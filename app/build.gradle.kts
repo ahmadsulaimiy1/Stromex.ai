@@ -17,10 +17,29 @@ android {
         versionName = "1.0.0"
     }
 
+    // Release signing is opt-in via environment variables (see .github/workflows/android-build.yml
+    // and docs/ANDROID_BUILD.md), never a keystore committed to this repo. Debug builds are
+    // unaffected — Android auto-generates and reuses a debug keystore, so `assembleDebug` always
+    // produces a directly installable APK with no configuration needed.
+    val releaseStoreFile = System.getenv("RELEASE_STORE_FILE")
+    signingConfigs {
+        if (!releaseStoreFile.isNullOrBlank()) {
+            create("release") {
+                storeFile = file(releaseStoreFile)
+                storePassword = System.getenv("RELEASE_STORE_PASSWORD")
+                keyAlias = System.getenv("RELEASE_KEY_ALIAS")
+                keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (!releaseStoreFile.isNullOrBlank()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 

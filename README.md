@@ -402,22 +402,37 @@ presented as certainty — and nothing here claims automatic Qur'anic recitation
   public API to accept externally captured audio, full stop. See
   [`docs/STREAMING_ARCHITECTURE.md`](docs/STREAMING_ARCHITECTURE.md).
 
+## Getting an installable APK
+
+`.github/workflows/android-build.yml` builds a real, installable debug APK on GitHub's own
+infrastructure (which has an Android SDK and full network access, unlike the sandbox this project
+was developed in) on every push, and boots a real Android emulator to install and launch it as a
+smoke test. Download the `sajjil-debug-apk` artifact from the latest "Android Build" run under the
+repo's **Actions** tab. Full instructions, including how to add your own signing key for a
+Play-Store-ready release AAB, are in [`docs/ANDROID_BUILD.md`](docs/ANDROID_BUILD.md). Exactly
+what has and hasn't been verified — installation and launch yes, a full RTL/dark-mode/tablet/
+low-memory/multi-API-level QA pass not yet — is in
+[`docs/ANDROID_VERIFICATION_REPORT.md`](docs/ANDROID_VERIFICATION_REPORT.md).
+
 ## Building
 
 This sandboxed environment has a JDK and Gradle but **no Android SDK and no network path to
-`dl.google.com`**, so the Android Gradle Plugin can't be resolved here — `app` could not be built
-or run in this session. `core` has zero Android dependencies and was fully built and tested here:
+`dl.google.com`** (confirmed blocked by this environment's egress policy, not merely unconfigured)
+— the Android Gradle Plugin can't be resolved here, so `app` could not be built or run directly in
+any session that developed it. `core` has zero Android dependencies and was fully built and tested
+here throughout:
 
 ```
 gradle :core:test
 ```
 
-On a normal Android development machine (Android SDK + network access), the whole project builds
-with:
+On a normal Android development machine (Android SDK + network access) or via the GitHub Actions
+workflow above, the whole project builds with:
 
 ```
 ./gradlew assembleDebug
 ./gradlew :core:test
 ```
 
-`minSdk 26`, `compileSdk 34`, Kotlin 1.9.24, Jetpack Compose (Material3), Room, DataStore.
+`minSdk 26`, `targetSdk`/`compileSdk 34`, Kotlin 1.9.24, Jetpack Compose (Material3), Room,
+DataStore.
