@@ -18,12 +18,17 @@ function ChatPage() {
   const [error, setError] = useState<string | null>(null);
 
   async function loadConversations() {
-    const list = await api.get<ConversationRead[]>("/api/v1/conversations");
-    setConversations(list);
+    try {
+      const list = await api.get<ConversationRead[]>("/api/v1/conversations");
+      setConversations(list);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not load your conversations.");
+    }
   }
 
   useEffect(() => {
     void loadConversations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -35,6 +40,9 @@ function ChatPage() {
     api
       .get<MessageRead[]>(`/api/v1/conversations/${activeId}/messages`)
       .then(setMessages)
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "Could not load this conversation.");
+      })
       .finally(() => setLoadingMessages(false));
   }, [activeId]);
 

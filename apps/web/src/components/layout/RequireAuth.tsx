@@ -20,7 +20,10 @@ export function RequireAuth({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.replace("/login");
+      // /welcome, not /login directly — a visitor with no session at all
+      // should always see all three entry paths (Google/Email/Guest), not
+      // just be dropped straight into the email form.
+      router.replace("/welcome");
     }
   }, [status, router]);
 

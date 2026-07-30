@@ -4,6 +4,7 @@ import { clearTokens, getAccessToken, getRefreshToken, setTokens } from "./auth-
 import type { TokenPair } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const REQUEST_TIMEOUT_MS = 8000;
 
 export class ApiError extends Error {
   constructor(
@@ -12,6 +13,33 @@ export class ApiError extends Error {
   ) {
     super(message);
     this.name = "ApiError";
+  }
+}
+
+/** The backend never responded at all — unreachable host, DNS failure, no
+ * network, or it simply took too long. Distinct from ApiError (a real HTTP
+ * error response) so callers like guest-mode entry can tell "the server
+ * said no" apart from "there's no server to ask" and behave differently. */
+export class NetworkError extends Error {
+  constructor(message = "Could not reach the StromeX server.") {
+    super(message);
+    this.name = "NetworkError";
+  }
+}
+
+async function fetchWithTimeout(input: string, init: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } catch (err) {
+    throw new NetworkError(
+      err instanceof DOMException && err.name === "AbortError"
+        ? "The StromeX server took too long to respond."
+        : "Could not reach the StromeX server. Check your connection.",
+    );
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
@@ -29,11 +57,19 @@ async function refreshAccessToken(): Promise<boolean> {
   const refreshToken = getRefreshToken();
   if (!refreshToken) return false;
 
-  const response = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refresh_token: refreshToken }),
-  });
+  // A network failure here must NOT clear tokens — that would sign out a
+  // real, valid session just because the network blipped. Only an actual
+  // rejection from the server (bad/expired/revoked refresh token) should.
+  let response: Response;
+  try {
+    response = await fetchWithTimeout(`${API_BASE}/api/v1/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+  } catch {
+    return false;
+  }
   if (!response.ok) {
     clearTokens();
     return false;
@@ -58,7 +94,7 @@ async function request<T>(path: string, options: RequestOptions = {}, retried = 
     if (token) headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await fetchWithTimeout(`${API_BASE}${path}`, {
     method,
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,

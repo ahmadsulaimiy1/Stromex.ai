@@ -58,7 +58,7 @@ export default function WelcomePage() {
             </Button>
           </Link>
           <Button
-            variant="ghost"
+            variant="primary"
             className="w-full"
             isLoading={isContinuingAsGuest}
             onClick={continueAsGuest}

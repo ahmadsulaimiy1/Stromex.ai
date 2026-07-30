@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Mark } from "@/components/ui/Mark";
 import { useAuth } from "@/hooks/useAuth";
-import { ApiError } from "@/lib/api";
+import { ApiError, NetworkError } from "@/lib/api";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -18,17 +18,24 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isUnreachable, setIsUnreachable] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
+    setIsUnreachable(false);
     setIsSubmitting(true);
     try {
       await register(email, password, displayName);
       router.push("/chat");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+      if (err instanceof NetworkError) {
+        setIsUnreachable(true);
+        setError(err.message);
+      } else {
+        setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -67,6 +74,15 @@ export default function RegisterPage() {
             onChange={(e) => setPassword(e.target.value)}
           />
           {error && <p className="text-sm text-rubrication">{error}</p>}
+          {isUnreachable && (
+            <p className="text-sm text-[color:var(--fg-muted)]">
+              You can still{" "}
+              <Link href="/welcome" className="font-medium text-brass hover:underline">
+                continue as a guest
+              </Link>{" "}
+              while you&apos;re offline.
+            </p>
+          )}
           <Button type="submit" isLoading={isSubmitting} className="mt-2 w-full">
             Create account
           </Button>
