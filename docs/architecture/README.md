@@ -5,6 +5,8 @@
 
 Competitive analysis basis: Canva, Adobe Creative Cloud, Figma, PixelLab, Adobe Express, Affinity Suite, CorelDRAW, VistaCreate, PicsArt, CapCut, Pinterest, Notion, Linear, Arc Browser, and the current wave of AI-native design tools.
 
+> **Phase 3 is live:** this architecture set describes the full destination. [`docs/strategy/`](../strategy/README.md) pressure-tests it — market validation, a recommended wedge, a Tier A–D feature cut, an actual Phase 1 engineering spec, a technology stack decision, an investor-grade summary, and an adversarial red team review.
+
 ## Documents in This Set
 
 1. **[Master Product Architecture](./01-master-product-architecture.md)** — system architecture, product ecosystem, and the desktop / mobile / cloud / AI / offline architectural layers.
