@@ -3,7 +3,6 @@ package com.sajjil.app.ui.screens.archive
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.sajjil.app.audio.AudioPlaybackEngine
 import com.sajjil.app.data.db.RecordingEntity
 import com.sajjil.app.di.asSajjilApplication
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -19,8 +18,15 @@ import java.io.File
 class ArchiveViewModel(application: Application) : AndroidViewModel(application) {
     private val app = application.asSajjilApplication()
 
-    /** One shared player for the whole Library: at most one recording plays at a time, matched by file path. */
-    val playback = AudioPlaybackEngine()
+    /**
+     * Uses the app-wide shared player (not a private instance) and the app-wide playback
+     * scope (not viewModelScope) so tapping Play here and then navigating to another screen
+     * keeps the recording playing -- the whole point of a mini-player. A ViewModel-scoped
+     * player would have its position-tracking coroutine cancelled the moment this screen is
+     * left, silently breaking the mini-player elsewhere in the app.
+     */
+    private val playback = app.playbackEngine
+    private val playbackScope = app.playbackScope()
     val isPlaying: StateFlow<Boolean> = playback.isPlaying
     val positionMs: StateFlow<Long> = playback.positionMs
     val durationMs: StateFlow<Long> = playback.durationMs
@@ -41,9 +47,9 @@ class ArchiveViewModel(application: Application) : AndroidViewModel(application)
     fun togglePlay(recording: RecordingEntity) {
         val file = File(recording.filePath)
         if (playingFile.value == file) {
-            if (isPlaying.value) playback.pause() else playback.resume(viewModelScope)
+            if (isPlaying.value) playback.pause() else playback.resume(playbackScope)
         } else {
-            playback.play(file, viewModelScope)
+            playback.play(file, playbackScope, label = recording.title)
         }
     }
 
@@ -63,8 +69,6 @@ class ArchiveViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        playback.stop()
-    }
+    // No playback.stop() in onCleared(): the shared player is owned by the app, not this
+    // screen, so leaving Library must not interrupt a recording that's still playing.
 }

@@ -26,6 +26,10 @@ class AudioPlaybackEngine {
     private val _playingFile = MutableStateFlow<File?>(null)
     val playingFile: StateFlow<File?> = _playingFile.asStateFlow()
 
+    /** Human-readable label for whatever is loaded (a recording's title) -- lets a shared mini-player show "what" without needing its own copy of the recording list. */
+    private val _nowPlayingLabel = MutableStateFlow<String?>(null)
+    val nowPlayingLabel: StateFlow<String?> = _nowPlayingLabel.asStateFlow()
+
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
 
@@ -36,7 +40,7 @@ class AudioPlaybackEngine {
     val durationMs: StateFlow<Long> = _durationMs.asStateFlow()
 
     /** Loads and plays [file] from the start. If it's already the loaded file, resumes instead. */
-    fun play(file: File, scope: CoroutineScope, onComplete: () -> Unit = {}) {
+    fun play(file: File, scope: CoroutineScope, label: String? = null, onComplete: () -> Unit = {}) {
         if (_playingFile.value == file && player != null) {
             resume(scope)
             return
@@ -60,6 +64,7 @@ class AudioPlaybackEngine {
         }
         player = mp
         _playingFile.value = file
+        _nowPlayingLabel.value = label
         _durationMs.value = mp.duration.toLong().coerceAtLeast(0L)
         runCatching { mp.start() }
         _isPlaying.value = true
@@ -102,6 +107,7 @@ class AudioPlaybackEngine {
         }
         player = null
         _playingFile.value = null
+        _nowPlayingLabel.value = null
         _isPlaying.value = false
         _positionMs.value = 0L
         _durationMs.value = 0L

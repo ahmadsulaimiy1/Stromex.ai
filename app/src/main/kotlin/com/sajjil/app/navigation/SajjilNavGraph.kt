@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -34,6 +35,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
 import com.sajjil.app.SajjilApplication
+import com.sajjil.app.ui.components.MiniPlayerBar
 import com.sajjil.app.ui.screens.about.AboutScreen
 import com.sajjil.app.ui.screens.analytics.AnalyticsScreen
 import com.sajjil.app.ui.screens.analytics.AnalyticsViewModel
@@ -104,20 +106,41 @@ fun SajjilNavGraph(
         bottomBar = {
             val backStackEntry by navController.currentBackStackEntryAsState()
             val currentDestination = backStackEntry?.destination
-            NavigationBar {
-                SajjilDestination.bottomNavItems.forEach { destination ->
-                    NavigationBarItem(
-                        selected = currentDestination?.hierarchy?.any { it.route == destination.route } == true,
-                        onClick = {
-                            navController.navigate(destination.route) {
-                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
+
+            val playingFile by application.playbackEngine.playingFile.collectAsStateWithLifecycle()
+            val nowPlayingLabel by application.playbackEngine.nowPlayingLabel.collectAsStateWithLifecycle()
+            val isPlaying by application.playbackEngine.isPlaying.collectAsStateWithLifecycle()
+            val positionMs by application.playbackEngine.positionMs.collectAsStateWithLifecycle()
+            val durationMs by application.playbackEngine.durationMs.collectAsStateWithLifecycle()
+
+            Column {
+                if (playingFile != null) {
+                    MiniPlayerBar(
+                        label = nowPlayingLabel ?: playingFile?.nameWithoutExtension.orEmpty(),
+                        isPlaying = isPlaying,
+                        positionMs = positionMs,
+                        durationMs = durationMs,
+                        onTogglePlay = {
+                            if (isPlaying) application.playbackEngine.pause() else application.playbackEngine.resume(application.playbackScope())
                         },
-                        icon = { Icon(destination.icon, contentDescription = destination.label) },
-                        label = { Text(destination.label) },
+                        onDismiss = { application.playbackEngine.stop() },
                     )
+                }
+                NavigationBar {
+                    SajjilDestination.bottomNavItems.forEach { destination ->
+                        NavigationBarItem(
+                            selected = currentDestination?.hierarchy?.any { it.route == destination.route } == true,
+                            onClick = {
+                                navController.navigate(destination.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            icon = { Icon(destination.icon, contentDescription = destination.label) },
+                            label = { Text(destination.label) },
+                        )
+                    }
                 }
             }
         },
