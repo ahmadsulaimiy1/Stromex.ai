@@ -7,6 +7,8 @@
 - **Product Name:** TASMIM™ (تصميم)
 - **Founder & Product Architect:** Imam Ahmad Sulaimiy
 
+> **Phase 2 is live:** the vision below is now backed by a full technical and competitive blueprint in [`docs/architecture/`](./architecture/README.md) — system architecture, a competitive feature matrix, the Creative Intelligence Engine's ten AI agents, the Inspiration Ecosystem, the Islamic Creative Suite, a five-phase roadmap, and a critical self-review.
+
 ---
 
 ## 1. Vision Statement
