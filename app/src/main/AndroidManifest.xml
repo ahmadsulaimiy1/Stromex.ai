@@ -49,7 +49,7 @@
             android:foregroundServiceType="microphone" />
 
         <!-- Needed to share a recording (Intent.ACTION_SEND) or hand its bytes to a
-             Storage Access Framework "Save As" destination -- Android has blocked
+             Storage Access Framework "Save As" destination. Android has blocked
              file:// URIs across app boundaries since API 24. -->
         <provider
             android:name="androidx.core.content.FileProvider"
