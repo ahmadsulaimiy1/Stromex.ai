@@ -1,7 +1,6 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp") version "1.9.24-1.0.20"
 }
 
@@ -54,6 +53,15 @@ android {
 
     buildFeatures {
         compose = true
+    }
+
+    // Kotlin 1.9.x configures the Compose compiler this way, via AGP's built-in support —
+    // the standalone `org.jetbrains.kotlin.plugin.compose` Gradle plugin only exists starting
+    // at Kotlin 2.0.0 (confirmed against the Gradle Plugin Portal's own metadata: applying it
+    // at 1.9.24 fails with "Plugin ... was not found in any of the following sources"). 1.5.14
+    // is the Compose compiler version JetBrains' compatibility map pairs with Kotlin 1.9.24.
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
 
     sourceSets["main"].apply {
