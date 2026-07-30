@@ -128,6 +128,11 @@ jobs:
           arch: x86_64
           target: google_apis
           profile: pixel_6
+          # NOTE: this action runs each line of `script` as its own independent shell
+          # invocation (confirmed from a real run's logs: every line appears as a separate
+          # `sh -c '<that line>'`) rather than as one connected multi-line script. A multi-line
+          # if/then/fi block therefore breaks with "Syntax error: end of file unexpected" --
+          # every logical statement below must be self-contained on its own line.
           script: |
             adb logcat -c
             adb install -r apk/*.apk
@@ -136,13 +141,6 @@ jobs:
             adb logcat -d > logcat.txt
             echo "--- last 100 lines of logcat ---"
             tail -n 100 logcat.txt
-            if grep -q "FATAL EXCEPTION" logcat.txt || grep -qi "ANR in com.sajjil.app" logcat.txt; then
-              echo "CRASH OR ANR DETECTED ON LAUNCH — see logcat above."
-              exit 1
-            fi
-            RUNNING=$(adb shell "dumpsys activity activities | grep -c 'com.sajjil.app/.MainActivity'" || echo 0)
-            if [ "$RUNNING" -eq 0 ]; then
-              echo "MainActivity does not appear to be running after launch — see logcat above."
-              exit 1
-            fi
+            if grep -q "FATAL EXCEPTION" logcat.txt || grep -qi "ANR in com.sajjil.app" logcat.txt; then echo "CRASH OR ANR DETECTED ON LAUNCH -- see logcat above."; exit 1; fi
+            RUNNING=$(adb shell "dumpsys activity activities | grep -c 'com.sajjil.app/.MainActivity'" || echo 0); if [ "$RUNNING" -eq 0 ]; then echo "MainActivity does not appear to be running after launch -- see logcat above."; exit 1; fi
             echo "PASS: com.sajjil.app installed, launched, and MainActivity was running 12s later with no fatal exception or ANR in logcat."
