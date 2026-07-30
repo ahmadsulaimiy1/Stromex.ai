@@ -49,9 +49,7 @@ import com.sajjil.app.ui.screens.comparison.ComparisonLabScreen
 import com.sajjil.app.ui.screens.comparison.ComparisonLabViewModel
 import com.sajjil.app.ui.screens.dashboard.DashboardScreen
 import com.sajjil.app.ui.screens.dashboard.DashboardViewModel
-import com.sajjil.app.ui.screens.enhance.EnhanceScreen
 import com.sajjil.app.ui.screens.enhance.EnhanceViewModel
-import com.sajjil.app.ui.screens.master.MasterScreen
 import com.sajjil.app.ui.screens.master.MasterViewModel
 import com.sajjil.app.ui.screens.quranproject.QuranProjectScreen
 import com.sajjil.app.ui.screens.quranproject.QuranProjectViewModel
@@ -65,6 +63,7 @@ import com.sajjil.app.ui.screens.settings.SettingsScreen
 import com.sajjil.app.ui.screens.settings.SettingsViewModel
 import com.sajjil.app.ui.screens.speechsettings.SpeechCapabilityScreen
 import com.sajjil.app.ui.screens.speechsettings.SpeechCapabilityViewModel
+import com.sajjil.app.ui.screens.studio.StudioScreen
 import com.sajjil.app.ui.screens.voicestudio.VoiceStudioScreen
 import com.sajjil.app.ui.screens.voicestudio.VoiceStudioViewModel
 
@@ -160,17 +159,14 @@ fun SajjilNavGraph(
                     MicrophonePermissionPrompt(onRequestMicrophone)
                 }
             }
-            composable(SajjilDestination.Enhance.route) {
-                val viewModel: EnhanceViewModel = viewModel(factory = viewModelFactory {
+            composable(SajjilDestination.Studio.route) {
+                val enhanceViewModel: EnhanceViewModel = viewModel(factory = viewModelFactory {
                     initializer { EnhanceViewModel(application) }
                 })
-                EnhanceScreen(viewModel)
-            }
-            composable(SajjilDestination.Master.route) {
-                val viewModel: MasterViewModel = viewModel(factory = viewModelFactory {
+                val masterViewModel: MasterViewModel = viewModel(factory = viewModelFactory {
                     initializer { MasterViewModel(application) }
                 })
-                MasterScreen(viewModel)
+                StudioScreen(enhanceViewModel, masterViewModel)
             }
             composable(SajjilDestination.Archive.route) {
                 val viewModel: ArchiveViewModel = viewModel(factory = viewModelFactory {

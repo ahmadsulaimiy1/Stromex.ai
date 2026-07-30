@@ -2,7 +2,6 @@ package com.sajjil.app.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoFixHigh
-import androidx.compose.material.icons.filled.Equalizer
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MenuBook
@@ -10,13 +9,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class SajjilDestination(val route: String, val label: String, val icon: ImageVector) {
     data object Record : SajjilDestination("record", "Record", Icons.Filled.Mic)
-    data object Enhance : SajjilDestination("enhance", "Enhance", Icons.Filled.AutoFixHigh)
-    data object Master : SajjilDestination("master", "Master", Icons.Filled.Equalizer)
+
+    // Formerly two separate destinations (Enhance, Master) with two disconnected "Select a
+    // recording" flows -- merged into one Studio workspace with Enhance/Master as tabs that
+    // share a single selection (see StudioScreen).
+    data object Studio : SajjilDestination("studio", "Studio", Icons.Filled.AutoFixHigh)
     data object Archive : SajjilDestination("archive", "Archive", Icons.Filled.LibraryMusic)
     data object QuranStudio : SajjilDestination("quran_studio", "Qur'an Studio", Icons.Filled.MenuBook)
 
     companion object {
-        val bottomNavItems = listOf(Record, Enhance, Master, Archive, QuranStudio)
+        val bottomNavItems = listOf(Record, Studio, Archive, QuranStudio)
     }
 }
 
