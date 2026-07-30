@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Node
+node_modules/
+.next/
+next-env.d.ts
+
+# Env files — real secrets never committed, only .env.example templates
+.env
+.env.local
+.env.*.local
+
+# Local data stores
+.qdrant-local/
+*.pdf.local
+
+# OS/editor
+.DS_Store
+*.swp
+tsconfig.tsbuildinfo

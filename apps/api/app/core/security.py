@@ -1,0 +1,81 @@
+"""Password hashing and JWT issuance/verification.
+
+Hashing calls the `bcrypt` library directly rather than going through passlib's
+CryptContext: passlib's one-time backend self-test (`detect_wrap_bug`) trips an
+incompatibility with bcrypt>=4.1's stricter 72-byte input enforcement, turning
+the first hash call into a hard crash. Calling bcrypt directly avoids that
+self-test entirely and removes a layer for no loss of functionality.
+"""
+from datetime import datetime, timedelta, timezone
+from enum import Enum
+from uuid import UUID
+
+import bcrypt
+import jwt
+
+from app.core.config import get_settings
+
+_MAX_PASSWORD_BYTES = 72  # bcrypt's hard input limit
+
+
+class TokenType(str, Enum):
+    ACCESS = "access"
+    REFRESH = "refresh"
+
+
+def hash_password(plain_password: str) -> str:
+    password_bytes = plain_password.encode("utf-8")[:_MAX_PASSWORD_BYTES]
+    return bcrypt.hashpw(password_bytes, bcrypt.gensalt()).decode("utf-8")
+
+
+def verify_password(plain_password: str, password_hash: str) -> bool:
+    password_bytes = plain_password.encode("utf-8")[:_MAX_PASSWORD_BYTES]
+    return bcrypt.checkpw(password_bytes, password_hash.encode("utf-8"))
+
+
+def _create_token(subject: UUID, token_type: TokenType, expires_delta: timedelta) -> str:
+    settings = get_settings()
+    now = datetime.now(timezone.utc)
+    payload = {
+        "sub": str(subject),
+        "type": token_type.value,
+        "iat": now,
+        "exp": now + expires_delta,
+    }
+    return jwt.encode(payload, settings.secret_key, algorithm=settings.jwt_algorithm)
+
+
+def create_access_token(user_id: UUID) -> str:
+    settings = get_settings()
+    return _create_token(
+        user_id, TokenType.ACCESS, timedelta(minutes=settings.access_token_expire_minutes)
+    )
+
+
+def create_refresh_token(user_id: UUID) -> str:
+    settings = get_settings()
+    return _create_token(
+        user_id, TokenType.REFRESH, timedelta(days=settings.refresh_token_expire_days)
+    )
+
+
+class TokenError(Exception):
+    pass
+
+
+def decode_token(token: str, expected_type: TokenType) -> UUID:
+    settings = get_settings()
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.jwt_algorithm])
+    except jwt.ExpiredSignatureError as exc:
+        raise TokenError("Token has expired") from exc
+    except jwt.InvalidTokenError as exc:
+        raise TokenError("Token is invalid") from exc
+
+    if payload.get("type") != expected_type.value:
+        raise TokenError(f"Expected a {expected_type.value} token")
+
+    try:
+        return UUID(payload["sub"])
+    except (KeyError, ValueError) as exc:
+        raise TokenError("Token subject is malformed") from exc

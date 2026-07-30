@@ -11,3 +11,12 @@ Every future decision in this repository — features, architecture, design, and
 3. **[The StromeX 10-Year Master Roadmap](docs/02-STROMEX-10-YEAR-ROADMAP.md)** — the phased build plan (MVP → Growth → Platform → Ecosystem → Global Scale), including explicit non-goals per phase and the assumptions challenged along the way.
 
 Read the Bible first. It is the supreme governing authority of the StromeX ecosystem.
+
+## MVP Codebase
+
+- **[`apps/api`](apps/api)** — FastAPI backend: auth, chat + multi-model routing (Claude/OpenAI/DeepSeek/Perplexity), memory (Postgres + Qdrant), Qur'an tutor (SM-2 spaced repetition), book writing + PDF export, admin dashboard.
+- **[`apps/web`](apps/web)** — Next.js 15 + TypeScript + Tailwind frontend, styled with the StromeX brand system (Fraunces/Archivo/Amiri/Cairo, brass/verdigris/ink palette).
+- **[`infra`](infra)** — Docker Compose for local development, `DEPLOYMENT.md` for the Cloudflare + VPS production topology.
+- **[`docs/03-STROMEX-MVP-ARCHITECTURE.md`](docs/03-STROMEX-MVP-ARCHITECTURE.md)** — what was actually built, run, and verified vs. what's deferred pending real credentials/infra.
+
+Quickest way to run it locally is `apps/api/README.md` and `apps/web/README.md`, in that order.

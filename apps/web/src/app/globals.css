@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Fraunces";
+  src: url("/fonts/Fraunces-300-normal.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fraunces";
+  src: url("/fonts/Fraunces-600-normal.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fraunces";
+  src: url("/fonts/Fraunces-900-normal.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Archivo";
+  src: url("/fonts/Archivo-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Archivo";
+  src: url("/fonts/Archivo-700-normal.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Amiri";
+  src: url("/fonts/Amiri-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Amiri";
+  src: url("/fonts/Amiri-700-normal.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Cairo";
+  src: url("/fonts/Cairo-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Cairo";
+  src: url("/fonts/Cairo-700-normal.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --bg: #e7eae2;
+  --bg-raised: #dee2d8;
+  --fg: #17140f;
+  --fg-muted: #55543f;
+  --brass: #8a6526;
+  --verdigris: #375b50;
+  --rubrication: #7c2a2a;
+  --hairline: rgba(23, 20, 15, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14120d;
+    --bg-raised: #1c1a13;
+    --fg: #ece8dc;
+    --fg-muted: #b4af9c;
+    --brass: #d2a34f;
+    --verdigris: #6fa091;
+    --rubrication: #c0605a;
+    --hairline: rgba(236, 232, 220, 0.16);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #14120d;
+  --bg-raised: #1c1a13;
+  --fg: #ece8dc;
+  --fg-muted: #b4af9c;
+  --brass: #d2a34f;
+  --verdigris: #6fa091;
+  --rubrication: #c0605a;
+  --hairline: rgba(236, 232, 220, 0.16);
+}
+
+:root[data-theme="light"] {
+  --bg: #e7eae2;
+  --bg-raised: #dee2d8;
+  --fg: #17140f;
+  --fg-muted: #55543f;
+  --brass: #8a6526;
+  --verdigris: #375b50;
+  --rubrication: #7c2a2a;
+  --hairline: rgba(23, 20, 15, 0.2);
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+}
