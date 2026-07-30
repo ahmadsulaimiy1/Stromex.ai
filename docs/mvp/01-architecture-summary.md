@@ -68,6 +68,16 @@ This is the core of the MVP and the piece worth understanding in most depth.
 
 A real bug was caught and fixed during verification: the app's default text theme originally specified only the Latin-only `Inter` font, which rendered Arabic UI strings (like the language toggle's own "العربية" label) as tofu boxes in this specific headless-browser test environment. The fix — adding `Cairo`/`NotoNaskhArabic` as `fontFamilyFallback` on every text style in `AppTheme` — is a general, correct solution (Flutter substitutes per-glyph from the fallback list) that also protects any future Arabic string in app chrome, not a one-off patch for that single label.
 
+## Branding assets
+
+`assets/branding/` holds the real TASMIM logo (a shield/T emblem in chrome blue, supplied by the founder), processed into three derived assets via `tool/process_logo.dart` (auto-crops the source photo by detecting its near-black background, splitting the emblem from the wordmark):
+
+- `tasmim_mark.png` — emblem only, transparent background — used as the Android adaptive icon foreground and in-app brand placements (welcome screen, dashboard app bar).
+- `tasmim_mark_flat.png` — the same emblem composited onto an opaque near-black background — used for the legacy (non-adaptive) launcher icon, which cannot use a transparent source.
+- `tasmim_logo_full.png` — emblem + "TASMIM" / "تصميم" wordmark, transparent background — held in reserve for future full-lockup placements (e.g., a splash screen).
+
+This is proprietary brand material, unlike the OFL-licensed fonts in `assets/fonts/` — it should not be reused outside this project without the founder's permission.
+
 ## What deliberately isn't here
 
 Real-time collaboration, a live Pinterest-class inspiration feed, image-generation AI, cloud accounts/sync, native mobile beyond Android, and Mushaf/calligraphy tooling are all out of scope for this MVP by design — each is either explicitly Tier B/C/D in the Phase 3 Feature Prioritization Framework or requires infrastructure (a backend, a scholarly governance board) this local-first, single-session MVP doesn't have. See [`04-known-limitations.md`](./04-known-limitations.md) for the complete, honest list.

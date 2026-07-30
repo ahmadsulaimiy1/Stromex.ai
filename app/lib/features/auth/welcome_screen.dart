@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/state/app_state.dart';
 import '../../l10n/gen/app_localizations.dart';
-import '../../shared/widgets/islamic_icons.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -19,7 +18,7 @@ class WelcomeScreen extends StatelessWidget {
           child: Column(
             children: [
               const Spacer(),
-              IslamicIcon(IslamicIconKind.starEight, size: 56, color: theme.colorScheme.secondary),
+              Image.asset('assets/branding/tasmim_mark.png', width: 120, height: 120),
               const SizedBox(height: 20),
               Text(l10n.appName, style: theme.textTheme.headlineLarge),
               const SizedBox(height: 8),

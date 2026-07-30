@@ -8,7 +8,6 @@ import '../editor/canvas/canvas_document_view.dart';
 import '../editor/canvas/canvas_model.dart';
 import '../../shared/widgets/empty_state.dart';
 import '../../shared/widgets/section_header.dart';
-import '../../shared/widgets/islamic_icons.dart';
 import 'new_design_sheet.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -44,7 +43,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         title: Row(
           children: [
-            IslamicIcon(IslamicIconKind.starEight, size: 20, color: theme.colorScheme.secondary),
+            Image.asset('assets/branding/tasmim_mark.png', width: 24, height: 24),
             const SizedBox(width: 8),
             Text(l10n.appName),
           ],
