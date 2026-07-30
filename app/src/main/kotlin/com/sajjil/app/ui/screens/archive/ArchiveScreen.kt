@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
@@ -56,6 +57,7 @@ import java.util.Locale
 fun ArchiveScreen(
     viewModel: ArchiveViewModel,
     onOpenDashboard: (Long) -> Unit,
+    onOpenEditor: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val recordings by viewModel.recordings.collectAsStateWithLifecycle()
@@ -116,6 +118,7 @@ fun ArchiveScreen(
                             saveTarget = recording
                             saveLauncher.launch(File(recording.filePath).name)
                         },
+                        onEdit = { onOpenEditor(recording.id) },
                         onOpenDashboard = { onOpenDashboard(recording.id) },
                     )
                 }
@@ -138,6 +141,7 @@ private fun ArchiveRow(
     onDelete: () -> Unit,
     onShare: () -> Unit,
     onSaveToDevice: () -> Unit,
+    onEdit: () -> Unit,
     onOpenDashboard: () -> Unit,
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
@@ -202,6 +206,11 @@ private fun ArchiveRow(
                             text = { Text("Save to device") },
                             leadingIcon = { Icon(Icons.Filled.SaveAlt, contentDescription = null) },
                             onClick = { menuExpanded = false; onSaveToDevice() },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Edit (trim / cut)") },
+                            leadingIcon = { Icon(Icons.Filled.ContentCut, contentDescription = null) },
+                            onClick = { menuExpanded = false; onEdit() },
                         )
                         DropdownMenuItem(
                             text = { Text("Delete") },

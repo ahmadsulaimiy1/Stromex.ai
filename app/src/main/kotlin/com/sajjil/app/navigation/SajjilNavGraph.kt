@@ -49,6 +49,8 @@ import com.sajjil.app.ui.screens.comparison.ComparisonLabScreen
 import com.sajjil.app.ui.screens.comparison.ComparisonLabViewModel
 import com.sajjil.app.ui.screens.dashboard.DashboardScreen
 import com.sajjil.app.ui.screens.dashboard.DashboardViewModel
+import com.sajjil.app.ui.screens.editor.EditorScreen
+import com.sajjil.app.ui.screens.editor.EditorViewModel
 import com.sajjil.app.ui.screens.enhance.EnhanceViewModel
 import com.sajjil.app.ui.screens.master.MasterViewModel
 import com.sajjil.app.ui.screens.quranproject.QuranProjectScreen
@@ -189,7 +191,11 @@ fun SajjilNavGraph(
                 val viewModel: ArchiveViewModel = viewModel(factory = viewModelFactory {
                     initializer { ArchiveViewModel(application) }
                 })
-                ArchiveScreen(viewModel, onOpenDashboard = { id -> navController.navigate(SajjilRoutes.dashboard(id)) })
+                ArchiveScreen(
+                    viewModel,
+                    onOpenDashboard = { id -> navController.navigate(SajjilRoutes.dashboard(id)) },
+                    onOpenEditor = { id -> navController.navigate(SajjilRoutes.editor(id)) },
+                )
             }
             composable(SajjilDestination.QuranStudio.route) {
                 val viewModel: QuranStudioViewModel = viewModel(factory = viewModelFactory {
@@ -295,6 +301,16 @@ fun SajjilNavGraph(
                     recordingId,
                     onOpenAssistant = { navController.navigate(SajjilRoutes.assistant(recordingId = it)) },
                 )
+            }
+            composable(
+                route = SajjilRoutes.EDITOR,
+                arguments = listOf(navArgument("recordingId") { type = NavType.LongType }),
+            ) { backStackEntry ->
+                val recordingId = backStackEntry.arguments?.getLong("recordingId") ?: return@composable
+                val viewModel: EditorViewModel = viewModel(factory = viewModelFactory {
+                    initializer { EditorViewModel(application) }
+                })
+                EditorScreen(viewModel, recordingId)
             }
         }
     }

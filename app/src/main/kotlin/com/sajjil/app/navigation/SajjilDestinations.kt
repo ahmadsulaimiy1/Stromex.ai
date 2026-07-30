@@ -34,8 +34,10 @@ object SajjilRoutes {
     const val PRODUCTION_READINESS = "production_readiness"
     const val DASHBOARD = "dashboard/{recordingId}"
     const val QURAN_PROJECT = "quran_project/{surahNumber}"
+    const val EDITOR = "editor/{recordingId}"
     fun dashboard(recordingId: Long) = "dashboard/$recordingId"
     fun quranProject(surahNumber: Int) = "quran_project/$surahNumber"
+    fun editor(recordingId: Long) = "editor/$recordingId"
 
     /** Project-memory: opens the Assistant already aware of a recording and/or Surah, so "read this transcript" or a Surah-scoped question doesn't need re-stating context. */
     fun assistant(recordingId: Long? = null, surahNumber: Int? = null) =
