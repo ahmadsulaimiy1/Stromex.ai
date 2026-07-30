@@ -408,11 +408,14 @@ presented as certainty — and nothing here claims automatic Qur'anic recitation
 infrastructure (which has an Android SDK and full network access, unlike the sandbox this project
 was developed in) on every push, and boots a real Android emulator to install and launch it as a
 smoke test. Download the `sajjil-debug-apk` artifact from the latest "Android Build" run under the
-repo's **Actions** tab. Full instructions, including how to add your own signing key for a
-Play-Store-ready release AAB, are in [`docs/ANDROID_BUILD.md`](docs/ANDROID_BUILD.md). Exactly
-what has and hasn't been verified — installation and launch yes, a full RTL/dark-mode/tablet/
-low-memory/multi-API-level QA pass not yet — is in
-[`docs/ANDROID_VERIFICATION_REPORT.md`](docs/ANDROID_VERIFICATION_REPORT.md).
+repo's **Actions** tab — first confirmed fully green run:
+[30535272891](https://github.com/ahmadsulaimiy1/Stromex.ai/actions/runs/30535272891) (commit
+`14c7cca`). Full instructions, including how to add your own signing key for a Play-Store-ready
+release AAB, are in [`docs/ANDROID_BUILD.md`](docs/ANDROID_BUILD.md). Exactly what has and hasn't
+been verified — installation and launch yes, a full RTL/dark-mode/tablet/low-memory/multi-API-level
+QA pass not yet — is in
+[`docs/ANDROID_VERIFICATION_REPORT.md`](docs/ANDROID_VERIFICATION_REPORT.md), including a
+bug-fix report of the four real compiler/CI bugs found and fixed to get here.
 
 ## Building
 
