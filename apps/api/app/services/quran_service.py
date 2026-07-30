@@ -83,12 +83,21 @@ def submit_review(db: Session, *, item: QuranRevisionItem, grade: int) -> QuranR
     return item
 
 
-def get_due_items(db: Session, *, plan_id: uuid.UUID, now: datetime | None = None) -> list[QuranRevisionItem]:
+def get_due_items(
+    db: Session,
+    *,
+    plan_id: uuid.UUID,
+    now: datetime | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> list[QuranRevisionItem]:
     now = now or datetime.now(timezone.utc)
     return (
         db.query(QuranRevisionItem)
         .filter(QuranRevisionItem.plan_id == plan_id, QuranRevisionItem.due_at <= now)
         .order_by(QuranRevisionItem.due_at)
+        .offset(offset)
+        .limit(limit)
         .all()
     )
 

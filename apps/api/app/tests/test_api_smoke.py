@@ -87,6 +87,44 @@ def test_book_create_chapter_and_pdf_export(app_client, random_email, in_memory_
     assert resp.content[:4] == b"%PDF"
 
 
+def test_chapter_content_over_the_length_cap_is_rejected(app_client, random_email, in_memory_qdrant):
+    from app.schemas.book import MAX_CHAPTER_CONTENT_CHARS
+
+    token = _register_and_login(app_client, random_email)
+    headers = {"Authorization": f"Bearer {token}"}
+    book_id = app_client.post(
+        "/api/v1/books", json={"title": "T", "author_name": "A", "language": "en"}, headers=headers
+    ).json()["id"]
+
+    resp = app_client.post(
+        f"/api/v1/books/{book_id}/chapters",
+        json={"title": "Too big", "order_index": 0, "content_markdown": "x" * (MAX_CHAPTER_CONTENT_CHARS + 1)},
+        headers=headers,
+    )
+    assert resp.status_code == 422
+
+
+def test_conversations_list_is_paginated(app_client, random_email, in_memory_qdrant):
+    token = _register_and_login(app_client, random_email)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    for i in range(5):
+        resp = app_client.post(
+            "/api/v1/chat", json={"message": f"message {i}", "mode": "general"}, headers=headers
+        )
+        assert resp.status_code == 200
+
+    resp = app_client.get("/api/v1/conversations?limit=2&offset=0", headers=headers)
+    assert resp.status_code == 200
+    assert len(resp.json()) == 2
+
+    resp = app_client.get("/api/v1/conversations?limit=2&offset=4", headers=headers)
+    assert len(resp.json()) == 1  # 5 conversations total, one left at offset 4
+
+    resp = app_client.get("/api/v1/conversations?limit=1000", headers=headers)
+    assert resp.status_code == 422  # over the hard cap (200)
+
+
 def test_quran_plan_creation_and_review_flow(app_client, random_email, in_memory_qdrant):
     token = _register_and_login(app_client, random_email)
     headers = {"Authorization": f"Bearer {token}"}

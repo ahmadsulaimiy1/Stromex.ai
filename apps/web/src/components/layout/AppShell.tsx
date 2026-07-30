@@ -47,7 +47,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <button
             className="text-left text-rubrication hover:underline"
             onClick={() => {
-              logout();
+              void logout();
               router.push("/login");
             }}
           >

@@ -5,17 +5,22 @@ from fastapi.responses import JSONResponse
 
 from app.api.v1.router import api_router
 from app.core.config import get_settings
+from app.core.middleware import MaxBodySizeMiddleware, SecurityHeadersMiddleware
 from app.services.llm.base import ProviderError
 
 logger = structlog.get_logger(__name__)
 
 settings = get_settings()
+settings.validate_for_production()
 
 app = FastAPI(
     title="StromeX API",
     description="English-Arabic AI Operating System — backend API",
     version="0.1.0",
 )
+
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(MaxBodySizeMiddleware, max_body_bytes=2 * 1024 * 1024)
 
 app.add_middleware(
     CORSMiddleware,

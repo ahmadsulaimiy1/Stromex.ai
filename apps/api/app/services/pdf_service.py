@@ -8,13 +8,37 @@ regardless of what is installed on the server.
 import html
 import re
 from pathlib import Path
+from urllib.parse import urlparse
 
 import markdown as md
-from weasyprint import HTML
+from weasyprint import HTML, default_url_fetcher
 
 from app.db.models.book import Book, BookLanguage
 
 _FONTS_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
+_ALLOWED_FONT_PREFIX = _FONTS_DIR.resolve().as_uri() + "/"
+
+
+def _restricted_url_fetcher(url: str) -> dict:
+    """Chapter content is arbitrary user-authored markdown, and markdown's
+    ordinary image syntax (`![alt](url)`) is enough to make WeasyPrint issue a
+    server-side GET to whatever URL is written there — a textbook SSRF against
+    cloud metadata endpoints, internal services, or anything else reachable
+    from this server. Reproduced against a local listener during the audit
+    before this fix existed. Only StromeX's own embedded font files (by exact
+    path prefix) and inline `data:` URIs are allowed; everything else —
+    `http(s)`, `file` outside the fonts directory, `ftp`, etc. — is rejected.
+    """
+    parsed = urlparse(url)
+    if parsed.scheme == "data":
+        return default_url_fetcher(url)
+    if parsed.scheme == "file" and url.startswith(_ALLOWED_FONT_PREFIX):
+        return default_url_fetcher(url)
+    raise ValueError(
+        f"Blocked fetch of '{url}' while rendering a PDF — only embedded "
+        "StromeX fonts and inline data: URIs may be loaded from chapter "
+        "content, to prevent server-side request forgery."
+    )
 
 _INK = "#17140F"
 _MUTED = "#55543F"
@@ -113,4 +137,4 @@ def render_book_pdf(book: Book) -> bytes:
     </html>
     """
 
-    return HTML(string=document_html).write_pdf()
+    return HTML(string=document_html, url_fetcher=_restricted_url_fetcher).write_pdf()

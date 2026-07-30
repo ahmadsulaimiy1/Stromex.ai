@@ -6,14 +6,16 @@ incompatibility with bcrypt>=4.1's stricter 72-byte input enforcement, turning
 the first hash call into a hard crash. Calling bcrypt directly avoids that
 self-test entirely and removes a layer for no loss of functionality.
 """
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import bcrypt
 import jwt
 
 from app.core.config import get_settings
+from app.core.token_denylist import is_revoked
 
 _MAX_PASSWORD_BYTES = 72  # bcrypt's hard input limit
 
@@ -39,6 +41,7 @@ def _create_token(subject: UUID, token_type: TokenType, expires_delta: timedelta
     payload = {
         "sub": str(subject),
         "type": token_type.value,
+        "jti": str(uuid4()),
         "iat": now,
         "exp": now + expires_delta,
     }
@@ -63,7 +66,14 @@ class TokenError(Exception):
     pass
 
 
-def decode_token(token: str, expected_type: TokenType) -> UUID:
+@dataclass(frozen=True, slots=True)
+class DecodedToken:
+    user_id: UUID
+    jti: str
+    expires_at: datetime
+
+
+def _decode(token: str, expected_type: TokenType) -> DecodedToken:
     settings = get_settings()
     try:
         payload = jwt.decode(token, settings.secret_key, algorithms=[settings.jwt_algorithm])
@@ -76,6 +86,24 @@ def decode_token(token: str, expected_type: TokenType) -> UUID:
         raise TokenError(f"Expected a {expected_type.value} token")
 
     try:
-        return UUID(payload["sub"])
+        user_id = UUID(payload["sub"])
+        jti = payload["jti"]
+        expires_at = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
     except (KeyError, ValueError) as exc:
-        raise TokenError("Token subject is malformed") from exc
+        raise TokenError("Token payload is malformed") from exc
+
+    if expected_type is TokenType.REFRESH and is_revoked(jti):
+        raise TokenError("Token has been revoked")
+
+    return DecodedToken(user_id=user_id, jti=jti, expires_at=expires_at)
+
+
+def decode_token(token: str, expected_type: TokenType) -> UUID:
+    """Back-compat convenience wrapper — most callers only need the subject."""
+    return _decode(token, expected_type).user_id
+
+
+def decode_token_full(token: str, expected_type: TokenType) -> DecodedToken:
+    """Used where the caller needs `jti`/expiry too — currently just logout,
+    to compute the denylist entry's TTL from the token's own remaining life."""
+    return _decode(token, expected_type)

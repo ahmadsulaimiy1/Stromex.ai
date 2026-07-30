@@ -3,7 +3,7 @@
 import { create } from "zustand";
 
 import { api } from "@/lib/api";
-import { clearTokens, getAccessToken, setTokens } from "@/lib/auth-storage";
+import { clearTokens, getAccessToken, getRefreshToken, setTokens } from "@/lib/auth-storage";
 import type { TokenPair, UserRead } from "@/lib/types";
 
 interface AuthState {
@@ -11,7 +11,7 @@ interface AuthState {
   status: "idle" | "loading" | "authenticated" | "unauthenticated";
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   hydrate: () => Promise<void>;
 }
 
@@ -40,9 +40,20 @@ export const useAuth = create<AuthState>((set) => ({
     set({ user, status: "authenticated" });
   },
 
-  logout() {
+  async logout() {
+    const refreshToken = getRefreshToken();
     clearTokens();
     set({ user: null, status: "unauthenticated" });
+    if (refreshToken) {
+      // Best-effort: revoke server-side so the refresh token can't mint new
+      // access tokens if it leaked. Local sign-out already happened above
+      // regardless of whether this call succeeds.
+      try {
+        await api.post("/api/v1/auth/logout", { refresh_token: refreshToken }, false);
+      } catch {
+        // Network error or already-invalid token — nothing more to do.
+      }
+    }
   },
 
   async hydrate() {

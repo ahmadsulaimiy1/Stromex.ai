@@ -4,6 +4,11 @@ os.environ.setdefault("DATABASE_URL", "postgresql+psycopg://stromex:stromex@loca
 os.environ.setdefault("ENVIRONMENT", "test")
 os.environ.setdefault("SECRET_KEY", "test-secret-key-not-for-production")
 os.environ.setdefault("QDRANT_LOCAL_PATH", "")
+# A dedicated Redis DB index for tests, flushed before every test (see
+# `clean_redis` below) — rate-limit counters and the token denylist are real
+# Redis state, not part of the Postgres transaction rollback, so without this
+# isolation one test's counters would bleed into the next test run.
+os.environ.setdefault("REDIS_URL", "redis://localhost:6379/15")
 
 import uuid
 from collections.abc import Generator
@@ -53,6 +58,16 @@ def in_memory_qdrant(monkeypatch):
     qdrant_module.get_qdrant.cache_clear()
     monkeypatch.setattr(qdrant_module, "get_qdrant", lambda: client)
     yield client
+
+
+@pytest.fixture(autouse=True)
+def clean_redis():
+    """Flushes the dedicated test Redis DB before every test so rate-limit
+    counters and revoked-token entries never leak between tests."""
+    from app.core.redis import get_redis
+
+    get_redis().flushdb()
+    yield
 
 
 @pytest.fixture()

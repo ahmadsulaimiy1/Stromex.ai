@@ -2,9 +2,11 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
+from sqlalchemy import func
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.deps import get_current_user
+from app.core.pagination import Page, pagination
 from app.db.base import get_db
 from app.db.models.book import Book, BookChapter
 from app.db.models.user import User
@@ -43,8 +45,19 @@ def create_book(
 
 
 @router.get("", response_model=list[BookRead])
-def list_books(db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> list[Book]:
-    return db.query(Book).filter(Book.user_id == user.id).order_by(Book.updated_at.desc()).all()
+def list_books(
+    page: Page = Depends(pagination),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> list[Book]:
+    return (
+        db.query(Book)
+        .filter(Book.user_id == user.id)
+        .order_by(Book.updated_at.desc())
+        .offset(page.offset)
+        .limit(page.limit)
+        .all()
+    )
 
 
 @router.get("/{book_id}", response_model=BookWithChapters)
@@ -52,6 +65,9 @@ def get_book(
     book_id: uuid.UUID, db: Session = Depends(get_db), user: User = Depends(get_current_user)
 ) -> Book:
     return _get_owned_book(db, user, book_id, with_chapters=True)
+
+
+_MAX_CHAPTERS_PER_BOOK = 300  # generous for any real book; a real, enforced ceiling
 
 
 @router.post("/{book_id}/chapters", response_model=ChapterRead, status_code=status.HTTP_201_CREATED)
@@ -62,6 +78,14 @@ def create_chapter(
     user: User = Depends(get_current_user),
 ) -> BookChapter:
     _get_owned_book(db, user, book_id)
+
+    existing_count = db.query(func.count(BookChapter.id)).filter(BookChapter.book_id == book_id).scalar()
+    if existing_count >= _MAX_CHAPTERS_PER_BOOK:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"A book may have at most {_MAX_CHAPTERS_PER_BOOK} chapters.",
+        )
+
     chapter = BookChapter(book_id=book_id, **payload.model_dump())
     db.add(chapter)
     db.commit()

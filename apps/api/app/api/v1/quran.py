@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_current_user
+from app.core.pagination import Page, pagination
 from app.db.base import get_db
 from app.db.models.quran import QuranPlan, QuranRevisionItem
 from app.db.models.user import User
@@ -37,12 +38,16 @@ def create_plan(
 
 @router.get("/plans", response_model=list[QuranPlanRead])
 def list_plans(
-    db: Session = Depends(get_db), user: User = Depends(get_current_user)
+    page: Page = Depends(pagination),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ) -> list[QuranPlan]:
     return (
         db.query(QuranPlan)
         .filter(QuranPlan.user_id == user.id, QuranPlan.is_active.is_(True))
         .order_by(QuranPlan.created_at.desc())
+        .offset(page.offset)
+        .limit(page.limit)
         .all()
     )
 
@@ -50,11 +55,12 @@ def list_plans(
 @router.get("/plans/{plan_id}/due", response_model=list[QuranRevisionItemRead])
 def due_items(
     plan_id: uuid.UUID,
+    page: Page = Depends(pagination),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> list[QuranRevisionItem]:
     _get_owned_plan(db, user, plan_id)
-    return quran_service.get_due_items(db, plan_id=plan_id)
+    return quran_service.get_due_items(db, plan_id=plan_id, limit=page.limit, offset=page.offset)
 
 
 @router.get("/plans/{plan_id}/analytics", response_model=QuranAnalytics)

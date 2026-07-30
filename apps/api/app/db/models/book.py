@@ -1,7 +1,7 @@
 import enum
 import uuid
 
-from sqlalchemy import ForeignKey, Integer, String, Text
+from sqlalchemy import ForeignKey, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -18,9 +18,10 @@ class BookLanguage(str, enum.Enum):
 
 class Book(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "books"
+    __table_args__ = (Index("ix_books_user_updated", "user_id", "updated_at"),)
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+        PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     subtitle: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -37,9 +38,10 @@ class Book(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
 class BookChapter(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "book_chapters"
+    __table_args__ = (Index("ix_book_chapters_book_order", "book_id", "order_index"),)
 
     book_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("books.id", ondelete="CASCADE"), nullable=False, index=True
+        PG_UUID(as_uuid=True), ForeignKey("books.id", ondelete="CASCADE"), nullable=False
     )
     order_index: Mapped[int] = mapped_column(Integer, nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False)

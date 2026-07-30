@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { isArabicText } from "@/lib/textDirection";
 import type { ConversationMode } from "@/lib/types";
 
 const MODES: { value: ConversationMode; label: string }[] = [
@@ -24,6 +25,7 @@ interface ComposerProps {
 export function Composer({ mode, onModeChange, onSend, disabled }: ComposerProps) {
   const [value, setValue] = useState("");
   const [sending, setSending] = useState(false);
+  const isArabic = isArabicText(value);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -66,10 +68,13 @@ export function Composer({ mode, onModeChange, onSend, disabled }: ComposerProps
               handleSubmit(e);
             }
           }}
+          dir={isArabic ? "rtl" : "ltr"}
           rows={2}
           placeholder="Ask StromeX anything…"
           disabled={disabled}
-          className="flex-1 resize-none rounded-md border border-[color:var(--hairline)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brass/40"
+          className={`flex-1 resize-none rounded-md border border-[color:var(--hairline)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brass/40 ${
+            isArabic ? "font-sans-ar text-base" : ""
+          }`}
         />
         <Button type="submit" isLoading={sending} disabled={disabled}>
           Send

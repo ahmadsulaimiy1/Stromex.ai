@@ -18,5 +18,6 @@ Read the Bible first. It is the supreme governing authority of the StromeX ecosy
 - **[`apps/web`](apps/web)** — Next.js 15 + TypeScript + Tailwind frontend, styled with the StromeX brand system (Fraunces/Archivo/Amiri/Cairo, brass/verdigris/ink palette).
 - **[`infra`](infra)** — Docker Compose for local development, `DEPLOYMENT.md` for the Cloudflare + VPS production topology.
 - **[`docs/03-STROMEX-MVP-ARCHITECTURE.md`](docs/03-STROMEX-MVP-ARCHITECTURE.md)** — what was actually built, run, and verified vs. what's deferred pending real credentials/infra.
+- **[`docs/04-STROMEX-INDEPENDENT-AUDIT.md`](docs/04-STROMEX-INDEPENDENT-AUDIT.md)** — the security/scalability/reliability/performance audit run against the MVP, including a critical SSRF vulnerability found, reproduced, and fixed; real benchmarks; and per-dimension grades.
 
 Quickest way to run it locally is `apps/api/README.md` and `apps/web/README.md`, in that order.

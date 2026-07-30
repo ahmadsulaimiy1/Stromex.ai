@@ -55,11 +55,21 @@ That fallback is intentionally unavailable when `ENVIRONMENT=production`.
 
 ## What's real vs. what's deferred
 
-- Real: JWT auth, Postgres schema + Alembic migrations, the routing engine's
-  selection/failover logic, SM-2 spaced repetition, memory read/write against
-  Qdrant, WeasyPrint PDF export with embedded brand fonts (verified with
-  actual Arabic RTL content), rate limiting, admin endpoints, audit logging.
+- Real: JWT auth with refresh-token rotation/revocation, Postgres schema +
+  Alembic migrations with benchmarked composite indexes, the routing
+  engine's selection/failover logic, SM-2 spaced repetition, memory
+  read/write against Qdrant, WeasyPrint PDF export with embedded brand fonts
+  and an SSRF-restricted fetcher (verified with actual Arabic RTL content),
+  brute-force-resistant rate limiting, admin endpoints, audit logging,
+  production boot-time config validation.
 - Deferred (needs real credentials/infra this environment doesn't have):
   live traffic against Claude/OpenAI/DeepSeek/Perplexity, a managed Qdrant/
   Postgres/Redis deployment, and the actual Cloudflare + VPS rollout (see
   `../../infra/DEPLOYMENT.md`).
+
+An independent security/scalability/reliability audit was run against this
+codebase after the initial build — see
+[`docs/04-STROMEX-INDEPENDENT-AUDIT.md`](../../docs/04-STROMEX-INDEPENDENT-AUDIT.md)
+for the full findings (including a critical SSRF vulnerability, found,
+reproduced, and fixed) and the real benchmarks behind every scalability
+claim above.

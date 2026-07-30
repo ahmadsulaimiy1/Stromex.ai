@@ -6,6 +6,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.deps import require_admin
+from app.core.pagination import Page, pagination
 from app.db.base import get_db
 from app.db.models.audit import AuditLog
 from app.db.models.book import Book
@@ -18,8 +19,14 @@ router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(requir
 
 
 @router.get("/users", response_model=list[AdminUserRow])
-def list_users(db: Session = Depends(get_db)) -> list[User]:
-    return db.query(User).order_by(User.created_at.desc()).all()
+def list_users(page: Page = Depends(pagination), db: Session = Depends(get_db)) -> list[User]:
+    return (
+        db.query(User)
+        .order_by(User.created_at.desc())
+        .offset(page.offset)
+        .limit(page.limit)
+        .all()
+    )
 
 
 @router.patch("/users/{user_id}", response_model=AdminUserRow)
@@ -86,5 +93,11 @@ def overview(db: Session = Depends(get_db)) -> dict:
 
 
 @router.get("/audit-logs", response_model=list[AuditLogRead])
-def audit_logs(db: Session = Depends(get_db), limit: int = 100) -> list[AuditLog]:
-    return db.query(AuditLog).order_by(AuditLog.created_at.desc()).limit(min(limit, 500)).all()
+def audit_logs(page: Page = Depends(pagination), db: Session = Depends(get_db)) -> list[AuditLog]:
+    return (
+        db.query(AuditLog)
+        .order_by(AuditLog.created_at.desc())
+        .offset(page.offset)
+        .limit(page.limit)
+        .all()
+    )

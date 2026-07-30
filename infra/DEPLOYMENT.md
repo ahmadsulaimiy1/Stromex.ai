@@ -56,6 +56,13 @@ VPS (Docker host)
    env to the real frontend origin(s) before going live — the default only
    allows `localhost:3000`.
 
+   Also set a request body size limit here: `client_max_body_size` in nginx
+   (or Caddy's equivalent), and Cloudflare has its own plan-dependent request
+   size cap in front of that. The API has its own `MaxBodySizeMiddleware`
+   (`app/core/middleware.py`, 2MB) as a second layer, but it only inspects
+   `Content-Length` — a client using chunked transfer-encoding bypasses it
+   entirely, so the reverse proxy is the layer that actually closes that gap.
+
 6. **Admin bootstrap.** There is no public "become admin" endpoint by design
    (Bible Part VIII: least privilege). Promote the first admin directly:
    ```bash

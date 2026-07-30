@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_current_user
-from app.core.rate_limit import RateLimiter
+from app.core.rate_limit import rate_limit_by_user
 from app.db.base import get_db
 from app.db.models.user import User
 from app.schemas.conversation import ChatRequest, ChatResponse, MessageRead
@@ -11,7 +11,7 @@ from app.services.llm.base import ProviderError
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
-_chat_rate_limit = RateLimiter(times=30, seconds=60, bucket="chat")
+_chat_rate_limit = rate_limit_by_user(times=30, seconds=60, bucket="chat")
 
 
 @router.post("", response_model=ChatResponse, dependencies=[Depends(_chat_rate_limit)])

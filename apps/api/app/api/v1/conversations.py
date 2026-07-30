@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_current_user
+from app.core.pagination import Page, pagination, wide_pagination
 from app.db.base import get_db
 from app.db.models.conversation import Conversation, Message
 from app.db.models.user import User
@@ -15,13 +16,19 @@ router = APIRouter(prefix="/conversations", tags=["conversations"])
 @router.get("", response_model=list[ConversationRead])
 def list_conversations(
     include_archived: bool = False,
+    page: Page = Depends(pagination),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> list[Conversation]:
     query = db.query(Conversation).filter(Conversation.user_id == user.id)
     if not include_archived:
         query = query.filter(Conversation.is_archived.is_(False))
-    return query.order_by(Conversation.updated_at.desc()).all()
+    return (
+        query.order_by(Conversation.updated_at.desc())
+        .offset(page.offset)
+        .limit(page.limit)
+        .all()
+    )
 
 
 @router.post("", response_model=ConversationRead, status_code=status.HTTP_201_CREATED)
@@ -56,6 +63,7 @@ def get_conversation(
 @router.get("/{conversation_id}/messages", response_model=list[MessageRead])
 def list_messages(
     conversation_id: uuid.UUID,
+    page: Page = Depends(wide_pagination),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> list[Message]:
@@ -64,6 +72,8 @@ def list_messages(
         db.query(Message)
         .filter(Message.conversation_id == conversation.id)
         .order_by(Message.created_at)
+        .offset(page.offset)
+        .limit(page.limit)
         .all()
     )
 

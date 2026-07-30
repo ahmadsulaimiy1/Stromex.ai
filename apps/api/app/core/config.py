@@ -17,6 +17,11 @@ class Settings(BaseSettings):
 
     # --- Database ---
     database_url: str = "postgresql+psycopg://stromex:stromex@localhost:5432/stromex"
+    # SQLAlchemy's own defaults (pool_size=5, max_overflow=10) are fine for a
+    # single dev process but are a real bottleneck under concurrent load —
+    # sized here so scaling the pool is a config change, not a code change.
+    db_pool_size: int = 10
+    db_max_overflow: int = 20
 
     # --- Redis ---
     redis_url: str = "redis://localhost:6379/0"
@@ -39,6 +44,36 @@ class Settings(BaseSettings):
 
     # --- Admin bootstrap ---
     admin_bootstrap_email: str | None = None
+
+    def validate_for_production(self) -> None:
+        """Audit finding: nothing stopped `ENVIRONMENT=production` from
+        booting with the placeholder secret key, a local-file Qdrant store
+        that silently fragments across multiple workers/replicas, or a CORS
+        allow-list still pointed at localhost. Each of those is a "works in
+        the demo, breaks or leaks in production" failure mode — better to
+        refuse to start than to start wrong. Called once from `main.py` at
+        import time, not from `get_settings()`, so tests and local dev are
+        never affected by it."""
+        if self.environment != "production":
+            return
+
+        problems = []
+        if self.secret_key == Settings.model_fields["secret_key"].default:
+            problems.append("SECRET_KEY is still the insecure development placeholder")
+        if len(self.secret_key) < 32:
+            problems.append("SECRET_KEY is too short (want at least 32 random characters)")
+        if not self.qdrant_url:
+            problems.append(
+                "QDRANT_URL is unset — embedded local-file Qdrant mode is not safe "
+                "across multiple workers or replicas and must not be used in production"
+            )
+        if self.cors_origins == Settings.model_fields["cors_origins"].default:
+            problems.append("CORS_ORIGINS is still the localhost-only development default")
+
+        if problems:
+            raise RuntimeError(
+                "Refusing to start with ENVIRONMENT=production: " + "; ".join(problems)
+            )
 
 
 @lru_cache

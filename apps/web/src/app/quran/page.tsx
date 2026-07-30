@@ -10,6 +10,18 @@ import { Input } from "@/components/ui/Input";
 import { api } from "@/lib/api";
 import type { QuranAnalytics, QuranPlanRead, QuranRevisionItemRead } from "@/lib/types";
 
+// SM-2's own recall-quality scale (see app/services/spaced_repetition.py) —
+// surfaced here so the grade a user picks means the same thing the scheduler
+// assumes it means, not just "a number from 0 to 5."
+const GRADE_LABELS = [
+  { grade: 0, label: "complete blackout" },
+  { grade: 1, label: "wrong, but familiar" },
+  { grade: 2, label: "wrong, easy to recall once shown" },
+  { grade: 3, label: "correct, with real effort" },
+  { grade: 4, label: "correct, brief hesitation" },
+  { grade: 5, label: "perfect recall" },
+];
+
 function CreatePlanForm({ onCreated }: { onCreated: () => void }) {
   const [title, setTitle] = useState("");
   const [surah, setSurah] = useState(114);
@@ -170,13 +182,14 @@ function PlanPanel({ plan }: { plan: QuranPlanRead }) {
             <span className="text-sm">
               Surah {item.surah}: {item.ayah_start}–{item.ayah_end}
             </span>
-            <div className="flex gap-1">
-              {[0, 1, 2, 3, 4, 5].map((grade) => (
+            <div className="flex gap-1" role="group" aria-label="Rate your recall, 0 (forgot) to 5 (perfect)">
+              {GRADE_LABELS.map(({ grade, label }) => (
                 <button
                   key={grade}
                   onClick={() => submitGrade(item.id, grade)}
                   className="h-7 w-7 rounded-md border border-[color:var(--hairline)] text-xs font-semibold hover:bg-brass hover:text-white"
-                  title={`Recall quality ${grade}`}
+                  aria-label={`Recall quality ${grade} of 5 — ${label}`}
+                  title={`${grade} — ${label}`}
                 >
                   {grade}
                 </button>
