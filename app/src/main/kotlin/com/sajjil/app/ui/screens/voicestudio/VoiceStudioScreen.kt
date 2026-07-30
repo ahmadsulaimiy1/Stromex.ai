@@ -27,7 +27,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sajjil.app.speech.SpeechCapabilityStatus
@@ -70,8 +73,18 @@ fun VoiceStudioScreen(viewModel: VoiceStudioViewModel, modifier: Modifier = Modi
                         }
                         state.statusMessage?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
                     }
-                    if (state.partialText.isNotBlank()) {
-                        Text(state.partialText, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Light)
+                    if (state.stablePartialText.isNotBlank() || state.draftPartialText.isNotBlank()) {
+                        Text(
+                            buildAnnotatedString {
+                                append(state.stablePartialText)
+                                if (state.stablePartialText.isNotBlank() && state.draftPartialText.isNotBlank()) append(" ")
+                                withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))) {
+                                    append(state.draftPartialText)
+                                }
+                            },
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Light,
+                        )
                     }
                 }
             }

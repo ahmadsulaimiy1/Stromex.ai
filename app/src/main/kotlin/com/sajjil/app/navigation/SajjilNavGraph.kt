@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.Assistant
 import androidx.compose.material.icons.filled.CompareArrows
 import androidx.compose.material.icons.filled.FactCheck
 import androidx.compose.material.icons.filled.RecordVoiceOver
@@ -35,6 +36,8 @@ import com.sajjil.app.ui.screens.analytics.AnalyticsScreen
 import com.sajjil.app.ui.screens.analytics.AnalyticsViewModel
 import com.sajjil.app.ui.screens.archive.ArchiveScreen
 import com.sajjil.app.ui.screens.archive.ArchiveViewModel
+import com.sajjil.app.ui.screens.assistant.AssistantScreen
+import com.sajjil.app.ui.screens.assistant.AssistantViewModel
 import com.sajjil.app.ui.screens.batch.BatchProductionScreen
 import com.sajjil.app.ui.screens.batch.BatchProductionViewModel
 import com.sajjil.app.ui.screens.comparison.ComparisonLabScreen
@@ -73,6 +76,9 @@ fun SajjilNavGraph(
             TopAppBar(
                 title = { Text("SAJJIL") },
                 actions = {
+                    IconButton(onClick = { navController.navigate(SajjilRoutes.ASSISTANT) }) {
+                        Icon(Icons.Filled.Assistant, contentDescription = "SAJJIL Assistant")
+                    }
                     IconButton(onClick = { navController.navigate(SajjilRoutes.PRODUCTION_READINESS) }) {
                         Icon(Icons.Filled.FactCheck, contentDescription = "Production Readiness")
                     }
@@ -182,6 +188,12 @@ fun SajjilNavGraph(
                     initializer { ComparisonLabViewModel(application) }
                 })
                 ComparisonLabScreen(viewModel)
+            }
+            composable(SajjilRoutes.ASSISTANT) {
+                val viewModel: AssistantViewModel = viewModel(factory = viewModelFactory {
+                    initializer { AssistantViewModel(application) }
+                })
+                AssistantScreen(viewModel)
             }
             composable(SajjilRoutes.PRODUCTION_READINESS) {
                 val viewModel: ProductionReadinessViewModel = viewModel(factory = viewModelFactory {

@@ -19,25 +19,32 @@ an explicit, documented roadmap.
   recording guidance, seven genuinely-distinct flagship mastering chains, one-click adaptive
   mastering, A/B/C instant comparison, executive-level library analytics, and a formal design
   system.
-- **Phase 4 — Flagship Platform & Speech Intelligence** (this pass): a Production Readiness Center
+- **Phase 4 — Flagship Platform & Speech Intelligence**: a Production Readiness Center
   (a single 0–100 score plus a concrete checklist — missing ayat, clipping, noise, loudness
   consistency, metadata, naming collisions), a rule-based Project Assistant, and — the phase's
   non-negotiable requirement — real offline speech recognition and text-to-speech built on
-  Android's own platform APIs, wrapped in a new **Voice Studio** workflow. See "Most important
-  instruction" below for how this phase was scoped against a much larger wishlist.
+  Android's own platform APIs, wrapped in a new **Voice Studio** workflow.
+- **Phase 5 — Real-Time Feel & the SAJJIL Assistant** (this pass): transcript stabilisation (a
+  stable/draft split so Voice Studio's live text stops flickering), a real concurrent-not-
+  sequential analysis pipeline in Dashboard, and a new **SAJJIL Assistant** screen — a small,
+  honestly-scoped set of pattern-matched requests ("Show me Surah Al-Kahf recordings," "Which
+  recordings have poor quality?") executed against real library data. See
+  [`docs/REALTIME_ASSISTANT.md`](docs/REALTIME_ASSISTANT.md) for exactly what "assistant" does and
+  does not mean here — there is no language model behind it.
 
 ## Modules
 
-- **`core`** — pure Kotlin/JVM, zero Android dependencies, fully unit tested (**135 tests**).
+- **`core`** — pure Kotlin/JVM, zero Android dependencies, fully unit tested (**156 tests**).
   Every DSP algorithm, acoustic analysis, Qur'an production-suite logic, the recording
   mode/voice-profile/microphone presets, WAV I/O, loudness analysis, batch processing, executive
-  analytics, production readiness, the project assistant, transcript search, and the plugin
-  architecture all live here — the parts actually verified in this sandbox.
+  analytics, production readiness, the project assistant, transcript search and stabilisation, the
+  assistant intent parser, and the plugin architecture all live here — the parts actually verified
+  in this sandbox.
 - **`app`** — the Android application (Jetpack Compose + Material3). Wires `core`'s logic into a
-  live `AudioRecord` capture chain, a Room-backed recording library, WAV/AAC export, and fourteen
+  live `AudioRecord` capture chain, a Room-backed recording library, WAV/AAC export, and fifteen
   screens (Record, Enhance, Master, Archive, Qur'an Studio, Surah Project, Batch Production,
-  Comparison Lab, Executive Analytics, Production Readiness, Voice Studio, Speech & Language
-  Packs, Dashboard, Settings).
+  Comparison Lab, Executive Analytics, Production Readiness, Voice Studio, SAJJIL Assistant, Speech
+  & Language Packs, Dashboard, Settings).
 
 `core` is verified in this environment with `gradle :core:test` (no Android SDK required — see
 "Building" below for why `app` couldn't be compiled here). `app` was written carefully against the
@@ -80,6 +87,29 @@ have meant building thin, half-verified stubs — the opposite of every prior ph
   out of scope" below: the Mushaf/Archive visual browser, the Brand Identity Package (logo assets),
   Performance Certification (needs a real device), and PDF/XLSX report export (needs dependencies
   this sandbox can't fetch or verify).
+
+## How Phase 5 was scoped
+
+Phase 5 asked for a UX principle ("never feel like it's waiting") and a future capability
+("SAJJIL Assistant," described with natural-language examples). Both were built as far as they
+can go honestly:
+- **Transcript stabilisation and Dashboard concurrency are unconditionally real** — pure
+  algorithmic/architectural work, fully testable (stabiliser) or fully reasoned about (Dashboard's
+  three analysis passes are provably independent), no external capability required.
+- **"Live transcription during recording" already existed for Voice Studio since Phase 4** — this
+  phase's real addition there is stopping the flicker, not inventing liveness. It does **not** now
+  exist for the main Record screen's studio-quality pipeline, and can't without either degrading
+  that pipeline's audio fidelity or relying on an unreliable dual-mic-session — a platform
+  constraint, not a scope choice; see [`docs/REALTIME_ASSISTANT.md`](docs/REALTIME_ASSISTANT.md).
+- **The SAJJIL Assistant is a rule-based command parser wearing the assistant's name, not
+  conversational AI** — there is no LLM to bundle or verify here, and the same honesty standard
+  that ruled out a bundled ASR model in Phase 3/4 rules out pretending an NLU model exists. It's
+  built to the letter of the architecture requirement (Speech Recognition / NLU / Assistant Logic
+  / Response Generation / TTS as separable modules) so a real NLU model can replace
+  `AssistantIntentParser` later without a rewrite. Natural conversation, cross-turn context,
+  Arabic-English code-switching, and a sub-1-2s response guarantee are not implemented — each one
+  either needs that same missing model or a real device to verify, and both are explained in
+  [`docs/REALTIME_ASSISTANT.md`](docs/REALTIME_ASSISTANT.md) rather than quietly skipped.
 
 ## What's real in `core` (not stubs)
 
@@ -151,6 +181,17 @@ have meant building thin, half-verified stubs — the opposite of every prior ph
   and search, including Arabic diacritic-insensitive matching (harakat/tashkeel are stripped
   before comparing, so a query typed without diacritics still matches recognizer output that
   includes them, and vice versa).
+
+### Phase 5 — Real-Time Feel & the SAJJIL Assistant
+- **`speech/TranscriptStabilizer`** — turns a stream of successive partial-recognition hypotheses
+  into a stable/draft split: the prefix that has survived unchanged across the last few updates is
+  safe to render without flicker, the trailing tail is expected to keep changing. Pure word-history
+  comparison — no recognizer- or language-specific logic.
+- **`assistant/AssistantIntentParser`** — the SAJJIL Assistant's understanding, in full: keyword and
+  regex matching against a fixed set of four request shapes (find by Surah, find by keyword, read
+  the current transcript, filter by quality score). Explicitly not NLU — see "How Phase 5 was
+  scoped" and [`docs/REALTIME_ASSISTANT.md`](docs/REALTIME_ASSISTANT.md) for why, and for what a
+  real NLU implementation would slot in to replace.
 
 ### Bugs found and fixed by the test suite
 Three genuine bugs surfaced across the phases — proof the tests are pulling their weight:
@@ -227,11 +268,21 @@ presented as certainty — and nothing here claims automatic Qur'anic recitation
 - **Voice Studio**: live offline speech-to-text (Arabic or English) via Android's own recognizer,
   with a simultaneous reference-audio capture, search across every saved transcript
   (diacritic-insensitive for Arabic), and text-to-speech readback — record, transcribe, search,
-  and listen without leaving the screen.
+  and listen without leaving the screen. The live transcript now renders as a stable/draft split
+  (`TranscriptStabilizer`) instead of rewriting the whole line on every recognizer update.
 - **Speech & Language Packs** (in Settings): per-language offline recognition/TTS status, checked
   fresh each time rather than assumed, an honest explanation of the three-tier fallback hierarchy,
   and buttons that open the real Android system settings to install a language pack — SAJJIL
   cannot install one itself, so it doesn't pretend it can.
+- **SAJJIL Assistant**: type or speak a request in the four patterns `AssistantIntentParser`
+  understands (find by Surah, find by keyword across titles/notes/transcripts, read the current
+  transcript aloud, filter by quality), executed against real library and transcript data, with
+  tappable results you can select as "current" for a follow-up request. Says plainly when a
+  request doesn't match a known pattern instead of guessing — see
+  [`docs/REALTIME_ASSISTANT.md`](docs/REALTIME_ASSISTANT.md) for why this isn't conversational AI.
+- **Dashboard analysis now runs concurrently**: RT60 estimation, loudness/quality scoring, and
+  spectrogram computation are three independent passes over the same decoded audio and now run in
+  parallel (`coroutineScope` + `async`) instead of one after another.
 
 ### Deliberately out of scope for this pass
 
@@ -264,6 +315,18 @@ presented as certainty — and nothing here claims automatic Qur'anic recitation
 - **Enterprise Metadata Engine** as a separate system — `RecordingEntity` already carries Surah,
   Ayah range, Juz, timestamps, readiness scores, and notes; a distinct metadata layer would
   duplicate it for no new capability.
+- **Live transcription fused into the main Record screen's studio-quality pipeline** — a real
+  platform constraint (mic contention between `AudioRecordEngine` and `SpeechRecognizer`), not a
+  scope choice; Voice Studio is the workflow that trades studio fidelity for live transcription.
+  See [`docs/REALTIME_ASSISTANT.md`](docs/REALTIME_ASSISTANT.md).
+- **A conversational, NLU-based SAJJIL Assistant** — what shipped is honest pattern matching over
+  four request shapes; a true natural-language assistant needs a language model this sandbox
+  cannot bundle or verify. The architecture (a swappable `AssistantIntentParser`) is built so a
+  real one can replace it later without a rewrite.
+- **Cross-turn conversational context, Arabic-English code-switching, and a certified sub-1-2s
+  assistant response time** — the first two depend on the same missing NLU model; the third is a
+  real-device measurement this sandbox can't make honestly, same reasoning as Performance
+  Certification.
 
 ## Building
 

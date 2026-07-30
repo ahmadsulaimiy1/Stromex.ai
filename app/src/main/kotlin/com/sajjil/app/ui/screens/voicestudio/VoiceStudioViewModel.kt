@@ -18,6 +18,7 @@ import com.sajjil.core.speech.TranscriptLanguage
 import com.sajjil.core.speech.TranscriptSearchEngine
 import com.sajjil.core.speech.TranscriptSearchResult
 import com.sajjil.core.speech.TranscriptSegment
+import com.sajjil.core.speech.TranscriptStabilizer
 import java.io.File
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +30,10 @@ data class VoiceStudioUiState(
     val capability: SpeechCapabilityReport? = null,
     val selectedLanguage: TranscriptLanguage = TranscriptLanguage.ENGLISH,
     val isListening: Boolean = false,
-    val partialText: String = "",
+    /** The part of the in-progress hypothesis that has held steady across recent updates — safe to render without flicker. */
+    val stablePartialText: String = "",
+    /** The trailing part still being revised by the recognizer — expect this to keep changing while listening. */
+    val draftPartialText: String = "",
     val segments: List<TranscriptSegment> = emptyList(),
     val statusMessage: String? = null,
     val searchQuery: String = "",
@@ -99,7 +103,8 @@ class VoiceStudioViewModel(application: Application) : AndroidViewModel(applicat
         userRequestedStop = false
         _uiState.value = _uiState.value.copy(
             isListening = true,
-            partialText = "",
+            stablePartialText = "",
+            draftPartialText = "",
             segments = emptyList(),
             statusMessage = null,
             lastSavedTitle = null,
@@ -119,15 +124,25 @@ class VoiceStudioViewModel(application: Application) : AndroidViewModel(applicat
                 TranscriptLanguage.ENGLISH -> OfflineEnglishRecognizer(getApplication(), file)
             }
             recognizer = engine
+            // Fresh per sub-session: a restarted SpeechRecognizer session starts a brand new
+            // hypothesis stream, unrelated to the previous one, so stability history must not
+            // carry across the boundary.
+            val stabilizer = TranscriptStabilizer()
 
             var shouldContinue = false
             engine.start().collect { event ->
                 when (event) {
                     RecognitionEvent.ReadyForSpeech ->
                         _uiState.value = _uiState.value.copy(statusMessage = "Listening…")
-                    is RecognitionEvent.PartialResult ->
-                        _uiState.value = _uiState.value.copy(partialText = event.text)
+                    is RecognitionEvent.PartialResult -> {
+                        val split = stabilizer.update(event.text)
+                        _uiState.value = _uiState.value.copy(
+                            stablePartialText = split.stableText,
+                            draftPartialText = split.draftText,
+                        )
+                    }
                     is RecognitionEvent.FinalSegment -> {
+                        stabilizer.commitFinal(event.segment.text)
                         val adjusted = event.segment.copy(
                             startMs = cumulativeOffsetMs + event.segment.startMs,
                             endMs = cumulativeOffsetMs + event.segment.endMs,
@@ -135,12 +150,18 @@ class VoiceStudioViewModel(application: Application) : AndroidViewModel(applicat
                         cumulativeOffsetMs = adjusted.endMs
                         _uiState.value = _uiState.value.copy(
                             segments = _uiState.value.segments + adjusted,
-                            partialText = "",
+                            stablePartialText = "",
+                            draftPartialText = "",
                         )
                         shouldContinue = true
                     }
                     is RecognitionEvent.Error -> {
-                        _uiState.value = _uiState.value.copy(statusMessage = event.message)
+                        stabilizer.reset()
+                        _uiState.value = _uiState.value.copy(
+                            statusMessage = event.message,
+                            stablePartialText = "",
+                            draftPartialText = "",
+                        )
                         shouldContinue = event.recoverable
                     }
                     RecognitionEvent.EndOfSession -> Unit
