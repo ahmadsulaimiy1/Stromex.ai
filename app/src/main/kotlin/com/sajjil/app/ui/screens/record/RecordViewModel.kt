@@ -1,7 +1,9 @@
 package com.sajjil.app.ui.screens.record
 
 import android.app.Application
+import android.content.Intent
 import android.media.AudioDeviceInfo
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.sajjil.app.analysis.RecordingAutoAnalyzer
@@ -10,6 +12,7 @@ import com.sajjil.app.audio.AudioInputDevices
 import com.sajjil.app.audio.AudioRecordEngine
 import com.sajjil.app.audio.LivePreviewMonitor
 import com.sajjil.app.audio.RecordingLevel
+import com.sajjil.app.audio.RecordingService
 import com.sajjil.app.data.db.RecordingEntity
 import com.sajjil.app.di.asSajjilApplication
 import com.sajjil.core.analysis.AcousticAnalyzer
@@ -155,6 +158,12 @@ class RecordViewModel(application: Application) : AndroidViewModel(application) 
         newEngine.start(viewModelScope)
         _uiState.value = state.copy(isRecording = true, elapsedMs = 0L, liveGuidance = null, waveformHistory = emptyList(), clippingDetected = false)
 
+        // Real background-survival guarantee: previously RecordingService was declared and
+        // fully implemented but never started, so long sittings did not actually survive the
+        // app being backgrounded despite the service's own doc comment claiming they did.
+        val context = getApplication<Application>()
+        ContextCompat.startForegroundService(context, Intent(context, RecordingService::class.java))
+
         viewModelScope.launch {
             newEngine.level.collect { level ->
                 _uiState.value = _uiState.value.copy(
@@ -177,6 +186,8 @@ class RecordViewModel(application: Application) : AndroidViewModel(application) 
 
     fun stopRecording() {
         val current = engine ?: return
+        val context = getApplication<Application>()
+        context.stopService(Intent(context, RecordingService::class.java))
         viewModelScope.launch {
             val file = current.stop()
             engine = null
@@ -211,6 +222,10 @@ class RecordViewModel(application: Application) : AndroidViewModel(application) 
 
     override fun onCleared() {
         super.onCleared()
+        if (engine != null) {
+            val context = getApplication<Application>()
+            context.stopService(Intent(context, RecordingService::class.java))
+        }
         engine = null
         liveMonitor.stop()
     }

@@ -11,6 +11,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Card
@@ -19,9 +21,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -39,10 +43,14 @@ fun ArchiveScreen(
 ) {
     val recordings by viewModel.recordings.collectAsStateWithLifecycle()
     val query by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val isPlaying by viewModel.isPlaying.collectAsStateWithLifecycle()
+    val positionMs by viewModel.positionMs.collectAsStateWithLifecycle()
+    val durationMs by viewModel.durationMs.collectAsStateWithLifecycle()
+    val playingFile by viewModel.playingFile.collectAsStateWithLifecycle()
 
     Column(modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text("SAJJIL Archive", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
-        Text("Professional library management for every recording.", style = MaterialTheme.typography.bodyMedium)
+        Text("SAJJIL Library", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
+        Text("Every recording, one tap from playing.", style = MaterialTheme.typography.bodyMedium)
 
         OutlinedTextField(
             value = query,
@@ -57,8 +65,15 @@ fun ArchiveScreen(
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(recordings, key = { it.id }) { recording ->
+                    val isActive = playingFile?.absolutePath == recording.filePath
                     ArchiveRow(
                         recording = recording,
+                        isActive = isActive,
+                        isPlaying = isActive && isPlaying,
+                        positionMs = if (isActive) positionMs else 0L,
+                        durationMs = if (isActive && durationMs > 0L) durationMs else recording.durationMs,
+                        onTogglePlay = { viewModel.togglePlay(recording) },
+                        onSeek = { viewModel.seekTo(it) },
                         onToggleFavorite = { viewModel.toggleFavorite(recording) },
                         onDelete = { viewModel.delete(recording) },
                         onOpenDashboard = { onOpenDashboard(recording.id) },
@@ -72,41 +87,74 @@ fun ArchiveScreen(
 @Composable
 private fun ArchiveRow(
     recording: RecordingEntity,
+    isActive: Boolean,
+    isPlaying: Boolean,
+    positionMs: Long,
+    durationMs: Long,
+    onTogglePlay: () -> Unit,
+    onSeek: (Long) -> Unit,
     onToggleFavorite: () -> Unit,
     onDelete: () -> Unit,
     onOpenDashboard: () -> Unit,
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isActive) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+        ),
         modifier = Modifier.fillMaxWidth().clickable(onClick = onOpenDashboard),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Column {
-                Text(recording.title, style = MaterialTheme.typography.titleMedium)
-                Text(
-                    "${recording.recordingMode} · ${formatDate(recording.createdAtEpochMs)} · ${formatDuration(recording.durationMs)}",
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                if (recording.surahNumber != null) {
-                    Text(
-                        "Surah ${recording.surahNumber} · Ayah ${recording.ayahStart}-${recording.ayahEnd} · Juz ${recording.juz}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
+        Column(Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    IconButton(onClick = onTogglePlay) {
+                        Icon(
+                            imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                            contentDescription = if (isPlaying) "Pause" else "Play",
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                    Column {
+                        Text(recording.title, style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "${recording.recordingMode} · ${formatDate(recording.createdAtEpochMs)} · ${formatDuration(recording.durationMs)}",
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                        if (recording.surahNumber != null) {
+                            Text(
+                                "Surah ${recording.surahNumber} · Ayah ${recording.ayahStart}-${recording.ayahEnd} · Juz ${recording.juz}",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                }
+                Row {
+                    IconButton(onClick = onToggleFavorite) {
+                        Icon(
+                            imageVector = if (recording.isFavorite) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                            contentDescription = "Favorite",
+                        )
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(Icons.Filled.Delete, contentDescription = "Delete")
+                    }
                 }
             }
-            Row {
-                IconButton(onClick = onToggleFavorite) {
-                    Icon(
-                        imageVector = if (recording.isFavorite) Icons.Filled.Star else Icons.Outlined.StarOutline,
-                        contentDescription = "Favorite",
+
+            if (isActive) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(formatDuration(positionMs), style = MaterialTheme.typography.labelSmall)
+                    Slider(
+                        value = positionMs.toFloat().coerceIn(0f, durationMs.toFloat().coerceAtLeast(1f)),
+                        onValueChange = { onSeek(it.toLong()) },
+                        valueRange = 0f..durationMs.toFloat().coerceAtLeast(1f),
+                        modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
                     )
-                }
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Filled.Delete, contentDescription = "Delete")
+                    Text(formatDuration(durationMs), style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
