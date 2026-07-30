@@ -35,30 +35,33 @@ def verify_password(plain_password: str, password_hash: str) -> bool:
     return bcrypt.checkpw(password_bytes, password_hash.encode("utf-8"))
 
 
-def _create_token(subject: UUID, token_type: TokenType, expires_delta: timedelta) -> str:
+def _create_token(
+    subject: UUID, token_type: TokenType, expires_delta: timedelta, token_version: int
+) -> str:
     settings = get_settings()
     now = datetime.now(timezone.utc)
     payload = {
         "sub": str(subject),
         "type": token_type.value,
         "jti": str(uuid4()),
+        "ver": token_version,
         "iat": now,
         "exp": now + expires_delta,
     }
     return jwt.encode(payload, settings.secret_key, algorithm=settings.jwt_algorithm)
 
 
-def create_access_token(user_id: UUID) -> str:
+def create_access_token(user_id: UUID, token_version: int = 0) -> str:
     settings = get_settings()
     return _create_token(
-        user_id, TokenType.ACCESS, timedelta(minutes=settings.access_token_expire_minutes)
+        user_id, TokenType.ACCESS, timedelta(minutes=settings.access_token_expire_minutes), token_version
     )
 
 
-def create_refresh_token(user_id: UUID) -> str:
+def create_refresh_token(user_id: UUID, token_version: int = 0) -> str:
     settings = get_settings()
     return _create_token(
-        user_id, TokenType.REFRESH, timedelta(days=settings.refresh_token_expire_days)
+        user_id, TokenType.REFRESH, timedelta(days=settings.refresh_token_expire_days), token_version
     )
 
 
@@ -71,6 +74,7 @@ class DecodedToken:
     user_id: UUID
     jti: str
     expires_at: datetime
+    token_version: int
 
 
 def _decode(token: str, expected_type: TokenType) -> DecodedToken:
@@ -91,11 +95,14 @@ def _decode(token: str, expected_type: TokenType) -> DecodedToken:
         expires_at = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
     except (KeyError, ValueError) as exc:
         raise TokenError("Token payload is malformed") from exc
+    # Tokens issued before "ver" existed have no claim at all; treat that as
+    # version 0, same as every user row's own default.
+    token_version = payload.get("ver", 0)
 
     if expected_type is TokenType.REFRESH and is_revoked(jti):
         raise TokenError("Token has been revoked")
 
-    return DecodedToken(user_id=user_id, jti=jti, expires_at=expires_at)
+    return DecodedToken(user_id=user_id, jti=jti, expires_at=expires_at, token_version=token_version)
 
 
 def decode_token(token: str, expected_type: TokenType) -> UUID:

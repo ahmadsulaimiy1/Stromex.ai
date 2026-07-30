@@ -6,10 +6,12 @@ from app.db.models.book import Book, BookChapter
 from app.db.models.conversation import Conversation, Message
 from app.db.models.memory import MemoryItem
 from app.db.models.quran import QuranPlan, QuranReviewLog, QuranRevisionItem
-from app.db.models.user import User
+from app.db.models.user import AuthToken, AuthTokenPurpose, User
 
 __all__ = [
     "AuditLog",
+    "AuthToken",
+    "AuthTokenPurpose",
     "Book",
     "BookChapter",
     "Conversation",

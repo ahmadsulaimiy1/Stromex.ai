@@ -14,6 +14,8 @@ export interface UserRead {
   role: "user" | "admin";
   preferred_language: string;
   is_active: boolean;
+  is_guest: boolean;
+  is_verified: boolean;
 }
 
 export interface TokenPair {

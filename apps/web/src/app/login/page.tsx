@@ -62,10 +62,20 @@ export default function LoginPage() {
             Sign in
           </Button>
         </form>
-        <p className="mt-6 text-center text-sm text-[color:var(--fg-muted)]">
+        <p className="mt-4 text-center text-sm">
+          <Link href="/reset-password" className="text-brass hover:underline">
+            Forgot your password?
+          </Link>
+        </p>
+        <p className="mt-2 text-center text-sm text-[color:var(--fg-muted)]">
           No account yet?{" "}
           <Link href="/register" className="font-medium text-brass hover:underline">
             Create one
+          </Link>
+        </p>
+        <p className="mt-6 text-center text-xs text-[color:var(--fg-muted)]">
+          <Link href="/welcome" className="hover:underline">
+            ← Other ways to sign in
           </Link>
         </p>
       </div>

@@ -3,9 +3,27 @@
 // backend — a mobile Pixel-5-sized viewport stands in for the WebView since
 // no real Android emulator/device is available in this sandbox.
 import { chromium, devices } from 'playwright';
+import { readFileSync } from 'node:fs';
+import { execSync } from 'node:child_process';
 
 const BASE = 'http://127.0.0.1:4173';
+const API_BASE = 'http://localhost:8000';
+const BACKEND_LOG = process.env.BACKEND_LOG || '';
 const results = [];
+
+// Dev mode logs password-reset/verify-email links instead of sending them
+// (see app/core/email.py) — scraping the token back out of the backend's
+// own log is what lets this test drive the *entire* email-verification loop
+// for real, not just "the endpoint returned 202".
+function tokenFromBackendLog(email) {
+  if (!BACKEND_LOG) return null;
+  const log = readFileSync(BACKEND_LOG, 'utf8');
+  const lines = log.split('\n').filter((l) => l.includes('to=' + email));
+  const last = lines[lines.length - 1];
+  if (!last) return null;
+  const match = last.match(/token=([\w-]+)/);
+  return match ? match[1] : null;
+}
 
 function record(name, ok, detail) {
   results.push({ name, ok, detail: detail || '' });
@@ -46,9 +64,10 @@ async function run() {
     const tag = mode === 'dark' ? ' [dark mode]' : ' [light mode]';
     const email = `android-qa-${Date.now()}-${emailCounter++}@stromex.ai`;
 
-    // 1. Load home page
+    // 1. Load home page: unauthenticated visitors land on the new
+    // Google/Email/Guest welcome screen, not straight into /login.
     await page.goto(`${BASE}/index.html`, { waitUntil: 'networkidle' });
-    record(`home page loads${tag}`, true, page.url());
+    record(`home page redirects to /welcome${tag}`, page.url().endsWith('/welcome'), page.url());
 
     // 2. Registration flow
     await page.goto(`${BASE}/register.html`, { waitUntil: 'networkidle' });
@@ -170,6 +189,159 @@ async function run() {
   const lowEndLoaded = (await lowEndPage.locator('body').innerText()).length > 0;
   record('low-end/throttled device: home page still loads', lowEndLoaded);
   await lowEndContext.close();
+
+  // --- Modern auth: guest mode, Google wiring, password reset, email verify, logout-all ---
+  // Resets the register/login rate-limit counters this section is about to
+  // exercise fresh — without this, the light+dark passes above already
+  // consumed most of the 5/hour register allowance and everything past
+  // this point would 429 as a test-harness artifact, not a real finding
+  // (the limiter itself working correctly is exactly what the earlier
+  // Android QA bug-fix report already covers).
+  try {
+    execSync('redis-cli --scan --pattern "ratelimit:*" | xargs -r redis-cli del', { stdio: 'ignore' });
+  } catch {
+    // best-effort — if redis-cli isn't on PATH here, the checks below will
+    // simply fail loudly on 429s instead, which is still an honest result.
+  }
+
+  const authContext = await browser.newContext({ ...devices['Pixel 5'] });
+  const authPage = await authContext.newPage();
+
+  // Guest mode: welcome screen -> Continue as Guest -> immediately in /chat
+  // with no email/password, and Settings correctly reflects guest status.
+  await authPage.goto(`${BASE}/welcome.html`, { waitUntil: 'networkidle' });
+  const googleButtonVisible = await authPage
+    .locator('button:has-text("Continue with Google")')
+    .isVisible()
+    .catch(() => false);
+  const emailButtonVisible = await authPage
+    .locator('button:has-text("Continue with Email")')
+    .isVisible()
+    .catch(() => false);
+  const guestButton = authPage.locator('button:has-text("Continue as Guest")');
+  const guestButtonVisible = await guestButton.isVisible().catch(() => false);
+  record(
+    'welcome screen shows Google/Email/Guest options',
+    googleButtonVisible && emailButtonVisible && guestButtonVisible,
+    `google=${googleButtonVisible} email=${emailButtonVisible} guest=${guestButtonVisible}`,
+  );
+
+  await guestButton.click();
+  await authPage.waitForURL((u) => u.pathname.endsWith('/chat'), { timeout: 10000 }).catch(() => {});
+  record('continue-as-guest lands in /chat', authPage.url().endsWith('/chat'), authPage.url());
+
+  await authPage.goto(`${BASE}/settings.html`, { waitUntil: 'networkidle' });
+  const settingsBody = await authPage.locator('body').innerText();
+  record(
+    'settings page identifies guest account and offers upgrade',
+    settingsBody.includes('Guest') && settingsBody.includes('Create a full account'),
+    settingsBody.slice(0, 120),
+  );
+
+  // Google Sign-In: this sandbox has no real Google Cloud OAuth credentials
+  // configured (see docs/10-STROMEX-AUTH-FEATURE.md) — the correct,
+  // verifiable behavior right now is a clean 503 from the backend rather
+  // than a redirect into a client id that doesn't exist. Hit the backend
+  // directly (not through the page) so this isn't tangled up with browser
+  // navigation/redirect handling.
+  const authorizeResp = await authContext.request.get(
+    `${API_BASE}/api/v1/auth/google/authorize?platform=web`,
+    { maxRedirects: 0 },
+  );
+  record(
+    'Google authorize endpoint responds correctly for its current (unconfigured) state',
+    authorizeResp.status() === 503,
+    `HTTP ${authorizeResp.status()}`,
+  );
+
+  // Password reset: full loop through the actual UI, including scraping the
+  // dev-mode-logged reset link back out of the backend's own log so this
+  // exercises confirm too, not just "the request endpoint answered 202".
+  const resetEmail = `android-qa-reset-${Date.now()}@stromex.ai`;
+  await authContext.request.post(`${API_BASE}/api/v1/auth/register`, {
+    data: { email: resetEmail, password: 'OldPassword-2026!', display_name: 'Reset QA' },
+  });
+  await authPage.goto(`${BASE}/reset-password.html`, { waitUntil: 'networkidle' });
+  await authPage.locator('input[type="email"]').first().fill(resetEmail);
+  await authPage.locator('button[type="submit"]').first().click();
+  await authPage.waitForTimeout(500);
+  const resetRequestBody = await authPage.locator('body').innerText();
+  record(
+    'password-reset request shows non-committal confirmation',
+    resetRequestBody.includes(resetEmail),
+    resetRequestBody.slice(0, 120),
+  );
+
+  const resetToken = tokenFromBackendLog(resetEmail);
+  if (resetToken) {
+    await authPage.goto(`${BASE}/reset-password.html?token=${resetToken}`, { waitUntil: 'networkidle' });
+    await authPage.locator('input[type="password"]').first().fill('BrandNewPassword-2026!');
+    await authPage.locator('button[type="submit"]').first().click();
+    await authPage.waitForURL((u) => u.pathname.endsWith('/login'), { timeout: 10000 }).catch(() => {});
+    record('password-reset confirm redirects to /login', authPage.url().endsWith('/login'), authPage.url());
+
+    const newLoginResp = await authContext.request.post(`${API_BASE}/api/v1/auth/login`, {
+      data: { email: resetEmail, password: 'BrandNewPassword-2026!' },
+    });
+    record('new password works after reset', newLoginResp.status() === 200, `HTTP ${newLoginResp.status()}`);
+  } else {
+    record(
+      'password-reset confirm (skipped: could not read backend log for token)',
+      false,
+      `BACKEND_LOG=${BACKEND_LOG || '(not set)'}`,
+    );
+  }
+
+  // Email verification: same log-scrape approach, driven through /verify-email.
+  const verifyEmail = `android-qa-verify-${Date.now()}@stromex.ai`;
+  await authContext.request.post(`${API_BASE}/api/v1/auth/register`, {
+    data: { email: verifyEmail, password: 'VerifyMe-2026!', display_name: 'Verify QA' },
+  });
+  const verifyToken = tokenFromBackendLog(verifyEmail);
+  if (verifyToken) {
+    await authPage.goto(`${BASE}/verify-email.html?token=${verifyToken}`, { waitUntil: 'networkidle' });
+    await authPage.waitForTimeout(500);
+    const verifyBody = await authPage.locator('body').innerText();
+    record('email verification confirms via UI', verifyBody.includes('verified'), verifyBody.slice(0, 120));
+  } else {
+    record(
+      'email verification (skipped: could not read backend log for token)',
+      false,
+      `BACKEND_LOG=${BACKEND_LOG || '(not set)'}`,
+    );
+  }
+
+  // Logout-all-devices: sign in normally, then confirm the button in
+  // Settings actually invalidates the session (bounced to /login, and the
+  // old access token stops working against the API directly).
+  const logoutAllEmail = `android-qa-logout-all-${Date.now()}@stromex.ai`;
+  await authContext.request.post(`${API_BASE}/api/v1/auth/register`, {
+    data: { email: logoutAllEmail, password: 'LogoutAll-2026!', display_name: 'Logout All QA' },
+  });
+  await authPage.goto(`${BASE}/login.html`, { waitUntil: 'networkidle' });
+  await authPage.locator('input[type="email"]').first().fill(logoutAllEmail);
+  await authPage.locator('input[type="password"]').first().fill('LogoutAll-2026!');
+  await authPage.locator('button[type="submit"]').first().click();
+  await authPage.waitForURL((u) => !u.pathname.endsWith('/login'), { timeout: 10000 }).catch(() => {});
+  const accessTokenBeforeLogoutAll = await authPage.evaluate(() =>
+    window.localStorage.getItem('stromex.access_token'),
+  );
+
+  await authPage.goto(`${BASE}/settings.html`, { waitUntil: 'networkidle' });
+  await authPage.locator('button:has-text("Sign out of all devices")').click();
+  await authPage.waitForURL((u) => u.pathname.endsWith('/login'), { timeout: 10000 }).catch(() => {});
+  record('logout-all-devices redirects to /login', authPage.url().endsWith('/login'), authPage.url());
+
+  const meAfterLogoutAll = await authContext.request.get(`${API_BASE}/api/v1/auth/me`, {
+    headers: { Authorization: `Bearer ${accessTokenBeforeLogoutAll}` },
+  });
+  record(
+    'old access token is rejected after logout-all',
+    meAfterLogoutAll.status() === 401,
+    `HTTP ${meAfterLogoutAll.status()}`,
+  );
+
+  await authContext.close();
 
   await browser.close();
 

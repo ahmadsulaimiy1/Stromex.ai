@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/chat", label: "Chat" },
   { href: "/quran", label: "Qur'an" },
   { href: "/books", label: "Books" },
+  { href: "/settings", label: "Settings" },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {

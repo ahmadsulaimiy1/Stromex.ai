@@ -10,6 +10,8 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -33,6 +35,12 @@ public class MainActivity extends Activity {
 
     private static final String VIRTUAL_HOST = "stromex.local";
     private static final String START_URL = "https://" + VIRTUAL_HOST + "/index.html";
+    // Must match the intent-filter in AndroidManifest.xml and the backend's
+    // APP_DEEP_LINK_SCHEME setting (see app/core/config.py) — this is where
+    // POST-code-exchange /auth/google/callback sends the system browser once
+    // sign-in with Google succeeds.
+    private static final String AUTH_CALLBACK_SCHEME = "ai.stromex.app";
+    private static final String AUTH_CALLBACK_HOST = "auth-callback";
 
     private WebView webView;
 
@@ -67,15 +75,56 @@ public class MainActivity extends Activity {
                 if (VIRTUAL_HOST.equals(uri.getHost())) {
                     return false; // keep in-app navigation inside the WebView
                 }
-                // Anything else (an external link, if one is ever added) opens
-                // in the system browser rather than navigating the app away
-                // from itself.
+                // Anything else — an external link, or Google's own sign-in
+                // pages — opens in the system browser rather than navigating
+                // the app's WebView there. This isn't just a UX choice:
+                // Google's terms disallow completing sign-in inside an
+                // embedded WebView at all, so this is the one legitimate way
+                // "Continue with Google" can work from this app.
                 startActivity(new Intent(Intent.ACTION_VIEW, uri));
                 return true;
             }
         });
 
         webView.loadUrl(START_URL);
+        handleIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleIntent(intent);
+    }
+
+    /**
+     * Recognizes the Google Sign-In callback deep link
+     * (ai.stromex.app://auth-callback?access_token=...&refresh_token=...),
+     * pulled in by the intent-filter in AndroidManifest.xml once the system
+     * browser finishes the OAuth round trip. Everything else (a cold app
+     * launch with no special intent) is a no-op.
+     */
+    private void handleIntent(Intent intent) {
+        if (intent == null) return;
+        Uri uri = intent.getData();
+        if (uri == null || !AUTH_CALLBACK_SCHEME.equals(uri.getScheme())
+                || !AUTH_CALLBACK_HOST.equals(uri.getHost())) {
+            return;
+        }
+
+        String accessToken = uri.getQueryParameter("access_token");
+        String refreshToken = uri.getQueryParameter("refresh_token");
+        if (accessToken == null || refreshToken == null) {
+            return;
+        }
+
+        // Same localStorage keys apps/web/src/lib/auth-storage.ts uses, so
+        // the web app's own auth state (useAuth.hydrate()) picks these up
+        // exactly as if it had called POST /auth/login itself.
+        String script = "localStorage.setItem('stromex.access_token', " + JSONObject.quote(accessToken) + ");"
+                + "localStorage.setItem('stromex.refresh_token', " + JSONObject.quote(refreshToken) + ");"
+                + "location.href = 'https://" + VIRTUAL_HOST + "/chat.html';";
+        webView.evaluateJavascript(script, null);
     }
 
     @Override

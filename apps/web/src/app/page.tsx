@@ -15,7 +15,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (status === "authenticated") router.replace("/chat");
-    if (status === "unauthenticated") router.replace("/login");
+    if (status === "unauthenticated") router.replace("/welcome");
   }, [status, router]);
 
   return (

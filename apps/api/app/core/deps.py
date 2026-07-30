@@ -4,7 +4,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
-from app.core.security import TokenError, TokenType, decode_token
+from app.core.security import TokenError, TokenType, decode_token_full
 from app.db.base import get_db
 from app.db.models.user import User, UserRole
 
@@ -22,7 +22,7 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     try:
-        user_id = decode_token(credentials.credentials, TokenType.ACCESS)
+        decoded = decode_token_full(credentials.credentials, TokenType.ACCESS)
     except TokenError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -30,9 +30,19 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         ) from exc
 
-    user = db.get(User, user_id)
+    user = db.get(User, decoded.user_id)
     if user is None or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or inactive")
+    # POST /auth/logout-all bumps token_version to invalidate every
+    # previously issued access/refresh token in one step — an access token
+    # minted under an older version is rejected here even though it hasn't
+    # naturally expired yet.
+    if decoded.token_version != user.token_version:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has been invalidated by a sign-out on all devices",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     return user
 
 

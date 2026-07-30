@@ -45,6 +45,37 @@ class Settings(BaseSettings):
     # --- Admin bootstrap ---
     admin_bootstrap_email: str | None = None
 
+    # --- Frontend / mobile app links (used to build password-reset, email-
+    # verification, and OAuth-callback links that appear outside the API
+    # itself — an email, a browser redirect, a mobile deep link) ---
+    frontend_base_url: str = "http://localhost:3000"
+    # The Android app's registered custom-scheme deep link
+    # (ai.stromex.app://auth-callback?...) that the Google OAuth callback
+    # redirects into after a successful sign-in — see MainActivity's
+    # intent-filter in apps/android/AndroidManifest.xml.
+    app_deep_link_scheme: str = "ai.stromex.app"
+
+    # --- Email delivery ---
+    # Unset (the default): password-reset/verification links are logged via
+    # `app/core/email.py` instead of sent — no external account required to
+    # run and test the full flow. Set every smtp_* field to send real email.
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_use_tls: bool = True
+    smtp_from_address: str = "no-reply@stromex.ai"
+
+    # --- Google Sign-In ---
+    # All unset by default: Sign-in with Google requires a real OAuth 2.0
+    # Client (type "Web application") from https://console.cloud.google.com,
+    # with google_redirect_uri added to its Authorized redirect URIs. Until
+    # these are set, GET /api/v1/auth/google/authorize returns 503 rather
+    # than redirecting into a client id that doesn't exist.
+    google_client_id: str | None = None
+    google_client_secret: str | None = None
+    google_redirect_uri: str | None = None
+
     def validate_for_production(self) -> None:
         """Audit finding: nothing stopped `ENVIRONMENT=production` from
         booting with the placeholder secret key, a local-file Qdrant store

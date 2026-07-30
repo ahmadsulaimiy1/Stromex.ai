@@ -26,6 +26,8 @@ class UserRead(BaseModel):
     role: UserRole
     preferred_language: str
     is_active: bool
+    is_guest: bool
+    is_verified: bool
 
 
 class TokenPair(BaseModel):

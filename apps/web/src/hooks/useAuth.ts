@@ -11,7 +11,12 @@ interface AuthState {
   status: "idle" | "loading" | "authenticated" | "unauthenticated";
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<void>;
+  loginAsGuest: () => Promise<void>;
+  upgradeGuest: (email: string, password: string, displayName: string) => Promise<void>;
+  adoptSession: (accessToken: string, refreshToken: string) => Promise<void>;
   logout: () => Promise<void>;
+  logoutAllDevices: () => Promise<void>;
+  deleteAccount: (password?: string) => Promise<void>;
   hydrate: () => Promise<void>;
 }
 
@@ -38,6 +43,42 @@ export const useAuth = create<AuthState>((set) => ({
     setTokens(pair.access_token, pair.refresh_token);
     const user = await api.get<UserRead>("/api/v1/auth/me");
     set({ user, status: "authenticated" });
+  },
+
+  async loginAsGuest() {
+    set({ status: "loading" });
+    const pair = await api.post<TokenPair>("/api/v1/auth/guest", undefined, false);
+    setTokens(pair.access_token, pair.refresh_token);
+    const user = await api.get<UserRead>("/api/v1/auth/me");
+    set({ user, status: "authenticated" });
+  },
+
+  async upgradeGuest(email, password, displayName) {
+    const user = await api.post<UserRead>("/api/v1/auth/guest/upgrade", {
+      email,
+      password,
+      display_name: displayName,
+    });
+    set({ user });
+  },
+
+  async adoptSession(accessToken, refreshToken) {
+    set({ status: "loading" });
+    setTokens(accessToken, refreshToken);
+    const user = await api.get<UserRead>("/api/v1/auth/me");
+    set({ user, status: "authenticated" });
+  },
+
+  async logoutAllDevices() {
+    await api.post("/api/v1/auth/logout-all");
+    clearTokens();
+    set({ user: null, status: "unauthenticated" });
+  },
+
+  async deleteAccount(password) {
+    await api.delete("/api/v1/auth/me", password ? { password } : {});
+    clearTokens();
+    set({ user: null, status: "unauthenticated" });
   },
 
   async logout() {

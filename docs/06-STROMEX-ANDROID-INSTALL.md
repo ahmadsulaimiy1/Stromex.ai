@@ -50,9 +50,13 @@ against a real backend:
    its reachable URL/IP.
 2. Add that URL's origin to the backend's `CORS_ORIGINS` — the app also needs
    `https://stromex.local` in that list (see `apps/api/.env.example`).
-3. Rebuild the web bundle with `NEXT_PUBLIC_API_URL` set to that URL, copy it
-   into `apps/android/assets/`, and re-run `apps/android/build.sh` (see the
-   build doc for exact commands).
+3. Update `apps/android/environments/<environment>.env` with that URL (or
+   export `NEXT_PUBLIC_API_URL` to override it without editing the file),
+   then run `apps/android/build-for-env.sh <development|staging|production>`
+   — this rebuilds the web bundle with that URL baked in, copies it into
+   `apps/android/assets/`, and runs the full Android build (see
+   `docs/10-STROMEX-AUTH-FEATURE.md` for why this is a build-time choice,
+   not a runtime setting).
 4. Install the freshly built APK/AAB as above.
 
 There is currently no in-app settings screen to change the API URL after
