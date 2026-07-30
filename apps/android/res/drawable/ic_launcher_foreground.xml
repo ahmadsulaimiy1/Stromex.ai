@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The StromeX mark ("The Index"): a fixed ring and a single settling
+     index line — see docs/ brand system. Same coordinates as the brand
+     book's SVG mark (100-unit grid), offset +4/+4 to sit inside the
+     adaptive icon's 108dp viewport. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M90,54 A36,36 0 1,0 18,54 A36,36 0 1,0 90,54 Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4.2"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M14.59,29.01 L100.25,60.19"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4.2"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M24.92,32.77 m-3.1,0 a3.1,3.1 0 1,0 6.2,0 a3.1,3.1 0 1,0 -6.2,0"
+        android:fillColor="#FFFFFF" />
+    <path
+        android:pathData="M89.92,56.43 m-3.1,0 a3.1,3.1 0 1,0 6.2,0 a3.1,3.1 0 1,0 -6.2,0"
+        android:fillColor="#FFFFFF" />
+    <path
+        android:pathData="M54,54 m-2.1,0 a2.1,2.1 0 1,0 4.2,0 a2.1,2.1 0 1,0 -4.2,0"
+        android:fillColor="#FFFFFF" />
+</vector>

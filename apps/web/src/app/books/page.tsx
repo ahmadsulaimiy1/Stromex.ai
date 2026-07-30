@@ -67,7 +67,7 @@ function BooksPage() {
 
       <div className="grid grid-cols-2 gap-4">
         {books.map((book) => (
-          <Link key={book.id} href={`/books/${book.id}`}>
+          <Link key={book.id} href={`/books/detail?id=${book.id}`}>
             <Card className="transition-colors hover:bg-[color:var(--bg)]">
               <h3 className="font-display text-base font-semibold">{book.title}</h3>
               <p className="text-sm text-[color:var(--fg-muted)]">{book.author_name}</p>

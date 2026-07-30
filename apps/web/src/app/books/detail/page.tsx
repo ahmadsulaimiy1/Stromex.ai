@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { RequireAuth } from "@/components/layout/RequireAuth";
 import { Button } from "@/components/ui/Button";
@@ -47,11 +47,15 @@ function ChapterEditor({ bookId, chapter, onSaved }: { bookId: string; chapter: 
 }
 
 function BookDetailPage() {
-  const params = useParams<{ bookId: string }>();
-  const bookId = params.bookId;
+  // A query param (?id=) rather than a dynamic route segment ([bookId]) —
+  // deliberate, so this route is statically exportable for the Android
+  // WebView bundle without needing generateStaticParams for every book id.
+  const searchParams = useSearchParams();
+  const bookId = searchParams.get("id") ?? "";
   const [book, setBook] = useState<BookWithChapters | null>(null);
 
   async function loadBook() {
+    if (!bookId) return;
     setBook(await api.get<BookWithChapters>(`/api/v1/books/${bookId}`));
   }
 
@@ -86,6 +90,10 @@ function BookDetailPage() {
       });
   }
 
+  if (!bookId) {
+    return <div className="p-6 text-sm text-[color:var(--fg-muted)]">No book selected.</div>;
+  }
+
   if (!book) {
     return <div className="p-6 text-sm text-[color:var(--fg-muted)]">Loading…</div>;
   }
@@ -116,7 +124,9 @@ function BookDetailPage() {
 export default function Page() {
   return (
     <RequireAuth>
-      <BookDetailPage />
+      <Suspense fallback={<div className="p-6 text-sm text-[color:var(--fg-muted)]">Loading…</div>}>
+        <BookDetailPage />
+      </Suspense>
     </RequireAuth>
   );
 }

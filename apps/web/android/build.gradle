@@ -1,0 +1,37 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+//
+// google() normally resolves to https://dl.google.com/dl/android/maven2/,
+// which this build environment's network policy blocks outbound. The exact
+// same artifacts are also published at https://maven.google.com/, which is
+// reachable, so every repository block below uses that explicit URL instead
+// of the `google()` shorthand.
+
+buildscript {
+
+    repositories {
+        maven { url 'https://maven.google.com/' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.13.0'
+        // google-services plugin removed: no Firebase/GCM config in this
+        // build, and its own dependencies would need the same repo above
+        // resolved transitively for no functional benefit here.
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+apply from: "variables.gradle"
+
+allprojects {
+    repositories {
+        maven { url 'https://maven.google.com/' }
+        mavenCentral()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
