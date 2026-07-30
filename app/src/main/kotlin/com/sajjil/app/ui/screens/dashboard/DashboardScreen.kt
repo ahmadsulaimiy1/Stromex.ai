@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -18,6 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.sajjil.app.ui.components.GlassCard
+import com.sajjil.app.ui.components.SpectrogramView
 import com.sajjil.core.analysis.AudioAnalysisReport
 
 @Composable
@@ -26,7 +30,10 @@ fun DashboardScreen(viewModel: DashboardViewModel, recordingId: Long, modifier: 
 
     LaunchedEffect(recordingId) { viewModel.load(recordingId) }
 
-    Column(modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(
+        modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
         Text("Executive Dashboard", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
 
         if (state.isLoading) {
@@ -37,26 +44,34 @@ fun DashboardScreen(viewModel: DashboardViewModel, recordingId: Long, modifier: 
         state.recording?.let { recording -> Text(recording.title, style = MaterialTheme.typography.titleLarge) }
 
         state.report?.let { report -> DashboardScores(report) }
+
+        state.spectrogram?.let { spectrogram ->
+            Text("Spectrogram", style = MaterialTheme.typography.titleMedium)
+            SpectrogramView(spectrogram)
+        }
     }
 }
 
 @Composable
 private fun DashboardScores(report: AudioAnalysisReport) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        ScoreMeter("Studio Readiness", report.studioReadinessScore)
-        ScoreMeter("Broadcast Readiness", report.broadcastReadinessScore)
-        ScoreMeter("Archive Readiness", report.archiveReadinessScore)
-        ScoreMeter("Clarity Score", report.clarityScore)
-        ScoreMeter("Noise Score", report.noiseScore)
-        ScoreMeter("Loudness Score", report.loudnessScore)
-        ScoreMeter("Dynamics Score", report.dynamicsScore)
+    GlassCard {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            ScoreMeter("Studio Readiness", report.studioReadinessScore)
+            ScoreMeter("Broadcast Readiness", report.broadcastReadinessScore)
+            ScoreMeter("Archive Readiness", report.archiveReadinessScore)
+            ScoreMeter("Clarity Score", report.clarityScore)
+            ScoreMeter("Noise Score", report.noiseScore)
+            ScoreMeter("Loudness Score", report.loudnessScore)
+            ScoreMeter("Dynamics Score", report.dynamicsScore)
+            report.echoScore?.let { ScoreMeter("Echo Score", it) }
 
-        Text("Loudness Metrics", style = MaterialTheme.typography.titleMedium)
-        Text("Peak: ${"%.1f".format(report.loudness.peakDb)} dBFS")
-        Text("RMS: ${"%.1f".format(report.loudness.rmsDb)} dBFS")
-        Text("Integrated Loudness: ${"%.1f".format(report.loudness.integratedLoudnessLufs)} LUFS")
-        Text("Dynamic Range: ${"%.1f".format(report.loudness.dynamicRangeDb)} dB")
-        Text("Noise Floor: ${"%.1f".format(report.loudness.noiseFloorDb)} dBFS")
+            Text("Loudness Metrics", style = MaterialTheme.typography.titleMedium)
+            Text("Peak: ${"%.1f".format(report.loudness.peakDb)} dBFS")
+            Text("RMS: ${"%.1f".format(report.loudness.rmsDb)} dBFS")
+            Text("Integrated Loudness: ${"%.1f".format(report.loudness.integratedLoudnessLufs)} LUFS")
+            Text("Dynamic Range: ${"%.1f".format(report.loudness.dynamicRangeDb)} dB")
+            Text("Noise Floor: ${"%.1f".format(report.loudness.noiseFloorDb)} dBFS")
+        }
     }
 }
 

@@ -40,4 +40,18 @@ class LoudnessAnalyzerTest {
             assertTrue(score in 0..100, "score out of range: $score")
         }
     }
+
+    @Test
+    fun `echoScore is null without an RT60 measurement and present with one`() {
+        val tone = FloatArray(sampleRate) { (0.3 * sin(2.0 * PI * 440 * it / sampleRate)).toFloat() }
+        val metrics = LoudnessAnalyzer.analyze(tone, sampleRate)
+
+        val withoutRt60 = AudioQualityScorer.score(metrics)
+        assertTrue(withoutRt60.echoScore == null)
+
+        val dryReport = AudioQualityScorer.score(metrics, rt60Seconds = 0.2)
+        val reverberantReport = AudioQualityScorer.score(metrics, rt60Seconds = 1.5)
+        assertTrue(dryReport.echoScore != null && reverberantReport.echoScore != null)
+        assertTrue(dryReport.echoScore!! > reverberantReport.echoScore!!, "a drier room should score higher than a reverberant one")
+    }
 }

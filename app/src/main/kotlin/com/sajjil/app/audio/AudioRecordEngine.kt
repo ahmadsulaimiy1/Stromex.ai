@@ -1,6 +1,7 @@
 package com.sajjil.app.audio
 
 import android.Manifest
+import android.media.AudioDeviceInfo
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
@@ -8,7 +9,9 @@ import androidx.annotation.RequiresPermission
 import com.sajjil.core.audio.BitDepth
 import com.sajjil.core.audio.WavStreamWriter
 import com.sajjil.core.dsp.AudioProcessingChain
+import com.sajjil.core.dsp.ParametricEqualizer
 import com.sajjil.core.dsp.ProcessingChainConfig
+import com.sajjil.core.modes.MicrophoneProfile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -39,8 +42,15 @@ class AudioRecordEngine(
     private val requestedSampleRate: Int,
     private val outputBitDepth: BitDepth,
     chainConfig: ProcessingChainConfig,
+    microphoneProfile: MicrophoneProfile = MicrophoneProfile.default,
+    private val preferredInputDevice: AudioDeviceInfo? = null,
 ) {
     private val chain = AudioProcessingChain(effectiveSampleRate(requestedSampleRate), chainConfig)
+    private val microphoneCorrection = if (microphoneProfile.correctionBands.isEmpty()) {
+        null
+    } else {
+        ParametricEqualizer.parametric(effectiveSampleRate(requestedSampleRate), microphoneProfile.correctionBands)
+    }
     private var audioRecord: AudioRecord? = null
     private var writer: WavStreamWriter? = null
     private var recordingJob: Job? = null
@@ -69,6 +79,7 @@ class AudioRecordEngine(
             AudioFormat.ENCODING_PCM_16BIT,
             bufferSize,
         )
+        preferredInputDevice?.let { record.preferredDevice = it }
         audioRecord = record
         writer = WavStreamWriter(outputFile, sampleRate, channels = 1, bitDepth = outputBitDepth)
 
@@ -86,7 +97,8 @@ class AudioRecordEngine(
                 var sumSquares = 0.0
                 for (i in 0 until read) {
                     val normalized = shortBuffer[i] / 32768f
-                    val processed = chain.process(normalized)
+                    val calibrated = microphoneCorrection?.process(normalized) ?: normalized
+                    val processed = chain.process(calibrated)
                     floatBuffer[i] = processed
                     val a = abs(processed)
                     if (a > peak) peak = a
@@ -119,7 +131,10 @@ class AudioRecordEngine(
         outputFile
     }
 
-    fun reset() = chain.reset()
+    fun reset() {
+        chain.reset()
+        microphoneCorrection?.reset()
+    }
 
     companion object {
         /** Falls back toward 48kHz if the device can't honor an exotic requested rate. */

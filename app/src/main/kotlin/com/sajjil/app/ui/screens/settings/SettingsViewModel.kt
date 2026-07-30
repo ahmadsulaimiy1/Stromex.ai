@@ -14,7 +14,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private val app = application.asSajjilApplication()
 
     val theme: StateFlow<SajjilTheme> = app.settingsRepository.theme
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SajjilTheme.ROYAL_GOLD)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SajjilTheme.ROYAL_NAVY_DEEP)
 
     fun setTheme(theme: SajjilTheme) {
         viewModelScope.launch { app.settingsRepository.setTheme(theme) }

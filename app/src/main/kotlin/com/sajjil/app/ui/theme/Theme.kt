@@ -8,21 +8,22 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
+/** Tighter tracking on display sizes, generous tracking on labels — an editorial/executive-dashboard rhythm. */
 val SajjilTypography = Typography(
-    headlineLarge = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 30.sp, letterSpacing = 0.2.sp),
-    headlineMedium = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 24.sp, letterSpacing = 0.2.sp),
-    titleLarge = TextStyle(fontWeight = FontWeight.Medium, fontSize = 20.sp, letterSpacing = 0.1.sp),
+    headlineLarge = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 30.sp, letterSpacing = (-0.3).sp),
+    headlineMedium = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 24.sp, letterSpacing = (-0.2).sp),
+    titleLarge = TextStyle(fontWeight = FontWeight.Medium, fontSize = 20.sp, letterSpacing = (-0.1).sp),
     titleMedium = TextStyle(fontWeight = FontWeight.Medium, fontSize = 16.sp, letterSpacing = 0.1.sp),
     bodyLarge = TextStyle(fontWeight = FontWeight.Normal, fontSize = 16.sp, letterSpacing = 0.15.sp),
     bodyMedium = TextStyle(fontWeight = FontWeight.Normal, fontSize = 14.sp, letterSpacing = 0.15.sp),
     labelLarge = TextStyle(fontWeight = FontWeight.Medium, fontSize = 14.sp, letterSpacing = 0.4.sp),
-    labelMedium = TextStyle(fontWeight = FontWeight.Medium, fontSize = 12.sp, letterSpacing = 0.4.sp),
+    labelMedium = TextStyle(fontWeight = FontWeight.Medium, fontSize = 12.sp, letterSpacing = 0.5.sp),
 )
 
-/** Applies the selected [SajjilTheme]; defaults to Royal Gold when none is persisted yet. */
+/** Applies the selected [SajjilTheme]; defaults to Royal Navy Deep when none is persisted yet. */
 @Composable
 fun SajjilAppTheme(
-    theme: SajjilTheme = if (isSystemInDarkTheme()) SajjilTheme.ROYAL_GOLD else SajjilTheme.PLATINUM_WHITE,
+    theme: SajjilTheme = if (isSystemInDarkTheme()) SajjilTheme.ROYAL_NAVY_DEEP else SajjilTheme.PLATINUM_WHITE,
     content: @Composable () -> Unit,
 ) {
     MaterialTheme(

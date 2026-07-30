@@ -18,12 +18,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,6 +36,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.media.AudioDeviceInfo
+import com.sajjil.app.audio.AudioInputDevices
+import com.sajjil.core.analysis.AcousticProfile
+import com.sajjil.core.modes.MicrophoneProfile
 import com.sajjil.core.modes.RecordingMode
 import com.sajjil.core.modes.RecordingQuality
 import kotlin.math.roundToInt
@@ -64,6 +71,30 @@ fun RecordScreen(viewModel: RecordViewModel, modifier: Modifier = Modifier) {
             selected = state.quality,
             enabled = !state.isRecording,
             onSelect = viewModel::selectQuality,
+        )
+
+        if (state.availableInputDevices.size > 1) {
+            InputDeviceSelector(
+                devices = state.availableInputDevices,
+                selected = state.selectedInputDevice,
+                enabled = !state.isRecording,
+                onSelect = viewModel::selectInputDevice,
+            )
+        }
+
+        MicrophoneProfileSelector(
+            selected = state.microphoneProfile,
+            enabled = !state.isRecording,
+            onSelect = viewModel::selectMicrophoneProfile,
+        )
+
+        RoomCheckSection(
+            isChecking = state.isCheckingRoom,
+            profile = state.roomProfile,
+            enabled = !state.isRecording,
+            onCheckRoom = viewModel::runRoomCheck,
+            onApplyRecommendedMode = viewModel::applyRecommendedMode,
+            onDismiss = viewModel::dismissRoomCheck,
         )
 
         LevelMeterCard(peakDb = state.level.peakDb, rmsDb = state.level.rmsDb)
@@ -116,6 +147,97 @@ private fun QualitySelector(selected: RecordingQuality, enabled: Boolean, onSele
                     enabled = enabled,
                     onClick = { onSelect(quality) },
                     label = { Text(quality.displayName) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun InputDeviceSelector(
+    devices: List<AudioDeviceInfo>,
+    selected: AudioDeviceInfo?,
+    enabled: Boolean,
+    onSelect: (AudioDeviceInfo?) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Input Device", style = MaterialTheme.typography.titleMedium)
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            item {
+                FilterChip(
+                    selected = selected == null,
+                    enabled = enabled,
+                    onClick = { onSelect(null) },
+                    label = { Text("Default") },
+                )
+            }
+            items(devices) { device ->
+                FilterChip(
+                    selected = device.id == selected?.id,
+                    enabled = enabled,
+                    onClick = { onSelect(device) },
+                    label = { Text(AudioInputDevices.friendlyName(device)) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MicrophoneProfileSelector(selected: MicrophoneProfile, enabled: Boolean, onSelect: (MicrophoneProfile) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Microphone", style = MaterialTheme.typography.titleMedium)
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(MicrophoneProfile.entries) { profile ->
+                FilterChip(
+                    selected = profile == selected,
+                    enabled = enabled,
+                    onClick = { onSelect(profile) },
+                    label = { Text(profile.displayName) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RoomCheckSection(
+    isChecking: Boolean,
+    profile: AcousticProfile?,
+    enabled: Boolean,
+    onCheckRoom: () -> Unit,
+    onApplyRecommendedMode: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text("AI Acoustic Intelligence", style = MaterialTheme.typography.titleMedium)
+                if (isChecking) {
+                    CircularProgressIndicator(modifier = Modifier.height(18.dp), strokeWidth = 2.dp)
+                } else {
+                    OutlinedButton(onClick = onCheckRoom, enabled = enabled) { Text("Check Room (3s)") }
+                }
+            }
+            if (profile != null) {
+                Text("Echo: ${profile.echoSeverity.name.lowercase().replaceFirstChar(Char::uppercase)}", style = MaterialTheme.typography.bodyMedium)
+                profile.estimatedRt60Seconds?.let {
+                    Text("Estimated decay time: ${"%.1f".format(it)}s", style = MaterialTheme.typography.bodyMedium)
+                }
+                profile.recommendations.forEach { note ->
+                    Text("• $note", style = MaterialTheme.typography.bodyMedium)
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (profile.recommendedModeName != null) {
+                        Button(onClick = onApplyRecommendedMode) { Text("Use Suggested Profile") }
+                    }
+                    OutlinedButton(onClick = onDismiss) { Text("Dismiss") }
+                }
+            } else if (!isChecking) {
+                Text(
+                    "Run a 3-second room check before recording to catch noise, echo and clipping risk early.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 )
             }
         }

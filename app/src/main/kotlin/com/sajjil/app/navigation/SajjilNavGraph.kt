@@ -29,6 +29,8 @@ import androidx.navigation.NavType
 import com.sajjil.app.SajjilApplication
 import com.sajjil.app.ui.screens.archive.ArchiveScreen
 import com.sajjil.app.ui.screens.archive.ArchiveViewModel
+import com.sajjil.app.ui.screens.batch.BatchProductionScreen
+import com.sajjil.app.ui.screens.batch.BatchProductionViewModel
 import com.sajjil.app.ui.screens.dashboard.DashboardScreen
 import com.sajjil.app.ui.screens.dashboard.DashboardViewModel
 import com.sajjil.app.ui.screens.enhance.EnhanceScreen
@@ -119,7 +121,13 @@ fun SajjilNavGraph(
                 val viewModel: QuranStudioViewModel = viewModel(factory = viewModelFactory {
                     initializer { QuranStudioViewModel(application) }
                 })
-                QuranStudioScreen(viewModel)
+                QuranStudioScreen(viewModel, onOpenBatchProduction = { navController.navigate(SajjilRoutes.BATCH_PRODUCTION) })
+            }
+            composable(SajjilRoutes.BATCH_PRODUCTION) {
+                val viewModel: BatchProductionViewModel = viewModel(factory = viewModelFactory {
+                    initializer { BatchProductionViewModel(application) }
+                })
+                BatchProductionScreen(viewModel)
             }
             composable(SajjilRoutes.SETTINGS) {
                 val viewModel: SettingsViewModel = viewModel(factory = viewModelFactory {

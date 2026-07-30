@@ -4,6 +4,7 @@ import android.app.Application
 import com.sajjil.app.data.db.SajjilDatabase
 import com.sajjil.app.data.repository.RecordingRepository
 import com.sajjil.app.data.repository.SettingsRepository
+import com.sajjil.core.plugin.BuiltinPlugins
 
 class SajjilApplication : Application() {
     lateinit var recordingRepository: RecordingRepository
@@ -16,5 +17,6 @@ class SajjilApplication : Application() {
         val database = SajjilDatabase.getInstance(this)
         recordingRepository = RecordingRepository(database.recordingDao())
         settingsRepository = SettingsRepository(this)
+        BuiltinPlugins.registerAll()
     }
 }

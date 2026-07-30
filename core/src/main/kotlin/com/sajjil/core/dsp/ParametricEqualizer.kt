@@ -26,6 +26,17 @@ class ParametricEqualizer(private val stages: List<BiquadFilter>) {
     }
 
     companion object {
+        /**
+         * RBJ cookbook biquad formulas assume a center frequency well below
+         * Nyquist; pushed close to or past it, the resulting pole can land
+         * outside the unit circle and the filter blows up to NaN within a
+         * few hundred samples. Every factory below clamps against this
+         * before building a stage, so a fixed-frequency band (e.g. a
+         * 9kHz treble shelf) stays stable even at a low capture sample
+         * rate (e.g. 16kHz, where 9kHz would otherwise exceed Nyquist).
+         */
+        private fun safeFreq(freqHz: Double, sampleRate: Int): Double = freqHz.coerceAtMost(sampleRate * 0.45)
+
         /** Simple 4-band tone control: bass/mid/treble shelves + presence bell. */
         fun basic(
             sampleRate: Int,
@@ -35,10 +46,10 @@ class ParametricEqualizer(private val stages: List<BiquadFilter>) {
             presenceDb: Double = 0.0,
         ): ParametricEqualizer = ParametricEqualizer(
             listOf(
-                BiquadFilter.lowShelf(120.0, sampleRate.toDouble(), bassDb),
-                BiquadFilter.peaking(1000.0, sampleRate.toDouble(), 0.9, midDb),
-                BiquadFilter.peaking(6500.0, sampleRate.toDouble(), 1.1, presenceDb),
-                BiquadFilter.highShelf(9000.0, sampleRate.toDouble(), trebleDb),
+                BiquadFilter.lowShelf(safeFreq(120.0, sampleRate), sampleRate.toDouble(), bassDb),
+                BiquadFilter.peaking(safeFreq(1000.0, sampleRate), sampleRate.toDouble(), 0.9, midDb),
+                BiquadFilter.peaking(safeFreq(6500.0, sampleRate), sampleRate.toDouble(), 1.1, presenceDb),
+                BiquadFilter.highShelf(safeFreq(9000.0, sampleRate), sampleRate.toDouble(), trebleDb),
             )
         )
 
@@ -56,6 +67,6 @@ class ParametricEqualizer(private val stages: List<BiquadFilter>) {
 
         /** Arbitrary parametric band list: (freqHz, Q, gainDb) triples. */
         fun parametric(sampleRate: Int, bands: List<Triple<Double, Double, Double>>): ParametricEqualizer =
-            ParametricEqualizer(bands.map { (freq, q, gain) -> BiquadFilter.peaking(freq, sampleRate.toDouble(), q, gain) })
+            ParametricEqualizer(bands.map { (freq, q, gain) -> BiquadFilter.peaking(safeFreq(freq, sampleRate), sampleRate.toDouble(), q, gain) })
     }
 }

@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val theme by app.settingsRepository.theme.collectAsStateWithLifecycle(
-                initialValue = com.sajjil.app.ui.theme.SajjilTheme.ROYAL_GOLD,
+                initialValue = com.sajjil.app.ui.theme.SajjilTheme.ROYAL_NAVY_DEEP,
             )
             SajjilAppTheme(theme = theme) {
                 SajjilNavGraph(

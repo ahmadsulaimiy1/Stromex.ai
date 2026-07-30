@@ -6,10 +6,13 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
 /**
- * The eight flagship SAJJIL themes. Each maps to a full Material3
- * [ColorScheme] so every screen automatically adopts the chosen identity.
+ * SAJJIL's flagship themes. Each maps to a full Material3 [ColorScheme] so
+ * every screen automatically adopts the chosen identity. [ROYAL_NAVY_DEEP]
+ * is the flagship default — a Saudi Vision 2030 / NEOM-publication-quality
+ * deep navy (#082A66) with restrained gold accents.
  */
 enum class SajjilTheme(val displayName: String) {
+    ROYAL_NAVY_DEEP("Royal Navy Deep"),
     ROYAL_GOLD("Royal Gold"),
     MIDNIGHT_BLACK("Midnight Black"),
     EMERALD_PRESTIGE("Emerald Prestige"),
@@ -21,6 +24,18 @@ enum class SajjilTheme(val displayName: String) {
 
     val colorScheme: ColorScheme
         get() = when (this) {
+            ROYAL_NAVY_DEEP -> darkColorScheme(
+                primary = Color(0xFFD4AF37),
+                onPrimary = Color(0xFF071433),
+                secondary = Color(0xFF6D8FD1),
+                onSecondary = Color(0xFF071433),
+                background = Color(0xFF050B1E),
+                onBackground = Color(0xFFE7ECFA),
+                surface = Color(0xFF082A66),
+                onSurface = Color(0xFFE7ECFA),
+                surfaceVariant = Color(0xFF11305F),
+                error = Color(0xFFFF6B6B),
+            )
             ROYAL_GOLD -> darkColorScheme(
                 primary = Color(0xFFD4AF37),
                 onPrimary = Color(0xFF241C00),

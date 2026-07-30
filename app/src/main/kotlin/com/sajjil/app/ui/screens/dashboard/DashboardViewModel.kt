@@ -5,9 +5,12 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.sajjil.app.data.db.RecordingEntity
 import com.sajjil.app.di.asSajjilApplication
+import com.sajjil.core.analysis.AcousticAnalyzer
 import com.sajjil.core.analysis.AudioAnalysisReport
 import com.sajjil.core.analysis.AudioQualityScorer
 import com.sajjil.core.analysis.LoudnessAnalyzer
+import com.sajjil.core.analysis.Spectrogram
+import com.sajjil.core.analysis.SpectrogramAnalyzer
 import com.sajjil.core.audio.WavIO
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +23,7 @@ import java.io.File
 data class DashboardUiState(
     val recording: RecordingEntity? = null,
     val report: AudioAnalysisReport? = null,
+    val spectrogram: Spectrogram? = null,
     val isLoading: Boolean = true,
 )
 
@@ -32,12 +36,13 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     fun load(recordingId: Long) {
         viewModelScope.launch {
             val recording = app.recordingRepository.getById(recordingId) ?: return@launch
-            val report = withContext(Dispatchers.Default) {
+            val (report, spectrogram) = withContext(Dispatchers.Default) {
                 val audio = WavIO.read(File(recording.filePath).readBytes())
+                val rt60 = AcousticAnalyzer.estimateRt60(audio.samples, audio.sampleRate)
                 val metrics = LoudnessAnalyzer.analyze(audio.samples, audio.sampleRate)
-                AudioQualityScorer.score(metrics)
+                AudioQualityScorer.score(metrics, rt60) to SpectrogramAnalyzer.compute(audio.samples, audio.sampleRate)
             }
-            _uiState.value = DashboardUiState(recording = recording, report = report, isLoading = false)
+            _uiState.value = DashboardUiState(recording = recording, report = report, spectrogram = spectrogram, isLoading = false)
         }
     }
 }

@@ -19,8 +19,10 @@ class DeEsser(
     var attackMs: Double = 1.0,
     var releaseMs: Double = 60.0,
 ) {
-    private val detectorFilter = BiquadFilter.highPass(centerFreqHz - 2000.0, sampleRate.toDouble(), 0.7071)
-    private var dynamicBand = BiquadFilter.peaking(centerFreqHz, sampleRate.toDouble(), 2.0, 0.0)
+    /** Keeps the sibilance band comfortably under Nyquist at low capture sample rates. */
+    private val safeCenterFreqHz = centerFreqHz.coerceAtMost(sampleRate * 0.45)
+    private val detectorFilter = BiquadFilter.highPass((safeCenterFreqHz - 2000.0).coerceAtLeast(20.0), sampleRate.toDouble(), 0.7071)
+    private var dynamicBand = BiquadFilter.peaking(safeCenterFreqHz, sampleRate.toDouble(), 2.0, 0.0)
     private var envelopeSquared = 0.0
     private var currentReductionDb = 0.0
     private val envCoeff = exp(-1.0 / (sampleRate * 0.002))
@@ -48,7 +50,7 @@ class DeEsser(
         }
         currentReductionDb = coeff * currentReductionDb + (1 - coeff) * targetReductionDb
 
-        dynamicBand.updateAsPeaking(centerFreqHz, sampleRate.toDouble(), 2.0, currentReductionDb)
+        dynamicBand.updateAsPeaking(safeCenterFreqHz, sampleRate.toDouble(), 2.0, currentReductionDb)
         return dynamicBand.process(sample)
     }
 

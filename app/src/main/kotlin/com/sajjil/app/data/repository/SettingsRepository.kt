@@ -20,7 +20,7 @@ class SettingsRepository(private val context: Context) {
 
     val theme: Flow<SajjilTheme> = context.settingsDataStore.data.map { prefs ->
         prefs[Keys.theme]?.let { name -> runCatching { SajjilTheme.valueOf(name) }.getOrNull() }
-            ?: SajjilTheme.ROYAL_GOLD
+            ?: SajjilTheme.ROYAL_NAVY_DEEP
     }
 
     suspend fun setTheme(theme: SajjilTheme) {

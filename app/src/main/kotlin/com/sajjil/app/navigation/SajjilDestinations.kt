@@ -22,6 +22,7 @@ sealed class SajjilDestination(val route: String, val label: String, val icon: I
 
 object SajjilRoutes {
     const val SETTINGS = "settings"
+    const val BATCH_PRODUCTION = "batch_production"
     const val DASHBOARD = "dashboard/{recordingId}"
     fun dashboard(recordingId: Long) = "dashboard/$recordingId"
 }

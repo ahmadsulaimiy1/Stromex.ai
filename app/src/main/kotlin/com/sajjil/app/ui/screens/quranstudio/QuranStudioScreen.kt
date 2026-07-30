@@ -28,12 +28,18 @@ import com.sajjil.app.data.db.RecordingEntity
 import com.sajjil.core.quran.SurahInfo
 
 @Composable
-fun QuranStudioScreen(viewModel: QuranStudioViewModel, modifier: Modifier = Modifier) {
+fun QuranStudioScreen(
+    viewModel: QuranStudioViewModel,
+    onOpenBatchProduction: () -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     Column(modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("SAJJIL Qur'an Studio", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
         Text("Organise recitations by Surah, Ayah and Juz.", style = MaterialTheme.typography.bodyMedium)
+
+        Button(onClick = onOpenBatchProduction) { Text("Batch Qur'an Production") }
 
         if (state.untaggedRecordings.isNotEmpty()) {
             Text("Tag a recording", style = MaterialTheme.typography.titleMedium)
