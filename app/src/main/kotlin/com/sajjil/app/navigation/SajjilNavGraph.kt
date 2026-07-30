@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.CompareArrows
 import androidx.compose.material.icons.filled.FactCheck
 import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
@@ -18,6 +19,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -63,6 +65,7 @@ import com.sajjil.app.ui.screens.speechsettings.SpeechCapabilityViewModel
 import com.sajjil.app.ui.screens.voicestudio.VoiceStudioScreen
 import com.sajjil.app.ui.screens.voicestudio.VoiceStudioViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SajjilNavGraph(
     application: SajjilApplication,
