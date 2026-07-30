@@ -1,7 +1,10 @@
 package com.sajjil.app
 
 import android.app.Application
+import android.content.Intent
+import androidx.core.content.ContextCompat
 import com.sajjil.app.audio.AudioPlaybackEngine
+import com.sajjil.app.audio.PlaybackService
 import com.sajjil.app.data.db.SajjilDatabase
 import com.sajjil.app.data.repository.RecordingRepository
 import com.sajjil.app.data.repository.SettingsRepository
@@ -10,6 +13,9 @@ import com.sajjil.core.plugin.BuiltinPlugins
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 class SajjilApplication : Application() {
     lateinit var recordingRepository: RecordingRepository
@@ -39,6 +45,21 @@ class SajjilApplication : Application() {
         transcriptRepository = TranscriptRepository(database.transcriptDao())
         playbackEngine = AudioPlaybackEngine()
         BuiltinPlugins.registerAll()
+
+        // Starts the lock-screen/notification-controls foreground service the moment something
+        // is loaded into the shared player, regardless of which screen started playback --
+        // PlaybackService itself stops when playingFile goes back to null, so this only needs to
+        // handle the "turning on" edge.
+        appScope.launch {
+            playbackEngine.playingFile
+                .map { it != null }
+                .distinctUntilChanged()
+                .collect { hasFile ->
+                    if (hasFile) {
+                        ContextCompat.startForegroundService(this@SajjilApplication, Intent(this@SajjilApplication, PlaybackService::class.java))
+                    }
+                }
+        }
     }
 
     fun playbackScope(): CoroutineScope = appScope

@@ -85,6 +85,11 @@ dependencies {
     androidTestImplementation(composeBom)
 
     implementation("androidx.core:core-ktx:1.13.1")
+    // MediaSessionCompat/PlaybackStateCompat/MediaStyle notifications: works with any playback
+    // backend (unlike Media3's Player-based MediaSession, which requires the player to implement
+    // Media3's Player interface -- ours is a raw android.media.MediaPlayer, so the classic
+    // "compat" media APIs are the right fit here, not a downgrade.
+    implementation("androidx.media:media:1.7.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.2")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.2")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.2")
