@@ -16,10 +16,16 @@ interface RecordingDao {
     @Query("SELECT * FROM recordings WHERE surahNumber IS NOT NULL ORDER BY surahNumber ASC, ayahStart ASC")
     fun observeQuranLibrary(): Flow<List<RecordingEntity>>
 
+    @Query("SELECT * FROM recordings WHERE surahNumber = :surahNumber ORDER BY ayahStart ASC, createdAtEpochMs ASC")
+    fun observeForSurah(surahNumber: Int): Flow<List<RecordingEntity>>
+
+    @Query("SELECT DISTINCT surahNumber FROM recordings WHERE surahNumber IS NOT NULL ORDER BY surahNumber ASC")
+    fun observeSurahsWithRecordings(): Flow<List<Int>>
+
     @Query("SELECT * FROM recordings WHERE id = :id")
     suspend fun getById(id: Long): RecordingEntity?
 
-    @Query("SELECT * FROM recordings WHERE title LIKE '%' || :query || '%' ORDER BY createdAtEpochMs DESC")
+    @Query("SELECT * FROM recordings WHERE title LIKE '%' || :query || '%' OR notes LIKE '%' || :query || '%' ORDER BY createdAtEpochMs DESC")
     fun search(query: String): Flow<List<RecordingEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

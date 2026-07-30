@@ -17,9 +17,12 @@ import com.sajjil.core.analysis.Spectrogram
 import com.sajjil.core.analysis.SpectrogramAnalyzer
 import com.sajjil.core.audio.BitDepth
 import com.sajjil.core.audio.WavIO
+import com.sajjil.core.dsp.AdaptiveMasteringEngine
 import com.sajjil.core.dsp.AudioProcessingChain
 import com.sajjil.core.dsp.AudioRestoration
+import com.sajjil.core.dsp.ContentClassification
 import com.sajjil.core.dsp.Dereverberator
+import com.sajjil.core.dsp.ProcessingChainConfig
 import com.sajjil.core.dsp.ReferenceMatcher
 import com.sajjil.core.modes.VoiceProfile
 import kotlinx.coroutines.Dispatchers
@@ -33,7 +36,9 @@ import java.io.File
 data class MasterUiState(
     val recordings: List<RecordingEntity> = emptyList(),
     val selected: RecordingEntity? = null,
-    val profile: VoiceProfile = VoiceProfile.STUDIO_QARI,
+    val profile: VoiceProfile = VoiceProfile.QARI_PRESTIGE,
+    val useAdaptiveMastering: Boolean = false,
+    val adaptiveClassification: ContentClassification? = null,
     val isProcessing: Boolean = false,
     val masteredFile: File? = null,
     val report: AudioAnalysisReport? = null,
@@ -43,6 +48,7 @@ data class MasterUiState(
     val referenceRecording: RecordingEntity? = null,
     val spectrogram: Spectrogram? = null,
     val loudnessHistory: List<LoudnessSample> = emptyList(),
+    val savedToLibrary: Boolean = false,
 )
 
 class MasterViewModel(application: Application) : AndroidViewModel(application) {
@@ -62,11 +68,19 @@ class MasterViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun select(recording: RecordingEntity) {
-        _uiState.value = _uiState.value.copy(selected = recording, masteredFile = null, report = null, spectrogram = null, loudnessHistory = emptyList())
+        _uiState.value = _uiState.value.copy(
+            selected = recording, masteredFile = null, report = null,
+            spectrogram = null, loudnessHistory = emptyList(), adaptiveClassification = null,
+            savedToLibrary = false,
+        )
     }
 
     fun selectProfile(profile: VoiceProfile) {
-        _uiState.value = _uiState.value.copy(profile = profile)
+        _uiState.value = _uiState.value.copy(profile = profile, useAdaptiveMastering = false)
+    }
+
+    fun setUseAdaptiveMastering(enabled: Boolean) {
+        _uiState.value = _uiState.value.copy(useAdaptiveMastering = enabled)
     }
 
     fun selectExportFormat(format: ExportFormat) {
@@ -90,7 +104,7 @@ class MasterViewModel(application: Application) : AndroidViewModel(application) 
         _uiState.value = _uiState.value.copy(isProcessing = true)
         viewModelScope.launch {
             val request = _uiState.value
-            val (outputFile, report, spectrogram, loudnessHistory) = withContext(Dispatchers.Default) {
+            val (outputFile, report, spectrogram, loudnessHistory, classification) = withContext(Dispatchers.Default) {
                 val audio = WavIO.read(File(selected.filePath).readBytes())
                 var working = audio.samples
 
@@ -114,7 +128,17 @@ class MasterViewModel(application: Application) : AndroidViewModel(application) 
                     working = ReferenceMatcher.matchToReference(audio.sampleRate, working, referenceAudio.samples)
                 }
 
-                val chain = AudioProcessingChain(audio.sampleRate, request.profile.config)
+                // Adaptive Mastering: measure the take and build a chain automatically, instead of a hand-picked profile.
+                val adaptiveClassification = if (request.useAdaptiveMastering) {
+                    AdaptiveMasteringEngine.classify(working, audio.sampleRate)
+                } else null
+                val chainConfig: ProcessingChainConfig = if (adaptiveClassification != null) {
+                    AdaptiveMasteringEngine.recommend(working, audio.sampleRate)
+                } else {
+                    request.profile.config
+                }
+
+                val chain = AudioProcessingChain(audio.sampleRate, chainConfig)
                 val mastered = FloatArray(working.size)
                 for (i in working.indices) mastered[i] = chain.process(working[i])
 
@@ -137,7 +161,7 @@ class MasterViewModel(application: Application) : AndroidViewModel(application) 
                 val spectrogramData = SpectrogramAnalyzer.compute(mastered, audio.sampleRate)
                 val history = SpectrogramAnalyzer.loudnessHistory(mastered, audio.sampleRate)
 
-                MasterResult(finalFile, scoreReport, spectrogramData, history)
+                MasterResult(finalFile, scoreReport, spectrogramData, history, adaptiveClassification)
             }
             _uiState.value = _uiState.value.copy(
                 isProcessing = false,
@@ -145,6 +169,7 @@ class MasterViewModel(application: Application) : AndroidViewModel(application) 
                 report = report,
                 spectrogram = spectrogram,
                 loudnessHistory = loudnessHistory,
+                adaptiveClassification = classification,
             )
         }
     }
@@ -152,6 +177,33 @@ class MasterViewModel(application: Application) : AndroidViewModel(application) 
     fun playMastered() {
         val file = _uiState.value.masteredFile ?: return
         if (file.extension == "wav") playback.play(file, viewModelScope)
+    }
+
+    /** Files onto the same Surah/Ayah tag as the source, so the mastered take shows up as an alternate version to choose from. */
+    fun saveToLibrary() {
+        val state = _uiState.value
+        val source = state.selected ?: return
+        val file = state.masteredFile ?: return
+        val label = if (state.useAdaptiveMastering) "Adaptive Master" else state.profile.displayName
+        viewModelScope.launch {
+            app.recordingRepository.save(
+                source.copy(
+                    id = 0,
+                    title = "${source.title} ($label)",
+                    filePath = file.absolutePath,
+                    createdAtEpochMs = System.currentTimeMillis(),
+                    fileSizeBytes = file.length(),
+                    exportFormat = file.extension,
+                    studioReadinessScore = state.report?.studioReadinessScore,
+                    broadcastReadinessScore = state.report?.broadcastReadinessScore,
+                    archiveReadinessScore = state.report?.archiveReadinessScore,
+                    isFavorite = false,
+                    isPrimaryVersion = false,
+                    notes = "Mastered from \"${source.title}\" using $label.",
+                ),
+            )
+            _uiState.value = _uiState.value.copy(savedToLibrary = true)
+        }
     }
 
     override fun onCleared() {
@@ -164,5 +216,6 @@ class MasterViewModel(application: Application) : AndroidViewModel(application) 
         val report: AudioAnalysisReport,
         val spectrogram: Spectrogram,
         val loudnessHistory: List<LoudnessSample>,
+        val classification: ContentClassification?,
     )
 }

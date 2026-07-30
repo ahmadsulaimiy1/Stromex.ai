@@ -8,6 +8,14 @@ data class ProcessingChainConfig(
     val eqMidDb: Double = 0.0,
     val eqPresenceDb: Double = 0.0,
     val eqTrebleDb: Double = 0.0,
+    /**
+     * When set, replaces the 4-band bass/mid/presence/treble tone control
+     * above with an arbitrary (freqHz, Q, gainDb) band list — how the
+     * flagship production-chain presets get a genuinely distinct spectral
+     * shape from each other rather than four shared shelf/bell points with
+     * different gains.
+     */
+    val customEqBands: List<Triple<Double, Double, Double>>? = null,
     val gateEnabled: Boolean = true,
     val gateThresholdDb: Double = -45.0,
     val gateRangeDb: Double = -18.0,
@@ -18,6 +26,7 @@ data class ProcessingChainConfig(
     val deEsserRatio: Double = 4.0,
     val compressorThresholdDb: Double = -18.0,
     val compressorRatio: Double = 2.5,
+    val compressorKneeDb: Double = 6.0,
     val compressorAttackMs: Double = 10.0,
     val compressorReleaseMs: Double = 140.0,
     val limiterCeilingDb: Double = -0.3,
@@ -39,13 +48,17 @@ class AudioProcessingChain(sampleRate: Int, val config: ProcessingChainConfig) {
         holdMs = config.gateHoldMs,
         releaseMs = config.gateReleaseMs,
     )
-    private val eq = ParametricEqualizer.basic(
-        sampleRate,
-        bassDb = config.eqBassDb,
-        midDb = config.eqMidDb,
-        trebleDb = config.eqTrebleDb,
-        presenceDb = config.eqPresenceDb,
-    )
+    private val eq = if (config.customEqBands.isNullOrEmpty()) {
+        ParametricEqualizer.basic(
+            sampleRate,
+            bassDb = config.eqBassDb,
+            midDb = config.eqMidDb,
+            trebleDb = config.eqTrebleDb,
+            presenceDb = config.eqPresenceDb,
+        )
+    } else {
+        ParametricEqualizer.parametric(sampleRate, config.customEqBands)
+    }
     private val deEsser = DeEsser(
         sampleRate,
         thresholdDb = config.deEsserThresholdDb,
@@ -55,6 +68,7 @@ class AudioProcessingChain(sampleRate: Int, val config: ProcessingChainConfig) {
         sampleRate,
         thresholdDb = config.compressorThresholdDb,
         ratio = config.compressorRatio,
+        kneeDb = config.compressorKneeDb,
         attackMs = config.compressorAttackMs,
         releaseMs = config.compressorReleaseMs,
     ).apply { makeupGainDb = autoMakeupGain() }

@@ -29,7 +29,7 @@ class BatchProcessorTest {
             BatchJobItem("Ayah $n", input, File(outDir, "ayah$n.wav"))
         }
 
-        val result = BatchProcessor.run(items, VoiceProfile.STUDIO_QARI.config)
+        val result = BatchProcessor.run(items, VoiceProfile.QARI_PRESTIGE.config)
 
         assertEquals(3, result.successCount)
         assertEquals(0, result.failureCount)
@@ -49,7 +49,7 @@ class BatchProcessorTest {
             BatchJobItem("Good", goodInput, File(outDir, "good.wav")),
         )
 
-        val result = BatchProcessor.run(items, VoiceProfile.STUDIO_QARI.config)
+        val result = BatchProcessor.run(items, VoiceProfile.QARI_PRESTIGE.config)
 
         assertEquals(1, result.successCount)
         assertEquals(1, result.failureCount)

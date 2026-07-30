@@ -23,6 +23,10 @@ sealed class SajjilDestination(val route: String, val label: String, val icon: I
 object SajjilRoutes {
     const val SETTINGS = "settings"
     const val BATCH_PRODUCTION = "batch_production"
+    const val ANALYTICS = "analytics"
+    const val COMPARISON_LAB = "comparison_lab"
     const val DASHBOARD = "dashboard/{recordingId}"
+    const val QURAN_PROJECT = "quran_project/{surahNumber}"
     fun dashboard(recordingId: Long) = "dashboard/$recordingId"
+    fun quranProject(surahNumber: Int) = "quran_project/$surahNumber"
 }

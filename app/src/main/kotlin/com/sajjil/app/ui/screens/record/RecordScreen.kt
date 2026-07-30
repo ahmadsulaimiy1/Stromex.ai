@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Stop
@@ -22,26 +24,38 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.media.AudioDeviceInfo
 import com.sajjil.app.audio.AudioInputDevices
 import com.sajjil.core.analysis.AcousticProfile
+import com.sajjil.core.analysis.DirectorGuidance
+import com.sajjil.core.analysis.GuidanceSeverity
 import com.sajjil.core.modes.MicrophoneProfile
 import com.sajjil.core.modes.RecordingMode
 import com.sajjil.core.modes.RecordingQuality
+import com.sajjil.core.quran.QuranMetadata
+import com.sajjil.core.quran.SurahInfo
 import kotlin.math.roundToInt
 
 @Composable
@@ -51,6 +65,7 @@ fun RecordScreen(viewModel: RecordViewModel, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
@@ -88,6 +103,15 @@ fun RecordScreen(viewModel: RecordViewModel, modifier: Modifier = Modifier) {
             onSelect = viewModel::selectMicrophoneProfile,
         )
 
+        QuranTargetSelector(
+            selectedSurah = state.targetSurah,
+            ayahStart = state.targetAyahStart,
+            ayahEnd = state.targetAyahEnd,
+            enabled = !state.isRecording,
+            onSelectSurah = viewModel::selectTargetSurah,
+            onSetAyahRange = viewModel::setTargetAyahRange,
+        )
+
         RoomCheckSection(
             isChecking = state.isCheckingRoom,
             profile = state.roomProfile,
@@ -97,7 +121,11 @@ fun RecordScreen(viewModel: RecordViewModel, modifier: Modifier = Modifier) {
             onDismiss = viewModel::dismissRoomCheck,
         )
 
-        LevelMeterCard(peakDb = state.level.peakDb, rmsDb = state.level.rmsDb)
+        if (state.isRecording) {
+            LevelMeterCard(peakDb = state.level.peakDb, rmsDb = state.level.rmsDb)
+        } else {
+            LiveDirectorCard(state.liveGuidance)
+        }
 
         Spacer(Modifier.height(4.dp))
 
@@ -240,6 +268,91 @@ private fun RoomCheckSection(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun QuranTargetSelector(
+    selectedSurah: SurahInfo?,
+    ayahStart: Int,
+    ayahEnd: Int,
+    enabled: Boolean,
+    onSelectSurah: (SurahInfo?) -> Unit,
+    onSetAyahRange: (Int, Int) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text("Qur'an Target", style = MaterialTheme.typography.titleMedium)
+                if (selectedSurah != null) {
+                    OutlinedButton(onClick = { onSelectSurah(null) }, enabled = enabled) { Text("Clear") }
+                }
+            }
+            Text(
+                "Set the Surah and Ayah range before recording — SAJJIL tags the take automatically when you stop.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            )
+            Box {
+                OutlinedTextField(
+                    value = selectedSurah?.let { "${it.number}. ${it.transliteratedName}" } ?: "None selected",
+                    onValueChange = {},
+                    readOnly = true,
+                    enabled = enabled,
+                    label = { Text("Surah") },
+                    modifier = Modifier.fillMaxWidth().clickable(enabled = enabled) { expanded = true },
+                )
+                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    QuranMetadata.surahs.forEach { surah ->
+                        DropdownMenuItem(
+                            text = { Text("${surah.number}. ${surah.transliteratedName} (${surah.ayahCount} ayat)") },
+                            onClick = { onSelectSurah(surah); expanded = false },
+                        )
+                    }
+                }
+            }
+            if (selectedSurah != null) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = ayahStart.toString(),
+                        onValueChange = { it.toIntOrNull()?.let { v -> onSetAyahRange(v, ayahEnd) } },
+                        label = { Text("Ayah start") },
+                        enabled = enabled,
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
+                    )
+                    OutlinedTextField(
+                        value = ayahEnd.toString(),
+                        onValueChange = { it.toIntOrNull()?.let { v -> onSetAyahRange(ayahStart, v) } },
+                        label = { Text("Ayah end") },
+                        enabled = enabled,
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LiveDirectorCard(guidance: DirectorGuidance?) {
+    val color = when (guidance?.severity) {
+        GuidanceSeverity.GOOD -> Color(0xFF2FB380)
+        GuidanceSeverity.WARNING -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+    }
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("Recording Director", style = MaterialTheme.typography.titleMedium)
+            Text(
+                guidance?.message ?: "Listening…",
+                style = MaterialTheme.typography.bodyMedium,
+                color = color,
+            )
         }
     }
 }

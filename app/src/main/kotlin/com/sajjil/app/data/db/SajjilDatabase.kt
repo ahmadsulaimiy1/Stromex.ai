@@ -5,7 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [RecordingEntity::class], version = 1, exportSchema = true)
+@Database(entities = [RecordingEntity::class], version = 2, exportSchema = true)
 abstract class SajjilDatabase : RoomDatabase() {
     abstract fun recordingDao(): RecordingDao
 
@@ -18,7 +18,12 @@ abstract class SajjilDatabase : RoomDatabase() {
                     context.applicationContext,
                     SajjilDatabase::class.java,
                     "sajjil.db",
-                ).build().also { instance = it }
+                )
+                    // Pre-release schema: no shipped installs to preserve yet, so a destructive
+                    // fallback is the right tradeoff over hand-written migrations for now.
+                    .fallbackToDestructiveMigration()
+                    .build()
+                    .also { instance = it }
             }
     }
 }

@@ -56,14 +56,30 @@ fun MasterScreen(viewModel: MasterViewModel, modifier: Modifier = Modifier) {
         }
 
         if (state.selected != null) {
-            Text("Voice Profile", style = MaterialTheme.typography.titleMedium)
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(VoiceProfile.entries) { profile ->
-                    FilterChip(
-                        selected = profile == state.profile,
-                        onClick = { viewModel.selectProfile(profile) },
-                        label = { Text(profile.displayName) },
-                    )
+            ToggleRow(
+                label = "Adaptive Mastering — detect content and build the chain automatically",
+                checked = state.useAdaptiveMastering,
+                onCheckedChange = viewModel::setUseAdaptiveMastering,
+            )
+            state.adaptiveClassification?.let { classification ->
+                Text(
+                    "Detected: ${classification.type.name.lowercase().replaceFirstChar(Char::uppercase)} " +
+                        "(${(classification.confidence * 100).toInt()}% confidence) — a heuristic estimate, not a verdict.",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+
+            if (!state.useAdaptiveMastering) {
+                Text("Voice Profile", style = MaterialTheme.typography.titleMedium)
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(VoiceProfile.entries) { profile ->
+                        FilterChip(
+                            selected = profile == state.profile,
+                            onClick = { viewModel.selectProfile(profile) },
+                            label = { Text(profile.displayName) },
+                        )
+                    }
                 }
             }
 
@@ -129,7 +145,12 @@ fun MasterScreen(viewModel: MasterViewModel, modifier: Modifier = Modifier) {
                         report.echoScore?.let { ScoreRow("Echo", it) }
                     }
                 }
-                OutlinedButton(onClick = { viewModel.playMastered() }) { Text("Preview Mastered") }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = { viewModel.playMastered() }) { Text("Preview Mastered") }
+                    OutlinedButton(onClick = { viewModel.saveToLibrary() }, enabled = !state.savedToLibrary) {
+                        Text(if (state.savedToLibrary) "Saved to Library" else "Save to Library")
+                    }
+                }
             }
 
             state.spectrogram?.let { spectrogram ->

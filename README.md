@@ -4,161 +4,187 @@ An AI-assisted voice recording, enhancement and mastering studio for Android, pu
 Qur'an recitation, Nasheed, lectures, khutbahs, podcasts and voiceover work.
 
 This repository is being built in phases against the SAJJIL product vision, which describes a
-multi-year product surface (dozens of AI features, nine luxury themes, dedicated Qur'an tooling,
-executive dashboards, a plugin ecosystem). Rather than stub all of it, each phase builds a
-**smaller set of things for real** — genuine DSP, genuine tests, a coherent architecture — and
-leaves the rest as an explicit, documented roadmap.
+multi-year product surface. Rather than stub all of it, each phase builds a **smaller set of
+things for real** — genuine DSP, genuine tests, a coherent architecture — and leaves the rest as
+an explicit, documented roadmap.
 
 - **Phase 1 — DSP Foundation Layer:** the core signal-processing engine, recording pipeline, and
   the six primary screens.
-- **Phase 2 — World-Class Audio Intelligence Layer** (this pass): pre-recording acoustic
-  intelligence, a professional spectrogram, echo removal (dereverberation), voice restoration
-  (declipping), USB microphone support, reference-track mastering, an Echo Score, batch Qur'an
-  production, a plugin architecture, and a UI pass toward the Royal Navy Deep identity.
+- **Phase 2 — World-Class Audio Intelligence Layer:** pre-recording acoustic intelligence, a
+  professional spectrogram, echo removal, voice restoration, USB microphone support,
+  reference-track mastering, an Echo Score, batch Qur'an production, a plugin architecture, and
+  the Royal Navy Deep identity.
+- **Phase 3 — Intelligence & Production Ecosystem** (this pass): explicitly *not* more filters —
+  per-Surah progress tracking and take-version management (the "killer feature"), continuous live
+  recording guidance, seven genuinely-distinct flagship mastering chains, one-click adaptive
+  mastering, A/B/C instant comparison, executive-level library analytics, and a formal design
+  system. See "Most important instruction" below for how this phase was scoped.
 
 ## Modules
 
-- **`core`** — pure Kotlin/JVM, zero Android dependencies, fully unit tested (**65 tests**).
-  Every DSP algorithm, acoustic analysis, the recording mode/voice profile/microphone presets,
-  WAV I/O, loudness analysis, batch processing, the plugin architecture, and Qur'an reference
-  metadata (Surah/Ayah/Juz) all live here — and are the parts actually verified in this sandbox.
-- **`app`** — the Android application (Jetpack Compose + Material3). Wires `core`'s DSP into a live
-  `AudioRecord` capture chain, a Room-backed recording library, WAV/AAC export, USB/input-device
-  selection, and seven screens (Record, Enhance, Master, Archive, Qur'an Studio, Batch Production,
-  Settings) plus an Executive Dashboard.
+- **`core`** — pure Kotlin/JVM, zero Android dependencies, fully unit tested (**103 tests**).
+  Every DSP algorithm, acoustic analysis, Qur'an production-suite logic, the recording
+  mode/voice-profile/microphone presets, WAV I/O, loudness analysis, batch processing, executive
+  analytics, and the plugin architecture all live here — the parts actually verified in this
+  sandbox.
+- **`app`** — the Android application (Jetpack Compose + Material3). Wires `core`'s logic into a
+  live `AudioRecord` capture chain, a Room-backed recording library, WAV/AAC export, and eleven
+  screens (Record, Enhance, Master, Archive, Qur'an Studio, Surah Project, Batch Production,
+  Comparison Lab, Executive Analytics, Dashboard, Settings).
 
 `core` is verified in this environment with `gradle :core:test` (no Android SDK required — see
 "Building" below for why `app` couldn't be compiled here). `app` was written carefully against the
 same API surfaces but has **not** been compiled or run on-device in this session; treat it as a
 strong draft to build and smoke-test on a real checkout.
 
+## Most important instruction for this phase
+
+The Phase 3 brief was explicit: *"Do not chase hundreds of effects. Focus on making SAJJIL the
+easiest professional Qur'an and voice-production platform in the world. Every feature should help
+users produce cleaner, clearer, more beautiful recordings with fewer steps."* Concretely, that
+shaped three decisions:
+- **Qur'an targeting moved to the front of Record**, not after. Set a Surah/Ayah range before
+  hitting record and the take is tagged automatically on save — no separate trip to Qur'an Studio
+  to tag it afterward.
+- **Enhance/Master results can be saved back to the library** as alternate takes on the same
+  Surah/Ayah range, which is what makes take-version management, Executive Analytics, and the
+  Comparison Lab actually have real data to work with instead of being disconnected demos.
+- **Adaptive Mastering is a toggle, not a wizard** — flip it on, and content classification +
+  chain selection happens in one pass inside the existing Master flow.
+
 ## What's real in `core` (not stubs)
 
 ### Phase 1 — DSP Foundation
 - **`BiquadFilter`** — RBJ Audio EQ Cookbook peaking/shelf/low-pass/high-pass filters.
 - **`ParametricEqualizer`** — 4-band tone control and a full 31-band ISO graphic EQ, with every
-  fixed/parametric band clamped below Nyquist (see "Bugs found" below for why that matters).
-- **`Compressor`** — RMS-detector feed-forward compressor, soft knee, auto makeup gain.
-- **`Limiter` / `LoudnessMaximizer`** — lookahead brickwall peak limiter for loudness maximization.
-- **`NoiseGate`** — envelope-follower gate with hold/hysteresis (Tajweed-safe: long hold avoids
-  clipping soft letters).
-- **`DeEsser`** — dynamic sibilance-band peaking filter.
+  fixed/parametric band clamped below Nyquist.
+- **`Compressor`**, **`Limiter`/`LoudnessMaximizer`**, **`NoiseGate`**, **`DeEsser`** — RMS
+  feed-forward compression, lookahead brickwall limiting, Tajweed-safe gating, dynamic sibilance
+  control.
 - **`FFT`** — iterative radix-2 Cooley-Tukey, forward/inverse.
-- **`SpectralNoiseReducer`** — real STFT spectral subtraction (Boll 1979) with Hann windows and
-  overlap-add reconstruction.
-- **`LoudnessAnalyzer`** — peak/RMS/dynamic-range/noise-floor and a simplified BS.1770-style
-  integrated loudness (LUFS) estimate.
-- **`WavIO` / `WavStreamWriter`** — full PCM16/PCM24/Float32 WAV read/write, including a streaming
-  writer so multi-hour recordings never have to sit fully in memory.
-- **`RecordingMode`** (Qur'an Studio, Imam Al-Haram, Lecture, Nasheed, Podcast) and **`VoiceProfile`**
-  (Haramain, Madinah, Makkah, Studio Qari, Lecture Hall, Broadcast, Podcast) — concrete DSP-chain
-  presets, not just labels.
-- **`QuranMetadata`** — all 114 Surahs with ayah counts and the 30 Juz start boundaries.
+- **`SpectralNoiseReducer`** — real STFT spectral subtraction (Boll 1979).
+- **`LoudnessAnalyzer`** — peak/RMS/dynamic-range/noise-floor and a simplified BS.1770-style LUFS.
+- **`WavIO`/`WavStreamWriter`** — full PCM16/PCM24/Float32 WAV read/write with a streaming writer.
+- **`RecordingMode`** and **`QuranMetadata`** (114 Surahs, 30 Juz boundaries).
 
 ### Phase 2 — Audio Intelligence
-- **`AcousticAnalyzer`** (AI Acoustic Intelligence) — blind RT60 estimation via free-decay
-  detection in the envelope (Ratnam et al.-style), clipping-risk detection, a direct-to-reverberant
-  proximity heuristic, and plain-language recommendations before the user commits to a take.
-- **`Spectrogram` / `SpectrogramAnalyzer`** — time × frequency dB matrix (single-sided, calibrated
-  so a full-scale tone reads ~0 dBFS) for a professional spectrogram/waterfall view, plus a
-  loudness-history time series.
-- **`Dereverberator`** (AI Echo Removal) — RT60-informed spectral-subtraction dereverberation
-  (Lebart/Boucher/Denbigh-style), targeting late-reflection "boominess" in mosque/hall recordings.
-- **`Declipper` / `AudioRestoration`** (AI Voice Restoration) — cubic-Hermite clip reconstruction,
-  a declip → denoise → level-rescue restoration pipeline, and a 0–100 damage score.
-- **`ReferenceMatcher`** (Reference Mastering Engine) — 1/3-octave spectral-envelope matching
-  against a reference take, building a 31-band correction EQ.
-- **`MicrophoneProfile`** — generic *character* correction curves (Phone Built-in, USB Condenser —
-  Bright, USB Dynamic — Warm, Wireless Lavalier, Flat/Reference), not fabricated per-model curves
-  (see "On honesty" below).
-- **`AudioQualityScorer`** — now includes an **Echo Score** (0–100 from RT60), folded into Studio/
-  Broadcast/Archive Readiness only when a measurement is actually available (null, not a fake 100,
-  otherwise).
-- **`plugin/AudioEffectPlugin`, `PluginRegistry`, `BuiltinPlugins`** — the plugin architecture
-  requested "ahead of a full marketplace": a narrow, real contract (describe yourself, produce a
-  processor), with SAJJIL's own gate/compressor/limiter/de-esser/EQ registered as the first five
-  plugins, proving the contract is load-bearing rather than a paper design.
-- **`batch/BatchProcessor`** (Batch Qur'an Production) — masters a list of files with one chain
-  config in one pass (an entire Surah, Juz, or full library selection), per-item pass/fail
-  reporting, one item's failure never aborting the batch.
+- **`AcousticAnalyzer`** — blind RT60 estimation, clipping-risk detection, a proximity heuristic,
+  plain-language pre-recording recommendations.
+- **`Spectrogram`/`SpectrogramAnalyzer`** — calibrated time × frequency dB matrix + loudness
+  history.
+- **`Dereverberator`** — RT60-informed spectral-subtraction dereverberation.
+- **`Declipper`/`AudioRestoration`** — cubic-Hermite clip reconstruction, declip → denoise →
+  level-rescue pipeline, damage scoring.
+- **`ReferenceMatcher`** — 1/3-octave spectral-envelope matching against a reference take.
+- **`MicrophoneProfile`** — generic *character* correction curves, not fabricated per-brand data.
+- **`AudioQualityScorer`** Echo Score, **`plugin/`** architecture, **`batch/BatchProcessor`**.
+
+### Phase 3 — Intelligence & Production Ecosystem
+- **`quran/SurahProgress.kt`** (`SurahProgressCalculator`) — the Qur'an Production Suite's core
+  algorithm: merges every recorded take's ayah range, reports exactly which ayahs are still
+  missing ("you've recorded 1–40 and 45–60, ayahs 41–44 and 61–88 are left"), and an
+  ayah-count-weighted average quality score across takes.
+- **`quran/QuranMetadata.juzSpan`** + **`JuzProgressCalculator`** — a Juz frequently starts partway
+  through one Surah and ends partway through another; this computes the exact multi-Surah segments
+  each of the 30 Juz spans and checks *every* segment is fully recorded before calling a Juz
+  complete — not just "some recording exists somewhere in it." Verified with a seamlessness test
+  across all 30 Juz boundaries.
+- **`analysis/LiveDirector`** — the Intelligent Recording Director: a fast (no-FFT), continuous
+  peak/RMS pass over a rolling window, producing "lower gain by 3 dB" / "levels look good, ready to
+  record" guidance a few times a second — the live counterpart to `AcousticAnalyzer`'s deeper
+  one-shot Room Check.
+- **`modes/VoiceProfile`** — renamed and re-built into seven Haramain-inspired flagship chains
+  (Haramain Broadcast, Makkah Studio, Madinah Studio, Qari Prestige, Lecture Authority, Royal
+  Podcast, Executive Voice), each with its own custom EQ *curve* (not just gain offsets on shared
+  points) plus distinct compressor knee/ratio and limiter drive — verified sonically distinct from
+  each other by a pairwise RMS-difference test, not just distinctly labeled.
+- **`dsp/AdaptiveMasteringEngine`** — measures pause structure, autocorrelation-based pitch
+  movement, dynamic range, and spectral tilt to classify a take (Recitation/Lecture/Nasheed/Speech)
+  and build a mastering chain automatically. An honest heuristic — see "On honesty" below.
+- **`analysis/AnalyticsCalculator`** — Executive Analytics: recording hours, distinct Surahs
+  recorded, true Juz-completed count (via `JuzProgressCalculator`), ayah-weighted average quality,
+  an improvement trend (recent-window vs. prior-window average score), library size, storage usage.
 
 ### Bugs found and fixed by the test suite
-Two genuine bugs surfaced while building this, in both phases — proof the tests are pulling their
-weight rather than just padding a count:
-1. **Phase 1:** the first spectral-subtraction implementation reconstructed audio incorrectly near
-   buffer edges (dividing by a near-zero window-sum), audible as retained noise a casual listen
-   might miss. Fixed via zero-padding before framing.
-2. **Phase 2:** `ParametricEqualizer.basic()`'s fixed 9 kHz treble shelf exceeds Nyquist at lower
-   capture sample rates (e.g. 16 kHz), which — per the RBJ cookbook's own assumptions — produces an
-   unstable filter pole and blows the signal up to `NaN` within a few hundred samples. Caught when
-   `BatchProcessor`'s test threw "Cannot round NaN value"; root-caused by bisecting the processing
-   chain stage by stage. Fixed by clamping every fixed/parametric EQ frequency below Nyquist
-   (`ParametricEqualizer`, `DeEsser`), with a regression test that reproduces the exact failing
-   configuration.
+Three genuine bugs surfaced across the three phases — proof the tests are pulling their weight:
+1. **Phase 1:** spectral-subtraction noise reduction reconstructed audio incorrectly near buffer
+   edges (dividing by a near-zero window-sum). Fixed via zero-padding before framing.
+2. **Phase 2:** `ParametricEqualizer.basic()`'s fixed 9 kHz treble shelf exceeded Nyquist at lower
+   capture sample rates (e.g. 16 kHz), producing an unstable filter pole that blew the signal up to
+   `NaN` within a few hundred samples. Fixed by clamping every EQ frequency below Nyquist.
+3. **Phase 3:** `AdaptiveMasteringEngine`'s pause detector used a noise-floor-percentile threshold
+   that degenerated on a signal with little level variation (e.g. a sustained tone with no real
+   silence) — nearly every frame sat close to that floor, so the whole signal was misclassified as
+   "pause." Caught by a test asserting a melodic sweep should show *more* pitch variability than a
+   monotone tone (it showed zero for both). Fixed by anchoring the threshold to the *median* frame
+   level instead of a low percentile, which stays meaningful even without real silence in the
+   buffer.
 
 ### On honesty: "AI" naming vs. what's implemented
-The spec calls these features "AI Acoustic Intelligence," "AI Echo Removal," "AI Voice
-Restoration," "SAJJIL AI Studio." What's implemented is classic, well-understood **acoustics and
-digital signal processing** — blind RT60 estimation, spectral-subtraction dereverberation,
-spectral-subtraction noise reduction, interpolation-based declipping — not trained models. These
-are honestly effective for what they target (steady-state noise, statistically-modeled late
-reverberation, short clip runs) and honestly limited where a neural model would do better (complex
-non-stationary noise, discrete echo/slap-back, heavily/long-clipped material with no surviving
-waveform to reconstruct from). `MicrophoneProfile` ships generic character curves, not measured
-per-model frequency-response data for the named hardware brands — SAJJIL has no lab measurements
-of them, and shipping fabricated "exact" curves would be actively misleading. On-device trained-
-model noise/echo removal remains a roadmap item, not something silently claimed.
+The spec calls these features "AI Acoustic Intelligence," "AI Echo Removal," "Intelligent
+Recording Director," "Adaptive Mastering." What's implemented is classic acoustics, DSP, and
+feature-based heuristics — blind RT60 estimation, spectral-subtraction dereverberation/noise
+reduction, autocorrelation pitch tracking, threshold-based pause detection — not trained models.
+`AdaptiveMasteringEngine` in particular: it cannot tell Qur'an recitation from any other
+rhythmically-paused speech in a language it doesn't parse. It measures acoustic features and maps
+them to the closest flagship profile, which is a helpful starting point a user can always override
+in Master, not an infallible content classifier. `MicrophoneProfile` ships generic character
+curves, not measured per-brand hardware data. Offline speech transcription was investigated, not
+implemented — see [`docs/SPEECH_INTELLIGENCE.md`](docs/SPEECH_INTELLIGENCE.md) — no bundled ASR
+model was available to select, integrate, and (critically) verify in this sandbox.
 
 ## What's in `app`
 
-- Live recording through `AudioRecordEngine`: mic capture → optional microphone-character EQ →
-  gate → EQ → de-esser → compressor → loudness maximizer → streamed straight to WAV.
-- **Room Check**: a 3-second pre-recording probe (`AcousticProbeRecorder` + `AcousticAnalyzer`) on
-  the Record screen, surfacing noise/echo/clipping guidance and a one-tap "use the suggested
-  profile" before the take even starts — the single highest-leverage feature in this phase, per
-  the brief's own framing ("capture the cleanest possible source before enhancement").
-- Input-device picker (`AudioInputDevices`) for USB/wired/Bluetooth microphones, wired to
-  `AudioRecord.setPreferredDevice`, plus the microphone character profile picker.
-- `SAJJIL Enhance`: pick a recording, run spectral noise reduction at Light/Moderate/Strong/Extreme,
-  A/B preview original vs. enhanced.
-- `SAJJIL Master`: apply a Voice Profile, optionally repair damage (declip/denoise/rescue level),
-  remove echo (dereverberate using a fresh RT60 estimate), match tonal balance to another take,
-  see Executive Dashboard scores (now including Echo Score) plus a spectrogram and loudness
-  history, export to WAV or AAC/M4A.
-- `SAJJIL Archive`: searchable Room-backed library, favorites, delete, tap-through to a
-  per-recording Executive Dashboard (loudness metrics, 0–100 readiness scores including Echo
-  Score, and a spectrogram).
-- `SAJJIL Qur'an Studio`: tag any recording with Surah/Ayah range (Juz derived automatically),
-  browse the resulting Qur'an library, and jump into **Batch Production** to master an entire
-  selection (a Surah, a Juz, the whole tagged library) in one pass.
-- Nine luxury Material3 themes — **Royal Navy Deep** (new flagship default: deep navy `#082A66`
-  with restrained gold accents, Vision 2030/NEOM-publication styled) plus Royal Gold, Midnight
-  Black, Emerald Prestige, Sapphire Blue, Makkah Night, Madinah Green, Platinum White, Executive
-  Dark — persisted via DataStore. A `GlassCard` component applies restrained glassmorphism to the
-  Executive Dashboard specifically, not as the default card style everywhere.
-- Export: WAV (any bit depth) and AAC/M4A via `MediaCodec`/`MediaMuxer` — no third-party codec
-  dependency.
+- **Qur'an Production Suite**: set a Surah/Ayah target before recording (auto-tags on save); the
+  **Surah Project** screen shows live progress, exactly which ayahs are missing, and lets you
+  browse every recorded *version* of a given ayah range with a star to mark the primary take and
+  per-take notes.
+- **Intelligent Recording Director**: continuous live guidance (`LivePreviewMonitor` +
+  `LiveDirector`) shown on the Record screen whenever the mic is live but not yet recording, plus
+  the deeper one-shot **Room Check** (`AcousticProbeRecorder` + `AcousticAnalyzer`) for
+  echo/noise/clipping analysis and a one-tap "use the suggested profile."
+- USB/wired/Bluetooth input-device picker (`AudioInputDevices`) and a microphone character profile
+  picker, both wired into the live capture chain.
+- `SAJJIL Enhance`: spectral noise reduction at four strengths, A/B preview, and **Save to
+  Library** to file the result as an alternate take.
+- `SAJJIL Master`: seven flagship Voice Profiles *or* one-tap **Adaptive Mastering**
+  (auto-detects content and builds the chain), optional damage repair, echo removal, reference-take
+  matching, Executive Dashboard scores including Echo Score, a spectrogram and loudness history,
+  export to WAV/AAC, and **Save to Library**.
+- `SAJJIL Archive`: searchable (title, notes, Surah/Ayah tags — see
+  [`docs/SPEECH_INTELLIGENCE.md`](docs/SPEECH_INTELLIGENCE.md) for why that's real search but not
+  transcript search yet) Room-backed library, favorites, delete, per-recording Dashboard.
+- **Batch Production**: master an entire tagged selection (a Surah, a Juz, the whole library) in
+  one pass.
+- **Comparison Laboratory**: load up to three takes into slots and switch playback between them at
+  the same elapsed position — genuine position-preserving A/B/C, with an honest caveat about the
+  small gap a source switch introduces (documented in `ComparisonPlayer`).
+- **Executive Analytics**: recording hours, Surahs recorded, true Juz completed, average quality,
+  improvement trend, library size, storage usage — computed from real persisted scores (Dashboard
+  and Master now write `studioReadinessScore` back to the library instead of leaving it null
+  forever).
+- **Design system**: `SajjilColorTokens`/`SajjilSpacing`/`SajjilRadius`/`SajjilElevation`/
+  `SajjilFonts` formalize the Royal Navy `#082A66` + Premium Gold + Platinum White + Obsidian Black
+  palette and an "executive sans + Arabic companion" typography role split — see the font honesty
+  note in `DesignTokens.kt` for why the actual typefaces resolve to the platform default rather
+  than a fabricated downloadable-fonts certificate.
+- Nine luxury Material3 themes, **Royal Navy Deep** as flagship default, `GlassCard` for restrained
+  glassmorphism on Executive surfaces specifically.
 
 ### Deliberately out of scope for this pass
 
-The spec's own **"Future Roadmap"** and **"Future AI Features"** sections are treated as out of
-scope, plus a few practical additions:
-
-- FLAC / MP3 / OGG / OPUS / ALAC / AIFF export — these need licensed or NDK-cross-compiled codecs
-  (`libFLAC`, `libmp3lame`, `libopus`); WAV and AAC/M4A cover the two formats Android's SDK supports
-  natively.
-- Trained-model noise/echo removal, voice cloning protection, an AI mastering *assistant* (as
-  opposed to the rule-based mastering chains shipped today), true per-microphone-model AI
-  calibration, room correction, a DAW/mixer/plugin *marketplace* (the plugin *architecture* is
-  real — see above), transcription, speaker separation, multi-track recording, cloud sync.
-- Hardware acceleration (NDK/SIMD/NEON/GPU) — investigated, not implemented; see
-  [`docs/HARDWARE_ACCELERATION.md`](docs/HARDWARE_ACCELERATION.md) for the findings and recommended
-  path. Short version: profile on real hardware first, NEON-accelerate the STFT hot path if it's
-  actually the bottleneck, skip GPU for the real-time path entirely.
-- Video-audio extraction (MP4/MOV/MKV/AVI) — same MediaCodec path as AAC export, just not wired up
-  yet.
-- Real-time (continuous, during capture) spectrogram — today's spectrogram renders from a completed
-  recording (Master/Dashboard), not a live streaming view during capture.
+- FLAC / MP3 / OGG / OPUS / ALAC / AIFF export, video-audio extraction — unchanged from Phase 2.
+- Hardware acceleration — investigated in Phase 2, still not implemented; see
+  [`docs/HARDWARE_ACCELERATION.md`](docs/HARDWARE_ACCELERATION.md).
+- Offline speech transcription and speaker segmentation — investigated this phase, not
+  implemented; see [`docs/SPEECH_INTELLIGENCE.md`](docs/SPEECH_INTELLIGENCE.md).
+- Recitation *sessions* as a separate tracked entity — deliberately not built; Recording Notes +
+  Surah Project progress covers the same need with one fewer concept for the user to manage,
+  matching this phase's "fewer steps" instruction.
+- Real per-microphone-model AI calibration, voice cloning protection, a DAW/mixer/plugin
+  marketplace (the plugin architecture itself is real), multi-track recording, cloud sync.
+- Truly gapless (sample-accurate, zero-gap) A/B switching in the Comparison Lab — today's version
+  stops and restarts at the matched position, not a simultaneous dual-source mix.
 
 ## Building
 

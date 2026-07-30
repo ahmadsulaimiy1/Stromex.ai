@@ -31,6 +31,7 @@ import com.sajjil.core.quran.SurahInfo
 fun QuranStudioScreen(
     viewModel: QuranStudioViewModel,
     onOpenBatchProduction: () -> Unit = {},
+    onOpenSurahProject: (Int) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -81,7 +82,7 @@ fun QuranStudioScreen(
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 items(state.library, key = { it.id }) { recording ->
-                    LibraryRow(recording)
+                    LibraryRow(recording, onClick = { recording.surahNumber?.let(onOpenSurahProject) })
                 }
             }
         }
@@ -125,8 +126,11 @@ private fun UntaggedRow(recording: RecordingEntity, isSelected: Boolean, onClick
 }
 
 @Composable
-private fun LibraryRow(recording: RecordingEntity) {
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+private fun LibraryRow(recording: RecordingEntity, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+    ) {
         Column(Modifier.padding(12.dp)) {
             Text(recording.title, style = MaterialTheme.typography.titleMedium)
             Text(

@@ -73,6 +73,12 @@ fun EnhanceScreen(viewModel: EnhanceViewModel, modifier: Modifier = Modifier) {
                     Text("Apply Enhancement")
                 }
             }
+
+            if (state.enhancedFile != null) {
+                OutlinedButton(onClick = { viewModel.saveToLibrary() }, enabled = !state.savedToLibrary) {
+                    Text(if (state.savedToLibrary) "Saved to Library" else "Save to Library")
+                }
+            }
         }
     }
 }

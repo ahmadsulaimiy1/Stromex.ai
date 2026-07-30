@@ -23,6 +23,7 @@ data class EnhanceUiState(
     val strength: NoiseReductionStrength = NoiseReductionStrength.MODERATE,
     val isProcessing: Boolean = false,
     val enhancedFile: File? = null,
+    val savedToLibrary: Boolean = false,
 )
 
 class EnhanceViewModel(application: Application) : AndroidViewModel(application) {
@@ -41,7 +42,7 @@ class EnhanceViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun select(recording: RecordingEntity) {
-        _uiState.value = _uiState.value.copy(selected = recording, enhancedFile = null)
+        _uiState.value = _uiState.value.copy(selected = recording, enhancedFile = null, savedToLibrary = false)
     }
 
     fun setStrength(strength: NoiseReductionStrength) {
@@ -76,6 +77,30 @@ class EnhanceViewModel(application: Application) : AndroidViewModel(application)
                 output
             }
             _uiState.value = _uiState.value.copy(isProcessing = false, enhancedFile = outputFile)
+        }
+    }
+
+    /** Files onto the same Surah/Ayah tag as the source, so the enhanced take shows up as an alternate version to choose from. */
+    fun saveToLibrary() {
+        val source = _uiState.value.selected ?: return
+        val file = _uiState.value.enhancedFile ?: return
+        viewModelScope.launch {
+            app.recordingRepository.save(
+                source.copy(
+                    id = 0,
+                    title = "${source.title} (Enhanced)",
+                    filePath = file.absolutePath,
+                    createdAtEpochMs = System.currentTimeMillis(),
+                    fileSizeBytes = file.length(),
+                    studioReadinessScore = null,
+                    broadcastReadinessScore = null,
+                    archiveReadinessScore = null,
+                    isFavorite = false,
+                    isPrimaryVersion = false,
+                    notes = "Enhanced from \"${source.title}\" (${_uiState.value.strength.name.lowercase()} noise reduction).",
+                ),
+            )
+            _uiState.value = _uiState.value.copy(savedToLibrary = true)
         }
     }
 

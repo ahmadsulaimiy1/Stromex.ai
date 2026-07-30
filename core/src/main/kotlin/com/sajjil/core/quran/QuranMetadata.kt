@@ -166,4 +166,31 @@ object QuranMetadata {
         }
         return result
     }
+
+    /**
+     * The Surah/ayah-range segments a Juz spans — a Juz frequently starts
+     * partway through one Surah and ends partway through (or exactly at
+     * the end of) another, so "Juz N complete" means every one of these
+     * segments is fully recorded, not just "some recording exists in Juz N."
+     */
+    fun juzSpan(juzNumber: Int): List<Pair<Int, AyahRange>> {
+        require(juzNumber in 1..30) { "Juz number must be 1-30, got $juzNumber" }
+        val start = juzBoundaries[juzNumber - 1]
+        val endExclusive = juzBoundaries.getOrNull(juzNumber) // null for Juz 30 -> runs to the end of the Qur'an
+
+        val segments = mutableListOf<Pair<Int, AyahRange>>()
+        var surahNumber = start.startSurah
+        var ayahCursor = start.startAyah
+        while (endExclusive == null || surahNumber < endExclusive.startSurah) {
+            val surahAyahCount = surahByNumber(surahNumber).ayahCount
+            segments.add(surahNumber to AyahRange(ayahCursor, surahAyahCount))
+            surahNumber += 1
+            ayahCursor = 1
+            if (surahNumber > 114) break
+        }
+        if (endExclusive != null && surahNumber == endExclusive.startSurah && endExclusive.startAyah > 1) {
+            segments.add(surahNumber to AyahRange(ayahCursor, endExclusive.startAyah - 1))
+        }
+        return segments
+    }
 }

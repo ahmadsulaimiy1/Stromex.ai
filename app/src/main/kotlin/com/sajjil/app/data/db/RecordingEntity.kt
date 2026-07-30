@@ -26,4 +26,10 @@ data class RecordingEntity(
     val broadcastReadinessScore: Int? = null,
     val archiveReadinessScore: Int? = null,
     val isFavorite: Boolean = false,
+    // Qur'an Production Suite: recording notes and take-version tracking. When several
+    // recordings share the same surah/ayah range, `isPrimaryVersion` marks the one that
+    // counts toward Surah/Juz progress and shows first — the rest are alternate takes kept
+    // for comparison rather than deleted.
+    val notes: String? = null,
+    val isPrimaryVersion: Boolean = true,
 )

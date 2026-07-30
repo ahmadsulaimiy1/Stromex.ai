@@ -43,6 +43,22 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                 AudioQualityScorer.score(metrics, rt60) to SpectrogramAnalyzer.compute(audio.samples, audio.sampleRate)
             }
             _uiState.value = DashboardUiState(recording = recording, report = report, spectrogram = spectrogram, isLoading = false)
+
+            // Persist the freshly computed scores so Executive Analytics (average quality,
+            // improvement trend, Juz completion) has real numbers to work with instead of
+            // every recording sitting at a permanent null score.
+            if (recording.studioReadinessScore != report.studioReadinessScore ||
+                recording.broadcastReadinessScore != report.broadcastReadinessScore ||
+                recording.archiveReadinessScore != report.archiveReadinessScore
+            ) {
+                app.recordingRepository.update(
+                    recording.copy(
+                        studioReadinessScore = report.studioReadinessScore,
+                        broadcastReadinessScore = report.broadcastReadinessScore,
+                        archiveReadinessScore = report.archiveReadinessScore,
+                    ),
+                )
+            }
         }
     }
 }

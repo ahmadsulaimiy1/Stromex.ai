@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.CompareArrows
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,16 +29,22 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
 import com.sajjil.app.SajjilApplication
+import com.sajjil.app.ui.screens.analytics.AnalyticsScreen
+import com.sajjil.app.ui.screens.analytics.AnalyticsViewModel
 import com.sajjil.app.ui.screens.archive.ArchiveScreen
 import com.sajjil.app.ui.screens.archive.ArchiveViewModel
 import com.sajjil.app.ui.screens.batch.BatchProductionScreen
 import com.sajjil.app.ui.screens.batch.BatchProductionViewModel
+import com.sajjil.app.ui.screens.comparison.ComparisonLabScreen
+import com.sajjil.app.ui.screens.comparison.ComparisonLabViewModel
 import com.sajjil.app.ui.screens.dashboard.DashboardScreen
 import com.sajjil.app.ui.screens.dashboard.DashboardViewModel
 import com.sajjil.app.ui.screens.enhance.EnhanceScreen
 import com.sajjil.app.ui.screens.enhance.EnhanceViewModel
 import com.sajjil.app.ui.screens.master.MasterScreen
 import com.sajjil.app.ui.screens.master.MasterViewModel
+import com.sajjil.app.ui.screens.quranproject.QuranProjectScreen
+import com.sajjil.app.ui.screens.quranproject.QuranProjectViewModel
 import com.sajjil.app.ui.screens.quranstudio.QuranStudioScreen
 import com.sajjil.app.ui.screens.quranstudio.QuranStudioViewModel
 import com.sajjil.app.ui.screens.record.RecordScreen
@@ -57,6 +65,12 @@ fun SajjilNavGraph(
             TopAppBar(
                 title = { Text("SAJJIL") },
                 actions = {
+                    IconButton(onClick = { navController.navigate(SajjilRoutes.ANALYTICS) }) {
+                        Icon(Icons.Filled.Analytics, contentDescription = "Executive Analytics")
+                    }
+                    IconButton(onClick = { navController.navigate(SajjilRoutes.COMPARISON_LAB) }) {
+                        Icon(Icons.Filled.CompareArrows, contentDescription = "Comparison Lab")
+                    }
                     IconButton(onClick = { navController.navigate(SajjilRoutes.SETTINGS) }) {
                         Icon(Icons.Filled.Settings, contentDescription = "Settings")
                     }
@@ -121,13 +135,39 @@ fun SajjilNavGraph(
                 val viewModel: QuranStudioViewModel = viewModel(factory = viewModelFactory {
                     initializer { QuranStudioViewModel(application) }
                 })
-                QuranStudioScreen(viewModel, onOpenBatchProduction = { navController.navigate(SajjilRoutes.BATCH_PRODUCTION) })
+                QuranStudioScreen(
+                    viewModel,
+                    onOpenBatchProduction = { navController.navigate(SajjilRoutes.BATCH_PRODUCTION) },
+                    onOpenSurahProject = { surahNumber -> navController.navigate(SajjilRoutes.quranProject(surahNumber)) },
+                )
+            }
+            composable(
+                route = SajjilRoutes.QURAN_PROJECT,
+                arguments = listOf(navArgument("surahNumber") { type = NavType.IntType }),
+            ) { backStackEntry ->
+                val surahNumber = backStackEntry.arguments?.getInt("surahNumber") ?: return@composable
+                val viewModel: QuranProjectViewModel = viewModel(factory = viewModelFactory {
+                    initializer { QuranProjectViewModel(application) }
+                })
+                QuranProjectScreen(viewModel, surahNumber)
             }
             composable(SajjilRoutes.BATCH_PRODUCTION) {
                 val viewModel: BatchProductionViewModel = viewModel(factory = viewModelFactory {
                     initializer { BatchProductionViewModel(application) }
                 })
                 BatchProductionScreen(viewModel)
+            }
+            composable(SajjilRoutes.ANALYTICS) {
+                val viewModel: AnalyticsViewModel = viewModel(factory = viewModelFactory {
+                    initializer { AnalyticsViewModel(application) }
+                })
+                AnalyticsScreen(viewModel)
+            }
+            composable(SajjilRoutes.COMPARISON_LAB) {
+                val viewModel: ComparisonLabViewModel = viewModel(factory = viewModelFactory {
+                    initializer { ComparisonLabViewModel(application) }
+                })
+                ComparisonLabScreen(viewModel)
             }
             composable(SajjilRoutes.SETTINGS) {
                 val viewModel: SettingsViewModel = viewModel(factory = viewModelFactory {

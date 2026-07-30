@@ -20,7 +20,7 @@ import java.io.File
 data class BatchProductionUiState(
     val library: List<RecordingEntity> = emptyList(),
     val selectedIds: Set<Long> = emptySet(),
-    val profile: VoiceProfile = VoiceProfile.HARAMAIN,
+    val profile: VoiceProfile = VoiceProfile.HARAMAIN_BROADCAST,
     val isRunning: Boolean = false,
     val completed: Int = 0,
     val total: Int = 0,
