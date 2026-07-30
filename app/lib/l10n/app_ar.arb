@@ -1,0 +1,57 @@
+{
+  "@@locale": "ar",
+  "appName": "تصميم",
+  "appTagline": "التصميم في أبهى صوره.",
+
+  "onboardTitle1": "صمّم في ثوانٍ",
+  "onboardBody1": "صف ما تحتاجه أو ابدأ من قالب جاهز — يقوم تصميم ببناء مسودة حقيقية وقابلة للتعديل فورًا.",
+  "onboardTitle2": "لوحة تصميم احترافية",
+  "onboardBody2": "نصوص، أشكال، أيقونات، طبقات، وتحكم دقيق بالألوان — بلا حدود مهما تقدمت في احترافيتك.",
+  "onboardTitle3": "مصمم للتصميم الإسلامي",
+  "onboardBody3": "خط عربي أصيل ومجموعة مخصصة من قوالب المطويات الإسلامية، وفعاليات المساجد، والدعوة.",
+  "skip": "تخطي",
+  "continueLabel": "متابعة",
+  "getStarted": "ابدأ الآن",
+
+  "continueWithoutAccount": "المتابعة بدون حساب",
+  "createLocalProfile": "إنشاء ملف تعريف محلي",
+  "alreadyHaveProfile": "لدي ملف تعريف بالفعل على هذا الجهاز",
+  "profileDisclaimer": "تُحفظ الملفات الشخصية بأمان على هذا الجهاز فقط — لا يوجد نظام حسابات سحابي في هذا الإصدار من تصميم.",
+
+  "dashboardGreetingGuest": "أهلًا بك — تصمم كضيف",
+  "dashboardGreetingBack": "أهلًا بعودتك، {name}",
+  "@dashboardGreetingBack": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "whatToCreate": "ماذا تحب أن تصمم اليوم؟",
+  "newDesign": "تصميم جديد",
+  "aiGenerate": "إنشاء بالذكاء الاصطناعي",
+  "templates": "القوالب",
+  "inspiration": "الإلهام",
+  "recentProjects": "المشاريع الأخيرة",
+  "noProjectsTitle": "لا توجد مشاريع بعد",
+  "noProjectsMessage": "ابدأ من قالب أو أنشئ تصميمًا بالذكاء الاصطناعي — ستظهر مشاريعك المحفوظة هنا.",
+  "browseTemplates": "تصفح القوالب",
+
+  "settingsTitle": "الإعدادات",
+  "appearance": "المظهر",
+  "light": "فاتح",
+  "dark": "داكن",
+  "systemDefault": "حسب النظام",
+  "language": "اللغة",
+  "english": "English",
+  "arabic": "العربية",
+  "aiSection": "الذكاء الاصطناعي",
+  "apiKeyLabel": "مفتاح واجهة Anthropic البرمجية",
+  "apiKeyConfigured": "تم الإعداد",
+  "apiKeyNotSet": "لم يُعدّ بعد — ميزات الذكاء الاصطناعي تحتاج إلى مفتاح",
+  "accountSection": "الحساب",
+  "signOut": "تسجيل الخروج",
+  "deleteProfileAction": "حذف الملف الشخصي",
+  "diagnostics": "التشخيص",
+
+  "save": "حفظ",
+  "export": "تصدير",
+  "cancel": "إلغاء",
+  "done": "تم"
+}

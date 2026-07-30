@@ -1,0 +1,85 @@
+name: Build TASMIM Android APK
+
+# This is the actual build path for the TASMIM MVP's release APK. The
+# development sandbox this app was built in blocks outbound access to
+# dl.google.com / maven.google.com (the Android SDK / Android Gradle
+# Plugin's hosts), so the APK cannot be compiled there. GitHub-hosted
+# runners have the Android SDK preinstalled and unrestricted internet, so
+# CI is where the real, installable APK actually gets produced.
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      - "app/**"
+      - ".github/workflows/build-apk.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.8"
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Static analysis
+        run: flutter analyze --no-fatal-infos
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Build release APK
+        run: flutter build apk --release --build-number=${{ github.run_number }}
+
+      - name: Rename APK with build metadata
+        run: |
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-release.apk \
+             "dist/tasmim-mvp-${{ github.run_number }}.apk"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tasmim-release-apk
+          path: app/dist/*.apk
+          retention-days: 90
+
+      - name: Create GitHub Release with APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: mvp-build-${{ github.run_number }}
+          name: "TASMIM MVP build #${{ github.run_number }}"
+          body: |
+            Automated release APK build from commit ${{ github.sha }}.
+
+            This is a debug-signed release build intended for direct
+            install and testing (Phase 4 MVP) — not a Play Store
+            submission build. See `docs/mvp/` in the repository for the
+            feature verification checklist, known limitations, and
+            build instructions.
+          files: app/dist/*.apk
+          draft: false
+          prerelease: true

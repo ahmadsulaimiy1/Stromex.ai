@@ -1,0 +1,57 @@
+{
+  "@@locale": "en",
+  "appName": "TASMIM",
+  "appTagline": "Design, elevated.",
+
+  "onboardTitle1": "Design in seconds",
+  "onboardBody1": "Describe what you need or start from a template — TASMIM builds a real, editable first draft instantly.",
+  "onboardTitle2": "A professional canvas",
+  "onboardBody2": "Text, shapes, icons, layers, and precise color control — never limited, however far you want to take it.",
+  "onboardTitle3": "Built for Islamic design",
+  "onboardBody3": "Real Arabic typography and a dedicated suite of Islamic flyer, mosque event, and da'wah templates.",
+  "skip": "Skip",
+  "continueLabel": "Continue",
+  "getStarted": "Get Started",
+
+  "continueWithoutAccount": "Continue without account",
+  "createLocalProfile": "Create a local profile",
+  "alreadyHaveProfile": "I already have a profile on this device",
+  "profileDisclaimer": "Profiles are stored securely on this device only — TASMIM has no cloud account system in this release.",
+
+  "dashboardGreetingGuest": "Welcome — designing as guest",
+  "dashboardGreetingBack": "Welcome back, {name}",
+  "@dashboardGreetingBack": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "whatToCreate": "What would you like to create today?",
+  "newDesign": "New Design",
+  "aiGenerate": "AI Generate",
+  "templates": "Templates",
+  "inspiration": "Inspiration",
+  "recentProjects": "Recent Projects",
+  "noProjectsTitle": "No projects yet",
+  "noProjectsMessage": "Start from a template or generate one with AI — your saved projects will show up here.",
+  "browseTemplates": "Browse Templates",
+
+  "settingsTitle": "Settings",
+  "appearance": "Appearance",
+  "light": "Light",
+  "dark": "Dark",
+  "systemDefault": "Follow system",
+  "language": "Language",
+  "english": "English",
+  "arabic": "العربية (Arabic)",
+  "aiSection": "AI",
+  "apiKeyLabel": "Anthropic API key",
+  "apiKeyConfigured": "Configured",
+  "apiKeyNotSet": "Not set — AI features need a key",
+  "accountSection": "Account",
+  "signOut": "Sign out",
+  "deleteProfileAction": "Delete profile",
+  "diagnostics": "Diagnostics",
+
+  "save": "Save",
+  "export": "Export",
+  "cancel": "Cancel",
+  "done": "Done"
+}
