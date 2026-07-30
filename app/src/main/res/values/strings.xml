@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">SAJJIL</string>
+    <string name="recording_notification_title">SAJJIL is recording</string>
+    <string name="recording_notification_body">Tap to return to the studio</string>
+</resources>

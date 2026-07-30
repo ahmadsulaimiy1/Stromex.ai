@@ -1,0 +1,150 @@
+package com.sajjil.app.navigation
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import androidx.navigation.NavType
+import com.sajjil.app.SajjilApplication
+import com.sajjil.app.ui.screens.archive.ArchiveScreen
+import com.sajjil.app.ui.screens.archive.ArchiveViewModel
+import com.sajjil.app.ui.screens.dashboard.DashboardScreen
+import com.sajjil.app.ui.screens.dashboard.DashboardViewModel
+import com.sajjil.app.ui.screens.enhance.EnhanceScreen
+import com.sajjil.app.ui.screens.enhance.EnhanceViewModel
+import com.sajjil.app.ui.screens.master.MasterScreen
+import com.sajjil.app.ui.screens.master.MasterViewModel
+import com.sajjil.app.ui.screens.quranstudio.QuranStudioScreen
+import com.sajjil.app.ui.screens.quranstudio.QuranStudioViewModel
+import com.sajjil.app.ui.screens.record.RecordScreen
+import com.sajjil.app.ui.screens.record.RecordViewModel
+import com.sajjil.app.ui.screens.settings.SettingsScreen
+import com.sajjil.app.ui.screens.settings.SettingsViewModel
+
+@Composable
+fun SajjilNavGraph(
+    application: SajjilApplication,
+    microphoneGranted: Boolean,
+    onRequestMicrophone: () -> Unit,
+) {
+    val navController = rememberNavController()
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("SAJJIL") },
+                actions = {
+                    IconButton(onClick = { navController.navigate(SajjilRoutes.SETTINGS) }) {
+                        Icon(Icons.Filled.Settings, contentDescription = "Settings")
+                    }
+                },
+            )
+        },
+        bottomBar = {
+            val backStackEntry by navController.currentBackStackEntryAsState()
+            val currentDestination = backStackEntry?.destination
+            NavigationBar {
+                SajjilDestination.bottomNavItems.forEach { destination ->
+                    NavigationBarItem(
+                        selected = currentDestination?.hierarchy?.any { it.route == destination.route } == true,
+                        onClick = {
+                            navController.navigate(destination.route) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        icon = { Icon(destination.icon, contentDescription = destination.label) },
+                        label = { Text(destination.label) },
+                    )
+                }
+            }
+        },
+    ) { padding ->
+        NavHost(
+            navController = navController,
+            startDestination = SajjilDestination.Record.route,
+            modifier = Modifier.fillMaxSize().padding(padding),
+        ) {
+            composable(SajjilDestination.Record.route) {
+                if (microphoneGranted) {
+                    val viewModel: RecordViewModel = viewModel(factory = viewModelFactory {
+                        initializer { RecordViewModel(application) }
+                    })
+                    RecordScreen(viewModel)
+                } else {
+                    MicrophonePermissionPrompt(onRequestMicrophone)
+                }
+            }
+            composable(SajjilDestination.Enhance.route) {
+                val viewModel: EnhanceViewModel = viewModel(factory = viewModelFactory {
+                    initializer { EnhanceViewModel(application) }
+                })
+                EnhanceScreen(viewModel)
+            }
+            composable(SajjilDestination.Master.route) {
+                val viewModel: MasterViewModel = viewModel(factory = viewModelFactory {
+                    initializer { MasterViewModel(application) }
+                })
+                MasterScreen(viewModel)
+            }
+            composable(SajjilDestination.Archive.route) {
+                val viewModel: ArchiveViewModel = viewModel(factory = viewModelFactory {
+                    initializer { ArchiveViewModel(application) }
+                })
+                ArchiveScreen(viewModel, onOpenDashboard = { id -> navController.navigate(SajjilRoutes.dashboard(id)) })
+            }
+            composable(SajjilDestination.QuranStudio.route) {
+                val viewModel: QuranStudioViewModel = viewModel(factory = viewModelFactory {
+                    initializer { QuranStudioViewModel(application) }
+                })
+                QuranStudioScreen(viewModel)
+            }
+            composable(SajjilRoutes.SETTINGS) {
+                val viewModel: SettingsViewModel = viewModel(factory = viewModelFactory {
+                    initializer { SettingsViewModel(application) }
+                })
+                SettingsScreen(viewModel)
+            }
+            composable(
+                route = SajjilRoutes.DASHBOARD,
+                arguments = listOf(navArgument("recordingId") { type = NavType.LongType }),
+            ) { backStackEntry ->
+                val recordingId = backStackEntry.arguments?.getLong("recordingId") ?: return@composable
+                val viewModel: DashboardViewModel = viewModel(factory = viewModelFactory {
+                    initializer { DashboardViewModel(application) }
+                })
+                DashboardScreen(viewModel, recordingId)
+            }
+        }
+    }
+}
+
+@Composable
+private fun MicrophonePermissionPrompt(onRequestMicrophone: () -> Unit) {
+    Column(Modifier.fillMaxSize().padding(24.dp)) {
+        Text("SAJJIL needs microphone access to record.")
+        androidx.compose.material3.Button(onClick = onRequestMicrophone) { Text("Grant Microphone Access") }
+    }
+}

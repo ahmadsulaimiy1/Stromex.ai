@@ -1,0 +1,43 @@
+package com.sajjil.app.ui.screens.dashboard
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.sajjil.app.data.db.RecordingEntity
+import com.sajjil.app.di.asSajjilApplication
+import com.sajjil.core.analysis.AudioAnalysisReport
+import com.sajjil.core.analysis.AudioQualityScorer
+import com.sajjil.core.analysis.LoudnessAnalyzer
+import com.sajjil.core.audio.WavIO
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+
+data class DashboardUiState(
+    val recording: RecordingEntity? = null,
+    val report: AudioAnalysisReport? = null,
+    val isLoading: Boolean = true,
+)
+
+class DashboardViewModel(application: Application) : AndroidViewModel(application) {
+    private val app = application.asSajjilApplication()
+
+    private val _uiState = MutableStateFlow(DashboardUiState())
+    val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
+
+    fun load(recordingId: Long) {
+        viewModelScope.launch {
+            val recording = app.recordingRepository.getById(recordingId) ?: return@launch
+            val report = withContext(Dispatchers.Default) {
+                val audio = WavIO.read(File(recording.filePath).readBytes())
+                val metrics = LoudnessAnalyzer.analyze(audio.samples, audio.sampleRate)
+                AudioQualityScorer.score(metrics)
+            }
+            _uiState.value = DashboardUiState(recording = recording, report = report, isLoading = false)
+        }
+    }
+}
