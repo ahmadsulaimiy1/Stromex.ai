@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.CompareArrows
+import androidx.compose.material.icons.filled.FactCheck
+import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,10 +49,16 @@ import com.sajjil.app.ui.screens.quranproject.QuranProjectScreen
 import com.sajjil.app.ui.screens.quranproject.QuranProjectViewModel
 import com.sajjil.app.ui.screens.quranstudio.QuranStudioScreen
 import com.sajjil.app.ui.screens.quranstudio.QuranStudioViewModel
+import com.sajjil.app.ui.screens.readiness.ProductionReadinessScreen
+import com.sajjil.app.ui.screens.readiness.ProductionReadinessViewModel
 import com.sajjil.app.ui.screens.record.RecordScreen
 import com.sajjil.app.ui.screens.record.RecordViewModel
 import com.sajjil.app.ui.screens.settings.SettingsScreen
 import com.sajjil.app.ui.screens.settings.SettingsViewModel
+import com.sajjil.app.ui.screens.speechsettings.SpeechCapabilityScreen
+import com.sajjil.app.ui.screens.speechsettings.SpeechCapabilityViewModel
+import com.sajjil.app.ui.screens.voicestudio.VoiceStudioScreen
+import com.sajjil.app.ui.screens.voicestudio.VoiceStudioViewModel
 
 @Composable
 fun SajjilNavGraph(
@@ -65,6 +73,12 @@ fun SajjilNavGraph(
             TopAppBar(
                 title = { Text("SAJJIL") },
                 actions = {
+                    IconButton(onClick = { navController.navigate(SajjilRoutes.PRODUCTION_READINESS) }) {
+                        Icon(Icons.Filled.FactCheck, contentDescription = "Production Readiness")
+                    }
+                    IconButton(onClick = { navController.navigate(SajjilRoutes.VOICE_STUDIO) }) {
+                        Icon(Icons.Filled.RecordVoiceOver, contentDescription = "Voice Studio")
+                    }
                     IconButton(onClick = { navController.navigate(SajjilRoutes.ANALYTICS) }) {
                         Icon(Icons.Filled.Analytics, contentDescription = "Executive Analytics")
                     }
@@ -169,11 +183,33 @@ fun SajjilNavGraph(
                 })
                 ComparisonLabScreen(viewModel)
             }
+            composable(SajjilRoutes.PRODUCTION_READINESS) {
+                val viewModel: ProductionReadinessViewModel = viewModel(factory = viewModelFactory {
+                    initializer { ProductionReadinessViewModel(application) }
+                })
+                ProductionReadinessScreen(viewModel)
+            }
+            composable(SajjilRoutes.VOICE_STUDIO) {
+                if (microphoneGranted) {
+                    val viewModel: VoiceStudioViewModel = viewModel(factory = viewModelFactory {
+                        initializer { VoiceStudioViewModel(application) }
+                    })
+                    VoiceStudioScreen(viewModel)
+                } else {
+                    MicrophonePermissionPrompt(onRequestMicrophone)
+                }
+            }
+            composable(SajjilRoutes.SPEECH_CAPABILITY) {
+                val viewModel: SpeechCapabilityViewModel = viewModel(factory = viewModelFactory {
+                    initializer { SpeechCapabilityViewModel(application) }
+                })
+                SpeechCapabilityScreen(viewModel)
+            }
             composable(SajjilRoutes.SETTINGS) {
                 val viewModel: SettingsViewModel = viewModel(factory = viewModelFactory {
                     initializer { SettingsViewModel(application) }
                 })
-                SettingsScreen(viewModel)
+                SettingsScreen(viewModel, onOpenSpeechCapability = { navController.navigate(SajjilRoutes.SPEECH_CAPABILITY) })
             }
             composable(
                 route = SajjilRoutes.DASHBOARD,

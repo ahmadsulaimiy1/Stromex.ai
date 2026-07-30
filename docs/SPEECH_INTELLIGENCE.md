@@ -1,98 +1,101 @@
-# Offline Speech Intelligence Investigation
+# Speech Intelligence: What's Real, Updated for Phase 4
 
-Phase 3 asked for Arabic/English transcription, speaker segmentation, and
-searchable recordings, "offline-first where possible." This is that
-investigation. As with hardware acceleration in Phase 2, it ends in a
-recommendation rather than a bundled model — see "Why not implemented now."
+Phase 3's version of this document investigated offline transcription and
+concluded, honestly, that no third-party ASR model (Whisper, Vosk, or
+similar) could be sourced, bundled, or verified in this sandbox — so Phase 3
+shipped title/notes/tag search instead of transcript search, and left
+transcription as a documented recommendation.
 
-## What shipped instead: real text search over what SAJJIL already knows
+Phase 4's directive asked for something different and genuinely achievable
+without a bundled model: **wrap Android's own speech APIs**. That doesn't
+require training or sourcing a model — `android.speech.SpeechRecognizer` and
+`android.speech.tts.TextToSpeech` are public OS services. This phase does
+that for real. What still isn't implemented, and why, is below.
 
-Recordings are searchable today by **title, notes, Surah tag, and Ayah
-range** (`RecordingDao.search`, `RecordingRepository.search`, wired into
-the Archive screen's search field). That's a genuine, working search
-feature — just not a transcript search, since there's no transcript yet.
-Recording Notes (Phase 3's Qur'an Production Suite) doubles as a practical
-stand-in: a Qari can note what a take covers or contains, and search finds
-it.
+## What's implemented this phase
 
-## Why transcription wasn't attempted
+- **`AndroidNativeSpeechRecognizer`** (`app/.../speech/`) — a real
+  `SpeechRecognizer` + `RecognitionListener` wrapper. Requests
+  `EXTRA_PREFER_OFFLINE`, taps `onBufferReceived` to simultaneously capture
+  a reference WAV so a Voice Studio session doesn't need two competing
+  microphone sessions (SAJJIL's own `AudioRecordEngine`, and
+  `SpeechRecognizer`'s own capture, cannot both own the mic reliably).
+- **`OfflineArabicRecognizer` / `OfflineEnglishRecognizer`** — named,
+  stable extension points (Kotlin interface delegation over the recognizer
+  above) so a future Priority-2 engine can be swapped in without touching
+  anything that calls them. Today both delegate straight to Priority 1.
+- **`TTSManager`** — wraps `TextToSpeech`, checks `Voice.isNetworkConnectionRequired()`
+  before claiming a voice is offline, exposes rate/pitch control.
+- **`VoiceCatalog`** — turns the raw voice set from a `TextToSpeech` engine
+  into a sorted, human-readable list (offline voices first).
+- **`AndroidSpeechBridge`** — the single place capability detection lives:
+  is a recognition service installed, is a TTS engine installed, is there
+  an offline voice per language. Feeds the Speech & Language Packs settings
+  screen and Voice Studio's warning banner. It does **not** claim to know
+  in advance whether a specific language will succeed at recognition time —
+  see the limitation below.
+- **`TranscriptSegment` / `Transcript` / `TranscriptSearchEngine`** (`core`,
+  pure Kotlin, unit tested) — the data model transcripts are stored and
+  searched with, including Arabic diacritic-insensitive matching.
+  `TranscriptSegmentEntity` + `TranscriptDao` persist them (Room, DB
+  version 3); `TranscriptRepository` bridges entities to the core domain
+  types `TranscriptSearchEngine` operates on.
+- **Voice Studio** (`ui/screens/voicestudio/`) — record → live offline
+  transcription → search saved transcripts → read a result back with TTS,
+  in one screen, per the directive. Confidence, when the recognizer
+  reports one, is shown next to each segment rather than presented as
+  certainty.
+- **Speech & Language Packs settings screen** — per-language recognition
+  and TTS status with an honest three-tier explanation (below), plus
+  buttons that open the real Android system settings for voice input and
+  TTS — SAJJIL cannot install a language pack itself, so it doesn't
+  pretend to.
 
-Offline ASR needs an actual trained acoustic/language model — there is no
-shortcut equivalent to how the DSP features in this project were built
-(genuine signal processing implemented from first principles). Whisper,
-Vosk, and similar are trained on enormous multilingual speech corpora;
-reproducing one from scratch here is not realistic, and I have no way in
-this sandbox to bundle, download, verify, or test a real model file — no
-Android runtime, no device, no network path to a model registry, and
-critically, no way to confirm a bundled model actually transcribes Arabic
-tajweed recitation or English lecture speech correctly rather than just
-returning plausible-looking garbage. Shipping an untested transcription
-path would be worse than not shipping one.
+## A real platform limitation, worked around rather than hidden
 
-## Recommended path, phased
+`SpeechRecognizer` has no public API to transcribe a pre-existing audio
+file — it is a **live microphone** API only (`startListening()`). Voice
+Studio is therefore built as a live transcription session, not a
+"transcribe this old recording" button; that's a constraint of the Android
+platform, not a shortcut taken here. It's also single-shot: one
+`startListening()` call yields exactly one final result, so a longer
+session is built by automatically starting a new session each time the
+previous one finalizes (`VoiceStudioViewModel.listenLoop`), with segment
+timestamps offset to stay continuous across restarts. Because reopening
+the same file mid-session would corrupt it (`WavStreamWriter` rewrites the
+header from byte zero on open), only the most recent restart's audio is
+kept as a reference clip when a session is saved — the transcript itself
+covers the full session, the saved audio deliberately does not, and the UI
+says so.
 
-### 1. Pick an on-device ASR runtime
-- **Whisper (small/base, quantized, via whisper.cpp or an ONNX Runtime
-  Mobile / TensorFlow Lite port)** — multilingual, has meaningfully strong
-  Modern Standard Arabic support, runs on-device with a quantized model in
-  the 40-150MB range depending on size chosen. This is the strongest
-  candidate specifically because Qur'anic Arabic and MSA lecture speech are
-  both well inside Whisper's training distribution; expect it to do
-  noticeably worse on Tajweed-specific pronunciation nuances than on plain
-  MSA, since Tajweed rules aren't something a general-purpose ASR model was
-  trained to represent.
-- **Vosk** — smaller footprint, fully offline, weaker accuracy than
-  Whisper in most published comparisons, includes Arabic language models.
-  Worth a look if Whisper's model size is a problem for low-end target
-  devices.
-- Either way: budget real device testing across a range of RAM tiers before
-  committing — a model that runs fine on a flagship can be unusable on a
-  budget phone.
+Similarly, there is no public API to ask "is Arabic available offline for
+recognition" before starting a session — the only way to find out is to
+try, and read back `ERROR_LANGUAGE_UNAVAILABLE` if it fails.
+`AndroidSpeechBridge` reports recognition as "installed, confirmed on
+first use" rather than a false green checkmark it can't actually back up.
 
-### 2. Integration shape
-- A `TranscriptionEngine` interface in `core` (pure Kotlin, mirroring the
-  `AudioEffectPlugin` pattern already in this codebase) wrapping whichever
-  runtime is chosen behind a narrow contract: `transcribe(samples,
-  sampleRate, languageHint): TranscriptResult`.
-- The actual model inference is NDK/JNI-bound (native runtimes, not pure
-  Kotlin), so it lives in `app`, not `core` — same boundary reasoning as
-  hardware acceleration.
-- Run transcription as an explicit, user-initiated background job (like
-  Batch Production), not automatically on every recording — it's
-  computationally expensive and the user should decide when it's worth the
-  battery/time cost.
+## The Smart Fallback Hierarchy, honestly scoped
 
-### 3. Data model
-- A `TranscriptEntity` (Room): recordingId, language, segments (start/end
-  timestamp + text), confidence. Store segment-level, not just full-text,
-  so the UI can eventually jump playback to a matched phrase.
-- Extend `RecordingDao.search` to also match transcript segments once they
-  exist — the search infrastructure built this phase (title/notes/tags)
-  extends naturally rather than needing a rewrite.
+1. **Installed Android offline speech services** — implemented, described
+   above.
+2. **A SAJJIL-branded downloadable Offline Speech Pack** — **not
+   implemented**. This is the same call Phase 3 made and for the same
+   reason: there is no way in this sandbox to source, bundle, or verify a
+   real ASR/TTS model. Shipping one unverified would risk silently
+   mis-transcribing Qur'anic recitation, which is worse than not shipping
+   it. The architecture reserves the slot — `OfflineArabicRecognizer` /
+   `OfflineEnglishRecognizer` are exactly where a real Priority-2 engine
+   would plug in — but nothing is downloaded, and the Speech & Language
+   Packs screen says so rather than showing a fake "Download" button.
+3. **Optional cloud processing** — **not implemented**. SAJJIL never sends
+   audio to a network service, on-device or otherwise, and there is no
+   code path that would.
 
-### 4. Speaker segmentation
-- A materially harder, separate problem from transcription — diarization
-  (who spoke when) typically needs its own model (e.g. pyannote-style
-  embedding + clustering), largely irrelevant for single-Qari recitation
-  but genuinely useful for multi-speaker lectures/Q&A sessions. Treat as a
-  distinct, lower-priority roadmap item after transcription ships and
-  proves out on real devices — don't bundle it speculatively.
+## Recommended path for Priority 2, unchanged from Phase 3's reasoning
 
-### 5. What "offline-first" means in practice here
-- Ship the model as a downloadable asset fetched once (not bundled in the
-  APK, which would bloat every install for a feature not everyone uses),
-  cached locally, and run entirely on-device thereafter with no network
-  dependency — genuinely offline after the one-time download, consistent
-  with the rest of SAJJIL's offline-first posture.
-
-## Why not implemented now
-
-No Android runtime, device, or model registry access in this sandbox to
-select, bundle, and — critically — *verify* an ASR model actually works on
-Arabic recitation and English lecture speech. A wrong transcript that looks
-plausible is worse than no transcript; shipping that risk without any way
-to test it here would violate the same honesty standard the rest of this
-project has held to (spectral subtraction called DSP, not "AI"; generic mic
-profiles instead of fabricated brand curves). The search feature that *did*
-ship this phase (title/notes/tag search) is real, tested by inspection
-against the DAO query, and immediately useful.
+Whisper (small/base, quantized) remains the strongest candidate for
+Arabic/English coverage; Vosk remains the lighter-footprint alternative.
+Either needs real device testing across RAM tiers, and — critically —
+verification against actual Qur'anic tajweed recitation and English
+lecture speech before it ships, neither of which is possible without a
+device and a model registry this environment doesn't have access to.

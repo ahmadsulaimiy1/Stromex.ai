@@ -14,23 +14,30 @@ an explicit, documented roadmap.
   professional spectrogram, echo removal, voice restoration, USB microphone support,
   reference-track mastering, an Echo Score, batch Qur'an production, a plugin architecture, and
   the Royal Navy Deep identity.
-- **Phase 3 — Intelligence & Production Ecosystem** (this pass): explicitly *not* more filters —
+- **Phase 3 — Intelligence & Production Ecosystem**: explicitly *not* more filters —
   per-Surah progress tracking and take-version management (the "killer feature"), continuous live
   recording guidance, seven genuinely-distinct flagship mastering chains, one-click adaptive
   mastering, A/B/C instant comparison, executive-level library analytics, and a formal design
-  system. See "Most important instruction" below for how this phase was scoped.
+  system.
+- **Phase 4 — Flagship Platform & Speech Intelligence** (this pass): a Production Readiness Center
+  (a single 0–100 score plus a concrete checklist — missing ayat, clipping, noise, loudness
+  consistency, metadata, naming collisions), a rule-based Project Assistant, and — the phase's
+  non-negotiable requirement — real offline speech recognition and text-to-speech built on
+  Android's own platform APIs, wrapped in a new **Voice Studio** workflow. See "Most important
+  instruction" below for how this phase was scoped against a much larger wishlist.
 
 ## Modules
 
-- **`core`** — pure Kotlin/JVM, zero Android dependencies, fully unit tested (**103 tests**).
+- **`core`** — pure Kotlin/JVM, zero Android dependencies, fully unit tested (**135 tests**).
   Every DSP algorithm, acoustic analysis, Qur'an production-suite logic, the recording
   mode/voice-profile/microphone presets, WAV I/O, loudness analysis, batch processing, executive
-  analytics, and the plugin architecture all live here — the parts actually verified in this
-  sandbox.
+  analytics, production readiness, the project assistant, transcript search, and the plugin
+  architecture all live here — the parts actually verified in this sandbox.
 - **`app`** — the Android application (Jetpack Compose + Material3). Wires `core`'s logic into a
-  live `AudioRecord` capture chain, a Room-backed recording library, WAV/AAC export, and eleven
+  live `AudioRecord` capture chain, a Room-backed recording library, WAV/AAC export, and fourteen
   screens (Record, Enhance, Master, Archive, Qur'an Studio, Surah Project, Batch Production,
-  Comparison Lab, Executive Analytics, Dashboard, Settings).
+  Comparison Lab, Executive Analytics, Production Readiness, Voice Studio, Speech & Language
+  Packs, Dashboard, Settings).
 
 `core` is verified in this environment with `gradle :core:test` (no Android SDK required — see
 "Building" below for why `app` couldn't be compiled here). `app` was written carefully against the
@@ -51,6 +58,28 @@ shaped three decisions:
   Comparison Lab actually have real data to work with instead of being disconnected demos.
 - **Adaptive Mastering is a toggle, not a wizard** — flip it on, and content classification +
   chain selection happens in one pass inside the existing Master flow.
+
+## How Phase 4 was scoped
+
+Phase 4 arrived as three stacked directives: a 10-item flagship-platform wishlist, then a
+"non-negotiable" offline speech/TTS requirement stated to supersede it, then a follow-up
+"permanent offline model download" directive on top of that. Chasing all of it in one pass would
+have meant building thin, half-verified stubs — the opposite of every prior phase's approach. So:
+- **The speech/TTS directive was treated as primary**, per its own "supersedes lower-priority
+  roadmap items" framing, and built as far as it can honestly go: real Android-native
+  `SpeechRecognizer`/`TextToSpeech` integration, a full Voice Studio workflow, capability
+  detection, and a Speech & Language Packs settings screen. The directive's second tier — a
+  downloadable SAJJIL-branded model — is architecturally reserved but not implemented, for the
+  same reason Phase 3 didn't implement transcription: no way to source or verify a real ASR/TTS
+  model in this sandbox. See [`docs/SPEECH_INTELLIGENCE.md`](docs/SPEECH_INTELLIGENCE.md).
+- **From the 10-item wishlist, two items were built for real**: the Production Readiness Center
+  and the Intelligent Project Assistant — both cheap to build honestly on top of Phase 3's
+  `SurahProgressCalculator`/`JuzProgressCalculator`/`AnalyticsCalculator`/`AudioQualityScorer`, and
+  both non-generative/rule-based, matching the phase's own "no fabricated AI claims" principle.
+- **The rest of the wishlist was scoped out explicitly, not silently dropped** — see "Deliberately
+  out of scope" below: the Mushaf/Archive visual browser, the Brand Identity Package (logo assets),
+  Performance Certification (needs a real device), and PDF/XLSX report export (needs dependencies
+  this sandbox can't fetch or verify).
 
 ## What's real in `core` (not stubs)
 
@@ -105,8 +134,26 @@ shaped three decisions:
   recorded, true Juz-completed count (via `JuzProgressCalculator`), ayah-weighted average quality,
   an improvement trend (recent-window vs. prior-window average score), library size, storage usage.
 
+### Phase 4 — Flagship Platform & Speech Intelligence
+- **`readiness/ProductionReadinessCalculator`** — the Production Readiness Center's core algorithm:
+  aggregates missing-ayah coverage (via `SurahProgressCalculator`), clipping, low noise scores,
+  cross-take loudness inconsistency (standard deviation across integrated LUFS), missing
+  Surah/Ayah/title metadata, overlapping-range duplicate takes, and title collisions into one
+  0–100 score plus a severity-ranked issue list (`"Production Readiness: 94/100"`). A heuristic
+  aggregator over numbers computed elsewhere, not a re-analysis of audio itself.
+- **`assistant/ProjectAssistant`** — the Intelligent Project Assistant: turns
+  `SurahProgress`/`JuzProgress`/`ExecutiveAnalytics` into plain-sentence insights ("112 of 114
+  Surahs recorded, remaining: 2 Juz and 15 Surahs", "quality in Al-Mulk is below your average,
+  consider re-recording it"). Every rule is arithmetic over an existing score — nothing here is
+  generated that a screen couldn't already show on its own; it's non-generative by design, per the
+  phase's own instruction.
+- **`speech/TranscriptSegment`/`Transcript`/`TranscriptSearchEngine`** — the transcript data model
+  and search, including Arabic diacritic-insensitive matching (harakat/tashkeel are stripped
+  before comparing, so a query typed without diacritics still matches recognizer output that
+  includes them, and vice versa).
+
 ### Bugs found and fixed by the test suite
-Three genuine bugs surfaced across the three phases — proof the tests are pulling their weight:
+Three genuine bugs surfaced across the phases — proof the tests are pulling their weight:
 1. **Phase 1:** spectral-subtraction noise reduction reconstructed audio incorrectly near buffer
    edges (dividing by a near-zero window-sum). Fixed via zero-padding before framing.
 2. **Phase 2:** `ParametricEqualizer.basic()`'s fixed 9 kHz treble shelf exceeded Nyquist at lower
@@ -129,9 +176,12 @@ reduction, autocorrelation pitch tracking, threshold-based pause detection — n
 rhythmically-paused speech in a language it doesn't parse. It measures acoustic features and maps
 them to the closest flagship profile, which is a helpful starting point a user can always override
 in Master, not an infallible content classifier. `MicrophoneProfile` ships generic character
-curves, not measured per-brand hardware data. Offline speech transcription was investigated, not
-implemented — see [`docs/SPEECH_INTELLIGENCE.md`](docs/SPEECH_INTELLIGENCE.md) — no bundled ASR
-model was available to select, integrate, and (critically) verify in this sandbox.
+curves, not measured per-brand hardware data. Offline speech recognition and TTS are implemented
+for real this phase, but as a wrapper around Android's own platform services, not a bundled
+SAJJIL model — see [`docs/SPEECH_INTELLIGENCE.md`](docs/SPEECH_INTELLIGENCE.md) for exactly what
+that means and what's still not implemented (a downloadable SAJJIL-branded model, and any cloud
+fallback). Voice Studio's transcript confidence is shown as whatever the recognizer reports, never
+presented as certainty — and nothing here claims automatic Qur'anic recitation accuracy.
 
 ## What's in `app`
 
@@ -151,9 +201,8 @@ model was available to select, integrate, and (critically) verify in this sandbo
   (auto-detects content and builds the chain), optional damage repair, echo removal, reference-take
   matching, Executive Dashboard scores including Echo Score, a spectrogram and loudness history,
   export to WAV/AAC, and **Save to Library**.
-- `SAJJIL Archive`: searchable (title, notes, Surah/Ayah tags — see
-  [`docs/SPEECH_INTELLIGENCE.md`](docs/SPEECH_INTELLIGENCE.md) for why that's real search but not
-  transcript search yet) Room-backed library, favorites, delete, per-recording Dashboard.
+- `SAJJIL Archive`: searchable (title, notes, Surah/Ayah tags) Room-backed library, favorites,
+  delete, per-recording Dashboard. Transcript search now exists too — see Voice Studio below.
 - **Batch Production**: master an entire tagged selection (a Surah, a Juz, the whole library) in
   one pass.
 - **Comparison Laboratory**: load up to three takes into slots and switch playback between them at
@@ -170,21 +219,51 @@ model was available to select, integrate, and (critically) verify in this sandbo
   than a fabricated downloadable-fonts certificate.
 - Nine luxury Material3 themes, **Royal Navy Deep** as flagship default, `GlassCard` for restrained
   glassmorphism on Executive surfaces specifically.
+- **Production Readiness Center**: a "Run Readiness Check" pass that reads every primary Qur'an
+  take's actual audio (not a cached composite score) for clipping and noise, plus missing-ayah
+  coverage, loudness consistency, and metadata/naming checks — one score
+  (`"Production Readiness: 94/100"`) and a severity-ranked issue list, with the Project Assistant's
+  insights surfaced on the same screen.
+- **Voice Studio**: live offline speech-to-text (Arabic or English) via Android's own recognizer,
+  with a simultaneous reference-audio capture, search across every saved transcript
+  (diacritic-insensitive for Arabic), and text-to-speech readback — record, transcribe, search,
+  and listen without leaving the screen.
+- **Speech & Language Packs** (in Settings): per-language offline recognition/TTS status, checked
+  fresh each time rather than assumed, an honest explanation of the three-tier fallback hierarchy,
+  and buttons that open the real Android system settings to install a language pack — SAJJIL
+  cannot install one itself, so it doesn't pretend it can.
 
 ### Deliberately out of scope for this pass
 
 - FLAC / MP3 / OGG / OPUS / ALAC / AIFF export, video-audio extraction — unchanged from Phase 2.
 - Hardware acceleration — investigated in Phase 2, still not implemented; see
   [`docs/HARDWARE_ACCELERATION.md`](docs/HARDWARE_ACCELERATION.md).
-- Offline speech transcription and speaker segmentation — investigated this phase, not
-  implemented; see [`docs/SPEECH_INTELLIGENCE.md`](docs/SPEECH_INTELLIGENCE.md).
+- A downloadable SAJJIL-branded offline speech/TTS model, and any cloud-based speech fallback —
+  see [`docs/SPEECH_INTELLIGENCE.md`](docs/SPEECH_INTELLIGENCE.md) for why (same reasoning as
+  hardware acceleration: nothing to bundle here that could be verified). Android's own offline
+  speech services are implemented and real.
 - Recitation *sessions* as a separate tracked entity — deliberately not built; Recording Notes +
   Surah Project progress covers the same need with one fewer concept for the user to manage,
-  matching this phase's "fewer steps" instruction.
+  matching Phase 3's "fewer steps" instruction.
 - Real per-microphone-model AI calibration, voice cloning protection, a DAW/mixer/plugin
   marketplace (the plugin architecture itself is real), multi-track recording, cloud sync.
 - Truly gapless (sample-accurate, zero-gap) A/B switching in the Comparison Lab — today's version
   stops and restarts at the matched position, not a simultaneous dual-source mix.
+- **Flagship Qur'an Archive** (Mushaf/Surah/Juz visual browser, completion map) — Surah Project and
+  Executive Analytics already surface this data; a dedicated Mushaf-style visual browser is a UI
+  investment, not a data problem, and wasn't built this pass to keep the speech directive primary.
+- **Brand Identity Package** (logo system, app icon, splash mark, dark/light variants) — this is
+  graphic-design asset production, not something to fabricate as placeholder files; needs a real
+  designer or image-generation pass, not code.
+- **Performance Certification** (processing speed, memory, battery, startup time dashboard) — same
+  reasoning as Hardware Acceleration: these are real-device measurements. Nothing runs in this
+  sandbox to measure honestly, so nothing is claimed.
+- **PDF/XLSX production reports** — needs a document-generation dependency this sandbox has no
+  network path to fetch or verify; the same data (hours, sessions, quality, completion) is already
+  real and visible in Executive Analytics and Production Readiness today.
+- **Enterprise Metadata Engine** as a separate system — `RecordingEntity` already carries Surah,
+  Ayah range, Juz, timestamps, readiness scores, and notes; a distinct metadata layer would
+  duplicate it for no new capability.
 
 ## Building
 

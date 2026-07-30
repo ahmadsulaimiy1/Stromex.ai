@@ -4,6 +4,7 @@ import android.app.Application
 import com.sajjil.app.data.db.SajjilDatabase
 import com.sajjil.app.data.repository.RecordingRepository
 import com.sajjil.app.data.repository.SettingsRepository
+import com.sajjil.app.data.repository.TranscriptRepository
 import com.sajjil.core.plugin.BuiltinPlugins
 
 class SajjilApplication : Application() {
@@ -11,12 +12,15 @@ class SajjilApplication : Application() {
         private set
     lateinit var settingsRepository: SettingsRepository
         private set
+    lateinit var transcriptRepository: TranscriptRepository
+        private set
 
     override fun onCreate() {
         super.onCreate()
         val database = SajjilDatabase.getInstance(this)
         recordingRepository = RecordingRepository(database.recordingDao())
         settingsRepository = SettingsRepository(this)
+        transcriptRepository = TranscriptRepository(database.transcriptDao())
         BuiltinPlugins.registerAll()
     }
 }

@@ -15,6 +15,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -28,15 +30,29 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.sajjil.app.ui.components.GlassCard
 import com.sajjil.app.ui.theme.SajjilTheme
 
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel, modifier: Modifier = Modifier) {
+fun SettingsScreen(viewModel: SettingsViewModel, onOpenSpeechCapability: () -> Unit = {}, modifier: Modifier = Modifier) {
     val theme by viewModel.theme.collectAsStateWithLifecycle()
 
     Column(modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("Settings", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
         Text("Choose the identity your studio wears.", style = MaterialTheme.typography.bodyMedium)
+
+        GlassCard(modifier = Modifier.clickable(onClick = onOpenSpeechCapability)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.RecordVoiceOver, contentDescription = null)
+                    Column {
+                        Text("Speech & Language Packs", fontWeight = FontWeight.SemiBold)
+                        Text("Offline recognition and voice status", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                Icon(Icons.Filled.ChevronRight, contentDescription = null)
+            }
+        }
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),

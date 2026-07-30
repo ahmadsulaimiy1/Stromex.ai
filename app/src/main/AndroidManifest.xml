@@ -9,6 +9,18 @@
 
     <uses-feature android:name="android.hardware.microphone" android:required="true" />
 
+    <!-- Package-visibility (Android 11+): lets SAJJIL see whether a speech
+         recognition service and a text-to-speech engine are installed, so
+         AndroidSpeechBridge can report real capability instead of guessing. -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
     <application
         android:name=".SajjilApplication"
         android:allowBackup="false"
