@@ -22,6 +22,7 @@ sealed class SajjilDestination(val route: String, val label: String, val icon: I
 
 object SajjilRoutes {
     const val SETTINGS = "settings"
+    const val ABOUT = "about"
     const val BATCH_PRODUCTION = "batch_production"
     const val ANALYTICS = "analytics"
     const val COMPARISON_LAB = "comparison_lab"

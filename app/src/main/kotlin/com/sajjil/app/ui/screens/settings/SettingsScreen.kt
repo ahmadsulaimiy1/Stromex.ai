@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -34,7 +35,12 @@ import com.sajjil.app.ui.components.GlassCard
 import com.sajjil.app.ui.theme.SajjilTheme
 
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel, onOpenSpeechCapability: () -> Unit = {}, modifier: Modifier = Modifier) {
+fun SettingsScreen(
+    viewModel: SettingsViewModel,
+    onOpenSpeechCapability: () -> Unit = {},
+    onOpenAbout: () -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
     val theme by viewModel.theme.collectAsStateWithLifecycle()
 
     Column(modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -54,6 +60,23 @@ fun SettingsScreen(viewModel: SettingsViewModel, onOpenSpeechCapability: () -> U
             }
         }
 
+        GlassCard(modifier = Modifier.clickable(onClick = onOpenAbout)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Info, contentDescription = null)
+                    Column {
+                        Text("About SAJJIL", fontWeight = FontWeight.SemiBold)
+                        Text("Vision, mission, and the team behind the platform", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                Icon(Icons.Filled.ChevronRight, contentDescription = null)
+            }
+        }
+
+        // Last child by design: an unbounded LazyVerticalGrid only lays out safely as the
+        // final item in this non-scrolling Column (matches the convention already used in
+        // QuranStudioScreen's library list) -- anything placed after it here would be pushed
+        // outside the Column's visible bounds.
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             verticalArrangement = Arrangement.spacedBy(12.dp),

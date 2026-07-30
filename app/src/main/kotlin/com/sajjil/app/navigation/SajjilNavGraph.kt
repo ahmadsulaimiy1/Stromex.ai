@@ -34,6 +34,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
 import com.sajjil.app.SajjilApplication
+import com.sajjil.app.ui.screens.about.AboutScreen
 import com.sajjil.app.ui.screens.analytics.AnalyticsScreen
 import com.sajjil.app.ui.screens.analytics.AnalyticsViewModel
 import com.sajjil.app.ui.screens.archive.ArchiveScreen
@@ -236,7 +237,14 @@ fun SajjilNavGraph(
                 val viewModel: SettingsViewModel = viewModel(factory = viewModelFactory {
                     initializer { SettingsViewModel(application) }
                 })
-                SettingsScreen(viewModel, onOpenSpeechCapability = { navController.navigate(SajjilRoutes.SPEECH_CAPABILITY) })
+                SettingsScreen(
+                    viewModel,
+                    onOpenSpeechCapability = { navController.navigate(SajjilRoutes.SPEECH_CAPABILITY) },
+                    onOpenAbout = { navController.navigate(SajjilRoutes.ABOUT) },
+                )
+            }
+            composable(SajjilRoutes.ABOUT) {
+                AboutScreen()
             }
             composable(
                 route = SajjilRoutes.DASHBOARD,
