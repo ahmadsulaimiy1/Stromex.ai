@@ -81,9 +81,9 @@ fun SajjilNavGraph(
             TopAppBar(
                 title = { Text("SAJJIL") },
                 actions = {
-                    IconButton(onClick = { navController.navigate(SajjilRoutes.assistant()) }) {
-                        Icon(Icons.Filled.Assistant, contentDescription = "SAJJIL Assistant")
-                    }
+                    // Assistant moved to the bottom nav as the 5th primary destination
+                    // (Record / Studio / Library / Qur'an / Assistant) -- one fewer icon
+                    // crowding this bar, per the "too many small icons" review feedback.
                     IconButton(onClick = { navController.navigate(SajjilRoutes.PRODUCTION_READINESS) }) {
                         Icon(Icons.Filled.FactCheck, contentDescription = "Production Readiness")
                     }
@@ -140,6 +140,23 @@ fun SajjilNavGraph(
                             label = { Text(destination.label) },
                         )
                     }
+                    // Assistant can't go through the generic loop above: its route carries
+                    // optional query params (SajjilRoutes.ASSISTANT is the pattern with
+                    // {recordingId}/{surahNumber} placeholders), so the destination actually
+                    // matched in the back stack always has THAT pattern as its .route,
+                    // regardless of which concrete values were passed when navigating to it.
+                    NavigationBarItem(
+                        selected = currentDestination?.hierarchy?.any { it.route == SajjilRoutes.ASSISTANT } == true,
+                        onClick = {
+                            navController.navigate(SajjilRoutes.assistant()) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        icon = { Icon(Icons.Filled.Assistant, contentDescription = "Assistant") },
+                        label = { Text("Assistant") },
+                    )
                 }
             }
         },

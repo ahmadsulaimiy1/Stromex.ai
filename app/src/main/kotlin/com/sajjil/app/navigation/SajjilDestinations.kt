@@ -14,7 +14,7 @@ sealed class SajjilDestination(val route: String, val label: String, val icon: I
     // recording" flows -- merged into one Studio workspace with Enhance/Master as tabs that
     // share a single selection (see StudioScreen).
     data object Studio : SajjilDestination("studio", "Studio", Icons.Filled.AutoFixHigh)
-    data object Archive : SajjilDestination("archive", "Archive", Icons.Filled.LibraryMusic)
+    data object Archive : SajjilDestination("archive", "Library", Icons.Filled.LibraryMusic)
     data object QuranStudio : SajjilDestination("quran_studio", "Qur'an Studio", Icons.Filled.MenuBook)
 
     companion object {
