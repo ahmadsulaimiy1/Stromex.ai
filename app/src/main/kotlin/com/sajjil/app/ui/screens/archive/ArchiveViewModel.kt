@@ -1,6 +1,7 @@
 package com.sajjil.app.ui.screens.archive
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.sajjil.app.data.db.RecordingEntity
@@ -41,6 +42,10 @@ class ArchiveViewModel(application: Application) : AndroidViewModel(application)
     private val _waveformPeaks = MutableStateFlow<FloatArray?>(null)
     val waveformPeaks: StateFlow<FloatArray?> = _waveformPeaks.asStateFlow()
     private var waveformJob: Job? = null
+
+    /** One-shot feedback for the "Save to device" action; the screen clears it after showing a toast. */
+    private val _exportMessage = MutableStateFlow<String?>(null)
+    val exportMessage: StateFlow<String?> = _exportMessage.asStateFlow()
 
     private val query = MutableStateFlow("")
     val searchQuery: StateFlow<String> = query
@@ -83,6 +88,27 @@ class ArchiveViewModel(application: Application) : AndroidViewModel(application)
 
     fun toggleFavorite(recording: RecordingEntity) {
         viewModelScope.launch { app.recordingRepository.update(recording.copy(isFavorite = !recording.isFavorite)) }
+    }
+
+    /** Copies a recording's bytes to a Storage Access Framework destination the user picked -- internal storage, SD card, or any provider the system's document picker offers. */
+    fun exportTo(destinationUri: Uri, recording: RecordingEntity) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val success = runCatching {
+                val context = getApplication<Application>()
+                context.contentResolver.openOutputStream(destinationUri)?.use { out ->
+                    File(recording.filePath).inputStream().use { input -> input.copyTo(out) }
+                } ?: error("ContentResolver returned no output stream")
+            }.isSuccess
+            _exportMessage.value = if (success) {
+                "Saved \"${recording.title}\""
+            } else {
+                "Couldn't save \"${recording.title}\" -- try again"
+            }
+        }
+    }
+
+    fun clearExportMessage() {
+        _exportMessage.value = null
     }
 
     fun delete(recording: RecordingEntity) {

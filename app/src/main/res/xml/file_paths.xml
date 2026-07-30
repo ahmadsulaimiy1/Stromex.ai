@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    FileProvider path map: every directory SAJJIL writes audio into
+    (recordings/, enhanced/, mastered/), all under the app's private
+    filesDir. Needed to hand a recording to another app (share sheet) or
+    let the user pick a destination (Storage Access Framework) without
+    exposing a raw file:// path, which Android has blocked across app
+    boundaries since API 24.
+-->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <files-path name="app_files" path="." />
+</paths>

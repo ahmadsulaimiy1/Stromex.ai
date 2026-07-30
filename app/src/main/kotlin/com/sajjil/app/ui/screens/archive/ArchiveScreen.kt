@@ -1,5 +1,8 @@
 package com.sajjil.app.ui.screens.archive
 
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,12 +15,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.SaveAlt
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -25,14 +33,21 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sajjil.app.data.db.RecordingEntity
+import com.sajjil.app.export.ShareExporter
 import com.sajjil.app.ui.components.PlaybackWaveformView
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -50,6 +65,22 @@ fun ArchiveScreen(
     val durationMs by viewModel.durationMs.collectAsStateWithLifecycle()
     val playingFile by viewModel.playingFile.collectAsStateWithLifecycle()
     val waveformPeaks by viewModel.waveformPeaks.collectAsStateWithLifecycle()
+    val exportMessage by viewModel.exportMessage.collectAsStateWithLifecycle()
+
+    val context = LocalContext.current
+    var saveTarget by remember { mutableStateOf<RecordingEntity?>(null) }
+    val saveLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("audio/*")) { uri ->
+        val target = saveTarget
+        if (uri != null && target != null) viewModel.exportTo(uri, target)
+        saveTarget = null
+    }
+
+    LaunchedEffect(exportMessage) {
+        exportMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearExportMessage()
+        }
+    }
 
     Column(modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("SAJJIL Library", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
@@ -80,6 +111,11 @@ fun ArchiveScreen(
                         onSeek = { viewModel.seekTo(it) },
                         onToggleFavorite = { viewModel.toggleFavorite(recording) },
                         onDelete = { viewModel.delete(recording) },
+                        onShare = { context.startActivity(ShareExporter.shareIntent(context, File(recording.filePath))) },
+                        onSaveToDevice = {
+                            saveTarget = recording
+                            saveLauncher.launch(File(recording.filePath).name)
+                        },
                         onOpenDashboard = { onOpenDashboard(recording.id) },
                     )
                 }
@@ -100,8 +136,12 @@ private fun ArchiveRow(
     onSeek: (Long) -> Unit,
     onToggleFavorite: () -> Unit,
     onDelete: () -> Unit,
+    onShare: () -> Unit,
+    onSaveToDevice: () -> Unit,
     onOpenDashboard: () -> Unit,
 ) {
+    var menuExpanded by remember { mutableStateOf(false) }
+
     Card(
         colors = CardDefaults.cardColors(
             containerColor = if (isActive) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
@@ -137,15 +177,37 @@ private fun ArchiveRow(
                         }
                     }
                 }
-                Row {
-                    IconButton(onClick = onToggleFavorite) {
-                        Icon(
-                            imageVector = if (recording.isFavorite) Icons.Filled.Star else Icons.Outlined.StarOutline,
-                            contentDescription = "Favorite",
-                        )
+
+                // A single overflow menu instead of a growing row of icons -- Favorite, Share,
+                // Save to device, and Delete all live here rather than each claiming their own
+                // permanently-visible IconButton, per the "reduce icons" review feedback.
+                Column {
+                    IconButton(onClick = { menuExpanded = true }) {
+                        Icon(Icons.Filled.MoreVert, contentDescription = "More actions")
                     }
-                    IconButton(onClick = onDelete) {
-                        Icon(Icons.Filled.Delete, contentDescription = "Delete")
+                    DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                        DropdownMenuItem(
+                            text = { Text(if (recording.isFavorite) "Unfavorite" else "Favorite") },
+                            leadingIcon = {
+                                Icon(if (recording.isFavorite) Icons.Filled.Star else Icons.Outlined.StarOutline, contentDescription = null)
+                            },
+                            onClick = { menuExpanded = false; onToggleFavorite() },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Share") },
+                            leadingIcon = { Icon(Icons.Filled.Share, contentDescription = null) },
+                            onClick = { menuExpanded = false; onShare() },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Save to device") },
+                            leadingIcon = { Icon(Icons.Filled.SaveAlt, contentDescription = null) },
+                            onClick = { menuExpanded = false; onSaveToDevice() },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Delete") },
+                            leadingIcon = { Icon(Icons.Filled.Delete, contentDescription = null) },
+                            onClick = { menuExpanded = false; onDelete() },
+                        )
                     }
                 }
             }
