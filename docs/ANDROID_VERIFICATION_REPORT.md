@@ -100,7 +100,34 @@ All four fixes are confirmed working as of run
 (commit `14c7cca`), the first run where both jobs completed with
 `conclusion: success` — see §1 above for the literal log evidence.
 
-## 4. What "complete" actually means for this deliverable
+## 4. Phase 7 UX overhaul — what's verified vs not
+
+A product review of real screenshots (not a spec) scored the app 3.5–4/10 as a consumer product,
+sharpest complaint being "no visible Play button anywhere." Four slices landed against that
+review, each verified individually the same way as every commit in this report — real CI run,
+both jobs, literal log evidence, not inferred from a green checkmark:
+
+| # | Commit | Run | Both jobs green | PASS line confirmed |
+|---|---|---|---|---|
+| 7.1 — real MediaPlayer-based play/pause/seek, Library play button, fixed dead `RecordingService` | `183b592` | [30562569875](https://github.com/ahmadsulaimiy1/Stromex.ai/actions/runs/30562569875) | Yes | Yes |
+| 7.2 — persistent mini-player (shared `AudioPlaybackEngine` + app-lifetime `CoroutineScope` in `SajjilApplication`) | `bc38b91` | [30563302465](https://github.com/ahmadsulaimiy1/Stromex.ai/actions/runs/30563302465) | Yes | Yes |
+| 7.3 — merged Enhance + Master into one Studio screen with shared recording selector | `400d380` | [30563677708](https://github.com/ahmadsulaimiy1/Stromex.ai/actions/runs/30563677708) | Yes | Yes |
+| 7.4 — Assistant as the 5th bottom-nav destination (Record/Studio/Library/Qur'an/Assistant) | `a78a267` | [30564122418](https://github.com/ahmadsulaimiy1/Stromex.ai/actions/runs/30564122418) | Yes | Yes |
+
+Full writeup of what changed and why is in the README's "Phase 7: UX overhaul" section.
+
+**What this table does NOT prove**, same limitation as §1 above but worth restating for this
+phase specifically because it landed several interaction-heavy changes: CI confirms compile +
+launch-without-crash only. It does not confirm tapping Play on a Library card actually produces
+audio, that seeking actually seeks, that the mini-player renders and controls playback correctly,
+that switching Enhance/Master tabs in Studio actually shares the selected recording as intended,
+or — the highest-risk item — that the Assistant bottom-nav tab's special-cased route matching
+(it deviates from the generic pattern the other four tabs use, since its route carries optional
+query params) actually navigates and highlights as selected when tapped. None of this is exercised
+by the smoke test, which only launches `MainActivity` and waits. A manual tap-through of all five
+tabs and the Library's play controls on a real device or emulator is still outstanding.
+
+## 5. What "complete" actually means for this deliverable
 
 A downloadable, installable **debug APK** that installs and launches
 without crashing, built and verified by GitHub Actions against a real

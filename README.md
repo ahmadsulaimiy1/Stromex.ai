@@ -52,10 +52,13 @@ an explicit, documented roadmap.
   machine, and the plugin architecture all live here — the parts actually verified in this sandbox.
 - **`app`** — the Android application (Jetpack Compose + Material3). Wires `core`'s logic into a
   live `AudioRecord` capture chain (now fanning out to a live waveform and clipping detection too),
-  a Room-backed recording library, WAV/AAC export, background take scoring, and fifteen screens
-  (Record, Enhance, Master, Archive, Qur'an Studio, Surah Project, Batch Production, Comparison Lab,
-  Executive Analytics, Production Readiness, Voice Studio, SAJJIL Assistant, Speech & Language
-  Packs, Dashboard, Settings).
+  a Room-backed recording library with a real `MediaPlayer`-backed play/pause/seek engine and a
+  persistent mini-player, WAV/AAC export, background take scoring, and fifteen screens (Record,
+  Studio [Enhance + Master merged into one workspace], Library, Qur'an Studio, Surah Project, Batch
+  Production, Comparison Lab, Executive Analytics, Production Readiness, Voice Studio, SAJJIL
+  Assistant, Speech & Language Packs, Dashboard, Settings, About). Bottom navigation is five
+  destinations: Record, Studio, Library, Qur'an Studio, Assistant — see "Phase 7: UX overhaul"
+  below for what changed and why.
 
 `core` is verified in this environment with `gradle :core:test` (no Android SDK required — see
 "Building" below for why `app` couldn't be compiled here). `app` was written carefully against the
@@ -152,6 +155,58 @@ constraint as before," and this pass picked the former without re-litigating the
   self-aware (live waveform, clipping), background scoring removes a wait, and the Assistant
   carries context — but Record and Voice Studio remain two pipelines for the platform reason in
   `docs/STREAMING_ARCHITECTURE.md`, not stitched together by pretending the mic can be shared.
+
+## Phase 7: UX overhaul
+
+A product review of the built Android app (not a spec, actual screenshots) scored it 3.5–4/10 as
+a consumer product despite the DSP engine itself scoring 8.5/10 — the sharpest single complaint
+being "no visible Play button anywhere." Four slices landed against that review, each committed
+and confirmed via a real GitHub Actions build + emulator smoke test before moving to the next
+(see `docs/ANDROID_VERIFICATION_REPORT.md` for the literal CI evidence per commit):
+
+- **7.1 — a real playback engine.** `AudioPlaybackEngine` was rewritten from a hand-rolled
+  `AudioTrack` streamer (which could only play-from-start or stop) onto Android's own
+  `MediaPlayer`, which gives true pause/resume and sample-accurate seek for free — WAV is a
+  guaranteed-supported format from API 26 (this app's `minSdk`) onward. The Library screen now has
+  an inline ▶/⏸ icon and a seek slider on every recording card, instead of routing playback through
+  Enhance/Master's "Preview" buttons. This slice also fixed a real, previously invisible bug:
+  `RecordingService` (meant to keep recording alive when the app is backgrounded) was fully
+  implemented and declared in the manifest, but never actually started from any ViewModel — its own
+  doc comment's "survives the app being backgrounded" claim was false until `RecordViewModel` was
+  wired to start/stop it.
+- **7.2 — a persistent mini-player.** Playback previously lived inside the Library screen's own
+  `ArchiveViewModel`, scoped to `viewModelScope` — navigating away cancelled the position-tracking
+  coroutine, so nothing signalled a recording was still playing anywhere else in the app.
+  `SajjilApplication` now owns one shared `AudioPlaybackEngine` plus a process-lifetime
+  `CoroutineScope`; a `MiniPlayerBar` sits above the bottom navigation bar on every screen whenever
+  something is loaded, with play/pause and stop.
+- **7.3 — Enhance and Master merged into one Studio screen.** They used to be two disconnected
+  destinations, each with its own "Select a recording" list unaware of the other — picking a take
+  in Enhance did nothing for Master. `StudioScreen` now hosts both view models under one shared
+  selector and an Enhance/Master tab row; selecting a recording drives both at once. The underlying
+  DSP (noise reduction, mastering chain, restoration, reference matching, export) is untouched —
+  this was a UI consolidation, not a processing change.
+- **7.4 — Assistant became the 5th bottom-nav destination.** Completing the requested
+  Record/Studio/Library/Qur'an/Assistant model; Assistant was previously reachable only via one of
+  six crowded top-bar icons. Its route carries optional query params
+  (`assistant?recordingId={recordingId}&surahNumber={surahNumber}`), so it couldn't go through the
+  same generic route-equality loop the other four tabs use — it's wired as an explicit
+  `NavigationBarItem` with its own selected-check and its own `navigate()` call.
+
+**What CI does and doesn't prove for this phase**: every commit above compiled and the app
+launched without crashing on a real Android 14 emulator (see the verification report for the
+literal log line each time). The smoke test does not click into the bottom nav, does not exercise
+the Assistant tab's special-cased route matching, does not tap Play on a Library card, and does not
+switch between the Enhance/Master tabs in Studio — whether those interactions actually behave as
+described has not been proven by CI and needs a manual pass on a real device or emulator.
+
+**Deliberately not touched in Phase 7**: a real waveform display (there still isn't one anywhere in
+the app despite this being a recording app — only post-hoc spectrograms/loudness charts and a live
+recording-only bar exist), a real editing timeline (trim/cut/split/fade — no primitives exist in
+`core` for this yet, though the WAV data is already plain `FloatArray`s trivial to slice), MP3/FLAC
+export (only WAV and AAC/M4A exist; MP3 has no native Android encoder and FLAC encoder support is
+device-dependent), share-to/SD-card export (no `Intent.ACTION_SEND`/Storage Access Framework
+integration exists), and lock-screen/notification playback controls (no `MediaSession` exists).
 
 ## What's real in `core` (not stubs)
 
