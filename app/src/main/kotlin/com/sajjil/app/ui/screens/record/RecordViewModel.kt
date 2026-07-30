@@ -4,6 +4,7 @@ import android.app.Application
 import android.media.AudioDeviceInfo
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.sajjil.app.analysis.RecordingAutoAnalyzer
 import com.sajjil.app.audio.AcousticProbeRecorder
 import com.sajjil.app.audio.AudioInputDevices
 import com.sajjil.app.audio.AudioRecordEngine
@@ -32,6 +33,8 @@ data class RecordUiState(
     val isRecording: Boolean = false,
     val elapsedMs: Long = 0L,
     val level: RecordingLevel = RecordingLevel(-100f, -100f, 0f),
+    val waveformHistory: List<Float> = emptyList(),
+    val clippingDetected: Boolean = false,
     val lastSavedFile: File? = null,
     val isCheckingRoom: Boolean = false,
     val roomProfile: AcousticProfile? = null,
@@ -150,7 +153,7 @@ class RecordViewModel(application: Application) : AndroidViewModel(application) 
         engine = newEngine
         startedAtMs = System.currentTimeMillis()
         newEngine.start(viewModelScope)
-        _uiState.value = state.copy(isRecording = true, elapsedMs = 0L, liveGuidance = null)
+        _uiState.value = state.copy(isRecording = true, elapsedMs = 0L, liveGuidance = null, waveformHistory = emptyList(), clippingDetected = false)
 
         viewModelScope.launch {
             newEngine.level.collect { level ->
@@ -158,6 +161,16 @@ class RecordViewModel(application: Application) : AndroidViewModel(application) 
                     level = level,
                     elapsedMs = System.currentTimeMillis() - startedAtMs,
                 )
+            }
+        }
+        viewModelScope.launch {
+            newEngine.waveformHistory.collect { history ->
+                _uiState.value = _uiState.value.copy(waveformHistory = history)
+            }
+        }
+        viewModelScope.launch {
+            newEngine.clippingDetected.collect { clipping ->
+                _uiState.value = _uiState.value.copy(clippingDetected = clipping)
             }
         }
     }
@@ -169,7 +182,7 @@ class RecordViewModel(application: Application) : AndroidViewModel(application) 
             engine = null
             val state = _uiState.value
             val target = state.targetSurah
-            app.recordingRepository.save(
+            val recordingId = app.recordingRepository.save(
                 RecordingEntity(
                     title = target?.let { "${it.transliteratedName} ${state.targetAyahStart}-${state.targetAyahEnd}" }
                         ?: file.nameWithoutExtension,
@@ -190,6 +203,9 @@ class RecordViewModel(application: Application) : AndroidViewModel(application) 
             )
             _uiState.value = state.copy(isRecording = false, lastSavedFile = file)
             startLiveMonitoring()
+            // Background Intelligence: score the take now instead of leaving it null until
+            // someone happens to open its Dashboard.
+            launch { RecordingAutoAnalyzer.analyzeAndPersist(app.recordingRepository, recordingId, file) }
         }
     }
 

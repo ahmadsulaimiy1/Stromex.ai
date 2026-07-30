@@ -3,6 +3,7 @@ package com.sajjil.app.ui.screens.enhance
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.sajjil.app.analysis.RecordingAutoAnalyzer
 import com.sajjil.app.audio.AudioPlaybackEngine
 import com.sajjil.app.data.db.RecordingEntity
 import com.sajjil.app.di.asSajjilApplication
@@ -85,7 +86,7 @@ class EnhanceViewModel(application: Application) : AndroidViewModel(application)
         val source = _uiState.value.selected ?: return
         val file = _uiState.value.enhancedFile ?: return
         viewModelScope.launch {
-            app.recordingRepository.save(
+            val recordingId = app.recordingRepository.save(
                 source.copy(
                     id = 0,
                     title = "${source.title} (Enhanced)",
@@ -101,6 +102,9 @@ class EnhanceViewModel(application: Application) : AndroidViewModel(application)
                 ),
             )
             _uiState.value = _uiState.value.copy(savedToLibrary = true)
+            // Background Intelligence: fill the score in shortly after, rather than making the
+            // save wait on it or leaving it null until Dashboard is opened.
+            launch { RecordingAutoAnalyzer.analyzeAndPersist(app.recordingRepository, recordingId, file) }
         }
     }
 

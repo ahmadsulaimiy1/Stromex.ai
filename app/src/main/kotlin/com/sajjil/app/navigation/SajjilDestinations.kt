@@ -26,11 +26,15 @@ object SajjilRoutes {
     const val ANALYTICS = "analytics"
     const val COMPARISON_LAB = "comparison_lab"
     const val VOICE_STUDIO = "voice_studio"
-    const val ASSISTANT = "assistant"
+    const val ASSISTANT = "assistant?recordingId={recordingId}&surahNumber={surahNumber}"
     const val SPEECH_CAPABILITY = "speech_capability"
     const val PRODUCTION_READINESS = "production_readiness"
     const val DASHBOARD = "dashboard/{recordingId}"
     const val QURAN_PROJECT = "quran_project/{surahNumber}"
     fun dashboard(recordingId: Long) = "dashboard/$recordingId"
     fun quranProject(surahNumber: Int) = "quran_project/$surahNumber"
+
+    /** Project-memory: opens the Assistant already aware of a recording and/or Surah, so "read this transcript" or a Surah-scoped question doesn't need re-stating context. */
+    fun assistant(recordingId: Long? = null, surahNumber: Int? = null) =
+        "assistant?recordingId=${recordingId ?: -1}&surahNumber=${surahNumber ?: -1}"
 }

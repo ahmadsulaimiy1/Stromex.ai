@@ -58,6 +58,23 @@ class AudioRecordEngine(
     private val _level = MutableStateFlow(RecordingLevel(-100f, -100f, 0f))
     val level: StateFlow<RecordingLevel> = _level.asStateFlow()
 
+    /**
+     * Rolling history of recent per-buffer peak levels (linear 0..1, most
+     * recent last) — a live waveform feed fanned out from the same
+     * per-sample loop that writes audio to disk and computes [level].
+     * This is the fan-out `docs/STREAMING_ARCHITECTURE.md` describes as
+     * genuinely achievable for `AudioRecordEngine`'s own consumers (it
+     * owns the raw samples); it is a different, easier problem than
+     * fanning out to `SpeechRecognizer`, which owns its own capture and
+     * accepts no external buffer via any public API.
+     */
+    private val _waveformHistory = MutableStateFlow<List<Float>>(emptyList())
+    val waveformHistory: StateFlow<List<Float>> = _waveformHistory.asStateFlow()
+
+    /** True as soon as any buffer this take touched the clipping threshold; stays true for the rest of the take once tripped. */
+    private val _clippingDetected = MutableStateFlow(false)
+    val clippingDetected: StateFlow<Boolean> = _clippingDetected.asStateFlow()
+
     private val _isRecording = MutableStateFlow(false)
     val isRecording: StateFlow<Boolean> = _isRecording.asStateFlow()
 
@@ -85,6 +102,8 @@ class AudioRecordEngine(
 
         record.startRecording()
         _isRecording.value = true
+        _waveformHistory.value = emptyList()
+        _clippingDetected.value = false
 
         recordingJob = scope.launch(Dispatchers.IO) {
             val shortBuffer = ShortArray(minBufferSize / 2)
@@ -112,6 +131,8 @@ class AudioRecordEngine(
                     rmsDb = (20.0 * log10(max(rms, 1e-6))).toFloat(),
                     gainReductionDb = 0f,
                 )
+                _waveformHistory.value = (_waveformHistory.value + peak).takeLast(WAVEFORM_HISTORY_SIZE)
+                if (peak >= CLIPPING_LINEAR_THRESHOLD) _clippingDetected.value = true
             }
         }
     }
@@ -137,6 +158,10 @@ class AudioRecordEngine(
     }
 
     companion object {
+        private const val WAVEFORM_HISTORY_SIZE = 200
+        /** ~ -0.1 dBFS in linear amplitude, matching AudioQualityScorer's clipping definition. */
+        private const val CLIPPING_LINEAR_THRESHOLD = 0.988f
+
         /** Falls back toward 48kHz if the device can't honor an exotic requested rate. */
         private fun effectiveSampleRate(requested: Int): Int {
             val minBuf = AudioRecord.getMinBufferSize(requested, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)

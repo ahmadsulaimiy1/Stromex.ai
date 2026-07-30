@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Assistant
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Card
@@ -41,7 +42,12 @@ import com.sajjil.app.ui.components.GlassCard
 import com.sajjil.core.quran.AyahRange
 
 @Composable
-fun QuranProjectScreen(viewModel: QuranProjectViewModel, surahNumber: Int, modifier: Modifier = Modifier) {
+fun QuranProjectScreen(
+    viewModel: QuranProjectViewModel,
+    surahNumber: Int,
+    onOpenAssistant: (Int) -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(surahNumber) { viewModel.load(surahNumber) }
@@ -51,11 +57,16 @@ fun QuranProjectScreen(viewModel: QuranProjectViewModel, surahNumber: Int, modif
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         val surah = state.surah
-        Text(
-            surah?.let { "${it.number}. ${it.transliteratedName}" } ?: "Surah Project",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.SemiBold,
-        )
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                surah?.let { "${it.number}. ${it.transliteratedName}" } ?: "Surah Project",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            IconButton(onClick = { onOpenAssistant(surahNumber) }) {
+                Icon(Icons.Filled.Assistant, contentDescription = "Ask SAJJIL Assistant about this Surah")
+            }
+        }
 
         state.progress?.let { progress ->
             GlassCard {

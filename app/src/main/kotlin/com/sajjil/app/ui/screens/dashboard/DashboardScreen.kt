@@ -8,7 +8,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Assistant
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -25,7 +29,12 @@ import com.sajjil.app.ui.components.SpectrogramView
 import com.sajjil.core.analysis.AudioAnalysisReport
 
 @Composable
-fun DashboardScreen(viewModel: DashboardViewModel, recordingId: Long, modifier: Modifier = Modifier) {
+fun DashboardScreen(
+    viewModel: DashboardViewModel,
+    recordingId: Long,
+    onOpenAssistant: (Long) -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(recordingId) { viewModel.load(recordingId) }
@@ -34,7 +43,12 @@ fun DashboardScreen(viewModel: DashboardViewModel, recordingId: Long, modifier: 
         modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text("Executive Dashboard", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text("Executive Dashboard", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
+            IconButton(onClick = { onOpenAssistant(recordingId) }) {
+                Icon(Icons.Filled.Assistant, contentDescription = "Ask SAJJIL Assistant about this recording")
+            }
+        }
 
         if (state.isLoading) {
             CircularProgressIndicator()

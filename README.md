@@ -24,27 +24,38 @@ an explicit, documented roadmap.
   consistency, metadata, naming collisions), a rule-based Project Assistant, and — the phase's
   non-negotiable requirement — real offline speech recognition and text-to-speech built on
   Android's own platform APIs, wrapped in a new **Voice Studio** workflow.
-- **Phase 5 — Real-Time Feel & the SAJJIL Assistant** (this pass): transcript stabilisation (a
+- **Phase 5 — Real-Time Feel & the SAJJIL Assistant**: transcript stabilisation (a
   stable/draft split so Voice Studio's live text stops flickering), a real concurrent-not-
   sequential analysis pipeline in Dashboard, and a new **SAJJIL Assistant** screen — a small,
   honestly-scoped set of pattern-matched requests ("Show me Surah Al-Kahf recordings," "Which
   recordings have poor quality?") executed against real library data. See
   [`docs/REALTIME_ASSISTANT.md`](docs/REALTIME_ASSISTANT.md) for exactly what "assistant" does and
   does not mean here — there is no language model behind it.
+- **Phase 6 — Flagship Experience & AI Foundation** (this pass): take-level quality-outlier
+  insights ("Al-Baqarah (Ayah 184-188) scored 60, well below your project average — consider
+  re-recording it"), a real `SpeechPackStateMachine` for the "Download Once. Use Forever." pack
+  lifecycle (honestly unimplemented — see below), Background Intelligence (every save path now
+  scores a take automatically instead of waiting for a Dashboard visit), a live waveform and
+  clipping warning fed straight from `AudioRecordEngine`'s own capture loop, and Assistant
+  "project memory" (opened from a Dashboard or Surah Project screen, already aware of what it's
+  about). See [`docs/STREAMING_ARCHITECTURE.md`](docs/STREAMING_ARCHITECTURE.md) for the
+  requested investigation into whether Record and Voice Studio could share one microphone
+  session — they can't, and it's a platform ceiling, not a design choice.
 
 ## Modules
 
-- **`core`** — pure Kotlin/JVM, zero Android dependencies, fully unit tested (**156 tests**).
+- **`core`** — pure Kotlin/JVM, zero Android dependencies, fully unit tested (**171 tests**).
   Every DSP algorithm, acoustic analysis, Qur'an production-suite logic, the recording
   mode/voice-profile/microphone presets, WAV I/O, loudness analysis, batch processing, executive
-  analytics, production readiness, the project assistant, transcript search and stabilisation, the
-  assistant intent parser, and the plugin architecture all live here — the parts actually verified
-  in this sandbox.
+  analytics, production readiness, the project assistant (including take-level quality outliers),
+  transcript search and stabilisation, the assistant intent parser, the speech-pack lifecycle state
+  machine, and the plugin architecture all live here — the parts actually verified in this sandbox.
 - **`app`** — the Android application (Jetpack Compose + Material3). Wires `core`'s logic into a
-  live `AudioRecord` capture chain, a Room-backed recording library, WAV/AAC export, and fifteen
-  screens (Record, Enhance, Master, Archive, Qur'an Studio, Surah Project, Batch Production,
-  Comparison Lab, Executive Analytics, Production Readiness, Voice Studio, SAJJIL Assistant, Speech
-  & Language Packs, Dashboard, Settings).
+  live `AudioRecord` capture chain (now fanning out to a live waveform and clipping detection too),
+  a Room-backed recording library, WAV/AAC export, background take scoring, and fifteen screens
+  (Record, Enhance, Master, Archive, Qur'an Studio, Surah Project, Batch Production, Comparison Lab,
+  Executive Analytics, Production Readiness, Voice Studio, SAJJIL Assistant, Speech & Language
+  Packs, Dashboard, Settings).
 
 `core` is verified in this environment with `gradle :core:test` (no Android SDK required — see
 "Building" below for why `app` couldn't be compiled here). `app` was written carefully against the
@@ -110,6 +121,37 @@ can go honestly:
   Arabic-English code-switching, and a sub-1-2s response guarantee are not implemented — each one
   either needs that same missing model or a real device to verify, and both are explained in
   [`docs/REALTIME_ASSISTANT.md`](docs/REALTIME_ASSISTANT.md) rather than quietly skipped.
+
+## How Phase 6 was scoped
+
+Phase 6's six priorities split cleanly into "buildable now" and "blocked by the same sandbox
+constraint as before," and this pass picked the former without re-litigating the latter:
+- **Priority 2 (Background Intelligence) and Priority 3 (take-level Qur'an insights) are fully
+  real** — every save path now scores a take automatically
+  (`RecordingAutoAnalyzer.analyzeAndPersist`), and `ProjectAssistant.analyzeTakeOutliers` flags an
+  individual take against the project average with its specific ayah range, not just a Surah-level
+  average as Phase 4 did.
+- **Priority 4 (Assistant project memory) is real, scoped to two entry points** — opening the
+  Assistant from a Dashboard or Surah Project screen now carries that context in (via nav
+  arguments), instead of the user re-stating "for this recording" every time.
+- **Priority 5 (investigate single-capture fan-out) was investigated as asked, and the answer is
+  split** — `AudioRecordEngine`'s own capture loop genuinely does fan out (recording + level +
+  now waveform + clipping), and that's real and shipped. Fanning out *into*
+  `SpeechRecognizer` is not an architecture problem to solve — it's a public-API ceiling (no
+  method exists to feed it external audio). See
+  [`docs/STREAMING_ARCHITECTURE.md`](docs/STREAMING_ARCHITECTURE.md) for the full investigation
+  rather than a one-line assertion.
+- **Priority 6 (Download-Once offline packs) got real architecture, not a fourth "not implemented"
+  paragraph** — `SpeechPackStateMachine` models the full lifecycle (request → downloading →
+  installed → update available → failed, with retry and uninstall) as pure, tested logic, and the
+  Speech & Language Packs screen now shows all four named packs through it. Every pack still
+  resolves to `UNAVAILABLE` — there is still no model to source, download, or verify in this
+  sandbox — but the lifecycle a real download would drive through now genuinely exists and is
+  tested, rather than being asserted as a future intention for a third phase running.
+- **Priority 1 (one unified experience)** is the sum of the above: Record's own pipeline is more
+  self-aware (live waveform, clipping), background scoring removes a wait, and the Assistant
+  carries context — but Record and Voice Studio remain two pipelines for the platform reason in
+  `docs/STREAMING_ARCHITECTURE.md`, not stitched together by pretending the mic can be shared.
 
 ## What's real in `core` (not stubs)
 
@@ -193,6 +235,17 @@ can go honestly:
   scoped" and [`docs/REALTIME_ASSISTANT.md`](docs/REALTIME_ASSISTANT.md) for why, and for what a
   real NLU implementation would slot in to replace.
 
+### Phase 6 — Flagship Experience & AI Foundation
+- **`assistant/ProjectAssistant.analyzeTakeOutliers`** — flags an individual take against the
+  project average with its specific title or ayah range ("Al-Baqarah (Ayah 184-188) scored 60,
+  well below your project average of 88 — consider re-recording it"), finer-grained than Phase 4's
+  Surah-level check. Uses a higher drop threshold than the Surah-level check deliberately — a
+  single take naturally varies more than a Surah's ayah-weighted average of several takes.
+- **`speechpack/SpeechPackStateMachine`** — pure, tested transition logic for the "Download Once.
+  Use Forever." pack lifecycle (not installed → downloading → installed → update available →
+  failed, with retry and uninstall). Models the mechanism for real; does not talk to a network or
+  bundle a model, since there is still nothing to source or verify — see "How Phase 6 was scoped."
+
 ### Bugs found and fixed by the test suite
 Three genuine bugs surfaced across the phases — proof the tests are pulling their weight:
 1. **Phase 1:** spectral-subtraction noise reduction reconstructed audio incorrectly near buffer
@@ -272,17 +325,30 @@ presented as certainty — and nothing here claims automatic Qur'anic recitation
   (`TranscriptStabilizer`) instead of rewriting the whole line on every recognizer update.
 - **Speech & Language Packs** (in Settings): per-language offline recognition/TTS status, checked
   fresh each time rather than assumed, an honest explanation of the three-tier fallback hierarchy,
-  and buttons that open the real Android system settings to install a language pack — SAJJIL
-  cannot install one itself, so it doesn't pretend it can.
+  the four named Speech Packs shown through `SpeechPackStateMachine` (all `UNAVAILABLE` — see
+  "How Phase 6 was scoped"), and buttons that open the real Android system settings to install a
+  language pack — SAJJIL cannot install one itself, so it doesn't pretend it can.
 - **SAJJIL Assistant**: type or speak a request in the four patterns `AssistantIntentParser`
   understands (find by Surah, find by keyword across titles/notes/transcripts, read the current
   transcript aloud, filter by quality), executed against real library and transcript data, with
   tappable results you can select as "current" for a follow-up request. Says plainly when a
   request doesn't match a known pattern instead of guessing — see
   [`docs/REALTIME_ASSISTANT.md`](docs/REALTIME_ASSISTANT.md) for why this isn't conversational AI.
+  Opening it from a Dashboard or Surah Project screen now carries that recording/Surah in as
+  context ("project memory") instead of asking again.
 - **Dashboard analysis now runs concurrently**: RT60 estimation, loudness/quality scoring, and
   spectrogram computation are three independent passes over the same decoded audio and now run in
   parallel (`coroutineScope` + `async`) instead of one after another.
+- **Background Intelligence**: Record, Enhance/Master's Save to Library, and Voice Studio's save
+  all trigger `RecordingAutoAnalyzer` the moment a take is saved, so studio/broadcast/archive
+  readiness scores are computed automatically instead of sitting null until someone opens
+  Dashboard or presses Production Readiness's "Run Check."
+- **Live waveform and clipping warning on Record**: `AudioRecordEngine`'s own per-buffer capture
+  loop now also feeds a rolling waveform view and flips a clipping flag the moment any buffer
+  touches the threshold — fanned out from the same loop that writes the WAV file and drives the
+  level meter, no extra capture needed. See
+  [`docs/STREAMING_ARCHITECTURE.md`](docs/STREAMING_ARCHITECTURE.md) for why this fan-out is real
+  while a Record-into-Voice-Studio fan-out is not.
 
 ### Deliberately out of scope for this pass
 
@@ -327,6 +393,14 @@ presented as certainty — and nothing here claims automatic Qur'anic recitation
   assistant response time** — the first two depend on the same missing NLU model; the third is a
   real-device measurement this sandbox can't make honestly, same reasoning as Performance
   Certification.
+- **Functional Speech Pack downloads** — `SpeechPackStateMachine` models the full lifecycle for
+  real (third phase running this has been asked for), but every pack still resolves to
+  `UNAVAILABLE`: there is still nothing in this sandbox to source, bundle, or verify a real
+  offline ASR/TTS model from. The mechanism exists; the model does not.
+- **A single shared microphone session across Record and Voice Studio** — investigated this phase
+  as explicitly requested, and it's not a design choice being deferred: `SpeechRecognizer` has no
+  public API to accept externally captured audio, full stop. See
+  [`docs/STREAMING_ARCHITECTURE.md`](docs/STREAMING_ARCHITECTURE.md).
 
 ## Building
 

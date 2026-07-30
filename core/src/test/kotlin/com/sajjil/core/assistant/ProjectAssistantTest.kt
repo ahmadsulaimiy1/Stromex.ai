@@ -151,4 +151,50 @@ class ProjectAssistantTest {
         val alMulk = QuranMetadata.surahByNumber(67)
         assertEquals("Al-Mulk", alMulk.transliteratedName)
     }
+
+    @Test
+    fun `a take scoring well below the project average is flagged with its ayah range`() {
+        val samples = listOf(
+            TakeQualitySample(1L, "Take A", "Al-Baqarah", AyahRange(1, 10), score = 90),
+            TakeQualitySample(2L, "Take B", "Al-Baqarah", AyahRange(11, 20), score = 92),
+            TakeQualitySample(3L, "Take C", "Al-Baqarah", AyahRange(184, 188), score = 60),
+        )
+
+        val insights = ProjectAssistant.analyzeTakeOutliers(samples)
+
+        assertEquals(1, insights.size)
+        assertEquals(InsightCategory.RECOMMENDATION, insights.first().category)
+        assertTrue(insights.first().message.contains("Al-Baqarah (Ayah 184-188)"))
+        assertTrue(insights.first().message.contains("60"))
+    }
+
+    @Test
+    fun `takes with similar scores produce no outlier insights`() {
+        val samples = listOf(
+            TakeQualitySample(1L, "Take A", "Al-Baqarah", AyahRange(1, 10), score = 88),
+            TakeQualitySample(2L, "Take B", "Al-Baqarah", AyahRange(11, 20), score = 90),
+        )
+
+        assertTrue(ProjectAssistant.analyzeTakeOutliers(samples).isEmpty())
+    }
+
+    @Test
+    fun `untagged take falls back to its title when surah or ayah range is missing`() {
+        val samples = listOf(
+            TakeQualitySample(1L, "Great Take", score = 95),
+            TakeQualitySample(2L, "Great Take", score = 96),
+            TakeQualitySample(3L, "Rough Take", score = 50),
+        )
+
+        val insights = ProjectAssistant.analyzeTakeOutliers(samples)
+
+        assertEquals(1, insights.size)
+        assertTrue(insights.first().message.contains("\"Rough Take\""))
+    }
+
+    @Test
+    fun `fewer than two takes produces no outlier insights`() {
+        val samples = listOf(TakeQualitySample(1L, "Only Take", score = 40))
+        assertTrue(ProjectAssistant.analyzeTakeOutliers(samples).isEmpty())
+    }
 }

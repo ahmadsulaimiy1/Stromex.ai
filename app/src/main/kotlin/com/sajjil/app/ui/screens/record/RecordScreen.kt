@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.media.AudioDeviceInfo
 import com.sajjil.app.audio.AudioInputDevices
+import com.sajjil.app.ui.components.LiveWaveformView
 import com.sajjil.core.analysis.AcousticProfile
 import com.sajjil.core.analysis.DirectorGuidance
 import com.sajjil.core.analysis.GuidanceSeverity
@@ -122,6 +123,14 @@ fun RecordScreen(viewModel: RecordViewModel, modifier: Modifier = Modifier) {
         )
 
         if (state.isRecording) {
+            LiveWaveformView(state.waveformHistory, modifier = Modifier.fillMaxWidth().height(60.dp))
+            if (state.clippingDetected) {
+                Text(
+                    "Clipping detected in this take — consider lowering input gain and re-recording.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
             LevelMeterCard(peakDb = state.level.peakDb, rmsDb = state.level.rmsDb)
         } else {
             LiveDirectorCard(state.liveGuidance)

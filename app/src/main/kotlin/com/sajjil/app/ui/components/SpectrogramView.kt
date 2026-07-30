@@ -59,6 +59,35 @@ fun LoudnessHistoryView(
     }
 }
 
+/**
+ * A live scrolling waveform fed directly from `AudioRecordEngine.waveformHistory` —
+ * the fan-out point `docs/STREAMING_ARCHITECTURE.md` describes: the same
+ * per-buffer loop that writes audio to disk also emits the peak level
+ * this view bars out, no separate capture needed.
+ */
+@Composable
+fun LiveWaveformView(
+    history: List<Float>,
+    modifier: Modifier = Modifier.fillMaxWidth().height(60.dp),
+    barColor: Color = Color(0xFFD4AF37),
+) {
+    Canvas(modifier = modifier) {
+        if (history.isEmpty()) return@Canvas
+        val barWidth = size.width / history.size
+        history.forEachIndexed { index, amplitude ->
+            val barHeight = amplitude.coerceIn(0f, 1f) * size.height
+            val x = index * barWidth + barWidth / 2
+            drawLine(
+                color = barColor,
+                start = Offset(x, size.height / 2 - barHeight / 2),
+                end = Offset(x, size.height / 2 + barHeight / 2),
+                strokeWidth = (barWidth * 0.6f).coerceAtLeast(1f),
+                cap = StrokeCap.Round,
+            )
+        }
+    }
+}
+
 private fun spectrogramBitmap(spectrogram: Spectrogram): Bitmap {
     val width = spectrogram.frames.size.coerceAtLeast(1)
     val height = (spectrogram.frames.firstOrNull()?.size ?: 1).coerceAtLeast(1)

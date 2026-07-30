@@ -3,6 +3,7 @@ package com.sajjil.app.ui.screens.voicestudio
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.sajjil.app.analysis.RecordingAutoAnalyzer
 import com.sajjil.app.data.db.RecordingEntity
 import com.sajjil.app.di.asSajjilApplication
 import com.sajjil.app.speech.AndroidSpeechBridge
@@ -234,6 +235,8 @@ class VoiceStudioViewModel(application: Application) : AndroidViewModel(applicat
             }
 
             if (recordingId != null) {
+                // Background Intelligence: score the reference clip too, same as any other save path.
+                launch { RecordingAutoAnalyzer.analyzeAndPersist(app.recordingRepository, recordingId, file!!) }
                 app.transcriptRepository.replaceForRecording(
                     recordingId,
                     Transcript(recordingId = recordingId, language = language, segments = state.segments, engineId = "android-native"),

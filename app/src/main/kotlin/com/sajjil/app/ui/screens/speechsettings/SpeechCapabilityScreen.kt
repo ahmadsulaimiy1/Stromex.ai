@@ -31,6 +31,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sajjil.app.speech.CapabilityDetail
 import com.sajjil.app.speech.SpeechCapabilityStatus
 import com.sajjil.app.ui.components.GlassCard
+import com.sajjil.core.speechpack.SpeechPackDescriptor
+import com.sajjil.core.speechpack.SpeechPackState
+import com.sajjil.core.speechpack.SpeechPackStatus
 
 @Composable
 fun SpeechCapabilityScreen(viewModel: SpeechCapabilityViewModel, modifier: Modifier = Modifier) {
@@ -80,6 +83,9 @@ fun SpeechCapabilityScreen(viewModel: SpeechCapabilityViewModel, modifier: Modif
             }
         }
 
+        item { Text("Speech Packs", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold) }
+        items(state.packs) { (descriptor, status) -> SpeechPackRow(descriptor, status) }
+
         item {
             GlassCard {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -126,6 +132,35 @@ private fun CapabilityRow(label: String, detail: CapabilityDetail) {
         Column {
             Text(label, fontWeight = FontWeight.Medium)
             Text(detail.message, style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+/**
+ * One row per [SpeechPackDescriptor], driven by the real
+ * `SpeechPackStateMachine` — every pack in this build sits in
+ * [SpeechPackState.UNAVAILABLE] because there is no verified model to
+ * download, so this deliberately shows no "Download" button that would
+ * do nothing. A future build with a real model source only needs to feed
+ * a different status into this same row.
+ */
+@Composable
+private fun SpeechPackRow(descriptor: SpeechPackDescriptor, status: SpeechPackStatus) {
+    GlassCard {
+        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            val (icon, tint) = when (status.state) {
+                SpeechPackState.INSTALLED -> Icons.Filled.CheckCircle to Color(0xFF2E7D32)
+                SpeechPackState.UPDATE_AVAILABLE, SpeechPackState.DOWNLOADING -> Icons.Filled.Warning to Color(0xFFF9A825)
+                else -> Icons.Filled.Error to Color(0xFF8A8A8A)
+            }
+            Icon(icon, contentDescription = null, tint = tint)
+            Column {
+                Text(descriptor.displayName, fontWeight = FontWeight.Medium)
+                Text(
+                    status.errorMessage ?: status.state.name.lowercase().replace('_', ' '),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
         }
     }
 }

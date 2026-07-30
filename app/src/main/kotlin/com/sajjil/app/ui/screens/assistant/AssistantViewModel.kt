@@ -49,20 +49,47 @@ private val EXAMPLE_COMMANDS = listOf(
  * match one, rather than guessing at meaning it can't actually derive.
  * See docs/REALTIME_ASSISTANT.md for the reasoning.
  */
-class AssistantViewModel(application: Application) : AndroidViewModel(application) {
+class AssistantViewModel(
+    application: Application,
+    /** Project memory: opened from a Dashboard/Surah Project screen already "about" a recording or Surah — not asked again. */
+    initialRecordingId: Long? = null,
+    initialSurahNumber: Int? = null,
+) : AndroidViewModel(application) {
     private val app = application.asSajjilApplication()
     private val ttsManager = TTSManager(application)
 
-    private val _uiState = MutableStateFlow(AssistantUiState())
+    private val _uiState = MutableStateFlow(
+        AssistantUiState(
+            selectedRecordingId = initialRecordingId,
+            responseMessage = if (initialRecordingId != null) {
+                "Ready — ask about this recording, or say \"read this transcript.\""
+            } else {
+                null
+            },
+        ),
+    )
     val uiState: StateFlow<AssistantUiState> = _uiState.asStateFlow()
 
     private var library: List<RecordingEntity> = emptyList()
     private var transcripts: List<Transcript> = emptyList()
     private var recognizer: SpeechRecognitionEngine? = null
+    private var pendingInitialSurahNumber: Int? = initialSurahNumber
 
     init {
         viewModelScope.launch { ttsManager.initialize() }
-        viewModelScope.launch { app.recordingRepository.observeAll().collect { library = it } }
+        viewModelScope.launch {
+            app.recordingRepository.observeAll().collect { recordings ->
+                library = recordings
+                // Runs once, the first time the library is available, so opening the Assistant
+                // from a Surah Project screen immediately shows that Surah's recordings instead
+                // of an empty results list waiting for a query that was already implied.
+                pendingInitialSurahNumber?.let { surahNumber ->
+                    pendingInitialSurahNumber = null
+                    val surah = QuranMetadata.surahByNumber(surahNumber)
+                    handle("Show me Surah ${surah.transliteratedName} recordings")
+                }
+            }
+        }
         viewModelScope.launch { app.transcriptRepository.observeAllAsTranscripts().collect { transcripts = it } }
     }
 

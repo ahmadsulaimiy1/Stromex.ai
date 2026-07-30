@@ -76,7 +76,7 @@ fun SajjilNavGraph(
             TopAppBar(
                 title = { Text("SAJJIL") },
                 actions = {
-                    IconButton(onClick = { navController.navigate(SajjilRoutes.ASSISTANT) }) {
+                    IconButton(onClick = { navController.navigate(SajjilRoutes.assistant()) }) {
                         Icon(Icons.Filled.Assistant, contentDescription = "SAJJIL Assistant")
                     }
                     IconButton(onClick = { navController.navigate(SajjilRoutes.PRODUCTION_READINESS) }) {
@@ -169,7 +169,11 @@ fun SajjilNavGraph(
                 val viewModel: QuranProjectViewModel = viewModel(factory = viewModelFactory {
                     initializer { QuranProjectViewModel(application) }
                 })
-                QuranProjectScreen(viewModel, surahNumber)
+                QuranProjectScreen(
+                    viewModel,
+                    surahNumber,
+                    onOpenAssistant = { navController.navigate(SajjilRoutes.assistant(surahNumber = it)) },
+                )
             }
             composable(SajjilRoutes.BATCH_PRODUCTION) {
                 val viewModel: BatchProductionViewModel = viewModel(factory = viewModelFactory {
@@ -189,9 +193,17 @@ fun SajjilNavGraph(
                 })
                 ComparisonLabScreen(viewModel)
             }
-            composable(SajjilRoutes.ASSISTANT) {
+            composable(
+                route = SajjilRoutes.ASSISTANT,
+                arguments = listOf(
+                    navArgument("recordingId") { type = NavType.LongType; defaultValue = -1L },
+                    navArgument("surahNumber") { type = NavType.IntType; defaultValue = -1 },
+                ),
+            ) { backStackEntry ->
+                val recordingId = backStackEntry.arguments?.getLong("recordingId")?.takeIf { it >= 0 }
+                val surahNumber = backStackEntry.arguments?.getInt("surahNumber")?.takeIf { it >= 0 }
                 val viewModel: AssistantViewModel = viewModel(factory = viewModelFactory {
-                    initializer { AssistantViewModel(application) }
+                    initializer { AssistantViewModel(application, recordingId, surahNumber) }
                 })
                 AssistantScreen(viewModel)
             }
@@ -231,7 +243,11 @@ fun SajjilNavGraph(
                 val viewModel: DashboardViewModel = viewModel(factory = viewModelFactory {
                     initializer { DashboardViewModel(application) }
                 })
-                DashboardScreen(viewModel, recordingId)
+                DashboardScreen(
+                    viewModel,
+                    recordingId,
+                    onOpenAssistant = { navController.navigate(SajjilRoutes.assistant(recordingId = it)) },
+                )
             }
         }
     }
