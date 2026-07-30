@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -31,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sajjil.app.data.db.RecordingEntity
+import com.sajjil.app.ui.components.PlaybackWaveformView
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -47,6 +49,7 @@ fun ArchiveScreen(
     val positionMs by viewModel.positionMs.collectAsStateWithLifecycle()
     val durationMs by viewModel.durationMs.collectAsStateWithLifecycle()
     val playingFile by viewModel.playingFile.collectAsStateWithLifecycle()
+    val waveformPeaks by viewModel.waveformPeaks.collectAsStateWithLifecycle()
 
     Column(modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("SAJJIL Library", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
@@ -72,6 +75,7 @@ fun ArchiveScreen(
                         isPlaying = isActive && isPlaying,
                         positionMs = if (isActive) positionMs else 0L,
                         durationMs = if (isActive && durationMs > 0L) durationMs else recording.durationMs,
+                        waveformPeaks = if (isActive) waveformPeaks else null,
                         onTogglePlay = { viewModel.togglePlay(recording) },
                         onSeek = { viewModel.seekTo(it) },
                         onToggleFavorite = { viewModel.toggleFavorite(recording) },
@@ -91,6 +95,7 @@ private fun ArchiveRow(
     isPlaying: Boolean,
     positionMs: Long,
     durationMs: Long,
+    waveformPeaks: FloatArray?,
     onTogglePlay: () -> Unit,
     onSeek: (Long) -> Unit,
     onToggleFavorite: () -> Unit,
@@ -146,6 +151,11 @@ private fun ArchiveRow(
             }
 
             if (isActive) {
+                PlaybackWaveformView(
+                    peaks = waveformPeaks,
+                    progress = if (durationMs > 0L) positionMs.toFloat() / durationMs.toFloat() else 0f,
+                    modifier = Modifier.fillMaxWidth().height(40.dp).padding(top = 8.dp),
+                )
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(formatDuration(positionMs), style = MaterialTheme.typography.labelSmall)
                     Slider(

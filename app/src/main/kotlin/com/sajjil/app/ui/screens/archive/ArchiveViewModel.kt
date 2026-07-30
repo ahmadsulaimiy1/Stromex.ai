@@ -5,10 +5,15 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.sajjil.app.data.db.RecordingEntity
 import com.sajjil.app.di.asSajjilApplication
+import com.sajjil.core.analysis.WaveformPeaks
+import com.sajjil.core.audio.WavIO
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -32,6 +37,11 @@ class ArchiveViewModel(application: Application) : AndroidViewModel(application)
     val durationMs: StateFlow<Long> = playback.durationMs
     val playingFile: StateFlow<File?> = playback.playingFile
 
+    /** Peak-amplitude bars for whichever recording is currently loaded; null while still decoding, or when nothing is loaded. */
+    private val _waveformPeaks = MutableStateFlow<FloatArray?>(null)
+    val waveformPeaks: StateFlow<FloatArray?> = _waveformPeaks.asStateFlow()
+    private var waveformJob: Job? = null
+
     private val query = MutableStateFlow("")
     val searchQuery: StateFlow<String> = query
 
@@ -50,6 +60,7 @@ class ArchiveViewModel(application: Application) : AndroidViewModel(application)
             if (isPlaying.value) playback.pause() else playback.resume(playbackScope)
         } else {
             playback.play(file, playbackScope, label = recording.title)
+            loadWaveform(file)
         }
     }
 
@@ -57,12 +68,29 @@ class ArchiveViewModel(application: Application) : AndroidViewModel(application)
         playback.seekTo(ms)
     }
 
+    /** Decodes the file once off the main thread and buckets it into peaks -- not something to redo on every recomposition. */
+    private fun loadWaveform(file: File) {
+        _waveformPeaks.value = null
+        waveformJob?.cancel()
+        waveformJob = viewModelScope.launch(Dispatchers.Default) {
+            val peaks = runCatching {
+                val audio = WavIO.read(file.readBytes())
+                WaveformPeaks.compute(audio.samples, WAVEFORM_BUCKET_COUNT)
+            }.getOrNull()
+            _waveformPeaks.value = peaks
+        }
+    }
+
     fun toggleFavorite(recording: RecordingEntity) {
         viewModelScope.launch { app.recordingRepository.update(recording.copy(isFavorite = !recording.isFavorite)) }
     }
 
     fun delete(recording: RecordingEntity) {
-        if (playingFile.value == File(recording.filePath)) playback.stop()
+        if (playingFile.value == File(recording.filePath)) {
+            playback.stop()
+            waveformJob?.cancel()
+            _waveformPeaks.value = null
+        }
         viewModelScope.launch {
             app.recordingRepository.delete(recording)
             runCatching { File(recording.filePath).delete() }
@@ -71,4 +99,8 @@ class ArchiveViewModel(application: Application) : AndroidViewModel(application)
 
     // No playback.stop() in onCleared(): the shared player is owned by the app, not this
     // screen, so leaving Library must not interrupt a recording that's still playing.
+
+    private companion object {
+        const val WAVEFORM_BUCKET_COUNT = 120
+    }
 }
