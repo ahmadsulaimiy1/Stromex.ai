@@ -119,7 +119,6 @@ class StudioViewModel(private val services: Services) : ViewModel() {
             val editSession = EditSession(audio)
             session = editSession
 
-            val settings = services.settings.settings
             _state.value = StudioUiState(
                 recording = recording,
                 isLoading = false,

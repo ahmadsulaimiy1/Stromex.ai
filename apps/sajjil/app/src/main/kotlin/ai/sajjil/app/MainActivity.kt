@@ -17,12 +17,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        val services = services
-        services.playback.connect()
+        val appServices = services
+        appServices.playback.connect()
 
         setContent {
             SajjilTheme {
-                SajjilApp(services = services)
+                SajjilApp(services = appServices)
             }
         }
     }
