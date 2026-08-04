@@ -62,8 +62,36 @@ All 5 fixtures decoded bit-exactly by libsndfile
 
 ### The build
 
-CI assembles the debug APK, runs the app module's unit tests, and runs lint on every push. The APK
-is uploaded as a build artifact.
+CI assembles the debug APK, runs the app module's unit tests, and runs lint on every push, and
+uploads the APK as a build artifact.
+
+Observed on the `claude/sajjil-ux-design-directive-7sdieb` branch:
+
+| Run | Commit | Engine tests | FLAC vs libsndfile | `assembleDebug` | App unit tests |
+|---|---|---|---|---|---|
+| 1 | `19b57a0` | pass | pass | **fail** — 9 Kotlin errors | not reached |
+| 2 | `5423f9e` | pass | pass | **pass** (3 m 46 s) | **pass** |
+| 3 | `f431820` | — | — | — | — |
+
+Run 1's failures were two real defects, both fixed in `5423f9e`: `animateFloat` was used without
+its import, and `AnimatedVisibility` inside a `Box` nested in a `Row` resolved to the `RowScope`
+overload, which cannot be called with an implicit receiver there.
+
+Run 2 is the evidence that **the app compiles and the APK builds**. Run 3 carries only a CI
+configuration change plus the `Format` tests; its result was not observed before this document was
+written, because GitHub's jobs API was serving cached step data at the time. Check the Actions tab
+for its conclusion rather than assuming it from here.
+
+### App module
+
+`FormatTest` covers the formatting shared by every screen — durations, the recording timer, spoken
+durations for screen readers, file sizes, relative dates, remaining-recording-time phrasing, and
+the cases that exist to avoid embarrassing output (a negative duration never renders as
+`-1:-30`; unmeasured loudness shows a dash rather than a fabricated number; silence reads as
+`−∞ dB`).
+
+This is the only part of the app module under test. Everything else in it depends on Android
+platform services — see the next section.
 
 ---
 
