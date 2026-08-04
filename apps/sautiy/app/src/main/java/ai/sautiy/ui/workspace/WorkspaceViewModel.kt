@@ -156,6 +156,8 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         // the streaming WAV writer, and is read back in ranges when it is needed.
         engine.onBlock = { block -> peaks.append(block) }
 
+        _state.update { it.copy(channelCount = quality.format.channelCount) }
+
         val failure = engine.start(files.takeFile(id))
         if (failure != null) {
             _state.update { it.copy(error = failure.toError()) }
@@ -264,6 +266,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
             provider = audioSources,
             fromFrame = _state.value.playheadFrame,
             speed = _state.value.speed,
+            channelCount = _state.value.channelCount,
             voiceSettings = if (_state.value.comparingOriginal) null else _state.value.voice,
         )
         workspace = workspace.copy(transport = TransportState.PLAYING)
@@ -442,7 +445,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                             provider = audioSources,
                             format = format,
                             voice = voice,
-                            channelCount = _state.value.quality.format.channelCount,
+                            channelCount = _state.value.channelCount,
                         ).run(stream) { fraction, _ ->
                             _state.update { it.copy(exportProgress = fraction) }
                         }
@@ -582,7 +585,9 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
             AppendRecording(layerId = "L1", source = source, atFrame = 0, clipId = "${entry.takeId}.clip"),
         )
         workspace = workspace.copy(transport = TransportState.STOPPED, hasAudio = true).dismissingPanel()
-        _state.update { it.copy(projectName = entry.title, playheadFrame = 0) }
+        _state.update {
+            it.copy(projectName = entry.title, playheadFrame = 0, channelCount = entry.channelCount)
+        }
         publish()
 
         // The waveform has to be rebuilt from the file. Without this the peak builder still

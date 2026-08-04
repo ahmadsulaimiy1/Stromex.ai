@@ -50,6 +50,13 @@ data class WorkspaceUiState(
     val projectName: String = "Untitled",
     val quality: CaptureQuality = CaptureQuality.STUDIO,
     val sampleRate: Int = 48_000,
+    /**
+     * Channels in the material being worked on, which is not always the capture setting.
+     *
+     * Opening a stereo recording while the capture quality is mono used to play and export it
+     * as mono, silently discarding one side.
+     */
+    val channelCount: Int = 1,
 
     val hasAudio: Boolean = false,
     val recordedFrames: Long = 0,
