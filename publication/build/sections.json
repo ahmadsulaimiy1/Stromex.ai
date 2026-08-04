@@ -1,0 +1,966 @@
+{
+ "0": [
+  {
+   "anchor": "s_0_1",
+   "num": "0.1",
+   "title": "Purpose",
+   "key": "0.1"
+  },
+  {
+   "anchor": "s_0_2",
+   "num": "0.2",
+   "title": "Mission",
+   "key": "0.2"
+  },
+  {
+   "anchor": "s_0_3",
+   "num": "0.3",
+   "title": "Long-Term Vision",
+   "key": "0.3"
+  },
+  {
+   "anchor": "s_0_4",
+   "num": "0.4",
+   "title": "Values",
+   "key": "0.4"
+  },
+  {
+   "anchor": "s_0_5",
+   "num": "0.5",
+   "title": "Design Philosophy",
+   "key": "0.5"
+  },
+  {
+   "anchor": "s_0_6",
+   "num": "0.6",
+   "title": "Non-Negotiable Principles",
+   "key": "0.6"
+  },
+  {
+   "anchor": "s_0_7",
+   "num": "0.7",
+   "title": "Identity: The Only Three Things",
+   "key": "0.7"
+  },
+  {
+   "anchor": "s_0_8",
+   "num": "0.8",
+   "title": "The MVP Boundary",
+   "key": "0.8"
+  },
+  {
+   "anchor": "s_0_9",
+   "num": "0.9",
+   "title": "Decision Rules",
+   "key": "0.9"
+  },
+  {
+   "anchor": "s_0_10",
+   "num": "0.10",
+   "title": "Amendments",
+   "key": "0.10"
+  }
+ ],
+ "1": [
+  {
+   "anchor": "s_1_1",
+   "num": "1.1",
+   "title": "The Name",
+   "key": "1.1"
+  },
+  {
+   "anchor": "s_1_2",
+   "num": "1.2",
+   "title": "Brand Personality",
+   "key": "1.2"
+  },
+  {
+   "anchor": "s_1_3",
+   "num": "1.3",
+   "title": "Brand Voice",
+   "key": "1.3"
+  },
+  {
+   "anchor": "s_1_4",
+   "num": "1.4",
+   "title": "Naming Rules",
+   "key": "1.4"
+  },
+  {
+   "anchor": "s_1_5",
+   "num": "1.5",
+   "title": "Logo Philosophy",
+   "key": "1.5"
+  },
+  {
+   "anchor": "s_1_6",
+   "num": "1.6",
+   "title": "Photography Direction",
+   "key": "1.6"
+  },
+  {
+   "anchor": "s_1_7",
+   "num": "1.7",
+   "title": "Illustration Style",
+   "key": "1.7"
+  },
+  {
+   "anchor": "s_1_8",
+   "num": "1.8",
+   "title": "Icon Style",
+   "key": "1.8"
+  },
+  {
+   "anchor": "s_1_9",
+   "num": "1.9",
+   "title": "Animation Philosophy",
+   "key": "1.9"
+  },
+  {
+   "anchor": "s_1_10",
+   "num": "1.10",
+   "title": "Brand Anti-Patterns",
+   "key": "1.10"
+  }
+ ],
+ "2": [
+  {
+   "anchor": "s_2_1",
+   "num": "2.1",
+   "title": "Colour Doctrine",
+   "key": "2.1"
+  },
+  {
+   "anchor": "s_2_2",
+   "num": "2.2",
+   "title": "Primary Palette: Orbit",
+   "key": "2.2"
+  },
+  {
+   "anchor": "s_2_3",
+   "num": "2.3",
+   "title": "Secondary Palette: Aurora (the intelligence colour)",
+   "key": "2.3"
+  },
+  {
+   "anchor": "s_2_4",
+   "num": "2.4",
+   "title": "Semantic Colours",
+   "key": "2.4"
+  },
+  {
+   "anchor": "s_2_5",
+   "num": "2.5",
+   "title": "Neutrals: Void",
+   "key": "2.5"
+  },
+  {
+   "anchor": "s_2_6",
+   "num": "2.6",
+   "title": "Light Mode and Dark Mode",
+   "key": "2.6"
+  },
+  {
+   "anchor": "s_2_7",
+   "num": "2.7",
+   "title": "Gradients",
+   "key": "2.7"
+  },
+  {
+   "anchor": "s_2_8",
+   "num": "2.8",
+   "title": "Shadows and Elevation",
+   "key": "2.8"
+  },
+  {
+   "anchor": "s_2_9",
+   "num": "2.9",
+   "title": "Glass (translucency)",
+   "key": "2.9"
+  },
+  {
+   "anchor": "s_2_10",
+   "num": "2.10",
+   "title": "Corner Radius",
+   "key": "2.10"
+  },
+  {
+   "anchor": "s_2_11",
+   "num": "2.11",
+   "title": "Spacing",
+   "key": "2.11"
+  },
+  {
+   "anchor": "s_2_12",
+   "num": "2.12",
+   "title": "Grid",
+   "key": "2.12"
+  },
+  {
+   "anchor": "s_2_13",
+   "num": "2.13",
+   "title": "Typography",
+   "key": "2.13"
+  },
+  {
+   "anchor": "s_2_14",
+   "num": "2.14",
+   "title": "Component Specifications (visual)",
+   "key": "2.14"
+  },
+  {
+   "anchor": "s_2_15",
+   "num": "2.15",
+   "title": "Accessibility Requirements",
+   "key": "2.15"
+  }
+ ],
+ "3": [
+  {
+   "anchor": "s_3_1",
+   "num": "3.1",
+   "title": "Navigation Philosophy",
+   "key": "3.1"
+  },
+  {
+   "anchor": "s_3_2",
+   "num": "3.2",
+   "title": "Interaction Philosophy",
+   "key": "3.2"
+  },
+  {
+   "anchor": "s_3_3",
+   "num": "3.3",
+   "title": "Motion Guidelines",
+   "key": "3.3"
+  },
+  {
+   "anchor": "s_3_4",
+   "num": "3.4",
+   "title": "Loading Behaviour",
+   "key": "3.4"
+  },
+  {
+   "anchor": "s_3_5",
+   "num": "3.5",
+   "title": "Error Handling",
+   "key": "3.5"
+  },
+  {
+   "anchor": "s_3_6",
+   "num": "3.6",
+   "title": "Empty States",
+   "key": "3.6"
+  },
+  {
+   "anchor": "s_3_7",
+   "num": "3.7",
+   "title": "Offline Behaviour",
+   "key": "3.7"
+  },
+  {
+   "anchor": "s_3_8",
+   "num": "3.8",
+   "title": "Search Philosophy",
+   "key": "3.8"
+  },
+  {
+   "anchor": "s_3_9",
+   "num": "3.9",
+   "title": "Notification Philosophy",
+   "key": "3.9"
+  },
+  {
+   "anchor": "s_3_10",
+   "num": "3.10",
+   "title": "Onboarding Principles",
+   "key": "3.10"
+  },
+  {
+   "anchor": "s_3_11",
+   "num": "3.11",
+   "title": "Accessibility (behavioural)",
+   "key": "3.11"
+  },
+  {
+   "anchor": "s_3_12",
+   "num": "3.12",
+   "title": "One-Handed Use and Thumb Reach",
+   "key": "3.12"
+  }
+ ],
+ "4": [
+  {
+   "anchor": "s_4_1",
+   "num": "4.1",
+   "title": "The Central Tension, Stated Plainly",
+   "key": "4.1"
+  },
+  {
+   "anchor": "s_4_2",
+   "num": "4.2",
+   "title": "Principles",
+   "key": "4.2"
+  },
+  {
+   "anchor": "s_4_3",
+   "num": "4.3",
+   "title": "Reply Suggestions",
+   "key": "4.3"
+  },
+  {
+   "anchor": "s_4_4",
+   "num": "4.4",
+   "title": "Translation",
+   "key": "4.4"
+  },
+  {
+   "anchor": "s_4_5",
+   "num": "4.5",
+   "title": "Summaries",
+   "key": "4.5"
+  },
+  {
+   "anchor": "s_4_6",
+   "num": "4.6",
+   "title": "Voice Transcription and Smart Search",
+   "key": "4.6"
+  },
+  {
+   "anchor": "s_4_7",
+   "num": "4.7",
+   "title": "Spam, Scam, and Fraud Protection",
+   "key": "4.7"
+  },
+  {
+   "anchor": "s_4_8",
+   "num": "4.8",
+   "title": "Conversation Memory",
+   "key": "4.8"
+  },
+  {
+   "anchor": "s_4_9",
+   "num": "4.9",
+   "title": "Privacy Boundaries (the definitive table)",
+   "key": "4.9"
+  },
+  {
+   "anchor": "s_4_10",
+   "num": "4.10",
+   "title": "AI Transparency",
+   "key": "4.10"
+  },
+  {
+   "anchor": "s_4_11",
+   "num": "4.11",
+   "title": "What We Will Not Build",
+   "key": "4.11"
+  }
+ ],
+ "5": [
+  {
+   "anchor": "s_5_1",
+   "num": "5.1",
+   "title": "Secure Messaging",
+   "key": "5.1"
+  },
+  {
+   "anchor": "s_5_2",
+   "num": "5.2",
+   "title": "Voice Notes",
+   "key": "5.2"
+  },
+  {
+   "anchor": "s_5_3",
+   "num": "5.3",
+   "title": "Voice Calls",
+   "key": "5.3"
+  },
+  {
+   "anchor": "s_5_4",
+   "num": "5.4",
+   "title": "Video Calls",
+   "key": "5.4"
+  },
+  {
+   "anchor": "s_5_5",
+   "num": "5.5",
+   "title": "Group Conversations",
+   "key": "5.5"
+  },
+  {
+   "anchor": "s_5_6",
+   "num": "5.6",
+   "title": "Channels",
+   "key": "5.6"
+  },
+  {
+   "anchor": "s_5_7",
+   "num": "5.7",
+   "title": "Stories",
+   "key": "5.7"
+  },
+  {
+   "anchor": "s_5_8",
+   "num": "5.8",
+   "title": "AI Assistant",
+   "key": "5.8"
+  },
+  {
+   "anchor": "s_5_9",
+   "num": "5.9",
+   "title": "File Sharing",
+   "key": "5.9"
+  },
+  {
+   "anchor": "s_5_10",
+   "num": "5.10",
+   "title": "Search",
+   "key": "5.10"
+  },
+  {
+   "anchor": "s_5_11",
+   "num": "5.11",
+   "title": "Profile System",
+   "key": "5.11"
+  },
+  {
+   "anchor": "s_5_12",
+   "num": "5.12",
+   "title": "Notifications",
+   "key": "5.12"
+  },
+  {
+   "anchor": "s_5_13",
+   "num": "5.13",
+   "title": "Multi-Device Support",
+   "key": "5.13"
+  },
+  {
+   "anchor": "s_5_14",
+   "num": "5.14",
+   "title": "Cross-Cutting Requirements",
+   "key": "5.14"
+  }
+ ],
+ "6": [
+  {
+   "anchor": "s_6_1",
+   "num": "6.1",
+   "title": "Architectural Principles",
+   "key": "6.1"
+  },
+  {
+   "anchor": "s_6_2",
+   "num": "6.2",
+   "title": "Client: Flutter",
+   "key": "6.2"
+  },
+  {
+   "anchor": "s_6_3",
+   "num": "6.3",
+   "title": "Backend",
+   "key": "6.3"
+  },
+  {
+   "anchor": "s_6_4",
+   "num": "6.4",
+   "title": "API Architecture",
+   "key": "6.4"
+  },
+  {
+   "anchor": "s_6_5",
+   "num": "6.5",
+   "title": "Database",
+   "key": "6.5"
+  },
+  {
+   "anchor": "s_6_6",
+   "num": "6.6",
+   "title": "Authentication, Identity, and Push",
+   "key": "6.6"
+  },
+  {
+   "anchor": "s_6_7",
+   "num": "6.7",
+   "title": "Encryption",
+   "key": "6.7"
+  },
+  {
+   "anchor": "s_6_8",
+   "num": "6.8",
+   "title": "Offline Sync and Caching",
+   "key": "6.8"
+  },
+  {
+   "anchor": "s_6_9",
+   "num": "6.9",
+   "title": "Realtime Media (Calls)",
+   "key": "6.9"
+  },
+  {
+   "anchor": "s_6_10",
+   "num": "6.10",
+   "title": "Scalability",
+   "key": "6.10"
+  },
+  {
+   "anchor": "s_6_11",
+   "num": "6.11",
+   "title": "Monitoring and Observability",
+   "key": "6.11"
+  },
+  {
+   "anchor": "s_6_12",
+   "num": "6.12",
+   "title": "Testing",
+   "key": "6.12"
+  },
+  {
+   "anchor": "s_6_13",
+   "num": "6.13",
+   "title": "Data Retention and Minimisation",
+   "key": "6.13"
+  },
+  {
+   "anchor": "s_6_14",
+   "num": "6.14",
+   "title": "CI/CD",
+   "key": "6.14"
+  },
+  {
+   "anchor": "s_6_15",
+   "num": "6.15",
+   "title": "Security Operations",
+   "key": "6.15"
+  }
+ ],
+ "7": [
+  {
+   "anchor": "s_7_1",
+   "num": "7.1",
+   "title": "Token Architecture",
+   "key": "7.1"
+  },
+  {
+   "anchor": "s_7_2",
+   "num": "7.2",
+   "title": "Component Inventory",
+   "key": "7.2"
+  },
+  {
+   "anchor": "s_7_3",
+   "num": "7.3",
+   "title": "Iconography",
+   "key": "7.3"
+  },
+  {
+   "anchor": "s_7_4",
+   "num": "7.4",
+   "title": "Buttons (behavioural contract)",
+   "key": "7.4"
+  },
+  {
+   "anchor": "s_7_5",
+   "num": "7.5",
+   "title": "Cards and Lists",
+   "key": "7.5"
+  },
+  {
+   "anchor": "s_7_6",
+   "num": "7.6",
+   "title": "Dialogs, Sheets, and Menus",
+   "key": "7.6"
+  },
+  {
+   "anchor": "s_7_7",
+   "num": "7.7",
+   "title": "Motion Tokens",
+   "key": "7.7"
+  },
+  {
+   "anchor": "s_7_8",
+   "num": "7.8",
+   "title": "Gestures",
+   "key": "7.8"
+  },
+  {
+   "anchor": "s_7_9",
+   "num": "7.9",
+   "title": "Transitions and Shared Elements",
+   "key": "7.9"
+  },
+  {
+   "anchor": "s_7_10",
+   "num": "7.10",
+   "title": "Design Patterns",
+   "key": "7.10"
+  },
+  {
+   "anchor": "s_7_11",
+   "num": "7.11",
+   "title": "Contribution Rules",
+   "key": "7.11"
+  }
+ ],
+ "8": [
+  {
+   "anchor": "s_8_1",
+   "num": "8.1",
+   "title": "Why Speed Is the First Feature",
+   "key": "8.1"
+  },
+  {
+   "anchor": "s_8_2",
+   "num": "8.2",
+   "title": "Cold Launch",
+   "key": "8.2"
+  },
+  {
+   "anchor": "s_8_3",
+   "num": "8.3",
+   "title": "Frame Rate",
+   "key": "8.3"
+  },
+  {
+   "anchor": "s_8_4",
+   "num": "8.4",
+   "title": "Latency",
+   "key": "8.4"
+  },
+  {
+   "anchor": "s_8_5",
+   "num": "8.5",
+   "title": "Memory",
+   "key": "8.5"
+  },
+  {
+   "anchor": "s_8_6",
+   "num": "8.6",
+   "title": "Binary Size, Battery, and Network",
+   "key": "8.6"
+  },
+  {
+   "anchor": "s_8_7",
+   "num": "8.7",
+   "title": "Reference Hardware and Network Profiles",
+   "key": "8.7"
+  },
+  {
+   "anchor": "s_8_8",
+   "num": "8.8",
+   "title": "Media Optimisation",
+   "key": "8.8"
+  },
+  {
+   "anchor": "s_8_9",
+   "num": "8.9",
+   "title": "Accessibility Score",
+   "key": "8.9"
+  },
+  {
+   "anchor": "s_8_10",
+   "num": "8.10",
+   "title": "Stability",
+   "key": "8.10"
+  },
+  {
+   "anchor": "s_8_11",
+   "num": "8.11",
+   "title": "The Performance Budget Process",
+   "key": "8.11"
+  }
+ ],
+ "9": [
+  {
+   "anchor": "h_9_1",
+   "num": "Phase 1",
+   "title": "MVP (Months 0–12)",
+   "key": "Phase 1 — MVP (Months 0–12)"
+  },
+  {
+   "anchor": "h_9_2",
+   "num": "Phase 1",
+   "title": "Execution Sequence",
+   "key": "Phase 1 — Execution Sequence"
+  },
+  {
+   "anchor": "h_9_3",
+   "num": "Phase 2",
+   "title": "Public Beta and Depth (Months 12–24)",
+   "key": "Phase 2 — Public Beta and Depth (Months 12–24)"
+  },
+  {
+   "anchor": "h_9_4",
+   "num": "Phase 3",
+   "title": "Creator Tools and Protocol Maturity (Months 24–42)",
+   "key": "Phase 3 — Creator Tools and Protocol Maturity (Months 24–42)"
+  },
+  {
+   "anchor": "h_9_5",
+   "num": "Phase 4",
+   "title": "Business Platform (Months 42–66)",
+   "key": "Phase 4 — Business Platform (Months 42–66)"
+  },
+  {
+   "anchor": "h_9_6",
+   "num": "Phase 5",
+   "title": "Platform Ecosystem (Months 66+)",
+   "key": "Phase 5 — Platform Ecosystem (Months 66+)"
+  },
+  {
+   "anchor": "h_9_7",
+   "num": "",
+   "title": "Cross-Phase: What Never Changes",
+   "key": "Cross-Phase: What Never Changes"
+  }
+ ],
+ "10": [
+  {
+   "anchor": "s_10_1",
+   "num": "10.1",
+   "title": "Why This Document Exists",
+   "key": "10.1"
+  },
+  {
+   "anchor": "s_10_2",
+   "num": "10.2",
+   "title": "How to Read the Register",
+   "key": "10.2"
+  },
+  {
+   "anchor": "s_10_3",
+   "num": "10.3",
+   "title": "WhatsApp-Class Features",
+   "key": "10.3"
+  },
+  {
+   "anchor": "s_10_4",
+   "num": "10.4",
+   "title": "Telegram-Class Features",
+   "key": "10.4"
+  },
+  {
+   "anchor": "s_10_5",
+   "num": "10.5",
+   "title": "Facebook-Class Features",
+   "key": "10.5"
+  },
+  {
+   "anchor": "s_10_6",
+   "num": "10.6",
+   "title": "Instagram-Class Features",
+   "key": "10.6"
+  },
+  {
+   "anchor": "s_10_7",
+   "num": "10.7",
+   "title": "Discord-Class Features",
+   "key": "10.7"
+  },
+  {
+   "anchor": "s_10_8",
+   "num": "10.8",
+   "title": "Signal-Class Features",
+   "key": "10.8"
+  },
+  {
+   "anchor": "s_10_9",
+   "num": "10.9",
+   "title": "WeChat-Class Features",
+   "key": "10.9"
+  },
+  {
+   "anchor": "s_10_10",
+   "num": "10.10",
+   "title": "The “Invent New Features” List",
+   "key": "10.10"
+  },
+  {
+   "anchor": "s_10_11",
+   "num": "10.11",
+   "title": "Rejections That Will Be Re-Proposed",
+   "key": "10.11"
+  },
+  {
+   "anchor": "s_10_12",
+   "num": "10.12",
+   "title": "The Process for Adding Anything",
+   "key": "10.12"
+  }
+ ],
+ "11": [
+  {
+   "anchor": "s_11_1",
+   "num": "11.1",
+   "title": "The Business Thesis",
+   "key": "11.1"
+  },
+  {
+   "anchor": "s_11_2",
+   "num": "11.2",
+   "title": "Subscription Plans",
+   "key": "11.2"
+  },
+  {
+   "anchor": "s_11_3",
+   "num": "11.3",
+   "title": "Creator Economy (Phase 3)",
+   "key": "11.3"
+  },
+  {
+   "anchor": "s_11_4",
+   "num": "11.4",
+   "title": "Unit Economics",
+   "key": "11.4"
+  },
+  {
+   "anchor": "s_11_5",
+   "num": "11.5",
+   "title": "Analytics",
+   "key": "11.5"
+  },
+  {
+   "anchor": "s_11_6",
+   "num": "11.6",
+   "title": "Growth Strategy",
+   "key": "11.6"
+  },
+  {
+   "anchor": "s_11_7",
+   "num": "11.7",
+   "title": "Moderation Architecture",
+   "key": "11.7"
+  },
+  {
+   "anchor": "s_11_8",
+   "num": "11.8",
+   "title": "Internationalisation",
+   "key": "11.8"
+  },
+  {
+   "anchor": "s_11_9",
+   "num": "11.9",
+   "title": "Legal and Compliance",
+   "key": "11.9"
+  },
+  {
+   "anchor": "s_11_10",
+   "num": "11.10",
+   "title": "Risk Register",
+   "key": "11.10"
+  }
+ ],
+ "12": [
+  {
+   "anchor": "a_001",
+   "num": "ADR-001",
+   "title": "Flutter for every client platform",
+   "key": "ADR-001"
+  },
+  {
+   "anchor": "a_002",
+   "num": "ADR-002",
+   "title": "A modular monolith in Go, not microservices",
+   "key": "ADR-002"
+  },
+  {
+   "anchor": "a_003",
+   "num": "ADR-003",
+   "title": "Signal Protocol via libsignal; Sender Keys for groups; MLS deferred",
+   "key": "ADR-003"
+  },
+  {
+   "anchor": "a_004",
+   "num": "ADR-004",
+   "title": "PostgreSQL for everything at MVP; ScyllaDB only on trigger",
+   "key": "ADR-004"
+  },
+  {
+   "anchor": "a_005",
+   "num": "ADR-005",
+   "title": "AI never processes E2EE content without an explicit, visible, revocable grant",
+   "key": "ADR-005"
+  },
+  {
+   "anchor": "a_006",
+   "num": "ADR-006",
+   "title": "LiveKit SFU with insertable-stream E2EE for group calls",
+   "key": "ADR-006"
+  },
+  {
+   "anchor": "a_007",
+   "num": "ADR-007",
+   "title": "Push notification payloads carry no content",
+   "key": "ADR-007"
+  },
+  {
+   "anchor": "a_008",
+   "num": "ADR-008",
+   "title": "Local-first architecture with an outbox",
+   "key": "ADR-008"
+  },
+  {
+   "anchor": "a_009",
+   "num": "ADR-009",
+   "title": "No advertising, ever; subscription and business revenue only",
+   "key": "ADR-009"
+  },
+  {
+   "anchor": "a_010",
+   "num": "ADR-010",
+   "title": "No address-book upload at MVP; username-first discovery",
+   "key": "ADR-010"
+  },
+  {
+   "anchor": "a_011",
+   "num": "ADR-011",
+   "title": "SpaceTalk is a greenfield product, not an extension of the existing StromeX codebase",
+   "key": "ADR-011"
+  },
+  {
+   "anchor": "a_012",
+   "num": "ADR-012",
+   "title": "Multi-device with per-device identity keys; web as the MVP linked client",
+   "key": "ADR-012"
+  }
+ ],
+ "13": [
+  {
+   "anchor": "s_13_1",
+   "num": "13.1",
+   "title": "The Core Hypotheses",
+   "key": "13.1"
+  },
+  {
+   "anchor": "s_13_2",
+   "num": "13.2",
+   "title": "The Research Programme",
+   "key": "13.2"
+  },
+  {
+   "anchor": "s_13_3",
+   "num": "13.3",
+   "title": "Who We Are Building For",
+   "key": "13.3"
+  },
+  {
+   "anchor": "s_13_4",
+   "num": "13.4",
+   "title": "Primary User Journeys",
+   "key": "13.4"
+  },
+  {
+   "anchor": "s_13_5",
+   "num": "13.5",
+   "title": "Information Architecture",
+   "key": "13.5"
+  },
+  {
+   "anchor": "s_13_6",
+   "num": "13.6",
+   "title": "Design File Specification",
+   "key": "13.6"
+  }
+ ]
+}
