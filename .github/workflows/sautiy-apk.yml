@@ -151,37 +151,4 @@ jobs:
           arch: x86_64
           profile: pixel_5
           disable-animations: true
-          script: |
-            set -x
-            APK=$(find apk -name '*.apk' | head -1)
-            adb install -r "$APK"
-
-            # Grant the microphone up front. A permission dialog is not a crash, and this test
-            # is about whether the workspace itself survives being started.
-            adb shell pm grant ai.sautiy.debug android.permission.RECORD_AUDIO || true
-
-            adb logcat -c
-            adb shell am start -W -n ai.sautiy.debug/ai.sautiy.SautiyActivity
-
-            # Give Compose time to lay out the first frame and any background work to run.
-            sleep 15
-
-            echo "=== crash buffer ==="
-            adb logcat -d -b crash > crash.txt || true
-            cat crash.txt
-
-            echo "=== our own log ==="
-            adb logcat -d | grep -iE "sautiy|AndroidRuntime|FATAL" | tail -80 || true
-
-            if [ -s crash.txt ]; then
-              echo "::error::The app crashed on launch"
-              exit 1
-            fi
-
-            if ! adb shell pidof ai.sautiy.debug > /dev/null; then
-              echo "::error::The process is not running 15s after launch"
-              adb logcat -d | tail -120
-              exit 1
-            fi
-
-            echo "SAUTIY launched and is still alive."
+          script: bash .github/scripts/sautiy-smoke.sh

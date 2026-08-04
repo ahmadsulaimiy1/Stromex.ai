@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+#
+# SAUTIY launch smoke test.
+#
+# Runs inside the emulator-runner. It must be ONE script file rather than a list of lines in
+# the workflow: the action executes each line of an inline `script:` in its own `sh -c`, so a
+# variable set on one line is gone by the next — which is exactly how the first attempt failed.
+set -euo pipefail
+
+PACKAGE="ai.sautiy.debug"
+ACTIVITY="ai.sautiy.SautiyActivity"
+
+APK=$(find apk -name '*.apk' | head -1)
+if [ -z "$APK" ]; then
+  echo "::error::No APK was downloaded"
+  find apk -type f || true
+  exit 1
+fi
+echo "Installing $APK"
+
+adb install -r "$APK"
+
+# Granted up front: a permission dialog is not a crash, and this test is about whether the
+# workspace survives being started at all.
+adb shell pm grant "$PACKAGE" android.permission.RECORD_AUDIO || true
+adb shell pm grant "$PACKAGE" android.permission.POST_NOTIFICATIONS || true
+
+adb logcat -c
+adb shell am start -W -n "$PACKAGE/$ACTIVITY"
+
+# Long enough for Compose to lay out the first frame, the ViewModel to run its init, and any
+# background work to reach a steady state.
+sleep 20
+
+echo "=== crash buffer ==="
+adb logcat -d -b crash > crash.txt 2>/dev/null || true
+cat crash.txt || true
+
+echo "=== relevant log ==="
+adb logcat -d | grep -iE "sautiy|AndroidRuntime|FATAL|Compose|Resources\\\$NotFound" | tail -100 || true
+
+if [ -s crash.txt ]; then
+  echo "::error::SAUTIY crashed on launch"
+  exit 1
+fi
+
+if ! adb shell pidof "$PACKAGE" > /dev/null 2>&1; then
+  echo "::error::SAUTIY is not running 20 seconds after launch"
+  echo "=== full tail ==="
+  adb logcat -d | tail -200
+  exit 1
+fi
+
+# A process that is alive but showing nothing is still a failure. Confirm our activity is the
+# one actually resumed, rather than the launcher having come back after a silent death.
+echo "=== resumed activity ==="
+adb shell dumpsys activity activities | grep -E "ResumedActivity|topResumedActivity" || true
+
+if ! adb shell dumpsys activity activities | grep -q "$PACKAGE"; then
+  echo "::error::SAUTIY is running but its activity is not on screen"
+  exit 1
+fi
+
+echo "SAUTIY launched, is alive, and its activity is resumed."
