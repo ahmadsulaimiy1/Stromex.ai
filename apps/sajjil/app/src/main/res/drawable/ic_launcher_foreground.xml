@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A waveform mark: five bars rising and falling around a centre line. Legible at 48dp, which
+     ruled out anything more literal. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFC9A227"
+        android:pathData="M34,46 h5 v16 h-5 z" />
+    <path
+        android:fillColor="#FFE8C64A"
+        android:pathData="M44,38 h5 v32 h-5 z" />
+    <path
+        android:fillColor="#FFF2E3A8"
+        android:pathData="M54,30 h5 v48 h-5 z" />
+    <path
+        android:fillColor="#FFE8C64A"
+        android:pathData="M64,38 h5 v32 h-5 z" />
+    <path
+        android:fillColor="#FFC9A227"
+        android:pathData="M74,46 h5 v16 h-5 z" />
+</vector>

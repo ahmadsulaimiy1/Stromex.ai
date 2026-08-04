@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SAJJIL</string>
+
+    <!-- Sections -->
+    <string name="section_record">Record</string>
+    <string name="section_studio">Studio</string>
+    <string name="section_library">Library</string>
+    <string name="section_quran">Qur\'an</string>
+    <string name="section_assistant">Assistant</string>
+
+    <!-- Transport. These are content descriptions as much as labels: every control on the
+         record and playback screens has to be reachable by a screen reader. -->
+    <string name="action_record">Record</string>
+    <string name="action_stop">Stop</string>
+    <string name="action_pause">Pause</string>
+    <string name="action_resume">Resume</string>
+    <string name="action_play">Play</string>
+    <string name="action_skip_back">Skip back ten seconds</string>
+    <string name="action_skip_forward">Skip forward ten seconds</string>
+    <string name="action_undo">Undo</string>
+    <string name="action_redo">Redo</string>
+    <string name="action_export">Export</string>
+    <string name="action_share">Share</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_rename">Rename</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_done">Done</string>
+    <string name="action_save">Save</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_recording">Recording</string>
+    <string name="notification_channel_recording_description">Shown while SAJJIL is recording, so Android keeps the microphone open.</string>
+    <string name="notification_channel_playback">Playback</string>
+    <string name="notification_channel_playback_description">Playback controls on the lock screen and in the notification shade.</string>
+    <string name="notification_recording_title">Recording</string>
+    <string name="notification_recording_paused">Recording paused</string>
+
+    <!-- Permissions. Written to say what the user gets, not what the system wants. -->
+    <string name="permission_microphone_title">SAJJIL needs the microphone</string>
+    <string name="permission_microphone_body">Recording is what this app does. Nothing is uploaded anywhere — recordings stay on this device unless you export them yourself.</string>
+    <string name="permission_microphone_grant">Allow microphone</string>
+    <string name="permission_microphone_denied_body">Microphone access was turned off. You can turn it back on in Settings, under Permissions.</string>
+    <string name="permission_open_settings">Open settings</string>
+
+    <!-- Empty states -->
+    <string name="empty_library_title">No recordings yet</string>
+    <string name="empty_library_body">Everything you record appears here, with its waveform, length and quality score.</string>
+    <string name="empty_library_action">Start recording</string>
+    <string name="empty_studio_title">Nothing open in Studio</string>
+    <string name="empty_studio_body">Open a recording from your Library, or record something new, and it will appear here ready to edit and enhance.</string>
+</resources>

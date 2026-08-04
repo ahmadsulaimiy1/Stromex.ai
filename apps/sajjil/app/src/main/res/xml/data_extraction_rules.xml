@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="database" path="." />
+        <include domain="sharedpref" path="." />
+        <exclude domain="file" path="recordings/" />
+    </cloud-backup>
+    <device-transfer>
+        <!-- A direct device-to-device transfer has no quota problem, so the audio goes too. -->
+        <include domain="database" path="." />
+        <include domain="sharedpref" path="." />
+        <include domain="file" path="recordings/" />
+    </device-transfer>
+</data-extraction-rules>

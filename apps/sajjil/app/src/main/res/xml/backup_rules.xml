@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- The recordings database and settings are small and worth restoring to a new device.
+         The audio itself is not: backing up hours of WAV would blow the backup quota, and the
+         restored database shows those recordings as needing re-import rather than pretending
+         the audio is there. -->
+    <include domain="database" path="." />
+    <include domain="sharedpref" path="." />
+    <exclude domain="file" path="recordings/" />
+    <exclude domain="external" path="." />
+</full-backup-content>

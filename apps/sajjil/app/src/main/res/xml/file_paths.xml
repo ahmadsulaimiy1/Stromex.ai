@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Exports are shared from here. Nothing else in the app's storage is exposed: the working
+         recordings directory is deliberately not listed. -->
+    <cache-path name="exports" path="exports/" />
+    <files-path name="recordings" path="recordings/" />
+</paths>

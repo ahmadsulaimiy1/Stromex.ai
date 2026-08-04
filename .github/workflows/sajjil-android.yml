@@ -1,0 +1,95 @@
+name: SAJJIL Android
+
+on:
+  push:
+    branches:
+      - main
+      - "claude/**"
+    paths:
+      - "apps/sajjil/**"
+      - ".github/workflows/sajjil-android.yml"
+  pull_request:
+    paths:
+      - "apps/sajjil/**"
+      - ".github/workflows/sajjil-android.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: sajjil-android-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: apps/sajjil
+
+jobs:
+  audio-engine:
+    name: Audio engine tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # core-audio is plain JVM Kotlin, so it needs no Android SDK at all. Running it as its own
+      # job means a DSP regression is reported in seconds rather than after a full APK build.
+      - name: Run core-audio unit tests
+        run: ./gradlew :core-audio:test --stacktrace
+
+      - name: Verify FLAC output against libsndfile
+        run: |
+          python3 -m pip install --quiet --user soundfile
+          python3 tools/verify-flac.py
+
+      - name: Upload test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-audio-test-report
+          path: apps/sajjil/core-audio/build/reports/tests/test/
+
+  android-app:
+    name: Build APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Assemble debug APK
+        run: ./gradlew :app:assembleDebug --stacktrace
+
+      - name: Run app unit tests
+        run: ./gradlew :app:testDebugUnitTest --stacktrace
+
+      - name: Lint
+        run: ./gradlew :app:lintDebug --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: sajjil-debug-apk
+          path: apps/sajjil/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+      - name: Upload lint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sajjil-lint-report
+          path: apps/sajjil/app/build/reports/
+          if-no-files-found: ignore

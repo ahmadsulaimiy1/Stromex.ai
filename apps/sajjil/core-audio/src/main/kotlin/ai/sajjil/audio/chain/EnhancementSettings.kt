@@ -306,37 +306,43 @@ object AmbienceProfiles {
     val VOCAL_BOOTH = AmbienceProfile(
         "vocal_booth", "Vocal Booth",
         "A small treated room. Barely there, but not lifeless.",
-        ReverbSettings(amount = 0.07, size = 0.18, decaySeconds = 0.35, warmth = 0.55, preDelayMs = 6.0),
+        ReverbSettings(amount = 0.07, size = 0.18, decaySeconds = 0.35, warmth = 0.55, preDelayMs = 6.0,
+            width = 0.3, earlyReflections = 0.7),
     )
 
     val BROADCAST_ROOM = AmbienceProfile(
         "broadcast", "Broadcast",
         "A controlled studio. Close, with just enough air.",
-        ReverbSettings(amount = 0.1, size = 0.3, decaySeconds = 0.6, warmth = 0.5, preDelayMs = 12.0),
+        ReverbSettings(amount = 0.1, size = 0.3, decaySeconds = 0.6, warmth = 0.5, preDelayMs = 12.0,
+            width = 0.45, earlyReflections = 0.6),
     )
 
     val LECTURE_HALL = AmbienceProfile(
         "lecture_hall", "Lecture Hall",
         "A room with hard surfaces and an audience in it.",
-        ReverbSettings(amount = 0.18, size = 0.55, decaySeconds = 1.3, warmth = 0.4, preDelayMs = 22.0),
+        ReverbSettings(amount = 0.18, size = 0.55, decaySeconds = 1.3, warmth = 0.4, preDelayMs = 22.0,
+            width = 0.7, earlyReflections = 0.5),
     )
 
     val LARGE_HALL = AmbienceProfile(
         "large_hall", "Large Hall",
         "A big, resonant space with a long tail.",
-        ReverbSettings(amount = 0.26, size = 0.8, decaySeconds = 2.6, warmth = 0.35, preDelayMs = 35.0),
+        ReverbSettings(amount = 0.26, size = 0.8, decaySeconds = 2.6, warmth = 0.35, preDelayMs = 35.0,
+            width = 0.9, earlyReflections = 0.3),
     )
 
     val GRAND_MASJID = AmbienceProfile(
         "grand_masjid", "Grand Masjid",
         "A large stone interior — wide, slow and warm.",
-        ReverbSettings(amount = 0.3, size = 0.92, decaySeconds = 3.4, warmth = 0.5, preDelayMs = 45.0),
+        ReverbSettings(amount = 0.3, size = 0.92, decaySeconds = 3.4, warmth = 0.5, preDelayMs = 45.0,
+            width = 1.0, earlyReflections = 0.25),
     )
 
     val PRESTIGE_RECITATION = AmbienceProfile(
         "prestige_recitation", "Prestige Recitation",
         "Generous space that stays clear enough to follow every word.",
-        ReverbSettings(amount = 0.2, size = 0.7, decaySeconds = 2.2, warmth = 0.48, preDelayMs = 30.0),
+        ReverbSettings(amount = 0.2, size = 0.7, decaySeconds = 2.2, warmth = 0.48, preDelayMs = 30.0,
+            width = 0.8, earlyReflections = 0.4),
     )
 
     val ALL = listOf(
