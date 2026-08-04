@@ -67,22 +67,28 @@ uploads the APK as a build artifact.
 
 Observed on the `claude/sajjil-ux-design-directive-7sdieb` branch:
 
-| Run | Commit | Engine tests | FLAC vs libsndfile | `assembleDebug` | App unit tests |
-|---|---|---|---|---|---|
-| 1 | `19b57a0` | pass | pass | **fail** — 9 Kotlin errors | not reached |
-| 2 | `5423f9e` | pass | pass | **pass** (3 m 46 s) | **pass** |
-| 3 | `f431820` | pass | pass | **pass** (4 m 02 s) | see below |
+| Run | Commit | Engine tests | FLAC vs libsndfile | `assembleDebug` | App unit tests | Lint | Conclusion |
+|---|---|---|---|---|---|---|---|
+| 1 | `19b57a0` | pass | pass | **fail** — 9 Kotlin errors | not reached | not reached | failure |
+| 2 | `5423f9e` | pass | pass | **pass** (3 m 46 s) | **pass** | superseded | cancelled |
+| 3 | `f431820` | pass | pass | **pass** (4 m 02 s) | **pass** | pass | **success** |
 
 Run 1's failures were two real defects, both fixed in `5423f9e`: `animateFloat` was used without
 its import, and `AnimatedVisibility` inside a `Box` nested in a `Row` resolved to the `RowScope`
 overload, which cannot be called with an implicit receiver there.
 
-Runs 2 and 3 are two independent confirmations that **the app compiles and the APK builds**.
+**Run 3 is green end to end** — both jobs, every step. It produced two artifacts:
 
-Run 3's `testDebugUnitTest` step had not reported by the time this was written — GitHub's jobs API
-lags. `FormatTest` was instead run directly on a plain JVM (`Format` has no Android dependency):
-all 11 tests pass. The lint step and the artifact upload have not been observed completing on any
-run; lint is configured with `abortOnError = false` and so cannot fail the build regardless.
+```
+sajjil-debug-apk     20,592,169 bytes   (~19.6 MB installable APK)
+sajjil-lint-report       49,639 bytes
+```
+
+The `Upload APK` step is configured with `if-no-files-found: error`, so the run could only have
+succeeded if a real APK was present. **The application builds and packages.**
+
+(Run 2 was cancelled part-way through lint by the push that created run 3; its `assembleDebug` and
+unit-test steps had already passed, which is why they are recorded above.)
 
 ### App module
 
@@ -164,9 +170,10 @@ all, and no permission for it in the manifest.
 
 ### Signed release builds
 
-CI produces an **unsigned debug APK**. Release signing needs a keystore, which is credential
-material and does not belong in a repository. `app/build.gradle.kts` falls back to debug signing so
-a release build does not fail; wiring a real keystore is a deployment step.
+CI produces a **debug-signed APK** (~19.6 MB), which installs on a device but is not a release
+build. Release signing needs a keystore, which is credential material and does not belong in a
+repository. `app/build.gradle.kts` falls back to debug signing so a release build does not fail;
+wiring a real keystore is a deployment step.
 
 ---
 
