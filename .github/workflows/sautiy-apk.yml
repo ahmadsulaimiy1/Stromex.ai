@@ -1,0 +1,113 @@
+name: SAUTIY APK
+
+# RC-1 delivery build.
+#
+# This exists because the development sandbox cannot reach dl.google.com, so the Android module
+# cannot be compiled there. GitHub-hosted runners ship the Android SDK, NDK and CMake and have
+# unrestricted access to the Google Maven repository — so this is where SAUTIY actually gets
+# built, and where the APK comes from.
+
+on:
+  push:
+    branches:
+      - 'claude/sautiy-**'
+    paths:
+      - 'apps/sautiy/**'
+      - '.github/workflows/sautiy-apk.yml'
+  workflow_dispatch:
+    inputs:
+      withMp3:
+        description: 'Build the LAME native encoder for MP3 export'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and verify
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/sautiy
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+
+      - name: Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('apps/sautiy/**/*.gradle.kts', 'apps/sautiy/gradle/libs.versions.toml') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      # The engine tests are the gate. They run first and on their own, so a DSP or edit-engine
+      # regression fails the build before any time is spent on the Android layer.
+      - name: Verify the audio engine
+        run: ./gradlew --no-daemon :sautiy-core:test
+
+      - name: Confirm the Android SDK is visible to Gradle
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          test -d "$ANDROID_HOME/platforms" || { echo "No Android platforms installed"; exit 1; }
+
+      # Fetch LAME only when MP3 is requested. Android has no MP3 encoder, so this is the only
+      # route to the format; without it the app builds and ships without MP3.
+      - name: Fetch LAME for MP3 export
+        if: ${{ inputs.withMp3 }}
+        run: |
+          cd app/src/main/cpp
+          curl -fL --retry 3 -o lame.tar.gz \
+            https://downloads.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz
+          tar xzf lame.tar.gz && mv lame-3.100 lame && rm lame.tar.gz
+          test -f lame/libmp3lame/lame.c
+
+      - name: Build the debug APK
+        run: ./gradlew --no-daemon :app:assembleDebug ${{ inputs.withMp3 && '-PsautiyMp3=true' || '' }}
+
+      - name: Lint the Android layer
+        continue-on-error: true
+        run: ./gradlew --no-daemon :app:lintDebug
+
+      - name: Report what was produced
+        run: |
+          echo "### APK" >> "$GITHUB_STEP_SUMMARY"
+          for apk in $(find app/build/outputs/apk -name '*.apk'); do
+            echo "- \`$apk\` — $(du -h "$apk" | cut -f1)" >> "$GITHUB_STEP_SUMMARY"
+          done
+          # A debug APK is signed with the standard debug keystore, so it installs directly.
+          "$ANDROID_HOME"/build-tools/35.0.0/aapt2 dump badging \
+            $(find app/build/outputs/apk -name '*.apk' | head -1) | head -5 >> "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Upload the APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: sautiy-debug-apk
+          path: apps/sautiy/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload build reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sautiy-build-reports
+          path: |
+            apps/sautiy/app/build/reports/**
+            apps/sautiy/sautiy-core/build/reports/**
+          if-no-files-found: ignore
+          retention-days: 7
