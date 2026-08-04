@@ -14,6 +14,9 @@ on:
     paths:
       - 'apps/sautiy/**'
       - '.github/workflows/sautiy-apk.yml'
+      # The gate itself. Without this a change to the smoke script does not run the smoke
+      # script, which is the one file where that matters most.
+      - '.github/scripts/sautiy-smoke.sh'
   workflow_dispatch:
     inputs:
       withMp3:
