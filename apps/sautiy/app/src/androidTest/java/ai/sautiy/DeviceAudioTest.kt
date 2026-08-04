@@ -256,6 +256,33 @@ class DeviceAudioTest {
     }
 
     @Test
+    fun stoppingMidBlockDoesNotTakeTheProcessWithIt() {
+        // The first run of these tests found this: AudioTrack.write with WRITE_BLOCKING does
+        // not respond to coroutine cancellation, so releasing the track from stop() freed the
+        // native pointer underneath a write still in flight, and the IllegalStateException
+        // killed the process. Stopping at an awkward moment is the ordinary case, not an edge.
+        val (timeline, provider) = timelineFor(syntheticTake(3.0))
+
+        repeat(6) {
+            val player = AudioPlayer(scope)
+            player.start(timeline, provider, fromFrame = 0, channelCount = 1)
+            runBlocking { withTimeoutOrNull(5_000) { player.positionFrames.first { it > 0 } } }
+            // Straight into a stop, while the render loop is inside a blocking write.
+            player.stop()
+        }
+
+        // The process is still here, and can still play.
+        val player = AudioPlayer(scope)
+        try {
+            player.start(timeline, provider, fromFrame = 0, channelCount = 1)
+            runBlocking { withTimeoutOrNull(6_000) { player.positionFrames.first { it > 0 } } }
+            assertTrue("Playback did not survive being stopped repeatedly", player.positionFrames.value > 0)
+        } finally {
+            player.stop()
+        }
+    }
+
+    @Test
     fun aRecordingMadeOnThisDeviceCanBePlayedBackOnIt() {
         // The two halves joined: what capture wrote is what playback reads.
         val (file, frames, _) = record(1.0)

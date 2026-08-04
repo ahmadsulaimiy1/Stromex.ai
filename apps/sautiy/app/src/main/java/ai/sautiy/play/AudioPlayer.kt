@@ -163,21 +163,47 @@ class AudioPlayer(
                 _positionFrames.value = position.coerceAtMost(total)
             }
 
+            // Reaching the end is a different event from being stopped, and only one of them
+            // is news. A cancelled loop that reported "finished" would move the transport to
+            // STOPPED behind the back of whatever just stopped it.
+            val reachedTheEnd = isActive
             _playing.value = false
-            onFinished?.invoke()
+
+            // The track is released *here*, and only here.
+            //
+            // `AudioTrack.write` with WRITE_BLOCKING does not respond to coroutine
+            // cancellation — it returns when the track is paused, flushed or drained, and not
+            // before. Releasing it from stop() therefore freed the native pointer underneath a
+            // write that was still in flight, and the resulting IllegalStateException killed
+            // the process. Owning the release from inside the loop makes that impossible: the
+            // last write has always returned by the time this line runs.
+            runCatching { audioTrack.pause() }
+            runCatching { audioTrack.flush() }
+            runCatching { audioTrack.stop() }
+            runCatching { audioTrack.release() }
+
+            if (reachedTheEnd) onFinished?.invoke()
         }
     }
 
+    /**
+     * Writes one block, stopping early if the track stops accepting audio.
+     *
+     * A non-positive return means paused, flushed or in error — in every case there is nothing
+     * further to write and the loop should look at its own cancellation instead of pushing on.
+     */
     private fun writeBlock(audioTrack: AudioTrack, block: AudioBuffer) {
         val interleaved = block.interleave()
         var written = 0
         while (written < interleaved.size) {
-            val count = audioTrack.write(
-                interleaved,
-                written,
-                interleaved.size - written,
-                AudioTrack.WRITE_BLOCKING,
-            )
+            val count = runCatching {
+                audioTrack.write(
+                    interleaved,
+                    written,
+                    interleaved.size - written,
+                    AudioTrack.WRITE_BLOCKING,
+                )
+            }.getOrElse { return }
             if (count <= 0) return
             written += count
         }
@@ -210,16 +236,25 @@ class AudioPlayer(
         _positionFrames.value = frame
     }
 
+    /**
+     * Stops playback.
+     *
+     * Pause and flush come first, and they are what actually ends it: they unblock the write
+     * the render loop is sitting in, so it can see its own cancellation. The loop then releases
+     * the track on its way out. Nothing here touches the native object, because doing so while
+     * a write is in flight is precisely the crash this ordering exists to prevent.
+     */
     fun stop() {
-        loop?.cancel()
+        val running = loop
+        val audioTrack = track
         loop = null
-        track?.let { audioTrack ->
-            runCatching { audioTrack.pause() }
-            runCatching { audioTrack.flush() }
-            runCatching { audioTrack.stop() }
-            audioTrack.release()
-        }
         track = null
         _playing.value = false
+
+        audioTrack?.let {
+            runCatching { it.pause() }
+            runCatching { it.flush() }
+        }
+        running?.cancel()
     }
 }
