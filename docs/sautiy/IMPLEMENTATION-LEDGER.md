@@ -51,6 +51,33 @@ Android layer.
 
 ---
 
+## Verified on a running Android — 12 instrumented tests, all passing
+
+`AudioRecord`, `AudioTrack` and `MediaCodec` have no meaningful stand-in on the JVM, so every
+claim about them is earned here: the CI emulator job installs the APK, launches it, and then
+runs `app/src/androidTest/.../DeviceAudioTest.kt`. **Starting 12 tests → Finished 12 tests,
+0 failed.**
+
+| Phase | What the device confirmed |
+|---|---|
+| **A — recording** | The microphone opens and reports no failure; frames arrive and reach the waveform callback; the file on disk is a real WAV whose header agrees with what capture reported; **the file is complete and readable while recording is still running** — the crash-recovery guarantee observed rather than argued; pause stops promptly and stays stopped, and resume continues the same take; a second take opens after the first is stopped, which is the only way a leaked `AudioEffect` ever shows itself |
+| **B — playback** | Playback starts and the head advances; a take recorded on the device plays back on it; playback through a Voice Space does not stall and changing the space mid-playback does not stop it; **starting and immediately stopping six times over does not take the process with it** |
+| **E — export** | Every format the panel offers writes bytes and reports the length it wrote; an exported WAV re-probes as the same project; progress runs 0→1 without going backwards; M4A comes back from MediaCodec; a format with no encoder refuses loudly rather than writing a broken file |
+
+**What the device tests found on their first run**, which is the point of them:
+
+`AudioTrack.write` with `WRITE_BLOCKING` does not respond to coroutine cancellation — it
+returns when the track is paused, flushed or drained, and not before. `stop()` cancelled the
+render loop and released the track while a write was still in flight, the native pointer went
+away underneath it, and the uncaught `IllegalStateException` **killed the process**. Stopping
+playback at that moment is the ordinary case, not an edge, and no amount of reading the code
+was going to surface it. The ordering is now pause → flush → cancel, with the loop owning the
+release on its way out.
+
+A second defect fell out of the same reading: a cancelled loop invoked `onFinished`, so
+stopping playback reported reaching the end and moved the transport to STOPPED behind the back
+of whatever had just stopped it.
+
 ## Compiles, lints and launches — verified on CI
 
 The APK builds, lints clean, installs on an emulator and **the app opens**. The smoke job boots
@@ -92,10 +119,14 @@ would be exactly the disconnected-sliders problem the reset rejects.
 
 ## What remains unproven, precisely
 
-CI has no microphone and no audio output, so what a compiling, launching APK still does **not**
-prove is that recording captures audio, that playback is audible, that the waveform draws under
-a finger, that edits apply, or that export writes a file another player will open. Each needs a
-human with a phone.
+The emulator has no microphone in front of it and no speaker behind it. So the device tests
+establish that the platform objects open, that frames flow, that files are written and reopen
+correctly, and that nothing crashes — but **not** that the captured audio sounds like the room,
+that playback is audible, that the twelve spaces sound like their names, that the waveform draws
+under a finger, or that a gesture selects what the user meant. Those need a human with a phone.
+
+The Voice Studio's *arithmetic* is proven on the JVM to a measured standard; its *sound* is a
+judgement only a listener can make.
 
 | Item | Why | Where recorded |
 |---|---|---|
