@@ -26,6 +26,7 @@ jobs:
   audio-engine:
     name: Audio engine tests
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -41,7 +42,7 @@ jobs:
       # core-audio is plain JVM Kotlin, so it needs no Android SDK at all. Running it as its own
       # job means a DSP regression is reported in seconds rather than after a full APK build.
       - name: Run core-audio unit tests
-        run: ./gradlew :core-audio:test --stacktrace
+        run: ./gradlew :core-audio:test --no-daemon --stacktrace
 
       - name: Verify FLAC output against libsndfile
         run: |
@@ -58,6 +59,9 @@ jobs:
   android-app:
     name: Build APK
     runs-on: ubuntu-latest
+    # A hung Gradle build otherwise sits until the six-hour job limit, which tells nobody
+    # anything. Failing at twenty minutes turns a hang into a reportable failure.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -71,13 +75,13 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Assemble debug APK
-        run: ./gradlew :app:assembleDebug --stacktrace
+        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
 
       - name: Run app unit tests
-        run: ./gradlew :app:testDebugUnitTest --stacktrace
+        run: ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace
 
       - name: Lint
-        run: ./gradlew :app:lintDebug --stacktrace
+        run: ./gradlew :app:lintDebug --no-daemon --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
