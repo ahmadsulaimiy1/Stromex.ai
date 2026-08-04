@@ -2,15 +2,12 @@ package ai.sautiy.ui.workspace
 
 import ai.sautiy.core.analysis.PeakBuilder
 import ai.sautiy.core.analysis.Waveform
-import ai.sautiy.core.audio.AudioBuffer
 import ai.sautiy.core.audio.CaptureQuality
 import ai.sautiy.core.audio.Decibels
-import ai.sautiy.core.codec.WavCodec
 import ai.sautiy.core.dsp.StudioPreset
 import ai.sautiy.core.edit.AppendRecording
 import ai.sautiy.core.edit.DeleteRange
 import ai.sautiy.core.edit.EditHistory
-import ai.sautiy.core.edit.InMemorySourceProvider
 import ai.sautiy.core.edit.Layer
 import ai.sautiy.core.edit.SilenceRange
 import ai.sautiy.core.edit.Source
@@ -54,12 +51,20 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
 
     private var capture: AudioCapture? = null
     private var peaks = PeakBuilder()
-    private var captureBuffers = mutableListOf<AudioBuffer>()
+
+    /**
+     * Source audio is read from disk in ranges, never accumulated in memory.
+     *
+     * Holding every captured buffer would be about 500 MB for a ninety-minute lecture — four
+     * times the constitutional ceiling of chapter 16.3, breached on exactly the recording that
+     * matters most to the person making it. Only the peaks are kept, at roughly 8 MB per hour,
+     * which is what lets the whole waveform be drawn while the audio stays on the platter.
+     */
+    private val audioSources = ai.sautiy.data.FileSourceProvider(files)
 
     private var workspace = WorkspaceState()
     private var history = EditHistory.of(Timeline.empty(CaptureQuality.STUDIO.format.sampleRate))
     private var recording = RecordingState()
-    private var sources = mutableMapOf<String, AudioBuffer>()
     private var takeCounter = 0
 
     private val _state = MutableStateFlow(WorkspaceUiState())
@@ -119,12 +124,10 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         val engine = AudioCapture(quality, viewModelScope)
 
         peaks = PeakBuilder()
-        captureBuffers = mutableListOf()
 
-        engine.onBlock = { block ->
-            peaks.append(block)
-            captureBuffers.add(block)
-        }
+        // Only the peak envelope is retained. The audio itself is already on disk, written by
+        // the streaming WAV writer, and is read back in ranges when it is needed.
+        engine.onBlock = { block -> peaks.append(block) }
 
         val failure = engine.start(files.takeFile(id))
         if (failure != null) {
@@ -174,9 +177,11 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                 channelCount = quality.format.channelCount,
                 frameCount = frames,
             )
-            sources[id] = AudioBuffer.concat(captureBuffers.ifEmpty { listOf(AudioBuffer.silence(1, 1, quality.format.sampleRate)) })
-
-            val layerId = workspace.layers.firstOrNull()?.let { "L1" } ?: "L1"
+            // The take lands on the selected layer, or on the first one, or on a layer created
+            // for it — a user who has never thought about layers never has to.
+            val layerId = _state.value.selectedLayerId
+                ?: history.current.layers.firstOrNull()?.id
+                ?: "L1"
             var timeline = history.current
             if (timeline.layer(layerId) == null) {
                 timeline = timeline.copy(layers = timeline.layers + Layer(layerId, "Vocals ${++takeCounter}"))
@@ -225,7 +230,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         }
         player.start(
             timeline = timeline,
-            provider = InMemorySourceProvider(sources),
+            provider = audioSources,
             fromFrame = _state.value.playheadFrame,
             speed = _state.value.speed,
         )

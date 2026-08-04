@@ -70,6 +70,7 @@ compiled**, because the Android toolchain is unreachable here.
 | `AudioPlayer` — `AudioTrack`, timeline rendering | Source complete |
 | `PlatformEncoders` — AAC/ADTS via `MediaCodec` | Source complete |
 | `WorkspaceViewModel` | Source complete |
+| `FileSourceProvider` — range reads with a small LRU | Source complete |
 | Manifest, resources, adaptive icon, splash, strings | Source complete |
 
 **Expect compilation errors on first build.** Roughly 4,000 lines of Compose and Android code
