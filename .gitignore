@@ -43,3 +43,10 @@ apps/web/android/local.properties
 *.swp
 tsconfig.tsbuildinfo
 dump.rdb
+
+# SAJJIL Android app — Gradle build output and local SDK config are regenerated.
+apps/sajjil/**/build/
+apps/sajjil/.gradle/
+apps/sajjil/local.properties
+apps/sajjil/keystore/
+apps/sajjil/.kotlin/
