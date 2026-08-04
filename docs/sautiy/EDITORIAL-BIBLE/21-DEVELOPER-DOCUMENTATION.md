@@ -16,7 +16,7 @@ apps/sautiy/
 │       ├── audio/                  AudioFormat, AudioBuffer, PcmCodec, Decibels
 │       ├── codec/                  WavCodec, FlacCodec (+decoder), encoder registry
 │       ├── dsp/                    Fft, Biquad, Dynamics, NoiseReduction, Reverb,
-│       │                           Resampler, StudioChain + the nine presets
+│       │                           Resampler, Ambience, VoiceStudio + the twelve spaces
 │       ├── analysis/               WaveformPeaks, Loudness (BS.1770), SilenceDetector
 │       ├── edit/                   Timeline, operations, history, renderer
 │       ├── record/                 Capture state machine, policy, crash recovery
@@ -66,7 +66,7 @@ gradle :app:installDebug
 |---|---|
 | A new tool in the context bar | `WorkspaceState.contextActions()` — the law, then the icon mapping |
 | A new panel | `Panel` enum, then `PanelHost` |
-| A new DSP stage | `dsp/`, then `StudioChain.apply`, in the chapter 10.2 order |
+| A new DSP stage | `dsp/`, then `LiveVoiceStudio.process`, in the fixed chain order |
 | A new export format | An `AudioEncoder`, registered in `Encoders` |
 | A new edit operation | `EditOperation`, as a pure `Timeline → Timeline` function |
 | A colour, a size, a duration | `sautiy-core/design/` — **never** at a call site |
