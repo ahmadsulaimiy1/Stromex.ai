@@ -2,7 +2,8 @@ package ai.sautiy.core.codec
 
 import ai.sautiy.core.audio.AudioBuffer
 import ai.sautiy.core.dsp.Resampler
-import ai.sautiy.core.dsp.StudioChain
+import ai.sautiy.core.dsp.VoiceStudio
+import ai.sautiy.core.dsp.VoiceStudioSettings
 import ai.sautiy.core.edit.SourceProvider
 import ai.sautiy.core.edit.Timeline
 import ai.sautiy.core.edit.TimelineRenderer
@@ -20,19 +21,19 @@ import java.io.OutputStream
  *
  * 1. **Render** the timeline (chapter 9) — the same renderer playback uses, so what was heard
  *    is what is exported.
- * 2. **Process** through the studio chain (chapter 10), if one is applied.
+ * 2. **Process** through the Voice Studio, if a voice is applied.
  * 3. **Resample** if the format demands a rate the project is not at.
  * 4. **Encode**.
  *
- * Processing before resampling, not after: the chain's filters were designed at the project's
- * rate, and its loudness target was measured there.
+ * Processing before resampling, not after: the Voice Studio's filters were designed at the
+ * project's rate, and its loudness target was measured there.
  */
 public class ExportJob(
     public val timeline: Timeline,
     public val provider: SourceProvider,
     public val format: ExportFormat,
     public val quality: ExportQuality = ExportQuality.STANDARD,
-    public val chain: StudioChain? = null,
+    public val voice: VoiceStudioSettings? = null,
     public val metadata: ExportMetadata = ExportMetadata(),
     public val channelCount: Int = 1,
 ) {
@@ -42,7 +43,7 @@ public class ExportJob(
         val sampleRate: Int,
         val peak: Float,
         val clipped: Boolean,
-        /** Set when the chain reported something the user should be told. */
+        /** Set when the Voice Studio reported something the user should be told. */
         val normalisationLimitedByPeak: Boolean = false,
     )
 
@@ -85,11 +86,11 @@ public class ExportJob(
         onProgress(RENDER_WEIGHT, Stage.Rendering)
 
         var limitedByPeak = false
-        if (chain != null && !chain.isTransparent) {
+        if (voice != null && !voice.isTransparent) {
             onProgress(RENDER_WEIGHT, Stage.Processing)
-            val (processed, report) = chain.apply(audio)
-            audio = processed
-            limitedByPeak = report.normalisationLimitedByPeak
+            val rendered = VoiceStudio(voice).render(audio)
+            audio = rendered.audio
+            limitedByPeak = rendered.report.normalisationLimitedByPeak
             onProgress(RENDER_WEIGHT + PROCESS_WEIGHT, Stage.Processing)
         }
 
@@ -106,7 +107,7 @@ public class ExportJob(
         audio.clampInPlace()
 
         val counting = CountingOutputStream(output)
-        val encodeBase = RENDER_WEIGHT + (if (chain != null && !chain.isTransparent) PROCESS_WEIGHT else 0.0)
+        val encodeBase = RENDER_WEIGHT + (if (voice != null && !voice.isTransparent) PROCESS_WEIGHT else 0.0)
         val encodeSpan = 1.0 - encodeBase
 
         Encoders.create(format).encode(audio, counting, metadata) { fraction ->

@@ -2,8 +2,10 @@ package ai.sautiy.core.codec
 
 import ai.sautiy.core.TestSignals
 import ai.sautiy.core.audio.AudioBuffer
-import ai.sautiy.core.dsp.StudioChain
-import ai.sautiy.core.dsp.StudioPreset
+import ai.sautiy.core.dsp.CleanupStage
+import ai.sautiy.core.dsp.LoudnessStage
+import ai.sautiy.core.dsp.VoiceSpacePreset
+import ai.sautiy.core.dsp.VoiceStudioSettings
 import ai.sautiy.core.edit.Clip
 import ai.sautiy.core.edit.InMemorySourceProvider
 import ai.sautiy.core.edit.Layer
@@ -77,7 +79,7 @@ class ExportJobTest {
     }
 
     @Test
-    fun `the studio chain is applied before encoding and its effect is real`() {
+    fun `the Voice Studio is applied before encoding and its effect is real`() {
         val audio = TestSignals.sine(440.0, 3.0, rate, amplitude = 0.05)
         val (timeline, provider) = project(audio)
 
@@ -87,7 +89,7 @@ class ExportJobTest {
         val enhanced = ByteArrayOutputStream()
         val result = ExportJob(
             timeline, provider, ExportFormat.WAV,
-            chain = StudioPreset.PODCAST.chain,
+            voice = VoiceSpacePreset.PODCAST_STUDIO.settings,
         ).run(enhanced)
 
         assertTrue(
@@ -98,7 +100,7 @@ class ExportJobTest {
     }
 
     @Test
-    fun `a transparent chain changes nothing`() {
+    fun `a transparent voice changes nothing`() {
         val audio = TestSignals.sine(440.0, 1.0, rate, amplitude = 0.5)
         val (timeline, provider) = project(audio)
 
@@ -106,7 +108,13 @@ class ExportJobTest {
         ExportJob(timeline, provider, ExportFormat.WAV).run(without)
 
         val with = ByteArrayOutputStream()
-        ExportJob(timeline, provider, ExportFormat.WAV, chain = StudioChain()).run(with)
+        ExportJob(
+            timeline, provider, ExportFormat.WAV,
+            voice = VoiceStudioSettings(
+                cleanup = CleanupStage(highPassHz = null),
+                loudness = LoudnessStage(limiterCeilingDb = null),
+            ),
+        ).run(with)
 
         assertTrue(without.toByteArray().contentEquals(with.toByteArray()))
     }
@@ -118,7 +126,7 @@ class ExportJobTest {
         val (timeline, provider) = project(audio)
 
         val seen = mutableListOf<Pair<Double, ExportJob.Stage>>()
-        ExportJob(timeline, provider, ExportFormat.FLAC, chain = StudioPreset.STUDIO.chain)
+        ExportJob(timeline, provider, ExportFormat.FLAC, voice = VoiceSpacePreset.DRY_STUDIO.settings)
             .run(ByteArrayOutputStream()) { fraction, stage -> seen += fraction to stage }
 
         assertTrue("Progress must be reported", seen.size > 3)
