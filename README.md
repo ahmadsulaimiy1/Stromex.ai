@@ -21,3 +21,20 @@ Read the Bible first. It is the supreme governing authority of the StromeX ecosy
 - **[`docs/04-STROMEX-INDEPENDENT-AUDIT.md`](docs/04-STROMEX-INDEPENDENT-AUDIT.md)** — the security/scalability/reliability/performance audit run against the MVP, including a critical SSRF vulnerability found, reproduced, and fixed; real benchmarks; and per-dimension grades.
 
 Quickest way to run it locally is `apps/api/README.md` and `apps/web/README.md`, in that order.
+
+## SAUTIY™
+
+**[`apps/sautiy`](apps/sautiy)** — SAUTIY™, a separate product line in this repository: a
+professional mobile audio recording, editing and publishing platform for Android, built as *one
+intelligent studio* rather than an application with screens.
+
+- **[The SAUTIY Editorial Bible](docs/sautiy/EDITORIAL-BIBLE/00-INDEX.md)** — twenty-two
+  chapters that are executable, not aspirational. Where the code and the Bible disagree, the
+  code is wrong.
+- **[The Implementation Ledger](docs/sautiy/IMPLEMENTATION-LEDGER.md)** — the honest record of
+  what is built, what is tested, what was verified by an executed test run, and what is not
+  built at all.
+
+The audio engine — capture, DSP, timeline, WAV, FLAC — is original work with no third-party
+audio library, and lives in a pure-JVM module so it compiles and tests without an Android SDK:
+`cd apps/sautiy && gradle :sautiy-core:test`.
