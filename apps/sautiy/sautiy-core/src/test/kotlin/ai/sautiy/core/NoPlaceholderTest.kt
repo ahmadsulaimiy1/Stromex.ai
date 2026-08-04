@@ -12,17 +12,24 @@ import org.junit.Test
  */
 class NoPlaceholderTest {
 
-    private val bannedTokens: List<String> = listOf(
-        "TO" + "DO",
-        "FIX" + "ME",
+    /**
+     * Conventional all-caps markers. Matched case-**sensitively** and on word boundaries:
+     * `toDouble` contains the letters of one of these and is not a placeholder, and a scanner
+     * that cannot tell the difference gets switched off within a week.
+     */
+    private val bannedMarkers: List<Regex> = listOf("TO" + "DO", "FIX" + "ME", "XX" + "X", "HA" + "CK")
+        .map { Regex("\\b${Regex.escape(it)}\\b") }
+
+    /** Phrases that betray unfinished work whatever their casing. */
+    private val bannedPhrases: List<Regex> = listOf(
         "Place" + "holder",
         "Coming " + "Soon",
         "Future " + "Work",
         "Not " + "Implemented",
-        "XX" + "X",
-        "stub" + "bed out",
-        "unimplemented" + "()",
-    )
+        "Not " + "Yet Implemented",
+        "unimplemented" + "\\(\\)",
+        "\\bstub" + "bed\\b",
+    ).map { Regex(it, RegexOption.IGNORE_CASE) }
 
     /** This file legitimately contains the banned words; nothing else may. */
     private val exemptFileNames = setOf("NoPlaceholderTest.kt")
@@ -48,10 +55,10 @@ class NoPlaceholderTest {
 
         for (file in scannableFiles()) {
             file.readLines().forEachIndexed { index, line ->
-                for (token in bannedTokens) {
-                    if (line.contains(token, ignoreCase = true)) {
-                        violations += "${file.relativeTo(sourceRoot())}:${index + 1}  $token  ->  ${line.trim()}"
-                    }
+                for (pattern in bannedMarkers + bannedPhrases) {
+                    val hit = pattern.find(line) ?: continue
+                    violations += "${file.relativeTo(sourceRoot())}:${index + 1}  " +
+                        "'${hit.value}'  ->  ${line.trim()}"
                 }
             }
         }
@@ -71,6 +78,41 @@ class NoPlaceholderTest {
             "Placeholder scan did not reach sautiy-core sources",
             files.any { it.path.contains("sautiy-core") && it.extension == "kt" },
         )
+    }
+
+    @Test
+    fun `the scan does not fire on ordinary code that merely contains the letters`() {
+        // `toDouble` contains the letters of a banned marker. A scanner that flags it produces
+        // noise on every numeric line in the engine and is switched off within a week, which
+        // means the rule stops being enforced at all. Word boundaries and case sensitivity are
+        // what keep this rule alive.
+        val innocent = listOf(
+            "val seconds = frameCount.toDouble() / sampleRate",
+            "buffer.channels[0].maxOf { abs(it) }.toDouble()",
+            "private const val TODAY = 1",
+            "fun toDoubleArray(): DoubleArray",
+        )
+        for (line in innocent) {
+            for (pattern in bannedMarkers + bannedPhrases) {
+                assertTrue(
+                    "False positive: '$line' matched ${pattern.pattern}",
+                    pattern.find(line) == null,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `the scan does fire on a real placeholder`() {
+        val guilty = listOf(
+            "// " + "TODO" + ": wire this up",
+            "throw NotImplementedError(\"" + "Coming Soon" + "\")",
+            "val label = \"" + "Placeholder" + "\"",
+        )
+        for (line in guilty) {
+            val matched = (bannedMarkers + bannedPhrases).any { it.find(line) != null }
+            assertTrue("The scan missed a real placeholder: '$line'", matched)
+        }
     }
 
     @Test
