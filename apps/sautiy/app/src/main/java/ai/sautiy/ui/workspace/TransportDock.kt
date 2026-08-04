@@ -6,6 +6,8 @@ import ai.sautiy.ui.theme.SautiyMotion
 import ai.sautiy.ui.theme.SautiySpace
 import ai.sautiy.ui.theme.SautiyTheme
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -134,7 +136,7 @@ private fun RecordButton(transport: TransportState, onClick: () -> Unit) {
         targetValue = if (recording) 1.06f else 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(1_400, easing = SautiyMotion.Standard),
-            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse,
+            repeatMode = RepeatMode.Reverse,
         ),
         label = "breath",
     )
