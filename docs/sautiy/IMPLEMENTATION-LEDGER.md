@@ -11,19 +11,27 @@ Last updated against commit on branch `claude/sautiy-editorial-bible-app-nhdku6`
 
 ---
 
-## The Build Environment, Stated First
+## The Build Environment
 
-This work was produced in a sandbox whose network policy blocks `dl.google.com` and
-`maven.google.com`. Maven Central is reachable; the Google Maven repository is not.
+The development sandbox blocks `dl.google.com` and `maven.google.com`, so `:app` cannot be
+compiled there. **The build was therefore moved to GitHub Actions**, whose runners ship the
+Android SDK and reach Google's Maven without restriction.
 
-**Consequence:** the Android SDK, AndroidX, Jetpack Compose and the Android Gradle Plugin could
-not be downloaded, so the `:app` module **has never been compiled**. Nothing in the Android
-layer below is claimed as verified.
+`.github/workflows/sautiy-apk.yml` runs the engine tests, builds the debug APK, lints it and
+uploads the artifact. That workflow is now the source of truth for anything claimed about the
+Android layer.
 
-**Response:** the architecture was chosen so this constraint costs as little truth as possible.
-Every product rule, the whole audio engine, every codec, the entire DSP chain and both transport
-state machines live in `sautiy-core`, a pure-JVM module that compiles and tests on a bare JDK.
-That is why 289 tests could actually be run.
+**The APK builds.** Run 4 (`310ecfb`) — every step green:
+
+| Step | Result |
+|---|---|
+| Verify the audio engine (`:sautiy-core:test`) | success, 289 tests |
+| Build the debug APK (`:app:assembleDebug`) | **success** |
+| Lint the Android layer (`:app:lintDebug`) | success |
+| Upload artifact | `sautiy-debug-apk`, 12,923,919 bytes |
+
+Four compile-stage defects were found and fixed to get there — two Gradle plugin-classloader
+problems and two missing Compose imports. They are listed in the git history.
 
 ---
 
@@ -54,10 +62,14 @@ That is why 289 tests could actually be run.
 
 ---
 
-## Source-complete but NOT compiled or run
+## Compiled — but NOT yet run on a device
 
-Everything in `apps/sautiy/app/`. Written as production source, reviewed by hand, **never
-compiled**, because the Android toolchain is unreachable here.
+Everything in `apps/sautiy/app/` now **compiles and links into an installable debug APK**, and
+passes Android lint. That is a real and checkable fact.
+
+It is not the same as working. Nothing below has been executed on a phone or an emulator: CI has
+no microphone, no audio output and no `/dev/kvm`, so it can prove the code builds and cannot
+prove the app records.
 
 | Component | State |
 |---|---|
@@ -77,9 +89,10 @@ compiled**, because the Android toolchain is unreachable here.
 | `Mp3Encoder` + JNI bridge + CMake (LAME) | Source complete; needs NDK |
 | Manifest, resources, adaptive icon, splash, strings | Source complete |
 
-**Expect compilation errors on first build.** Roughly 4,000 lines of Compose and Android code
-have never seen a compiler. The correct next step on a machine with an SDK is
-`gradle :app:assembleDebug` and a fix-forward pass.
+**What remains unproven, precisely:** that recording captures audio, that playback is audible,
+that the waveform draws, that edits apply, that export writes a valid file, and that the app
+does not crash on launch. Each needs the APK installed on a real device. The APK exists for
+exactly that purpose.
 
 ---
 
@@ -87,7 +100,7 @@ have never seen a compiler. The correct next step on a machine with an SDK is
 
 | Item | Why | Where recorded |
 |---|---|---|
-| **MP3 export** | Implemented as an **optional native component**: JNI bridge + CMake over LAME, wired to `-PsautiyMp3=true`, registering itself only when `libsautiymp3.so` is in the APK. Android has no MP3 encoder, so this is the only honest route. **Not compiled or run here** — needs the NDK and a LAME checkout. See `app/src/main/cpp/README.md`. | Ch. 14.6 |
+| **MP3 export** | Optional native component: JNI bridge + CMake over LAME, built by the CI workflow when dispatched with `withMp3=true`. Android has no MP3 encoder, so this is the only route. The default APK ships without it, and MP3 is then absent from the export panel rather than present and broken. | Ch. 14.6 |
 | **On-device transcription** | Depends on a platform recogniser. The interface and the panel exist; where no recogniser is present the capability is absent rather than degraded. | Ch. 11.4, 11.7 |
 | **Qur'an Studio project store** | The model and the chapter are complete; the persistence layer and its panel UI are not written. | Ch. 12 |
 | **Spectrogram rendering** | The FFT is implemented and tested; the drawing is not written. | Ch. 15.2 |
