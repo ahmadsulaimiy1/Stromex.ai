@@ -1,7 +1,7 @@
 plugins {
-    // AGP carries its version here because it is not declared at the root — see the root
-    // build file. The Kotlin plugins take theirs from the root.
-    alias(libs.plugins.android.application)
+    // Versions come from the root buildscript classpath, so AGP and the Kotlin plugins share
+    // one classloader. See the root build file.
+    id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.plugin.serialization")

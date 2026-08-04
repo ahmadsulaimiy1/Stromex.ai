@@ -1,5 +1,5 @@
 plugins {
-    // Versions come from the root project (see its comment).
+    // Versions come from the root buildscript classpath (see the root build file).
     id("org.jetbrains.kotlin.jvm")
     id("org.jetbrains.kotlin.plugin.serialization")
 }
