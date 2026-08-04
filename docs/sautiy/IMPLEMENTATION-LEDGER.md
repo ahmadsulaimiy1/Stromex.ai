@@ -23,7 +23,7 @@ layer below is claimed as verified.
 **Response:** the architecture was chosen so this constraint costs as little truth as possible.
 Every product rule, the whole audio engine, every codec, the entire DSP chain and both transport
 state machines live in `sautiy-core`, a pure-JVM module that compiles and tests on a bare JDK.
-That is why 248 tests could actually be run.
+That is why 289 tests could actually be run.
 
 ---
 
@@ -46,8 +46,11 @@ That is why 248 tests could actually be run.
 | **Ch.10.4 loudness** | 15 | **−20 dBFS 1 kHz reads −23.0 LUFS at 44.1, 48, 32 and 96 kHz**; 20 s silences do not shift programme loudness; relative gating; true peak exceeds sample peak on inter-sample material |
 | **Ch.14 FLAC** | 12 | **Bit-exact round trips** through SAUTIY's own decoder on tones, noise, stereo, partial blocks and alternating full-scale; 2 s silence under 2 KB; speech under 75% of WAV |
 | **Ch.14 export registry** | 5 | Unregistered formats fail loudly; platform encoders register without core knowledge |
+| **Ch.13 library store** | 28 | Save survives restart; rename keeps titles unique; delete goes to trash with a stated date; expired trash purges and nothing else does; atomic write leaves no temp file; a corrupt index does not take the recordings with it; file names never contain a separator or wildcard |
+| **Ch.4.6 search** | 13 | Full ranking order title > tag > marker > transcript > date; transcript hits show why they matched; trashed entries never appear; "last week" excludes this week; an unrecognised phrase matches nothing rather than guessing |
+| **Ch.14 export pipeline** | 12 | What is exported is what was heard (same renderer, same edits); progress is monotonic 0→1 across render/enhance/encode; encoding never reported before rendering finishes; a format that cannot carry the project rate is resampled to the nearest legal rate at or above it; clipping reported; the caller's stream is never closed |
 
-**Total: 248 tests, 0 failures.** Reproduce with `cd apps/sautiy && gradle :sautiy-core:test`.
+**Total: 289 tests, 0 failures.** Reproduce with `cd apps/sautiy && gradle :sautiy-core:test`.
 
 ---
 
@@ -71,6 +74,7 @@ compiled**, because the Android toolchain is unreachable here.
 | `PlatformEncoders` — AAC/ADTS via `MediaCodec` | Source complete |
 | `WorkspaceViewModel` | Source complete |
 | `FileSourceProvider` — range reads with a small LRU | Source complete |
+| `Mp3Encoder` + JNI bridge + CMake (LAME) | Source complete; needs NDK |
 | Manifest, resources, adaptive icon, splash, strings | Source complete |
 
 **Expect compilation errors on first build.** Roughly 4,000 lines of Compose and Android code
@@ -83,10 +87,9 @@ have never seen a compiler. The correct next step on a machine with an SDK is
 
 | Item | Why | Where recorded |
 |---|---|---|
-| **MP3 export** | Android's `MediaCodec` cannot encode MP3. A real implementation needs the NDK with LAME, or ~1,500 entries of exactly-correct Huffman table data for a Layer III encoder — worth building correctly rather than half-building. The format is **absent from the panel** rather than present and broken. | Ch. 14.6 |
+| **MP3 export** | Implemented as an **optional native component**: JNI bridge + CMake over LAME, wired to `-PsautiyMp3=true`, registering itself only when `libsautiymp3.so` is in the APK. Android has no MP3 encoder, so this is the only honest route. **Not compiled or run here** — needs the NDK and a LAME checkout. See `app/src/main/cpp/README.md`. | Ch. 14.6 |
 | **On-device transcription** | Depends on a platform recogniser. The interface and the panel exist; where no recogniser is present the capability is absent rather than degraded. | Ch. 11.4, 11.7 |
 | **Qur'an Studio project store** | The model and the chapter are complete; the persistence layer and its panel UI are not written. | Ch. 12 |
-| **Library persistence** | The panel renders from state; the on-disk project store is not written. | Ch. 13 |
 | **Spectrogram rendering** | The FFT is implemented and tested; the drawing is not written. | Ch. 15.2 |
 | **Media session / lock screen** | Declared in chapter 8.7; not implemented. | Ch. 8.7 |
 | **SAF document picker wiring** | The export contract and encoders exist; the picker launch is not wired. | Ch. 14.3 |

@@ -12,6 +12,7 @@ import android.media.AudioFormat as AndroidAudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.media.audiofx.AcousticEchoCanceler
+import android.media.audiofx.AudioEffect
 import android.media.audiofx.AutomaticGainControl
 import android.media.audiofx.NoiseSuppressor
 import java.io.File
@@ -57,7 +58,13 @@ class AudioCapture(
     private var writer: WavCodec.StreamingWriter? = null
     private var loop: Job? = null
 
-    private val effects = mutableListOf<AutoCloseable>()
+    /**
+     * The platform effect objects we opened purely to switch off. They must be held and released
+     * explicitly: `AudioEffect` owns a native handle and does not implement `AutoCloseable`, so
+     * dropping the reference leaks the handle for the life of the process — and on several
+     * devices a leaked effect keeps the audio session alive and the next recording fails to open.
+     */
+    private val effects = mutableListOf<AudioEffect>()
 
     private val _level = MutableStateFlow(InstantLevel(0f, 0.0))
     val level: StateFlow<InstantLevel> = _level.asStateFlow()
@@ -220,7 +227,7 @@ class AudioCapture(
         }
         record = null
 
-        for (effect in effects) runCatching { effect.close() }
+        for (effect in effects) runCatching { effect.release() }
         effects.clear()
 
         val frames = writer?.frameCount ?: 0
@@ -237,15 +244,20 @@ class AudioCapture(
      * still getting somebody's noise reduction.
      */
     private fun disablePlatformProcessing(sessionId: Int) {
-        if (NoiseSuppressor.isAvailable()) {
-            runCatching { NoiseSuppressor.create(sessionId)?.apply { enabled = false } }
+        fun disable(create: () -> AudioEffect?) {
+            runCatching {
+                create()?.also { effect ->
+                    effect.enabled = false
+                    // Held so stop() can release the native handle. Dropping it here would leak
+                    // the session on devices that keep it alive behind a live effect.
+                    effects += effect
+                }
+            }
         }
-        if (AcousticEchoCanceler.isAvailable()) {
-            runCatching { AcousticEchoCanceler.create(sessionId)?.apply { enabled = false } }
-        }
-        if (AutomaticGainControl.isAvailable()) {
-            runCatching { AutomaticGainControl.create(sessionId)?.apply { enabled = false } }
-        }
+
+        if (NoiseSuppressor.isAvailable()) disable { NoiseSuppressor.create(sessionId) }
+        if (AcousticEchoCanceler.isAvailable()) disable { AcousticEchoCanceler.create(sessionId) }
+        if (AutomaticGainControl.isAvailable()) disable { AutomaticGainControl.create(sessionId) }
     }
 }
 

@@ -137,6 +137,8 @@ data class WorkspaceActions(
     val onTravelHistory: (Int) -> Unit = {},
     val onOpenRecording: (String) -> Unit = {},
     val onToggleFavourite: (String) -> Unit = {},
+    val onRename: (String, String) -> Unit = { _, _ -> },
+    val onDelete: (String) -> Unit = {},
     val onSearchLibrary: (String) -> Unit = {},
 
     val onDismissError: () -> Unit = {},

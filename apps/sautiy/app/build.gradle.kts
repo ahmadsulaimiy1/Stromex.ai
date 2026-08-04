@@ -45,6 +45,26 @@ android {
         compose = true
     }
 
+    // MP3 export is an optional native component (LAME via the NDK). Android has no MP3
+    // encoder, so this is the only honest way to offer the format.
+    //
+    // The block is added only when -PsautiyMp3=true, which means an ordinary build needs no NDK,
+    // no CMake and no LAME checkout — and simply ships without MP3 rather than failing to build.
+    // See app/src/main/cpp/README.md.
+    if (providers.gradleProperty("sautiyMp3").orNull == "true") {
+        externalNativeBuild {
+            cmake {
+                path = file("src/main/cpp/CMakeLists.txt")
+                version = "3.22.1"
+            }
+        }
+        defaultConfig {
+            ndk {
+                abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
+            }
+        }
+    }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"

@@ -22,11 +22,10 @@ import java.nio.ByteBuffer
  * encoder, M4A is simply never offered, rather than being offered and then failing at the
  * moment the user presses Export.
  *
- * **MP3 is deliberately not registered.** Android's `MediaCodec` decodes MP3 but has never
- * encoded it, and no amount of configuration changes that. Registering an MP3 encoder that
- * quietly wrote something else, or wrote nothing, would be exactly the silent failure chapter
- * 14 forbids. Until SAUTIY ships a Layer III encoder of its own, the honest behaviour is for
- * the format to be absent from the panel.
+ * **MP3 needs the NDK.** Android's `MediaCodec` decodes MP3 but has never encoded it, and no
+ * amount of configuration changes that. SAUTIY ships MP3 through LAME as an optional native
+ * component; [Mp3Encoder.registerIfAvailable] adds it when `libsautiymp3.so` is in the APK and
+ * does nothing when it is not. See `app/src/main/cpp/README.md`.
  */
 object PlatformEncoders {
 
@@ -34,6 +33,9 @@ object PlatformEncoders {
         if (hasEncoderFor(MediaFormat.MIMETYPE_AUDIO_AAC)) {
             Encoders.register(ExportFormat.M4A) { AacEncoder() }
         }
+        // Present only in builds made with -PsautiyMp3=true, which bundle LAME. In every other
+        // build MP3 is absent from the panel rather than present and broken.
+        Mp3Encoder.registerIfAvailable()
     }
 
     private fun hasEncoderFor(mimeType: String): Boolean = runCatching {

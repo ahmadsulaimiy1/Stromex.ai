@@ -20,6 +20,9 @@ import ai.sautiy.core.workspace.Focus
 import ai.sautiy.core.workspace.Panel
 import ai.sautiy.core.workspace.TransportState
 import ai.sautiy.core.workspace.WorkspaceAction
+import ai.sautiy.core.library.Library
+import ai.sautiy.core.library.RecordingEntry
+import ai.sautiy.core.library.RecordingStore
 import ai.sautiy.core.workspace.WorkspaceState
 import ai.sautiy.data.SautiyFiles
 import ai.sautiy.play.AudioPlayer
@@ -62,6 +65,9 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
      */
     private val audioSources = ai.sautiy.data.FileSourceProvider(files)
 
+    /** The library. Verified on the JVM; this class only calls it. */
+    private val store = RecordingStore(files.libraryIndex)
+
     private var workspace = WorkspaceState()
     private var history = EditHistory.of(Timeline.empty(CaptureQuality.STUDIO.format.sampleRate))
     private var recording = RecordingState()
@@ -95,14 +101,21 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         onToggleLoop = { _state.update { it.copy(looping = !it.looping) } },
         onToggleCompare = { _state.update { it.copy(comparingOriginal = !it.comparingOriginal) } },
         onTravelHistory = ::travelHistory,
-        onOpenRecording = {},
-        onToggleFavourite = {},
-        onSearchLibrary = { query -> _state.update { it.copy(librarySearch = query) } },
+        onOpenRecording = ::openRecording,
+        onToggleFavourite = ::toggleFavourite,
+        onRename = ::rename,
+        onDelete = ::delete,
+        onSearchLibrary = { query ->
+            _state.update { it.copy(librarySearch = query) }
+            refreshLibrary()
+        },
         onDismissError = { _state.update { it.copy(error = null) } },
         onErrorRemedy = {},
     )
 
     init {
+        pruneTrash()
+        refreshLibrary()
         publish()
     }
 
@@ -195,6 +208,10 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                     clipId = "$id.clip",
                 ),
             )
+        }
+
+        if (frames > 0) {
+            saveTake(id, frames, recording.quality.format.sampleRate, recording.quality.format.channelCount)
         }
 
         workspace = workspace.copy(
@@ -335,6 +352,106 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
 
     private fun revertPreset() {
         _state.update { it.copy(appliedPreset = null) }
+    }
+
+    // --- Library ----------------------------------------------------------------------------------
+
+    /**
+     * Saves a finished take into the library.
+     *
+     * Chapter 13.2: the recording is never named before it exists. It is saved immediately under
+     * a date-and-time title, so a user who dismisses the naming prompt still has a findable
+     * library, and renaming afterwards is an ordinary edit rather than a rescue.
+     */
+    private fun saveTake(takeId: String, frames: Long, sampleRate: Int, channelCount: Int) {
+        val created = System.currentTimeMillis()
+        val title = Library.uniqueTitle(
+            Library.defaultTitle(created),
+            store.all().map { it.title }.toSet(),
+        )
+        store.save(
+            RecordingEntry(
+                id = takeId,
+                title = title,
+                takeId = takeId,
+                createdAtEpochMs = created,
+                durationFrames = frames,
+                sampleRate = sampleRate,
+                channelCount = channelCount,
+                markerLabels = _state.value.markerFrames.map { formatTimecode(it, sampleRate) },
+            ),
+        )
+        refreshLibrary()
+    }
+
+    private fun rename(id: String, title: String) {
+        store.rename(id, title)
+        refreshLibrary()
+    }
+
+    /** Delete is never final: it goes to the trash with a stated recovery window (chapter 13.5). */
+    private fun delete(id: String) {
+        store.trash(id)
+        refreshLibrary()
+    }
+
+    private fun toggleFavourite(id: String) {
+        store.find(id)?.let { store.setFavourite(id, !it.favourite) }
+        refreshLibrary()
+    }
+
+    private fun openRecording(id: String) {
+        val entry = store.find(id) ?: return
+        val source = Source(
+            id = entry.takeId,
+            relativePath = "takes/${entry.takeId}.wav",
+            sampleRate = entry.sampleRate,
+            channelCount = entry.channelCount,
+            frameCount = entry.durationFrames,
+        )
+        val layer = Layer("L1", "Vocals 1")
+        val timeline = Timeline(sampleRate = entry.sampleRate, layers = listOf(layer))
+        history = EditHistory.of(timeline).apply(
+            AppendRecording(layerId = "L1", source = source, atFrame = 0, clipId = "${entry.takeId}.clip"),
+        )
+        workspace = workspace.copy(transport = TransportState.STOPPED, hasAudio = true).dismissingPanel()
+        _state.update { it.copy(projectName = entry.title, playheadFrame = 0) }
+        publish()
+    }
+
+    /**
+     * Purges expired trash on launch and deletes the audio it orphaned.
+     *
+     * The store reports the orphans; deleting them is this class's job, because one component
+     * owning both the index and the media is how an index bug becomes lost recordings.
+     */
+    private fun pruneTrash() {
+        for (takeId in store.purgeExpired()) files.deleteTake(takeId)
+        files.pruneExportStaging(System.currentTimeMillis())
+    }
+
+    private fun refreshLibrary() {
+        val query = _state.value.librarySearch
+        val rows = if (query.isBlank()) {
+            store.live()
+        } else {
+            store.search(query).map { it.entry }
+        }
+        _state.update { previous ->
+            previous.copy(
+                library = rows.map { entry ->
+                    LibraryRow(
+                        id = entry.id,
+                        title = entry.title,
+                        durationFrames = entry.durationFrames,
+                        sampleRate = entry.sampleRate,
+                        createdAtEpochMs = entry.createdAtEpochMs,
+                        favourite = entry.favourite,
+                        tags = entry.tags,
+                    )
+                },
+            )
+        }
     }
 
     // --- Publishing -------------------------------------------------------------------------------

@@ -28,6 +28,12 @@ class SautiyFiles(private val context: Context) {
 
     fun projectFile(id: String): File = projects.resolve("$id.json")
 
+    /** The library index. One file, written atomically (see `RecordingStore`). */
+    val libraryIndex: File get() = projects.resolve("library.json")
+
+    /** Deletes the audio for a purged entry. Called only by the owner of the take, never by the store. */
+    fun deleteTake(takeId: String): Boolean = takeFile(takeId).delete()
+
     /**
      * Free bytes on the volume holding the takes.
      *
