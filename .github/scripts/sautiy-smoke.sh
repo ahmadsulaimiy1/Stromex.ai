@@ -62,3 +62,12 @@ if ! adb shell dumpsys activity activities | grep -q "$PACKAGE"; then
 fi
 
 echo "SAUTIY launched, is alive, and its activity is resumed."
+
+# Launching is not working. AudioRecord, AudioTrack and MediaCodec have no meaningful stand-in
+# on the JVM, so the only place a claim about them can be earned is on a running Android — which
+# is what this is. The emulator has no microphone in front of it, so what is captured is
+# near-silence; that still proves the device opens, that frames arrive, that the file on disk is
+# a real WAV of the right length, that playback runs and that an export writes a file.
+echo "=== device audio tests ==="
+cd apps/sautiy
+./gradlew --no-daemon :app:connectedDebugAndroidTest

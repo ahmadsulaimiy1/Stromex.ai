@@ -21,6 +21,11 @@ android {
         versionCode = 1
         versionName = "1.0"
         resourceConfigurations += listOf("en", "ar")
+
+        // Instrumented tests are how the device layer stops being "source complete".
+        // AudioRecord, AudioTrack and MediaCodec have no meaningful JVM stand-in, so anything
+        // claimed about them has to be claimed from a running Android.
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -99,4 +104,9 @@ dependencies {
     debugImplementation(libs.compose.ui.tooling)
 
     testImplementation(libs.junit)
+
+    androidTestImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.androidx.test.ext.junit)
 }

@@ -112,10 +112,11 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-  # A build that compiles is not a build that runs. This job installs the APK on a real emulator
-  # and launches it, so "does it open" is answered by a machine rather than by inspection.
+  # A build that compiles is not a build that runs, and a build that runs is not a build that
+  # records. This job installs the APK on a real emulator, launches it, and then runs the
+  # instrumented tests that exercise capture, playback and export against the actual platform.
   smoke:
-    name: Launch smoke test
+    name: Device tests
     runs-on: ubuntu-latest
     needs: build
     timeout-minutes: 30
@@ -135,6 +136,17 @@ jobs:
           name: sautiy-debug-apk
           path: apk
 
+      # The instrumented tests are built here, so this job needs the same Gradle state the
+      # build job had.
+      - name: Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('apps/sautiy/**/*.gradle.kts', 'apps/sautiy/gradle/libs.versions.toml') }}
+          restore-keys: gradle-${{ runner.os }}-
+
       # GitHub's Linux runners expose KVM, but the device node is not world-writable by default.
       - name: Enable KVM
         run: |
@@ -143,7 +155,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Install, launch and watch for a crash
+      - name: Install, launch, and exercise the audio device
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 30
@@ -151,4 +163,16 @@ jobs:
           arch: x86_64
           profile: pixel_5
           disable-animations: true
+          # The action's default options include -noaudio, which disables audio support
+          # outright and would stop AudioRecord opening at all. Everything else is kept.
+          emulator-options: -no-window -gpu swiftshader_indirect -no-boot-anim -camera-back none
           script: bash .github/scripts/sautiy-smoke.sh
+
+      - name: Upload the instrumented test report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sautiy-device-test-reports
+          path: apps/sautiy/app/build/reports/androidTests/**
+          if-no-files-found: ignore
+          retention-days: 7

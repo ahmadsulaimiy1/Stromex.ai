@@ -12,6 +12,9 @@ documentfile = "1.0.1"
 coreKtx = "1.13.1"
 datastore = "1.1.1"
 junit = "4.13.2"
+androidxTestRunner = "1.6.2"
+androidxTestRules = "1.6.1"
+androidxTestExtJunit = "1.2.1"
 jlayer = "1.0.1"
 
 [libraries]
@@ -41,6 +44,9 @@ compose-material3 = { module = "androidx.compose.material3:material3" }
 compose-animation = { module = "androidx.compose.animation:animation" }
 
 junit = { module = "junit:junit", version.ref = "junit" }
+androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidxTestRunner" }
+androidx-test-rules = { module = "androidx.test:rules", version.ref = "androidxTestRules" }
+androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidxTestExtJunit" }
 jlayer = { module = "javazoom:jlayer", version.ref = "jlayer" }
 
 [plugins]
