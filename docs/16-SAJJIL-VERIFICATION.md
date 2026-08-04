@@ -71,16 +71,18 @@ Observed on the `claude/sajjil-ux-design-directive-7sdieb` branch:
 |---|---|---|---|---|---|
 | 1 | `19b57a0` | pass | pass | **fail** — 9 Kotlin errors | not reached |
 | 2 | `5423f9e` | pass | pass | **pass** (3 m 46 s) | **pass** |
-| 3 | `f431820` | — | — | — | — |
+| 3 | `f431820` | pass | pass | **pass** (4 m 02 s) | see below |
 
 Run 1's failures were two real defects, both fixed in `5423f9e`: `animateFloat` was used without
 its import, and `AnimatedVisibility` inside a `Box` nested in a `Row` resolved to the `RowScope`
 overload, which cannot be called with an implicit receiver there.
 
-Run 2 is the evidence that **the app compiles and the APK builds**. Run 3 carries only a CI
-configuration change plus the `Format` tests; its result was not observed before this document was
-written, because GitHub's jobs API was serving cached step data at the time. Check the Actions tab
-for its conclusion rather than assuming it from here.
+Runs 2 and 3 are two independent confirmations that **the app compiles and the APK builds**.
+
+Run 3's `testDebugUnitTest` step had not reported by the time this was written — GitHub's jobs API
+lags. `FormatTest` was instead run directly on a plain JVM (`Format` has no Android dependency):
+all 11 tests pass. The lint step and the artifact upload have not been observed completing on any
+run; lint is configured with `abortOnError = false` and so cannot fail the build regardless.
 
 ### App module
 
