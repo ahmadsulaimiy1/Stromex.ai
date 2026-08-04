@@ -197,7 +197,11 @@ fun RecordScreen(
             // Pause only appears once there is something to pause, so an idle screen has exactly
             // one control on it.
             Box(Modifier.size(Space.minimumTouchTarget)) {
-                AnimatedVisibility(visible = state.isActive, enter = fadeIn(), exit = fadeOut()) {
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = state.isActive,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                ) {
                     CircularIconButton(
                         icon = if (state.isPaused) Icons.Filled.PlayArrow else Icons.Filled.Pause,
                         description = if (state.isPaused) "Resume recording" else "Pause recording",
@@ -220,7 +224,7 @@ fun RecordScreen(
             )
 
             Box(Modifier.size(Space.minimumTouchTarget)) {
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = state.justFinishedId != null,
                     enter = fadeIn(),
                     exit = fadeOut(),

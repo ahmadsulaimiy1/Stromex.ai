@@ -36,7 +36,7 @@ class QuranViewModel(private val services: Services) : ViewModel() {
     private val completed = dao.observeProjects().map { projects ->
         withContext(Dispatchers.IO) {
             projects.associate { project ->
-                val takes = dao.takesForRange(project.id, Int.MIN_VALUE, Int.MAX_VALUE)
+                val takes = dao.allTakes(project.id)
                 project.id to takes.filter { it.isSelected }.sumOf { it.ayahTo - it.ayahFrom + 1 }
             }
         }

@@ -169,6 +169,9 @@ interface QuranDao {
     @Query("SELECT * FROM quran_takes WHERE projectId = :projectId AND ayahFrom = :ayahFrom AND ayahTo = :ayahTo ORDER BY takeNumber ASC")
     suspend fun takesForRange(projectId: Long, ayahFrom: Int, ayahTo: Int): List<QuranTakeEntity>
 
+    @Query("SELECT * FROM quran_takes WHERE projectId = :projectId ORDER BY ayahFrom ASC, takeNumber ASC")
+    suspend fun allTakes(projectId: Long): List<QuranTakeEntity>
+
     /** Number of distinct ayat covered by a selected take. Drives the progress ring. */
     @Query(
         """

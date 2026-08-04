@@ -21,3 +21,28 @@ Read the Bible first. It is the supreme governing authority of the StromeX ecosy
 - **[`docs/04-STROMEX-INDEPENDENT-AUDIT.md`](docs/04-STROMEX-INDEPENDENT-AUDIT.md)** — the security/scalability/reliability/performance audit run against the MVP, including a critical SSRF vulnerability found, reproduced, and fixed; real benchmarks; and per-dimension grades.
 
 Quickest way to run it locally is `apps/api/README.md` and `apps/web/README.md`, in that order.
+
+## SAJJIL™ — Android audio studio
+
+**[`apps/sajjil`](apps/sajjil)** is a native Android recording, editing, enhancement and export
+application, built around one journey — Record → Review → Edit → Enhance → Export → Archive — and
+five sections: Record, Studio, Library, Qur'an, Assistant.
+
+It shares this repository with StromeX but not its runtime; it has no network code and no
+dependency on `apps/api`.
+
+- **[`apps/sajjil/core-audio`](apps/sajjil/core-audio)** — the audio engine in dependency-free
+  Kotlin: filters, dynamics, restoration, FDN reverb, BS.1770-4 loudness metering and
+  normalisation, a reversible edit model, and WAV/FLAC codecs. Platform-free on purpose, so all of
+  it is verifiable by unit test on a plain JVM.
+- **[`apps/sajjil/app`](apps/sajjil/app)** — the Android application: Jetpack Compose UI,
+  `AudioRecord` capture with crash recovery, Media3 playback with lock-screen controls, Room
+  persistence, and export to WAV, FLAC, M4A and AAC.
+- **[`docs/15-SAJJIL-ARCHITECTURE.md`](docs/15-SAJJIL-ARCHITECTURE.md)** — what was built and why
+  the structure is the way it is.
+- **[`docs/16-SAJJIL-VERIFICATION.md`](docs/16-SAJJIL-VERIFICATION.md)** — what is proven by test,
+  what merely compiles, and what is deliberately not implemented. Read this before relying on any
+  capability.
+
+`./gradlew :core-audio:test` from `apps/sajjil` runs the engine's test suite with no Android SDK
+required.

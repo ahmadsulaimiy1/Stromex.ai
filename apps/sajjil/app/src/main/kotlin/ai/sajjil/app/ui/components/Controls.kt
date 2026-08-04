@@ -3,6 +3,8 @@ package ai.sajjil.app.ui.components
 import ai.sajjil.app.ui.theme.Radius
 import ai.sajjil.app.ui.theme.Space
 import ai.sajjil.app.ui.theme.sajjilColors
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -473,7 +475,7 @@ private fun androidx.compose.animation.core.InfiniteTransition.animateFloatCompa
     targetValue = target,
     animationSpec = infiniteRepeatable(
         animation = tween(durationMillis),
-        repeatMode = androidx.compose.animation.core.RepeatMode.Reverse,
+        repeatMode = RepeatMode.Reverse,
     ),
     label = "pulse",
 )
