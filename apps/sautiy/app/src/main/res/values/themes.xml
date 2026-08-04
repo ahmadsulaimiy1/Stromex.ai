@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Chapter 2.8. The splash is a seam-cover, not a brand moment: it exists for exactly as
+      long as the process takes to become interactive. There is no splash Activity and no
+      artificial delay, so this theme IS the first frame.
+    -->
+    <style name="Theme.Sautiy.Splash" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Projects and settings are backed up; raw capture audio is not, because it is large,
+         the user did not ask for it to leave the device, and chapter 1.3.7 says it does not. -->
+    <include domain="file" path="projects/" />
+    <include domain="sharedpref" path="." />
+    <exclude domain="file" path="takes/" />
+    <exclude domain="file" path="exports/" />
+</full-backup-content>

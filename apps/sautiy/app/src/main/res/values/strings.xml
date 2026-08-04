@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Editorial Bible chapter 2.9 — tone of voice.
+
+  Every user-facing string in SAUTIY lives here so the whole voice can be read in one sitting
+  and held to one standard: state the fact, then the consequence, then the action. No
+  apologies. No exclamation marks. No emoji. British English. Sentence case.
+-->
+<resources>
+    <string name="app_name">SAUTIY</string>
+
+    <!-- Transport -->
+    <string name="record">Record</string>
+    <string name="stop">Stop</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
+    <string name="play">Play</string>
+    <string name="rewind">Rewind</string>
+    <string name="monitor">Monitor</string>
+    <string name="export">Export</string>
+
+    <!-- Context bar -->
+    <string name="marker">Marker</string>
+    <string name="layer">Layer</string>
+    <string name="input">Input</string>
+    <string name="noise">Noise</string>
+    <string name="discard_take">Discard take</string>
+    <string name="speed">Speed</string>
+    <string name="loop">Loop</string>
+    <string name="compare">Compare</string>
+    <string name="cut">Cut</string>
+    <string name="split">Split</string>
+    <string name="fade">Fade</string>
+    <string name="silence">Silence</string>
+    <string name="gain">Gain</string>
+    <string name="deselect">Deselect</string>
+    <string name="rename">Rename</string>
+    <string name="mute">Mute</string>
+    <string name="solo">Solo</string>
+    <string name="duplicate">Duplicate</string>
+    <string name="delete_layer">Delete layer</string>
+    <string name="jump">Jump</string>
+    <string name="delete">Delete</string>
+    <string name="undo">Undo</string>
+    <string name="redo">Redo</string>
+    <string name="enhance">Enhance</string>
+    <string name="trim">Trim</string>
+    <string name="quality">Quality</string>
+    <string name="library">Library</string>
+    <string name="projects">Projects</string>
+    <string name="settings">Settings</string>
+    <string name="add_layer">Add layer</string>
+
+    <!-- Status rail -->
+    <string name="untitled_recording">Untitled</string>
+    <string name="storage_remaining">%1$s left</string>
+    <string name="take_number">Take %1$d</string>
+
+    <!-- Panels -->
+    <string name="panel_studio">Studio</string>
+    <string name="panel_equaliser">Equaliser</string>
+    <string name="panel_dynamics">Dynamics</string>
+    <string name="panel_space">Space</string>
+    <string name="panel_analysis">Analysis</string>
+    <string name="panel_layers">Layers</string>
+    <string name="panel_markers">Markers</string>
+    <string name="panel_history">History</string>
+    <string name="panel_transcript">Transcript</string>
+    <string name="panel_library">Library</string>
+    <string name="panel_project">Project</string>
+    <string name="panel_export">Export</string>
+    <string name="close_panel">Close</string>
+
+    <!-- Empty states. Chapter 18: an empty state states what this is for and offers the one action. -->
+    <string name="empty_workspace_title">Ready</string>
+    <string name="empty_workspace_body">Press record to begin. Everything is saved from the first moment.</string>
+    <string name="empty_library_title">No recordings yet</string>
+    <string name="empty_library_body">Recordings appear here as soon as you make them.</string>
+    <string name="empty_markers_title">No markers</string>
+    <string name="empty_markers_body">Drop a marker while recording to find a moment again later.</string>
+
+    <!-- Errors. Fact, consequence, remedy — in that order (chapter 3.2.6). -->
+    <string name="error_microphone_busy_fact">The microphone is in use by another app.</string>
+    <string name="error_microphone_busy_consequence">Recording cannot start.</string>
+    <string name="error_microphone_busy_remedy">Retry</string>
+
+    <string name="error_microphone_denied_fact">SAUTIY does not have microphone access.</string>
+    <string name="error_microphone_denied_consequence">Recording is unavailable until access is granted.</string>
+    <string name="error_microphone_denied_remedy">Open settings</string>
+
+    <string name="error_storage_full_fact">This device has no free storage.</string>
+    <string name="error_storage_full_consequence">The recording has stopped and everything captured so far is saved.</string>
+    <string name="error_storage_full_remedy">Free space</string>
+
+    <string name="error_route_changed_fact">The audio input changed while recording.</string>
+    <string name="error_route_changed_consequence">Recording paused at the moment the input was lost.</string>
+    <string name="error_route_changed_remedy">Resume</string>
+
+    <string name="error_export_failed_fact">The chosen destination rejected the file.</string>
+    <string name="error_export_failed_consequence">Nothing was written and the recording is unchanged.</string>
+    <string name="error_export_failed_remedy">Choose destination</string>
+
+    <!-- Permission, asked at the moment of the first record tap (chapter 3.2.1). -->
+    <string name="permission_reason">SAUTIY needs the microphone to record. Nothing is uploaded.</string>
+
+    <!-- Interruptions. Exactly four are permitted (chapter 3.2.7). -->
+    <string name="interruption_storage">Storage runs out in about %1$s.</string>
+    <string name="interruption_recovery_title">Unfinished recording</string>
+    <string name="interruption_recovery_body">A recording of %1$s was not closed. It is intact.</string>
+    <string name="interruption_recovery_keep">Keep</string>
+    <string name="interruption_recovery_discard">Discard</string>
+
+    <!-- Notification, shown only while capturing. -->
+    <string name="notification_channel_recording">Recording</string>
+    <string name="notification_recording_title">Recording</string>
+    <string name="notification_recording_paused">Recording paused</string>
+
+    <!-- Content descriptions. Every icon has one; there are no exceptions (chapter 2.5). -->
+    <string name="cd_record">Start recording</string>
+    <string name="cd_stop">Stop recording</string>
+    <string name="cd_pause">Pause recording</string>
+    <string name="cd_play">Play</string>
+    <string name="cd_pause_playback">Pause playback</string>
+    <string name="cd_rewind">Back to the previous marker</string>
+    <string name="cd_monitor">Listen to the input while recording</string>
+    <string name="cd_export">Export this recording</string>
+    <string name="cd_waveform">Waveform. %1$s of %2$s.</string>
+    <string name="cd_level_meter">Input level, %1$s decibels</string>
+    <string name="cd_quality_gauge">Recording quality, %1$d out of 100</string>
+    <string name="cd_close_panel">Close panel</string>
+    <string name="cd_settings">Settings</string>
+    <string name="cd_project">Project and library</string>
+
+    <!-- About (chapter 22). -->
+    <string name="about_title">SAUTIY</string>
+    <string name="about_developer">Imam Ahmad Sulaimiy</string>
+    <string name="about_role">Senior Software Engineer, Product Architect &amp; Founder</string>
+    <string name="about_body">SAUTIY is engineered to deliver an elegant, dependable and professional mobile audio production experience with intuitive workflows, premium design, and high-quality recording, editing and publishing capabilities for creators, educators, reciters, lecturers, broadcasters and podcasters.</string>
+    <string name="about_privacy">SAUTIY has no internet permission. Nothing you record can leave this device unless you export or share it yourself.</string>
+</resources>
