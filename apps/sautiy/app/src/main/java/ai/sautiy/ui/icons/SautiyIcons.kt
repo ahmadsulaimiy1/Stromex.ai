@@ -562,6 +562,77 @@ object SautiyIcons {
         }
     }
 
+    // --- Library ------------------------------------------------------------------------------
+
+    /** Favourite. Outline when it is not one, so the state is legible without colour alone. */
+    val Star: ImageVector by lazy {
+        stroked("sautiy.star") {
+            line {
+                moveTo(12f, 4.2f)
+                lineTo(14.4f, 9.2f)
+                lineTo(19.8f, 10f)
+                lineTo(15.9f, 13.8f)
+                lineTo(16.8f, 19.2f)
+                lineTo(12f, 16.7f)
+                lineTo(7.2f, 19.2f)
+                lineTo(8.1f, 13.8f)
+                lineTo(4.2f, 10f)
+                lineTo(9.6f, 9.2f)
+                close()
+            }
+        }
+    }
+
+    /** Rename. A pencil, because renaming is editing rather than configuring. */
+    val Edit: ImageVector by lazy {
+        stroked("sautiy.edit") {
+            line {
+                moveTo(4.5f, 19.5f)
+                lineTo(5.2f, 15.6f)
+                lineTo(15.6f, 5.2f)
+                lineTo(18.8f, 8.4f)
+                lineTo(8.4f, 18.8f)
+                close()
+            }
+            line {
+                moveTo(13.4f, 7.4f)
+                lineTo(16.6f, 10.6f)
+            }
+        }
+    }
+
+    /** Delete. A bin, not a cross: a cross means dismiss, and the two must never be confused. */
+    val Delete: ImageVector by lazy {
+        stroked("sautiy.delete") {
+            line {
+                moveTo(5.5f, 7f)
+                horizontalLineTo(18.5f)
+            }
+            line {
+                moveTo(9.5f, 7f)
+                verticalLineTo(5.2f)
+                horizontalLineTo(14.5f)
+                verticalLineTo(7f)
+            }
+            line {
+                moveTo(7f, 7f)
+                lineTo(7.9f, 18.6f)
+                arcToRelative(1.2f, 1.2f, 0f, false, false, 1.2f, 1.1f)
+                horizontalLineTo(14.9f)
+                arcToRelative(1.2f, 1.2f, 0f, false, false, 1.2f, -1.1f)
+                lineTo(17f, 7f)
+            }
+            line {
+                moveTo(10.6f, 10.4f)
+                verticalLineTo(16.2f)
+            }
+            line {
+                moveTo(13.4f, 10.4f)
+                verticalLineTo(16.2f)
+            }
+        }
+    }
+
     val Waveform: ImageVector by lazy {
         stroked("sautiy.waveform") {
             line {

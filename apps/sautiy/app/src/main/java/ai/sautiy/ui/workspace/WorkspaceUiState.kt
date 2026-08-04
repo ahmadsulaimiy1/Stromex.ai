@@ -3,7 +3,10 @@ package ai.sautiy.ui.workspace
 import ai.sautiy.core.analysis.WaveformColumns
 import ai.sautiy.core.audio.CaptureQuality
 import ai.sautiy.core.codec.ExportFormat
-import ai.sautiy.core.dsp.StudioPreset
+import ai.sautiy.core.dsp.AmbienceSettings
+import ai.sautiy.core.dsp.VoiceRefinement
+import ai.sautiy.core.dsp.VoiceSpacePreset
+import ai.sautiy.core.dsp.VoiceStudioSettings
 import ai.sautiy.core.play.PlaybackSpeed
 import ai.sautiy.core.workspace.Panel
 import ai.sautiy.core.workspace.SautiyError
@@ -83,9 +86,23 @@ data class WorkspaceUiState(
     val historySteps: List<String> = emptyList(),
     val historyIndex: Int = 0,
 
-    val appliedPreset: StudioPreset? = null,
+    /** The space currently selected, or `null` when the recording is heard as captured. */
+    val appliedPreset: VoiceSpacePreset? = null,
+    /** The live voice, including any hand edits made after a space was chosen. */
+    val voice: VoiceStudioSettings? = null,
+    /**
+     * Stages the preview cannot run, named so the panel can say so.
+     *
+     * Noise reduction needs a profile from the whole recording and loudness needs the finished
+     * programme; neither can exist under a playback callback. Saying which is missing is the
+     * difference between an honest preview and one that quietly differs from the export.
+     */
+    val deferredStages: List<String> = emptyList(),
+
     val exportFormat: ExportFormat = ExportFormat.WAV,
     val exportProgress: Double? = null,
+    /** Set once an export has written a file, so it can be shared without exporting twice. */
+    val lastExportPath: String? = null,
 
     val library: List<LibraryRow> = emptyList(),
     val librarySearch: String = "",
@@ -124,8 +141,14 @@ data class WorkspaceActions(
     val onOpenLibrary: () -> Unit = {},
     val onOpenSettings: () -> Unit = {},
 
-    val onApplyPreset: (StudioPreset) -> Unit = {},
+    val onApplyPreset: (VoiceSpacePreset) -> Unit = {},
     val onRevertPreset: () -> Unit = {},
+    /** ✨ Enhance Voice — clean it up, change nothing about where it was recorded. */
+    val onEnhanceVoice: () -> Unit = {},
+    /** 🎙 Studio Voice — the finished production, room and all. */
+    val onStudioVoice: () -> Unit = {},
+    val onAmbienceChanged: (AmbienceSettings) -> Unit = {},
+    val onRefinementChanged: (VoiceRefinement) -> Unit = {},
     val onChooseExportFormat: (ExportFormat) -> Unit = {},
     val onExport: () -> Unit = {},
     val onShare: () -> Unit = {},

@@ -2,7 +2,9 @@ package ai.sautiy.ui.workspace
 
 import ai.sautiy.core.analysis.Loudness
 import ai.sautiy.core.codec.ExportFormat
-import ai.sautiy.core.dsp.StudioPreset
+import ai.sautiy.core.dsp.AmbienceSettings
+import ai.sautiy.core.dsp.VoiceRefinement
+import ai.sautiy.core.dsp.VoiceSpacePreset
 import ai.sautiy.core.play.PlaybackSpeed
 import ai.sautiy.core.workspace.Panel
 import ai.sautiy.ui.components.QualityGauge
@@ -29,8 +31,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,9 +71,9 @@ fun PanelHost(
             Panel.HISTORY -> HistoryPanel(state, actions)
             Panel.LAYERS -> LayersPanel(state, actions)
             Panel.MARKERS -> MarkersPanel(state, actions)
-            Panel.EQUALISER -> EqualiserPanel(state)
+            Panel.EQUALISER -> EqualiserPanel(state, actions)
             Panel.DYNAMICS -> DynamicsPanel(state)
-            Panel.SPACE -> SpacePanel(state)
+            Panel.SPACE -> SpacePanel(state, actions)
             Panel.TRANSCRIPT -> TranscriptPanel()
             Panel.PROJECT -> ProjectPanel(state)
         }
@@ -71,7 +82,7 @@ fun PanelHost(
 
 private fun panelTitle(panel: Panel): String = when (panel) {
     Panel.STUDIO -> "Studio"
-    Panel.EQUALISER -> "Equaliser"
+    Panel.EQUALISER -> "Voice"
     Panel.DYNAMICS -> "Dynamics"
     Panel.SPACE -> "Space"
     Panel.ANALYSIS -> "Analysis"
@@ -145,18 +156,49 @@ private fun PanelScaffold(
 }
 
 /**
- * The Studio panel — chapter 10.3's preset cards.
+ * The Studio panel — the twelve spaces, and the two buttons that skip choosing one.
  *
- * Named for situations rather than processes, because a user knows whether they recorded a
- * lecture and does not know whether they want 3:1 at −18 dBFS with a 6 dB knee. Each card
- * expands to those numbers on touch, and never before.
+ * Named for places rather than processes, because a person knows they recorded a lecture and
+ * does not know they want 3:1 at −18 dBFS with a 6 dB knee. Choosing a card applies it
+ * immediately: to what is playing, and to what will be exported. Nothing here records an
+ * intention it does not carry out.
  */
 @Composable
 private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
     val colours = SautiyTheme.colours
 
     LazyColumn(verticalArrangement = Arrangement.spacedBy(SautiySpace.s)) {
-        items(StudioPreset.cardOrder) { preset ->
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(SautiySpace.m)) {
+                PrimaryAction(
+                    label = "\u2728 Enhance Voice",
+                    onClick = actions.onEnhanceVoice,
+                    modifier = Modifier.weight(1f),
+                )
+                PrimaryAction(
+                    label = "\uD83C\uDF99 Studio Voice",
+                    onClick = actions.onStudioVoice,
+                    modifier = Modifier.weight(1f),
+                    filled = false,
+                )
+            }
+        }
+
+        if (state.deferredStages.isNotEmpty()) {
+            item {
+                // Said plainly rather than implied. A preview that quietly differs from the
+                // export is how a person ships something they never heard.
+                Text(
+                    text = "Heard on export, not in preview: " +
+                        state.deferredStages.joinToString(", ").lowercase(),
+                    style = SautiyTheme.type.bodyMedium,
+                    color = colours.textTertiary,
+                    modifier = Modifier.padding(vertical = SautiySpace.xs),
+                )
+            }
+        }
+
+        items(VoiceSpacePreset.cardOrder) { preset ->
             val applied = state.appliedPreset == preset
             Column(
                 modifier = Modifier
@@ -181,11 +223,7 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                         modifier = Modifier.weight(1f),
                     )
                     if (applied) {
-                        Text(
-                            text = "Applied",
-                            style = SautiyTheme.type.labelSmall,
-                            color = colours.signal,
-                        )
+                        Text(text = "Applied", style = SautiyTheme.type.labelSmall, color = colours.signal)
                     }
                 }
                 Spacer(modifier = Modifier.height(SautiySpace.xxs))
@@ -199,17 +237,26 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                 // applied one. A professional is never limited; a beginner never has to look.
                 if (applied) {
                     Spacer(modifier = Modifier.height(SautiySpace.m))
-                    val chain = preset.chain
-                    chain.compressor?.let {
+                    val settings = preset.settings
+                    settings.cleanup.highPassHz?.let { ParameterRow("High-pass", "${it.toInt()} Hz") }
+                    settings.dynamics.compressor?.let {
                         ParameterRow("Compression", "${it.ratio}:1 at ${it.thresholdDb.toInt()} dB")
                     }
-                    chain.highPassHz?.let { ParameterRow("High-pass", "${it.toInt()} Hz") }
-                    chain.deEsser?.let { ParameterRow("De-esser", "${(it.frequencyHz / 1000).toInt()} kHz") }
-                    chain.loudnessTargetName?.let {
-                        val target = Loudness.Target.valueOf(it)
-                        ParameterRow("Loudness", "${target.lufs} LUFS")
+                    settings.dynamics.deEsser?.let {
+                        ParameterRow("De-esser", "${(it.frequencyHz / 1000).toInt()} kHz")
                     }
-                    chain.limiterCeilingDb?.let { ParameterRow("Ceiling", "$it dBTP") }
+                    val space = settings.effectiveAmbience
+                    if (!space.isBypassed) {
+                        ParameterRow("Decay", "${space.decaySeconds} s")
+                        ParameterRow("Pre-delay", "${space.preDelayMs.toInt()} ms")
+                        ParameterRow("Room", "${(space.wetDryMix * 100).toInt()}%")
+                    } else {
+                        ParameterRow("Room", "None")
+                    }
+                    settings.loudness.target?.let {
+                        ParameterRow("Loudness", "${Loudness.Target.valueOf(it).lufs} LUFS")
+                    }
+                    settings.loudness.limiterCeilingDb?.let { ParameterRow("Ceiling", "$it dBTP") }
 
                     Spacer(modifier = Modifier.height(SautiySpace.s))
                     Text(
@@ -228,6 +275,56 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
             }
         }
     }
+}
+
+/**
+ * One control: a name, its value in the unit it is measured in, and a slider.
+ *
+ * The value is always printed. A dial whose position is the only record of its setting cannot be
+ * described, compared or written down, and every professional eventually needs to do all three.
+ */
+@Composable
+private fun StudioSlider(
+    label: String,
+    value: Double,
+    range: ClosedFloatingPointRange<Float>,
+    display: String,
+    onChange: (Double) -> Unit,
+) {
+    val colours = SautiyTheme.colours
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = SautiySpace.xxs)) {
+        Row {
+            Text(
+                text = label,
+                style = SautiyTheme.type.bodyMedium,
+                color = colours.textSecondary,
+                modifier = Modifier.weight(1f),
+            )
+            Text(text = display, style = SautiyTheme.type.numeric, color = colours.textPrimary)
+        }
+        Slider(
+            value = value.toFloat().coerceIn(range.start, range.endInclusive),
+            onValueChange = { onChange(it.toDouble()) },
+            valueRange = range,
+            colors = SliderDefaults.colors(
+                thumbColor = colours.signal,
+                activeTrackColor = colours.signal,
+                inactiveTrackColor = colours.surfaceRaised,
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .sizeIn(minHeight = SautiySpace.minTouchTarget)
+                .semantics { contentDescription = "$label, $display" },
+        )
+    }
+}
+
+private fun percent(value: Double): String = "${(value * 100).toInt()}%"
+
+/** A bipolar refinement control, printed as the signed position it is at. */
+private fun signed(value: Double): String {
+    val rounded = (value * 100).toInt()
+    return if (rounded > 0) "+$rounded" else "$rounded"
 }
 
 @Composable
@@ -355,6 +452,8 @@ private fun AnalysisPanel(state: WorkspaceUiState) {
 @Composable
 private fun LibraryPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
     val colours = SautiyTheme.colours
+    var confirming by remember { mutableStateOf<String?>(null) }
+    var renaming by remember { mutableStateOf<Pair<String, String>?>(null) }
 
     if (state.library.isEmpty()) {
         EmptyPanelState(
@@ -366,15 +465,14 @@ private fun LibraryPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
 
     LazyColumn(verticalArrangement = Arrangement.spacedBy(SautiySpace.xs)) {
         items(state.library) { row ->
+          Column(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .sizeIn(minHeight = SautiySpace.minTouchTarget)
-                    .clip(SautiyShapes.small)
-                    .clickable(onClickLabel = row.title, role = Role.Button) { actions.onOpenRecording(row.id) }
-                    .padding(vertical = SautiySpace.m),
+                    .padding(vertical = SautiySpace.xxs),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(SautiySpace.m),
+                horizontalArrangement = Arrangement.spacedBy(SautiySpace.xs),
             ) {
                 Icon(
                     imageVector = SautiyIcons.Waveform,
@@ -382,7 +480,15 @@ private fun LibraryPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                     tint = colours.signal,
                     modifier = Modifier.size(20.dp),
                 )
-                Column(modifier = Modifier.weight(1f)) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(SautiyShapes.small)
+                        .clickable(onClickLabel = row.title, role = Role.Button) {
+                            actions.onOpenRecording(row.id)
+                        }
+                        .padding(vertical = SautiySpace.s),
+                ) {
                     Text(
                         text = row.title,
                         style = SautiyTheme.type.bodyLarge,
@@ -396,11 +502,110 @@ private fun LibraryPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                         color = colours.textTertiary,
                     )
                 }
-                if (row.favourite) {
-                    Text(text = "Favourite", style = SautiyTheme.type.labelSmall, color = colours.caution)
+                // Favourite, rename and delete, on the row itself. A recording that can be
+                // opened but not renamed or removed is a library only in name — and these were
+                // missing entirely from the first version of this panel.
+                RowAction(
+                    label = if (row.favourite) "Remove favourite" else "Favourite",
+                    icon = SautiyIcons.Star,
+                    tint = if (row.favourite) colours.caution else colours.textTertiary,
+                ) { actions.onToggleFavourite(row.id) }
+
+                RowAction(label = "Rename", icon = SautiyIcons.Edit, tint = colours.textTertiary) {
+                    renaming = row.id to row.title
+                }
+
+                RowAction(label = "Delete", icon = SautiyIcons.Delete, tint = colours.textTertiary) {
+                    confirming = row.id
+                }
+            }
+
+            // Delete is never immediate and never final: it is confirmed here, and the store
+            // moves it to the trash with a stated recovery window (chapter 13.5).
+            if (confirming == row.id) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = SautiySpace.s),
+                    horizontalArrangement = Arrangement.spacedBy(SautiySpace.m),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "Moves to the trash for 30 days.",
+                        style = SautiyTheme.type.bodyMedium,
+                        color = colours.textTertiary,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        text = "Keep",
+                        style = SautiyTheme.type.labelLarge,
+                        color = colours.textSecondary,
+                        modifier = Modifier
+                            .sizeIn(minHeight = SautiySpace.minTouchTarget)
+                            .clickable(onClickLabel = "Keep", role = Role.Button) { confirming = null }
+                            .padding(SautiySpace.s),
+                    )
+                    Text(
+                        text = "Delete",
+                        style = SautiyTheme.type.labelLarge,
+                        color = colours.critical,
+                        modifier = Modifier
+                            .sizeIn(minHeight = SautiySpace.minTouchTarget)
+                            .clickable(onClickLabel = "Delete ${row.title}", role = Role.Button) {
+                                actions.onDelete(row.id)
+                                confirming = null
+                            }
+                            .padding(SautiySpace.s),
+                    )
+                }
+            }
+
+            val pending = renaming
+            if (pending != null && pending.first == row.id) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = SautiySpace.s),
+                    horizontalArrangement = Arrangement.spacedBy(SautiySpace.m),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    TextField(
+                        value = pending.second,
+                        onValueChange = { renaming = row.id to it },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        text = "Save",
+                        style = SautiyTheme.type.labelLarge,
+                        color = colours.signal,
+                        modifier = Modifier
+                            .sizeIn(minHeight = SautiySpace.minTouchTarget)
+                            .clickable(onClickLabel = "Save name", role = Role.Button) {
+                                val title = pending.second.trim()
+                                if (title.isNotEmpty()) actions.onRename(row.id, title)
+                                renaming = null
+                            }
+                            .padding(SautiySpace.s),
+                    )
                 }
             }
         }
+    }
+}
+
+/** A 48 dp icon control on a library row. Small on screen, never small to the thumb. */
+@Composable
+private fun RowAction(
+    label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    tint: androidx.compose.ui.graphics.Color,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .size(SautiySpace.minTouchTarget)
+            .clip(SautiyShapes.small)
+            .clickable(onClickLabel = label, role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(imageVector = icon, contentDescription = label, tint = tint, modifier = Modifier.size(20.dp))
     }
 }
 
@@ -494,24 +699,61 @@ private fun MarkersPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
 }
 
 /**
- * The Equaliser, Dynamics and Space panels show the parameters of the applied chain.
+ * The Voice and Space panels: the two halves of the Voice Studio a person actually turns.
  *
- * They read from the chain rather than holding their own state, so the curve on screen is
- * always the filter in the audio — chapter 10.5's rule that the drawn response is computed from
- * the coefficients rather than maintained alongside them.
+ * They are controls, not read-outs. The first version of these showed the applied preset's
+ * numbers and moved nothing — the panel looked complete and did nothing at all. Every control
+ * here writes back through [WorkspaceActions] and is audible on the next block of playback.
  */
 @Composable
-private fun EqualiserPanel(state: WorkspaceUiState) {
-    val chain = state.appliedPreset?.chain
-    if (chain == null || chain.equaliser.isEmpty()) {
-        EmptyPanelState("No equalisation", "This preset shapes nothing. Choose another to see its bands.")
-        return
-    }
+private fun EqualiserPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
+    val voice = state.voice
+    val refinement = voice?.refinement ?: VoiceRefinement()
+
+    fun update(next: VoiceRefinement) = actions.onRefinementChanged(next)
+
     Column {
-        for (band in chain.equaliser) {
-            ParameterRow(
-                label = "${band.frequency.toInt()} Hz",
-                value = "${if (band.gainDb >= 0) "+" else ""}${band.gainDb} dB  Q ${band.q}",
+        Text(
+            text = "Eight controls, each centred at zero. A control at rest changes nothing.",
+            style = SautiyTheme.type.bodyMedium,
+            color = SautiyTheme.colours.textTertiary,
+        )
+        Spacer(modifier = Modifier.height(SautiySpace.m))
+
+        val bipolar = -1f..1f
+        StudioSlider("Clarity", refinement.clarity, bipolar, signed(refinement.clarity)) {
+            update(refinement.copy(clarity = it))
+        }
+        StudioSlider("Warmth", refinement.warmth, bipolar, signed(refinement.warmth)) {
+            update(refinement.copy(warmth = it))
+        }
+        StudioSlider("Richness", refinement.richness, bipolar, signed(refinement.richness)) {
+            update(refinement.copy(richness = it))
+        }
+        StudioSlider("Presence", refinement.presence, bipolar, signed(refinement.presence)) {
+            update(refinement.copy(presence = it))
+        }
+        StudioSlider("Body", refinement.body, bipolar, signed(refinement.body)) {
+            update(refinement.copy(body = it))
+        }
+        StudioSlider("Air", refinement.air, bipolar, signed(refinement.air)) {
+            update(refinement.copy(air = it))
+        }
+        StudioSlider("Brightness", refinement.brightness, bipolar, signed(refinement.brightness)) {
+            update(refinement.copy(brightness = it))
+        }
+        StudioSlider("Depth", refinement.depth, bipolar, signed(refinement.depth)) {
+            update(refinement.copy(depth = it))
+        }
+
+        if (voice?.ambience?.isBypassed != false && refinement.depth != 0.0) {
+            // Depth is distance, and distance is a room. Saying so is better than letting a
+            // control sit at a position that does nothing.
+            Text(
+                text = "Depth needs a space. Choose one in Studio.",
+                style = SautiyTheme.type.bodyMedium,
+                color = SautiyTheme.colours.textTertiary,
+                modifier = Modifier.padding(top = SautiySpace.s),
             )
         }
     }
@@ -519,10 +761,10 @@ private fun EqualiserPanel(state: WorkspaceUiState) {
 
 @Composable
 private fun DynamicsPanel(state: WorkspaceUiState) {
-    val chain = state.appliedPreset?.chain
-    val compressor = chain?.compressor
+    val dynamics = state.voice?.dynamics
+    val compressor = dynamics?.compressor
     if (compressor == null) {
-        EmptyPanelState("No compression", "This preset leaves the dynamics alone.")
+        EmptyPanelState("No compression", "This voice leaves the dynamics alone.")
         return
     }
     Column {
@@ -531,22 +773,88 @@ private fun DynamicsPanel(state: WorkspaceUiState) {
         ParameterRow("Attack", "${compressor.attackMs} ms")
         ParameterRow("Release", "${compressor.releaseMs} ms")
         ParameterRow("Knee", "${compressor.kneeDb} dB")
-        chain.limiterCeilingDb?.let { ParameterRow("Limiter ceiling", "$it dBTP") }
+        dynamics.deEsser?.let {
+            ParameterRow("De-esser", "${(it.frequencyHz / 1000).toInt()} kHz at ${it.ratio}:1")
+        }
+        state.voice?.loudness?.limiterCeilingDb?.let { ParameterRow("Limiter ceiling", "$it dBTP") }
     }
 }
 
+/** The ambience controls. Nine of them, in the order a room is built rather than alphabetically. */
 @Composable
-private fun SpacePanel(state: WorkspaceUiState) {
-    val space = state.appliedPreset?.chain?.space
-    if (space == null) {
-        EmptyPanelState("No space", "This preset adds no room. The recording is left as it was made.")
+private fun SpacePanel(state: WorkspaceUiState, actions: WorkspaceActions) {
+    val ambience = state.voice?.ambience
+    if (ambience == null || ambience.isBypassed) {
+        Column {
+            EmptyPanelState(
+                "No space",
+                "This voice adds no room. Choose a space in Studio, or start one here.",
+            )
+            Spacer(modifier = Modifier.height(SautiySpace.m))
+            PrimaryAction(
+                label = "Add a room",
+                onClick = { actions.onAmbienceChanged(AmbienceSettings()) },
+                modifier = Modifier.fillMaxWidth(),
+                filled = false,
+            )
+        }
         return
     }
+
+    fun update(next: AmbienceSettings) = actions.onAmbienceChanged(next)
+
     Column {
-        ParameterRow("Size", "${(space.size * 100).toInt()}%")
-        ParameterRow("Damping", "${(space.damping * 100).toInt()}%")
-        ParameterRow("Mix", "${(space.mix * 100).toInt()}%")
-        space.echoDelayMs?.let { ParameterRow("Echo", "${it.toInt()} ms") }
+        StudioSlider("Amount", ambience.amount, 0f..1f, percent(ambience.amount)) {
+            update(ambience.copy(amount = it))
+        }
+        StudioSlider("Wet / dry mix", ambience.wetDryMix, 0f..1f, percent(ambience.wetDryMix)) {
+            update(ambience.copy(wetDryMix = it))
+        }
+        StudioSlider("Room size", ambience.roomSize, 0f..1f, percent(ambience.roomSize)) {
+            update(ambience.copy(roomSize = it))
+        }
+        StudioSlider(
+            label = "Decay time",
+            value = ambience.decaySeconds,
+            range = 0.1f..12f,
+            display = String.format("%.2f s", ambience.decaySeconds),
+        ) { update(ambience.copy(decaySeconds = it)) }
+        StudioSlider(
+            label = "Pre-delay",
+            value = ambience.preDelayMs,
+            range = 0f..200f,
+            display = "${ambience.preDelayMs.toInt()} ms",
+        ) { update(ambience.copy(preDelayMs = it)) }
+        StudioSlider(
+            "Early reflections",
+            ambience.earlyReflections,
+            0f..1f,
+            percent(ambience.earlyReflections),
+        ) { update(ambience.copy(earlyReflections = it)) }
+        StudioSlider("Width", ambience.width, 0f..1f, percent(ambience.width)) {
+            update(ambience.copy(width = it))
+        }
+        StudioSlider("Warmth", ambience.warmth, 0f..1f, percent(ambience.warmth)) {
+            update(ambience.copy(warmth = it))
+        }
+        StudioSlider("Brightness", ambience.brightness, 0f..1f, percent(ambience.brightness)) {
+            update(ambience.copy(brightness = it))
+        }
+
+        Spacer(modifier = Modifier.height(SautiySpace.s))
+        Text(
+            text = "Warmth and brightness here shape the room. The same controls in Voice shape " +
+                "the speaker.",
+            style = SautiyTheme.type.bodyMedium,
+            color = SautiyTheme.colours.textTertiary,
+        )
+        Spacer(modifier = Modifier.height(SautiySpace.m))
+        PrimaryAction(
+            label = "Remove the room",
+            onClick = { actions.onAmbienceChanged(AmbienceSettings.NONE) },
+            modifier = Modifier.fillMaxWidth(),
+            filled = false,
+        )
     }
 }
 

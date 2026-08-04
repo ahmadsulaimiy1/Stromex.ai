@@ -1,7 +1,10 @@
 package ai.sautiy.play
 
 import ai.sautiy.core.audio.AudioBuffer
+import ai.sautiy.core.dsp.LiveVoiceStudio
 import ai.sautiy.core.dsp.Resampler
+import ai.sautiy.core.dsp.VoiceStudio
+import ai.sautiy.core.dsp.VoiceStudioSettings
 import ai.sautiy.core.edit.SourceProvider
 import ai.sautiy.core.edit.Timeline
 import ai.sautiy.core.edit.TimelineRenderer
@@ -40,6 +43,18 @@ class AudioPlayer(
     private var track: AudioTrack? = null
     private var loop: Job? = null
 
+    /**
+     * The Voice Studio applied to every block on its way to the speaker.
+     *
+     * Volatile because it is written from the main thread when a space is chosen and read from
+     * the render loop. Replacing it mid-playback is how "live preview" works: the next block
+     * comes out of the new room, with no restart and no gap.
+     */
+    @Volatile
+    private var voice: LiveVoiceStudio? = null
+    private var voiceSampleRate = 0
+    private var voiceChannelCount = 0
+
     private val _positionFrames = MutableStateFlow(0L)
     val positionFrames: StateFlow<Long> = _positionFrames.asStateFlow()
 
@@ -56,8 +71,14 @@ class AudioPlayer(
         speed: PlaybackSpeed = PlaybackSpeed.NORMAL,
         loopRegion: ai.sautiy.core.play.LoopRegion? = null,
         channelCount: Int = 1,
+        voiceSettings: VoiceStudioSettings? = null,
     ) {
         stop()
+
+        voiceSampleRate = timeline.sampleRate
+        voiceChannelCount = channelCount
+        voice = voiceSettings?.takeIf { !it.isTransparent }
+            ?.let { VoiceStudio(it).live(timeline.sampleRate, channelCount) }
 
         val sampleRate = timeline.sampleRate
         val channelMask = if (channelCount == 1) {
@@ -121,6 +142,11 @@ class AudioPlayer(
                     channelCount = channelCount,
                 )
 
+                // The voice before the speed change: the Voice Studio's filters were designed
+                // at the project's rate, and this is also the order the export uses, so what is
+                // auditioned is what will be written.
+                voice?.let { runCatching { it.process(block) } }
+
                 if (speed != PlaybackSpeed.NORMAL) {
                     // FAST quality here on purpose: this is a preview being heard once, at
                     // speed, and TRANSPARENT would spend thirty-two taps per sample to improve
@@ -167,7 +193,20 @@ class AudioPlayer(
         _playing.value = true
     }
 
+    /**
+     * Changes the voice without interrupting playback.
+     *
+     * The tail of the previous room is dropped rather than crossfaded: they are different rooms,
+     * and hearing two at once while comparing presets is worse than hearing the join.
+     */
+    fun setVoice(settings: VoiceStudioSettings?) {
+        voice = settings?.takeIf { !it.isTransparent && voiceSampleRate > 0 }
+            ?.let { VoiceStudio(it).live(voiceSampleRate, voiceChannelCount) }
+    }
+
     fun seekTo(frame: Long) {
+        // A seek must not drag the old room across the cut.
+        voice?.reset()
         _positionFrames.value = frame
     }
 

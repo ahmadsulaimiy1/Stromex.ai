@@ -4,7 +4,14 @@ import ai.sautiy.core.analysis.PeakBuilder
 import ai.sautiy.core.analysis.Waveform
 import ai.sautiy.core.audio.CaptureQuality
 import ai.sautiy.core.audio.Decibels
-import ai.sautiy.core.dsp.StudioPreset
+import ai.sautiy.core.codec.ExportJob
+import ai.sautiy.core.codec.WavStreamReader
+import ai.sautiy.core.dsp.AmbienceSettings
+import ai.sautiy.core.dsp.OneTap
+import ai.sautiy.core.dsp.VoiceRefinement
+import ai.sautiy.core.dsp.VoiceSpacePreset
+import ai.sautiy.core.dsp.VoiceStudio
+import ai.sautiy.core.dsp.VoiceStudioSettings
 import ai.sautiy.core.edit.AppendRecording
 import ai.sautiy.core.edit.DeleteRange
 import ai.sautiy.core.edit.EditHistory
@@ -18,6 +25,7 @@ import ai.sautiy.core.record.RecordingMachine
 import ai.sautiy.core.record.RecordingState
 import ai.sautiy.core.workspace.Focus
 import ai.sautiy.core.workspace.Panel
+import ai.sautiy.core.workspace.SautiyError
 import ai.sautiy.core.workspace.TransportState
 import ai.sautiy.core.workspace.WorkspaceAction
 import ai.sautiy.core.library.Library
@@ -34,7 +42,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * The single place where the studio's state lives.
@@ -94,12 +104,16 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         onOpenSettings = {},
         onApplyPreset = ::applyPreset,
         onRevertPreset = ::revertPreset,
+        onEnhanceVoice = { applyVoice(OneTap.enhanceVoice(), preset = null) },
+        onStudioVoice = { applyVoice(OneTap.studioVoice(), preset = null) },
+        onAmbienceChanged = ::changeAmbience,
+        onRefinementChanged = ::changeRefinement,
         onChooseExportFormat = { format -> _state.update { it.copy(exportFormat = format) } },
-        onExport = {},
-        onShare = {},
+        onExport = ::export,
+        onShare = ::share,
         onSetSpeed = { speed -> _state.update { it.copy(speed = speed) } },
         onToggleLoop = { _state.update { it.copy(looping = !it.looping) } },
-        onToggleCompare = { _state.update { it.copy(comparingOriginal = !it.comparingOriginal) } },
+        onToggleCompare = ::toggleCompare,
         onTravelHistory = ::travelHistory,
         onOpenRecording = ::openRecording,
         onToggleFavourite = ::toggleFavourite,
@@ -250,6 +264,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
             provider = audioSources,
             fromFrame = _state.value.playheadFrame,
             speed = _state.value.speed,
+            voiceSettings = if (_state.value.comparingOriginal) null else _state.value.voice,
         )
         workspace = workspace.copy(transport = TransportState.PLAYING)
         publish()
@@ -346,12 +361,123 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
 
     // --- Studio ---------------------------------------------------------------------------------
 
-    private fun applyPreset(preset: StudioPreset) {
-        _state.update { it.copy(appliedPreset = preset) }
+    /**
+     * Chooses a space, and applies it — to what is playing right now, and to what is exported.
+     *
+     * The first version of this method set a field and stopped. The card highlighted, the panel
+     * printed numbers, and not one sample was ever processed. Nothing here is allowed to record
+     * an intention without carrying it out.
+     */
+    private fun applyPreset(preset: VoiceSpacePreset) {
+        applyVoice(preset.settings, preset)
+    }
+
+    private fun applyVoice(settings: VoiceStudioSettings, preset: VoiceSpacePreset?) {
+        _state.update {
+            it.copy(
+                appliedPreset = preset,
+                voice = settings,
+                deferredStages = VoiceStudio(settings).deferredStages,
+            )
+        }
+        // Heard immediately, without restarting playback.
+        player.setVoice(if (_state.value.comparingOriginal) null else settings)
     }
 
     private fun revertPreset() {
-        _state.update { it.copy(appliedPreset = null) }
+        _state.update { it.copy(appliedPreset = null, voice = null, deferredStages = emptyList()) }
+        player.setVoice(null)
+    }
+
+    /** An ambience control moved. The space stops being a named preset the moment it is edited. */
+    private fun changeAmbience(ambience: AmbienceSettings) {
+        val base = _state.value.voice ?: VoiceStudioSettings()
+        applyVoice(base.copy(ambience = ambience), preset = null)
+    }
+
+    private fun changeRefinement(refinement: VoiceRefinement) {
+        val base = _state.value.voice ?: VoiceStudioSettings()
+        applyVoice(base.copy(refinement = refinement), preset = null)
+    }
+
+    /**
+     * A/B against the original, without stopping.
+     *
+     * The comparison has to reach the audio, not just the label. Toggling this used to flip a
+     * boolean in the state and nothing else, so the button lit up and both sides sounded the same.
+     */
+    private fun toggleCompare() {
+        val comparing = !_state.value.comparingOriginal
+        _state.update { it.copy(comparingOriginal = comparing) }
+        player.setVoice(if (comparing) null else _state.value.voice)
+    }
+
+    // --- Export -----------------------------------------------------------------------------
+
+    /**
+     * Writes the project to a file, through the same Voice Studio that was auditioned.
+     *
+     * Export reports its progress and its failures. A silent failure here is the worst bug the
+     * application can have: the user believes they have a file, and finds out they do not at the
+     * moment they need it.
+     */
+    private fun export() {
+        val timeline = history.current
+        if (timeline.lengthFrames == 0L) return
+        if (_state.value.exportProgress != null) return
+
+        val format = _state.value.exportFormat
+        val voice = _state.value.voice
+        val name = _state.value.projectName.replace(Regex("[^A-Za-z0-9 _-]"), "").trim()
+            .ifBlank { "SAUTIY recording" }
+        val target = files.exports.resolve("$name.${format.extension}")
+
+        _state.update { it.copy(exportProgress = 0.0) }
+        viewModelScope.launch {
+            val outcome = withContext(Dispatchers.IO) {
+                runCatching {
+                    target.outputStream().use { stream ->
+                        ExportJob(
+                            timeline = timeline,
+                            provider = audioSources,
+                            format = format,
+                            voice = voice,
+                            channelCount = _state.value.quality.format.channelCount,
+                        ).run(stream) { fraction, _ ->
+                            _state.update { it.copy(exportProgress = fraction) }
+                        }
+                    }
+                }
+            }
+            outcome.fold(
+                onSuccess = {
+                    _state.update { state ->
+                        state.copy(exportProgress = null, lastExportPath = target.absolutePath)
+                    }
+                    if (shareAfterExport) {
+                        shareAfterExport = false
+                        share()
+                    }
+                },
+                onFailure = { failure ->
+                    shareAfterExport = false
+                    // The file is removed: a half-written export that opens in nothing is worse
+                    // than no export, because it looks like success.
+                    runCatching { target.delete() }
+                    _state.update { state ->
+                        state.copy(
+                            exportProgress = null,
+                            error = SautiyError(
+                                fact = "The export stopped before it finished.",
+                                consequence = "No ${format.displayName} file was written. " +
+                                    (failure.message ?: "The device reported no reason."),
+                                remedy = SautiyError.Remedy("Try again", "error.retryExport"),
+                            ),
+                        )
+                    }
+                },
+            )
+        }
     }
 
     // --- Library ----------------------------------------------------------------------------------
@@ -384,6 +510,46 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         refreshLibrary()
     }
 
+    /**
+     * Hands the exported file to the system share sheet.
+     *
+     * Exports first if there is nothing to share yet, so "Share" never silently does nothing —
+     * and shares a `content://` URI through the declared provider rather than a file path, which
+     * every Android since Nougat rejects.
+     */
+    private fun share() {
+        val path = _state.value.lastExportPath
+        if (path == null) {
+            shareAfterExport = true
+            export()
+            return
+        }
+        val file = java.io.File(path)
+        if (!file.isFile) {
+            shareAfterExport = true
+            export()
+            return
+        }
+        val context = getApplication<Application>()
+        val uri = androidx.core.content.FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.files",
+            file,
+        )
+        val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+            type = _state.value.exportFormat.mimeType
+            putExtra(android.content.Intent.EXTRA_STREAM, uri)
+            putExtra(android.content.Intent.EXTRA_TITLE, _state.value.projectName)
+            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        val chooser = android.content.Intent.createChooser(intent, "Share recording")
+            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        runCatching { context.startActivity(chooser) }
+    }
+
+    /** Set when Share was pressed before anything had been exported. */
+    private var shareAfterExport = false
+
     private fun rename(id: String, title: String) {
         store.rename(id, title)
         refreshLibrary()
@@ -391,6 +557,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
 
     /** Delete is never final: it goes to the trash with a stated recovery window (chapter 13.5). */
     private fun delete(id: String) {
+        store.find(id)?.let { audioSources.invalidate(it.takeId) }
         store.trash(id)
         refreshLibrary()
     }
@@ -417,6 +584,37 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         workspace = workspace.copy(transport = TransportState.STOPPED, hasAudio = true).dismissingPanel()
         _state.update { it.copy(projectName = entry.title, playheadFrame = 0) }
         publish()
+
+        // The waveform has to be rebuilt from the file. Without this the peak builder still
+        // holds whatever the last recording left in it — usually nothing — and a saved
+        // recording opens to an empty canvas. It runs off the main thread and streams the file
+        // in blocks, so a ninety-minute lecture does not stall the interface or the heap.
+        rebuildPeaks(entry.takeId)
+    }
+
+    private fun rebuildPeaks(takeId: String) {
+        peaks = PeakBuilder()
+        publish()
+        viewModelScope.launch {
+            val rebuilt = withContext(Dispatchers.IO) {
+                val file = files.takeFile(takeId)
+                if (!file.isFile) return@withContext null
+                runCatching {
+                    WavStreamReader(file).use { reader ->
+                        PeakBuilder().also { builder ->
+                            var position = 0L
+                            while (position < reader.frameCount) {
+                                val frames = minOf((1 shl 18).toLong(), reader.frameCount - position).toInt()
+                                builder.append(reader.read(position, frames))
+                                position += frames
+                            }
+                        }
+                    }
+                }.getOrNull()
+            } ?: return@launch
+            peaks = rebuilt
+            publish()
+        }
     }
 
     /**
@@ -526,6 +724,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
     override fun onCleared() {
         capture?.stop()
         player.stop()
+        audioSources.close()
         super.onCleared()
     }
 
