@@ -206,7 +206,14 @@ class AudioCapture(
 
     private suspend fun currentCoroutineIsActive(): Boolean = kotlin.coroutines.coroutineContext[Job]?.isActive ?: false
 
-    /** Pauses without closing the file, so resuming continues the same take. */
+    /**
+     * Pauses without closing the file, so resuming continues the same take.
+     *
+     * A read already in flight still lands. That is deliberate: the block the device is part
+     * way through holds audio captured *before* the tap, and discarding it to make the frame
+     * count freeze on the exact sample would lose audio the user did record — which is the one
+     * thing SAUTIY may not do. Up to one buffer of room tone past the tap is the cheaper error.
+     */
     fun pause() {
         paused = true
         writer?.flush()

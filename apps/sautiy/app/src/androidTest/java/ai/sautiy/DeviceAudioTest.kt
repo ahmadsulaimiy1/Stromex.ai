@@ -146,14 +146,27 @@ class DeviceAudioTest {
         runBlocking { withTimeoutOrNull(5_000) { capture.framesWritten.first { it > 0 } } }
         capture.pause()
         val atPause = capture.framesWritten.value
+
+        // One read may already be in flight when pause is called, and that block holds audio
+        // captured *before* the tap. Throwing it away to make the count freeze exactly would
+        // lose audio the user did record, which is the one thing SAUTIY may not do. So the
+        // contract is: pause stops promptly, and then stays stopped.
         Thread.sleep(400)
-        assertEquals("Frames were written while paused", atPause, capture.framesWritten.value)
+        val settled = capture.framesWritten.value
+        val oneBuffer = CaptureQuality.STUDIO.format.sampleRate / 5L // 200 ms, generously
+        assertTrue(
+            "Pause let $atPause frames become $settled — that is more than one read in flight",
+            settled - atPause <= oneBuffer,
+        )
+
+        Thread.sleep(400)
+        assertEquals("Capture did not stay paused", settled, capture.framesWritten.value)
         assertTrue("Pausing ended the recording", capture.isRecording)
 
         capture.resume()
-        runBlocking { withTimeoutOrNull(5_000) { capture.framesWritten.first { it > atPause } } }
-        assertTrue("Resuming did not resume", capture.framesWritten.value > atPause)
-        assertTrue(capture.stop() > atPause)
+        runBlocking { withTimeoutOrNull(5_000) { capture.framesWritten.first { it > settled } } }
+        assertTrue("Resuming did not resume", capture.framesWritten.value > settled)
+        assertTrue(capture.stop() > settled)
     }
 
     @Test
