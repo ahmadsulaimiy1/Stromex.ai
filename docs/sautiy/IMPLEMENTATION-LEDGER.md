@@ -62,14 +62,27 @@ problems and two missing Compose imports. They are listed in the git history.
 
 ---
 
-## Compiled — but NOT yet run on a device
+## Launches — verified on an emulator
 
-Everything in `apps/sautiy/app/` now **compiles and links into an installable debug APK**, and
-passes Android lint. That is a real and checkable fact.
+The APK installs and **the app opens**. Run 7's smoke job booted an x86_64 emulator (API 30),
+installed the APK, started the activity and checked it 20 seconds later:
 
-It is not the same as working. Nothing below has been executed on a phone or an emulator: CI has
-no microphone, no audio output and no `/dev/kvm`, so it can prove the code builds and cannot
-prove the app records.
+```
+ResumedActivity: ActivityRecord{ai.sautiy.debug/ai.sautiy.SautiyActivity t9}
+SAUTIY launched, is alive, and its activity is resumed.
+```
+
+Crash buffer empty. This is now a permanent CI gate, not a one-off: every push runs it, and it
+fails the build on anything in the crash buffer or if the activity is not the resumed one.
+
+**The launch crash that reached the first APK:** `splash_background.xml` wrapped a
+VectorDrawable in `<bitmap>`. That drawable was the window background, so the framework
+inflated it while creating the window — before `onCreate`. It crashed on every device, every
+launch, and both the compiler and lint were silent, because it is a runtime resource-inflation
+failure. Fixed by using `<item android:drawable=...>`, which accepts a vector.
+
+Everything in `apps/sautiy/app/` compiles, links, lints clean and launches. What that still does
+**not** prove is that it *works*: CI has no microphone and no audio output.
 
 | Component | State |
 |---|---|
@@ -90,9 +103,8 @@ prove the app records.
 | Manifest, resources, adaptive icon, splash, strings | Source complete |
 
 **What remains unproven, precisely:** that recording captures audio, that playback is audible,
-that the waveform draws, that edits apply, that export writes a valid file, and that the app
-does not crash on launch. Each needs the APK installed on a real device. The APK exists for
-exactly that purpose.
+that the waveform draws under a finger, that edits apply, and that export writes a file another
+player will open. Each needs a human with a phone. Launch stability is no longer on this list.
 
 ---
 

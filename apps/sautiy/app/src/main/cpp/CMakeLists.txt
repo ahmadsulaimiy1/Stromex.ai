@@ -33,28 +33,20 @@ set(LAME_SOURCES
     ${LAME_DIR}/libmp3lame/vbrquantize.c
     ${LAME_DIR}/libmp3lame/VbrTag.c
     ${LAME_DIR}/libmp3lame/version.c
-    ${LAME_DIR}/libmp3lame/mpglib_interface.c
 )
 
 add_library(sautiymp3 SHARED sautiy_mp3.c ${LAME_SOURCES})
 
 target_include_directories(sautiymp3 PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}   # our hand-written config.h
     ${LAME_DIR}/include
     ${LAME_DIR}/libmp3lame
-    ${LAME_DIR}/mpglib
 )
 
-target_compile_definitions(sautiymp3 PRIVATE
-    HAVE_CONFIG_H=0
-    STDC_HEADERS=1
-    HAVE_LIMITS_H=1
-    HAVE_STRING_H=1
-    HAVE_MEMCPY=1
-    # LAME's own float type. Fixing it here rather than relying on a generated config.h keeps
-    # the build reproducible across NDK versions.
-    FLOAT8=float
-    real=float
-)
+# Everything LAME needs is in our config.h. Defining the feature macros on the command line as
+# well would fight it — and -Dreal=float in particular is a landmine, since `real` is an
+# ordinary identifier in several of these translation units.
+target_compile_definitions(sautiymp3 PRIVATE HAVE_CONFIG_H=1)
 
 target_compile_options(sautiymp3 PRIVATE
     -O3

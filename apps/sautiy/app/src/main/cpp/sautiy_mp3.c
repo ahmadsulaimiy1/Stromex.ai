@@ -10,7 +10,8 @@
  */
 #include <jni.h>
 #include <stdlib.h>
-#include <lame/lame.h>
+/* lame/include is on the include path, so the header is <lame.h> and not <lame/lame.h>. */
+#include <lame.h>
 
 #define SAUTIY_JNI(name) Java_ai_sautiy_export_Mp3Encoder_##name
 
