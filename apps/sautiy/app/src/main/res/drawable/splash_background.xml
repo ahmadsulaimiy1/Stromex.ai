@@ -1,9 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  The window background, inflated by the framework before any application code runs.
+
+  This MUST NOT use <bitmap>: the Aperture is a VectorDrawable, and BitmapDrawable inflation
+  rejects a vector `src` with "requires a valid 'src' attribute" — a Resources.NotFoundException
+  thrown while the window is being created, which crashes the app on launch every time, on every
+  device, before onCreate is reached.
+
+  A layer-list <item android:drawable="..."> accepts a vector directly, which is what this needs.
+-->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/ink_900" />
-    <item android:gravity="center">
-        <bitmap
-            android:gravity="center"
-            android:src="@drawable/ic_launcher_foreground" />
-    </item>
+    <item
+        android:drawable="@drawable/ic_launcher_foreground"
+        android:gravity="center"
+        android:width="108dp"
+        android:height="108dp" />
 </layer-list>
