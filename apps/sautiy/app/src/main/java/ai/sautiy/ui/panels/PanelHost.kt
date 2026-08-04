@@ -465,7 +465,7 @@ private fun LibraryPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
 
     LazyColumn(verticalArrangement = Arrangement.spacedBy(SautiySpace.xs)) {
         items(state.library) { row ->
-          Column(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -585,6 +585,7 @@ private fun LibraryPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                             .padding(SautiySpace.s),
                     )
                 }
+            }
             }
         }
     }
