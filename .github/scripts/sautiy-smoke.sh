@@ -68,6 +68,12 @@ echo "SAUTIY launched, is alive, and its activity is resumed."
 # is what this is. The emulator has no microphone in front of it, so what is captured is
 # near-silence; that still proves the device opens, that frames arrive, that the file on disk is
 # a real WAV of the right length, that playback runs and that an export writes a file.
+# The artifact APK was signed with the *build* job's debug keystore; this runner generates its
+# own, and Gradle is about to build and install its own copy of the same package. Android
+# refuses that as INSTALL_FAILED_UPDATE_INCOMPATIBLE, and the run reports "Finished 0 tests" —
+# a green-looking failure to run anything at all. Remove the launched copy first.
 echo "=== device audio tests ==="
+adb uninstall "$PACKAGE" || true
+
 cd apps/sautiy
 ./gradlew --no-daemon :app:connectedDebugAndroidTest
