@@ -18,11 +18,6 @@ on:
       # script, which is the one file where that matters most.
       - '.github/scripts/sautiy-smoke.sh'
   workflow_dispatch:
-    inputs:
-      withMp3:
-        description: 'Build the LAME native encoder for MP3 export'
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -47,7 +42,14 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+          # NDK and CMake are not optional extras: MP3 export is a release blocker and it is
+          # native, because Android has never shipped an MP3 encoder.
+          packages: >-
+            platform-tools
+            platforms;android-35
+            build-tools;35.0.0
+            ndk;27.0.12077973
+            cmake;3.22.1
 
       - name: Gradle cache
         uses: actions/cache@v4
@@ -68,23 +70,50 @@ jobs:
           echo "ANDROID_HOME=$ANDROID_HOME"
           test -d "$ANDROID_HOME/platforms" || { echo "No Android platforms installed"; exit 1; }
 
-      # Fetch LAME only when MP3 is requested. Android has no MP3 encoder, so this is the only
-      # route to the format; without it the app builds and ships without MP3.
-      - name: Fetch LAME for MP3 export
-        if: ${{ inputs.withMp3 }}
+      # LAME is fetched on every build, not on request. MP3 export is a release blocker, and
+      # the app's Gradle build turns the native component on by itself once these sources exist
+      # — so every APK this workflow produces has a working MP3 encoder in it.
+      - name: Cache the LAME sources
+        id: lame-cache
+        uses: actions/cache@v4
+        with:
+          path: apps/sautiy/app/src/main/cpp/lame
+          key: lame-3.100
+
+      - name: Fetch LAME
+        if: steps.lame-cache.outputs.cache-hit != 'true'
         run: |
           cd app/src/main/cpp
           curl -fL --retry 3 -o lame.tar.gz \
             https://downloads.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz
           tar xzf lame.tar.gz && mv lame-3.100 lame && rm lame.tar.gz
-          test -f lame/libmp3lame/lame.c
+
+      - name: Confirm MP3 will be built
+        run: |
+          test -f app/src/main/cpp/lame/libmp3lame/lame.c || {
+            echo "::error::LAME sources are missing, so this APK would ship without MP3 export."
+            exit 1
+          }
 
       - name: Build the debug APK
-        run: ./gradlew --no-daemon :app:assembleDebug ${{ inputs.withMp3 && '-PsautiyMp3=true' || '' }}
+        run: ./gradlew --no-daemon :app:assembleDebug
 
       - name: Lint the Android layer
         continue-on-error: true
         run: ./gradlew --no-daemon :app:lintDebug
+
+      # A release blocker gets checked, not assumed. If the encoder is not in the APK, MP3 is
+      # silently absent from the export panel — which is exactly the failure this guards.
+      - name: Confirm the MP3 encoder is in the APK
+        run: |
+          apk=$(find app/build/outputs/apk -name '*.apk' | head -1)
+          if ! unzip -l "$apk" | grep -q 'libsautiymp3.so'; then
+            echo "::error::libsautiymp3.so is not in the APK — MP3 export would be absent"
+            unzip -l "$apk" | grep '\.so' || echo "(no native libraries at all)"
+            exit 1
+          fi
+          echo "MP3 encoder present:"
+          unzip -l "$apk" | grep 'libsautiymp3.so'
 
       - name: Report what was produced
         run: |

@@ -10,6 +10,8 @@
  */
 #include <jni.h>
 #include <stdlib.h>
+/* intptr_t, used to round-trip the LAME handle through a jlong. */
+#include <stdint.h>
 /* lame/include is on the include path, so the header is <lame.h> and not <lame/lame.h>. */
 #include <lame.h>
 
