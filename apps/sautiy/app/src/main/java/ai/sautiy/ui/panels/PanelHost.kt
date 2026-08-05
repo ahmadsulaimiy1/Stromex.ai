@@ -170,6 +170,48 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
 
     LazyColumn(verticalArrangement = Arrangement.spacedBy(SautiySpace.s)) {
         item {
+            // Choosing a room is a listening decision and nothing else. This plays one passage
+            // through every space in turn, starting from the original, so the comparison is of
+            // the same phrase rather than of two memories a minute apart.
+            val auditioning = state.auditioning
+            if (auditioning != null) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(SautiyShapes.medium)
+                        .background(colours.signalSelection)
+                        .padding(SautiySpace.l),
+                ) {
+                    Text(
+                        text = "Listening: ${auditioning.displayName}",
+                        style = SautiyTheme.type.titleMedium,
+                        color = colours.signal,
+                    )
+                    Spacer(modifier = Modifier.height(SautiySpace.xxs))
+                    Text(
+                        text = auditioning.summary,
+                        style = SautiyTheme.type.bodyMedium,
+                        color = colours.textTertiary,
+                    )
+                    Spacer(modifier = Modifier.height(SautiySpace.m))
+                    PrimaryAction(
+                        label = "Keep this one",
+                        onClick = actions.onStopAudition,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            } else {
+                PrimaryAction(
+                    label = "Hear every space",
+                    onClick = actions.onAuditionSpaces,
+                    modifier = Modifier.fillMaxWidth(),
+                    filled = false,
+                )
+            }
+            Spacer(modifier = Modifier.height(SautiySpace.s))
+        }
+
+        item {
             Row(horizontalArrangement = Arrangement.spacedBy(SautiySpace.m)) {
                 PrimaryAction(
                     label = "\u2728 Enhance Voice",

@@ -45,6 +45,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.Dispatchers
+import ai.sautiy.core.play.LoopRegion
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -110,6 +112,8 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         onStudioVoice = { applyVoice(OneTap.studioVoice(), preset = null) },
         onAmbienceChanged = ::changeAmbience,
         onAmbienceModeChanged = ::changeAmbienceMode,
+        onAuditionSpaces = ::auditionSpaces,
+        onStopAudition = ::stopAudition,
         onRefinementChanged = ::changeRefinement,
         onChooseExportFormat = { format -> _state.update { it.copy(exportFormat = format) } },
         onExport = ::export,
@@ -394,6 +398,74 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         _state.update { it.copy(appliedPreset = null, voice = null, deferredStages = emptyList()) }
         player.setVoice(null)
     }
+
+    /**
+     * Plays one short passage through every space in turn.
+     *
+     * This exists because choosing a room is a listening decision and nothing else, and the only
+     * honest way to make it is to hear the *same* phrase in each one. Reading the parameters, or
+     * comparing two presets a minute apart, tells you almost nothing — ears have no memory for
+     * timbre over that distance. So the passage loops, the space changes underneath it every few
+     * seconds, and the name of what is playing is on screen.
+     */
+    private fun auditionSpaces() {
+        val timeline = history.current
+        if (timeline.lengthFrames == 0L) return
+        auditionJob?.cancel()
+
+        val rate = timeline.sampleRate
+        val span = minOf(timeline.lengthFrames, AUDITION_SECONDS * rate)
+        val start = _state.value.playheadFrame
+            .coerceIn(0, (timeline.lengthFrames - span).coerceAtLeast(0))
+
+        // The comparison has to start from the original, so the first thing heard is the thing
+        // every space is being judged against.
+        player.onFinished = null
+        player.start(
+            timeline = timeline,
+            provider = audioSources,
+            fromFrame = start,
+            speed = _state.value.speed,
+            loopRegion = LoopRegion(start, start + span),
+            channelCount = _state.value.channelCount,
+            voiceSettings = null,
+        )
+        workspace = workspace.copy(transport = TransportState.PLAYING)
+        publish()
+
+        val mode = _state.value.voice?.ambienceMode ?: AmbienceMode.STUDIO
+        auditionJob = viewModelScope.launch {
+            _state.update { it.copy(auditioning = null, appliedPreset = null, voice = null) }
+            player.setVoice(null)
+            delay(AUDITION_SECONDS * 1_000L)
+
+            for (preset in VoiceSpacePreset.cardOrder) {
+                val settings = preset.settings.copy(ambienceMode = mode)
+                _state.update {
+                    it.copy(
+                        auditioning = preset,
+                        appliedPreset = preset,
+                        voice = settings,
+                        deferredStages = VoiceStudio(settings).deferredStages,
+                    )
+                }
+                player.setVoice(settings)
+                delay(AUDITION_SECONDS * 1_000L)
+            }
+            // Ends on whatever was last heard rather than reverting, so a space the listener
+            // liked is already applied when the cycle stops.
+            _state.update { it.copy(auditioning = null) }
+        }
+    }
+
+    /** Stops the cycle and keeps whatever was playing when it stopped. */
+    private fun stopAudition() {
+        auditionJob?.cancel()
+        auditionJob = null
+        _state.update { it.copy(auditioning = null) }
+    }
+
+    private var auditionJob: kotlinx.coroutines.Job? = null
 
     /** An ambience control moved. The space stops being a named preset the moment it is edited. */
     private fun changeAmbience(ambience: AmbienceSettings) {
@@ -803,6 +875,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     override fun onCleared() {
+        auditionJob?.cancel()
         capture?.stop()
         player.stop()
         audioSources.close()
@@ -812,5 +885,14 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
     private companion object {
         /** Columns to resolve the waveform into. Redrawn on layout with the real pixel width. */
         const val WAVEFORM_COLUMNS = 720
+
+        /**
+         * Seconds each space gets during an audition.
+         *
+         * Long enough to hear a tail decay and short enough that the previous space is still in
+         * the listener's ear. Below about three seconds a long hall never finishes speaking;
+         * above about six the comparison stops being a comparison.
+         */
+        const val AUDITION_SECONDS = 5L
     }
 }

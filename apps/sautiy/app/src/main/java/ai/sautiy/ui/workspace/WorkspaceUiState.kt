@@ -96,6 +96,8 @@ data class WorkspaceUiState(
 
     /** The space currently selected, or `null` when the recording is heard as captured. */
     val appliedPreset: VoiceSpacePreset? = null,
+    /** The space currently being auditioned, when the listening cycle is running. */
+    val auditioning: VoiceSpacePreset? = null,
     /** The live voice, including any hand edits made after a space was chosen. */
     val voice: VoiceStudioSettings? = null,
     /**
@@ -162,6 +164,9 @@ data class WorkspaceActions(
     val onAmbienceChanged: (AmbienceSettings) -> Unit = {},
     /** How much room, independent of which room. */
     val onAmbienceModeChanged: (AmbienceMode) -> Unit = {},
+    /** Play one passage through every space in turn — the only honest way to choose one. */
+    val onAuditionSpaces: () -> Unit = {},
+    val onStopAudition: () -> Unit = {},
     val onRefinementChanged: (VoiceRefinement) -> Unit = {},
     val onChooseExportFormat: (ExportFormat) -> Unit = {},
     val onExport: () -> Unit = {},
