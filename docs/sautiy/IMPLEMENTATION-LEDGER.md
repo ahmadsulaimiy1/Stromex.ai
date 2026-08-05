@@ -160,6 +160,45 @@ budget is met on something slower than the target device.
 
 ---
 
+## Voice Space 2.0 — what was fixed, and what is still unknown
+
+**Four causes of an artificial-sounding room, each removed and each measured:**
+
+| Cause | What was done | How it is checked |
+|---|---|---|
+| Static comb delays ring at fixed frequencies — the metallic sound that makes a recording seem to *have reverb on it* | Every comb's read position wanders ~½ ms on a slow, mutually detuned LFO, fractionally interpolated | Spectral crest inside narrow sub-bands is lower with the tail moving than still |
+| Thin echo density is heard as separate ticks | Diffusion drives both the number of all-pass sections and their coefficient | Tail density rises measurably with the control |
+| Low frequencies turn a large room to mud | The reverb send is high-passed at 190 Hz; the dry voice keeps its weight | 70 Hz reaches the room at under half the level of 1 kHz |
+| The room masks consonants | Speech priority ducks the wet by the dry envelope, so the room recedes while a word is spoken and blooms in the gaps | The room is measurably quieter during speech and still present in the gaps |
+
+**Two real gain bugs, both of which would have made tuning by ear impossible:**
+
+The all-pass sections were Freeverb's simplified form, which is **not** all-pass — its gain rises
+with the feedback coefficient, so raising diffusion raised the volume and no two presets could be
+compared. Replaced with the textbook unity-gain Schroeder structure. Removing that accidental
+gain then exposed a second: the comb-bank normalisation used the textbook formula, which ignores
+that the damping filter sits *inside* the loop and cuts effective feedback everywhere except DC.
+On a damped hall it understated the loop gain by around 17 dB.
+
+**Four of the measurements were themselves wrong** and had to be fixed before they measured
+anything — recorded because they are the kind of error that produces confident nonsense: crest
+over one wide band confuses ringing with tone (a darker tail reads as more metallic); RMS across
+windows of different lengths measures how long the tail is, not how loud it is; and ducking
+measured on the mixture confuses "the room got quieter" with "everything got quieter".
+
+**Fifteen spaces, three modes.** Natural, Studio and Immersive are one control over *how much*
+room, separate from *which* room. Immersive raises the mix and also raises the floor under speech
+priority, so turning the room up cannot quietly cost intelligibility.
+
+**Not tuned by ear, and not claimed to be.** The numbers are derived from the acoustics of the
+places the presets are named for — a plastered room absorbs less treble than a carpeted one, a
+larger space answers later and needs more diffusion to stop sounding grainy, a longer tail needs
+more speech priority to stay intelligible. That reasoning gets a preset close. Only listening
+gets it right, and no one has listened to these yet. **Hear every space** exists for exactly that:
+it loops one five-second passage, starts on the original, and changes the room underneath the
+same phrase every five seconds, so the whole roster is one tap and seventy-five seconds instead
+of fifteen separate manual comparisons.
+
 ## The Voice Studio
 
 The signal chain is fixed: `Input → Cleanup → Dynamics → Tone → Ambience → Loudness → Output`.
