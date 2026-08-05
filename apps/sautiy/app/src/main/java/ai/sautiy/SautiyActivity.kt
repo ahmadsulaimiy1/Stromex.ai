@@ -4,12 +4,17 @@ import ai.sautiy.ui.theme.SautiyTheme
 import ai.sautiy.ui.workspace.SautiyWorkspace
 import ai.sautiy.ui.workspace.WorkspaceViewModel
 import android.Manifest
+import android.app.Activity
 import android.app.Application
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -48,6 +53,19 @@ class SautiyActivity : ComponentActivity() {
 
     private var viewModelRef: WorkspaceViewModel? = null
 
+    /**
+     * The destination picker — Storage Access Framework, not a storage permission.
+     *
+     * SAUTIY never asks for READ/WRITE_EXTERNAL_STORAGE. The user points at a place, the system
+     * hands back a writable document, and that place can be internal storage, an SD card or a
+     * cloud provider without this application knowing or caring which. That is both the only
+     * route Android still supports and the one that asks the user for the least.
+     */
+    private val chooseDestination = registerForActivityResult(SaveAudioDocument()) { uri ->
+        val model = viewModelRef ?: return@registerForActivityResult
+        if (uri == null) model.exportCancelled() else model.exportTo(uri)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // Installed before super.onCreate so the splash theme is genuinely the first frame and
         // there is no seam between it and the workspace (chapter 2.8).
@@ -71,6 +89,17 @@ class SautiyActivity : ComponentActivity() {
                                 requestMicrophone.launch(Manifest.permission.RECORD_AUDIO)
                             }
                         },
+                        // Export is one action: the picker opens on the tap, and the file is
+                        // written where the user pointed. There is no intermediate "exported to
+                        // somewhere, now find it" step.
+                        onExport = {
+                            chooseDestination.launch(
+                                SaveAudioDocument.Request(
+                                    mimeType = state.exportFormat.mimeType,
+                                    fileName = model.suggestedExportName,
+                                ),
+                            )
+                        },
                     ),
                     modifier = Modifier
                         .fillMaxSize()
@@ -85,6 +114,28 @@ class SautiyActivity : ComponentActivity() {
 
     private fun hasMicrophonePermission(): Boolean =
         ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+}
+
+/**
+ * Creates a document with a MIME type chosen at launch time.
+ *
+ * `ActivityResultContracts.CreateDocument` fixes its MIME type when the contract is registered,
+ * and SAUTIY does not know at that point whether the user will export MP3 or FLAC. Declaring
+ * the wrong type matters: it is what the picker uses to decide which providers can accept the
+ * file, so a wrong one quietly hides destinations the user has.
+ */
+class SaveAudioDocument : ActivityResultContract<SaveAudioDocument.Request, Uri?>() {
+
+    data class Request(val mimeType: String, val fileName: String)
+
+    override fun createIntent(context: Context, input: Request): Intent =
+        Intent(Intent.ACTION_CREATE_DOCUMENT)
+            .addCategory(Intent.CATEGORY_OPENABLE)
+            .setType(input.mimeType)
+            .putExtra(Intent.EXTRA_TITLE, input.fileName)
+
+    override fun parseResult(resultCode: Int, intent: Intent?): Uri? =
+        intent.takeIf { resultCode == Activity.RESULT_OK }?.data
 }
 
 /**

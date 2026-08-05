@@ -36,6 +36,7 @@ import ai.sautiy.data.SautiyFiles
 import ai.sautiy.play.AudioPlayer
 import ai.sautiy.record.AudioCapture
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -418,58 +419,115 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
     // --- Export -----------------------------------------------------------------------------
 
     /**
-     * Writes the project to a file, through the same Voice Studio that was auditioned.
+     * The file name to offer the destination picker.
      *
-     * Export reports its progress and its failures. A silent failure here is the worst bug the
+     * Derived from the project title, because that is the name the user already gave it. Stripped
+     * of anything a file system would reject rather than allowed to fail at the moment of saving.
+     */
+    val suggestedExportName: String
+        get() {
+            // Letters, digits, spaces and the three punctuation marks a file name may safely
+            // carry. Written as what is *allowed* rather than what is forbidden, so an Arabic
+            // or Urdu title survives — a title stripped to nothing is not a fixed file name.
+            val base = _state.value.projectName
+                .replace(Regex("[^\\p{L}\\p{N} ._-]"), "")
+                .trim()
+                .ifBlank { "SAUTIY recording" }
+            return "$base.${_state.value.exportFormat.extension}"
+        }
+
+    /**
+     * Writes the project into a destination the user chose, through the same Voice Studio that
+     * was auditioned.
+     *
+     * The document comes from the Storage Access Framework, so it can be internal storage, an SD
+     * card, or a cloud provider — SAUTIY does not need to know which, and never asks for
+     * storage permission to reach any of them.
+     *
+     * Export reports its progress and its failures. A silent failure here is the worst bug this
      * application can have: the user believes they have a file, and finds out they do not at the
      * moment they need it.
      */
+    fun exportTo(destination: Uri) {
+        runExport(destination = destination, thenShare = false)
+    }
+
+    /** The user dismissed the destination picker. Nothing was written, and nothing is claimed. */
+    fun exportCancelled() {
+        shareAfterExport = false
+        _state.update { it.copy(exportProgress = null) }
+    }
+
+    /** Export into app storage, which is the staging area the share sheet reads from. */
     private fun export() {
+        runExport(destination = null, thenShare = shareAfterExport)
+    }
+
+    private fun runExport(destination: Uri?, thenShare: Boolean) {
         val timeline = history.current
         if (timeline.lengthFrames == 0L) return
         if (_state.value.exportProgress != null) return
 
         val format = _state.value.exportFormat
         val voice = _state.value.voice
-        val name = _state.value.projectName.replace(Regex("[^A-Za-z0-9 _-]"), "").trim()
-            .ifBlank { "SAUTIY recording" }
-        val target = files.exports.resolve("$name.${format.extension}")
+        val staging = files.exports.resolve(suggestedExportName)
 
         _state.update { it.copy(exportProgress = 0.0) }
         viewModelScope.launch {
             val outcome = withContext(Dispatchers.IO) {
                 runCatching {
-                    target.outputStream().use { stream ->
+                    val stream = if (destination != null) {
+                        getApplication<Application>().contentResolver.openOutputStream(destination)
+                            ?: error("The chosen destination could not be opened for writing.")
+                    } else {
+                        staging.outputStream()
+                    }
+                    stream.use { out ->
                         ExportJob(
                             timeline = timeline,
                             provider = audioSources,
                             format = format,
                             voice = voice,
                             channelCount = _state.value.channelCount,
-                        ).run(stream) { fraction, _ ->
+                        ).run(out) { fraction, _ ->
                             _state.update { it.copy(exportProgress = fraction) }
                         }
                     }
                 }
             }
             outcome.fold(
-                onSuccess = {
+                onSuccess = { result ->
                     _state.update { state ->
-                        state.copy(exportProgress = null, lastExportPath = target.absolutePath)
+                        state.copy(
+                            exportProgress = null,
+                            lastExportPath = if (destination == null) staging.absolutePath else state.lastExportPath,
+                            savedTo = destination?.let { describe(it) },
+                            exportClipped = result.clipped,
+                        )
                     }
-                    if (shareAfterExport) {
+                    if (thenShare) {
                         shareAfterExport = false
                         share()
                     }
                 },
                 onFailure = { failure ->
                     shareAfterExport = false
-                    // The file is removed: a half-written export that opens in nothing is worse
-                    // than no export, because it looks like success.
-                    runCatching { target.delete() }
+                    // A half-written export that opens in nothing is worse than no export,
+                    // because it looks like success. Remove what was started.
+                    if (destination == null) {
+                        runCatching { staging.delete() }
+                    } else {
+                        runCatching {
+                            android.provider.DocumentsContract.deleteDocument(
+                                getApplication<Application>().contentResolver,
+                                destination,
+                            )
+                        }
+                    }
                     _state.update { state ->
                         state.copy(
                             exportProgress = null,
+                            savedTo = null,
                             error = SautiyError(
                                 fact = "The export stopped before it finished.",
                                 consequence = "No ${format.displayName} file was written. " +
@@ -482,6 +540,16 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
             )
         }
     }
+
+    /** What to tell the user about where their file went, in their own terms. */
+    private fun describe(uri: Uri): String =
+        runCatching {
+            getApplication<Application>().contentResolver
+                .query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)
+                ?.use { cursor ->
+                    if (cursor.moveToFirst()) cursor.getString(0) else null
+                }
+        }.getOrNull() ?: uri.lastPathSegment ?: "the chosen folder"
 
     // --- Library ----------------------------------------------------------------------------------
 

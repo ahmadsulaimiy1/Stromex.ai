@@ -110,6 +110,10 @@ data class WorkspaceUiState(
     val exportProgress: Double? = null,
     /** Set once an export has written a file, so it can be shared without exporting twice. */
     val lastExportPath: String? = null,
+    /** Where the last export landed, named the way the user would name it. */
+    val savedTo: String? = null,
+    /** True when the exported audio reached full scale, which the user is told rather than not. */
+    val exportClipped: Boolean = false,
 
     val library: List<LibraryRow> = emptyList(),
     val librarySearch: String = "",

@@ -1,7 +1,7 @@
 package ai.sautiy.ui.workspace
 
 import ai.sautiy.core.analysis.Loudness
-import ai.sautiy.core.codec.ExportFormat
+import ai.sautiy.core.codec.Encoders
 import ai.sautiy.core.dsp.AmbienceSettings
 import ai.sautiy.core.dsp.VoiceRefinement
 import ai.sautiy.core.dsp.VoiceSpacePreset
@@ -345,15 +345,20 @@ private fun ParameterRow(label: String, value: String) {
 /**
  * The Export panel — chapter 1.6's three-tap guarantee.
  *
- * Commit, choose the format, export. The last-used format is pre-selected, so the common case
- * is two taps.
+ * Open it, tap a format, tap Export. The last-used format is already selected, so the common
+ * case is two taps, and Export opens the destination picker directly rather than writing
+ * somewhere the user then has to go and find.
+ *
+ * Only formats with a registered encoder appear. A format that cannot be written is absent
+ * rather than present and failing at the moment it is pressed.
  */
 @Composable
 private fun ExportPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
     val colours = SautiyTheme.colours
+    val available = remember { Encoders.available() }
 
     Column {
-        for (format in ExportFormat.panelOrder) {
+        for (format in available) {
             val chosen = state.exportFormat == format
             Row(
                 modifier = Modifier
@@ -388,23 +393,56 @@ private fun ExportPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
         Spacer(modifier = Modifier.height(SautiySpace.l))
 
         val progress = state.exportProgress
-        if (progress != null) {
-            LinearProgressIndicator(
-                progress = { progress.toFloat() },
-                modifier = Modifier.fillMaxWidth(),
-                color = colours.signal,
-                trackColor = colours.surfaceRaised,
-            )
-        } else {
-            Row(horizontalArrangement = Arrangement.spacedBy(SautiySpace.m)) {
-                PrimaryAction(label = "Export", onClick = actions.onExport, modifier = Modifier.weight(1f))
-                PrimaryAction(
-                    label = "Share",
-                    onClick = actions.onShare,
-                    modifier = Modifier.weight(1f),
-                    filled = false,
+        when {
+            progress != null -> {
+                LinearProgressIndicator(
+                    progress = { progress.toFloat() },
+                    modifier = Modifier.fillMaxWidth(),
+                    color = colours.signal,
+                    trackColor = colours.surfaceRaised,
+                )
+                Spacer(modifier = Modifier.height(SautiySpace.xs))
+                Text(
+                    text = "Exporting ${(progress * 100).toInt()}%",
+                    style = SautiyTheme.type.bodyMedium,
+                    color = colours.textTertiary,
                 )
             }
+
+            else -> {
+                Row(horizontalArrangement = Arrangement.spacedBy(SautiySpace.m)) {
+                    PrimaryAction(
+                        label = "Export",
+                        onClick = actions.onExport,
+                        modifier = Modifier.weight(1f),
+                    )
+                    PrimaryAction(
+                        label = "Share",
+                        onClick = actions.onShare,
+                        modifier = Modifier.weight(1f),
+                        filled = false,
+                    )
+                }
+            }
+        }
+
+        // Where it went, said plainly. "Exported" with no destination is the version of this
+        // message that sends people hunting through a file manager.
+        state.savedTo?.let { destination ->
+            Spacer(modifier = Modifier.height(SautiySpace.m))
+            Text(
+                text = "Saved as $destination",
+                style = SautiyTheme.type.bodyMedium,
+                color = colours.safe,
+            )
+        }
+        if (state.exportClipped) {
+            Spacer(modifier = Modifier.height(SautiySpace.xs))
+            Text(
+                text = "The exported audio reached full scale. Lower the output level and export again.",
+                style = SautiyTheme.type.bodyMedium,
+                color = colours.caution,
+            )
         }
     }
 }
