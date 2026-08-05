@@ -51,20 +51,35 @@ Android layer.
 
 ---
 
-## Verified on a running Android — 12 instrumented tests, all passing
+## Verified on a running Android — 20 instrumented tests, all passing
 
 `AudioRecord`, `AudioTrack` and `MediaCodec` have no meaningful stand-in on the JVM, so every
 claim about them is earned here: the CI emulator job installs the APK, launches it, and then
-runs `app/src/androidTest/.../DeviceAudioTest.kt`. **Starting 12 tests → Finished 12 tests,
-0 failed.**
+runs the instrumented suite. **Starting 20 tests → Finished 20 tests, 0 failed.**
 
 | Phase | What the device confirmed |
 |---|---|
 | **A — recording** | The microphone opens and reports no failure; frames arrive and reach the waveform callback; the file on disk is a real WAV whose header agrees with what capture reported; **the file is complete and readable while recording is still running** — the crash-recovery guarantee observed rather than argued; pause stops promptly and stays stopped, and resume continues the same take; a second take opens after the first is stopped, which is the only way a leaked `AudioEffect` ever shows itself |
 | **B — playback** | Playback starts and the head advances; a take recorded on the device plays back on it; playback through a Voice Space does not stall and changing the space mid-playback does not stop it; **starting and immediately stopping six times over does not take the process with it** |
+| **MP3** | **The encoder is in the APK and loads** — asserted, not skipped when absent. Android's own `MediaExtractor`/`MediaCodec` — the code every other application uses to open an audio file — reports `audio/mpeg`, the right rate and channel count; the duration survives within 150 ms declared *and* decoded; the file decodes to real audio rather than silence; the ID3v2 synchsafe size lands exactly on an MPEG frame sync; 44.1 and 48 kHz in mono and stereo all round-trip; the file survives being handed to another application as a `content://` URI; two minutes encodes with monotonic progress in under 30 seconds |
 | **E — export** | Every format the panel offers writes bytes and reports the length it wrote; an exported WAV re-probes as the same project; progress runs 0→1 without going backwards; M4A comes back from MediaCodec; a format with no encoder refuses loudly rather than writing a broken file |
 
-**What the device tests found on their first run**, which is the point of them:
+**What the device tests found, which is the point of them.**
+
+`lame_encode_buffer_interleaved` is documented for stereo, and its `num_samples` parameter means
+samples *per channel* — it reads `num_samples × 2` shorts whatever the encoder is configured for.
+Handing it mono audio makes it read twice the data that exists: a native overrun that killed the
+process with no Java exception, no stack and nothing to act on. Mono now goes through
+`lame_encode_buffer`. The bridge also refuses an out-of-range read rather than performing it, so
+a wrong frame count is a returned error code with a sentence attached instead of a dead
+application.
+
+Two earlier failures in the same sequence were harness faults, not product faults, and are
+recorded as such: the device-test job rebuilt the app without the LAME sources, so it tested a
+build that was not the one shipped; and `Mp3Encoder` discarded the reason `System.loadLibrary`
+failed, making "library missing" and "library failed to link" indistinguishable.
+
+And earlier still:
 
 `AudioTrack.write` with `WRITE_BLOCKING` does not respond to coroutine cancellation — it
 returns when the track is paused, flushed or drained, and not before. `stop()` cancelled the
@@ -130,12 +145,10 @@ judgement only a listener can make.
 
 | Item | Why | Where recorded |
 |---|---|---|
-| **MP3 export** | Optional native component over LAME, built only when the workflow is dispatched with `withMp3=true`. Android has no MP3 encoder. The default APK ships without it, and MP3 is then absent from the export panel rather than present and broken. The native build has not yet been run. | Ch. 14.6 |
 | **On-device transcription** | Depends on a platform recogniser; where none is present the capability is absent rather than degraded. | Ch. 11.4 |
 | **Qur'an Studio project store** | Model complete; persistence and panel not written. | Ch. 12 |
 | **Spectrogram rendering** | The FFT is implemented and tested; the drawing is not written. | Ch. 15.2 |
 | **Media session / lock screen** | Not implemented. | Ch. 8.7 |
-| **SAF document picker** | Export writes to app storage and shares from there; the picker is not wired, so "save to SD card" is not yet available. | Ch. 14.3 |
 | **Settings and About screens** | Not built. | Ch. 4.1.2, 22.3 |
 | **Instrumented UI tests** | Require a device. | Ch. 19.7 |
 
