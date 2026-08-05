@@ -159,8 +159,9 @@ class Mp3ExportTest {
         // Not "skip if missing". An APK without the encoder is a build the user cannot export
         // MP3 from, and that is a failure, not a configuration.
         assertTrue(
-            "The native MP3 encoder is not in this APK. MP3 export is a release blocker; see " +
-                "app/src/main/cpp/README.md and the CI workflow's LAME step.",
+            "The native MP3 encoder did not load. MP3 export is a release blocker; see " +
+                "app/src/main/cpp/README.md and the CI workflow's LAME step. " +
+                "Reason: ${Mp3Encoder.unavailableReason ?: "none reported"}",
             Mp3Encoder.isAvailable,
         )
         assertTrue("MP3 is not registered, so it would not appear in the export panel", Encoders.isAvailable(ExportFormat.MP3))

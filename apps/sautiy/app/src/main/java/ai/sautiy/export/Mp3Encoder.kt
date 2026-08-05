@@ -150,10 +150,19 @@ public class Mp3Encoder(
          * rather than as an error — a build without the NDK step is a valid build, it simply has
          * no MP3.
          */
-        public val isAvailable: Boolean = runCatching {
-            System.loadLibrary("sautiymp3")
-            true
-        }.getOrDefault(false)
+        private val loadOutcome: Result<Unit> = runCatching { System.loadLibrary("sautiymp3") }
+
+        public val isAvailable: Boolean = loadOutcome.isSuccess
+
+        /**
+         * Why the library did not load, when it did not.
+         *
+         * The first version discarded this, and a build whose native library was missing looked
+         * identical to a build where it failed to link — both simply had no MP3, with nothing
+         * to act on. An absence a person cannot diagnose is worse than a crash.
+         */
+        public val unavailableReason: String?
+            get() = loadOutcome.exceptionOrNull()?.let { "${it::class.java.simpleName}: ${it.message}" }
 
         /** Registers MP3 only if it can actually be written. */
         public fun registerIfAvailable() {

@@ -180,6 +180,32 @@ jobs:
           restore-keys: gradle-${{ runner.os }}-
 
       # GitHub's Linux runners expose KVM, but the device node is not world-writable by default.
+      # This job rebuilds the app to produce the instrumentation APK, so it needs the LAME
+      # sources too. Without them its rebuild silently drops the native encoder, and the MP3
+      # tests fail against a build that is not the one shipped — which is exactly what happened.
+      - name: Restore the LAME sources
+        id: lame-cache
+        uses: actions/cache@v4
+        with:
+          path: apps/sautiy/app/src/main/cpp/lame
+          key: lame-3.100
+
+      - name: Fetch LAME
+        if: steps.lame-cache.outputs.cache-hit != 'true'
+        working-directory: apps/sautiy
+        run: |
+          cd app/src/main/cpp
+          curl -fL --retry 3 -o lame.tar.gz \
+            https://downloads.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz
+          tar xzf lame.tar.gz && mv lame-3.100 lame && rm lame.tar.gz
+
+      - name: Confirm MP3 will be built into the test APK
+        run: |
+          test -f apps/sautiy/app/src/main/cpp/lame/libmp3lame/lame.c || {
+            echo "::error::LAME is missing in the device-test job, so MP3 would be tested against a build that lacks it."
+            exit 1
+          }
+
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
