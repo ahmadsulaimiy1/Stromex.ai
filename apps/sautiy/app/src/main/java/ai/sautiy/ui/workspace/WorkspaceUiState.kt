@@ -3,6 +3,7 @@ package ai.sautiy.ui.workspace
 import ai.sautiy.core.analysis.WaveformColumns
 import ai.sautiy.core.audio.CaptureQuality
 import ai.sautiy.core.codec.ExportFormat
+import ai.sautiy.core.dsp.AmbienceMode
 import ai.sautiy.core.dsp.AmbienceSettings
 import ai.sautiy.core.dsp.VoiceRefinement
 import ai.sautiy.core.dsp.VoiceSpacePreset
@@ -159,6 +160,8 @@ data class WorkspaceActions(
     /** 🎙 Studio Voice — the finished production, room and all. */
     val onStudioVoice: () -> Unit = {},
     val onAmbienceChanged: (AmbienceSettings) -> Unit = {},
+    /** How much room, independent of which room. */
+    val onAmbienceModeChanged: (AmbienceMode) -> Unit = {},
     val onRefinementChanged: (VoiceRefinement) -> Unit = {},
     val onChooseExportFormat: (ExportFormat) -> Unit = {},
     val onExport: () -> Unit = {},

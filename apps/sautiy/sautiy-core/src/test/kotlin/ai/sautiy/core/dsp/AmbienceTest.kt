@@ -149,13 +149,14 @@ class AmbienceTest {
     }
 
     @Test
-    fun `warmth shortens the high frequencies without shortening the low ones`() {
+    fun `damping shortens the high frequencies without shortening the low ones`() {
         // What a warm room means physically: soft surfaces absorb treble first.
-        fun tailAt(frequency: Double, warmth: Double): Double {
+        fun tailAt(frequency: Double, damping: Double): Double {
             val settings = wetOnly(
                 AmbienceSettings(
                     decaySeconds = 2.0, roomSize = 0.7, preDelayMs = 0.0,
-                    earlyReflections = 0.0, warmth = warmth, brightness = 0.5, wetDryMix = 1.0,
+                    earlyReflections = 0.0, damping = damping, warmth = 0.5, brightness = 0.5,
+                    presence = 0.0, speechPriority = 0.0, wetDryMix = 1.0,
                 ),
             )
             val source = TestSignals.sine(frequency, 0.5, rate, amplitude = 0.7)
@@ -167,13 +168,13 @@ class AmbienceTest {
             return rms(padded.channels[0].copyOfRange((1.4 * rate).toInt(), frames))
         }
 
-        val dryLow = tailAt(200.0, warmth = 0.0)
-        val warmLow = tailAt(200.0, warmth = 1.0)
-        val dryHigh = tailAt(8_000.0, warmth = 0.0)
-        val warmHigh = tailAt(8_000.0, warmth = 1.0)
+        val liveLow = tailAt(200.0, damping = 0.0)
+        val dampedLow = tailAt(200.0, damping = 1.0)
+        val liveHigh = tailAt(8_000.0, damping = 0.0)
+        val dampedHigh = tailAt(8_000.0, damping = 1.0)
 
-        assertTrue("Warmth must cut the high tail: $dryHigh → $warmHigh", warmHigh < dryHigh * 0.5)
-        assertTrue("Warmth must leave the low tail alone: $dryLow → $warmLow", warmLow > dryLow * 0.5)
+        assertTrue("Damping must cut the high tail: $liveHigh → $dampedHigh", dampedHigh < liveHigh * 0.5)
+        assertTrue("Damping must leave the low tail alone: $liveLow → $dampedLow", dampedLow > liveLow * 0.5)
     }
 
     @Test
@@ -313,23 +314,47 @@ class AmbienceTest {
 
     @Test
     fun `no space is so loud or so quiet that presets cannot be compared by ear`() {
-        // Decay time must not double as a volume control. Without the comb-bank normalisation
-        // a three-second hall is many times louder than a booth at the same mix, and no two
-        // presets can be judged against each other.
-        val source = TestSignals.noise(1.0, rate, amplitude = 0.5)
-        val dry = rms(source.channels[0])
+        // Decay time must not double as a volume control. Without the comb-bank normalisation a
+        // three-second hall is many times louder than a booth at the same mix, and no two
+        // presets can be judged against each other — which is the whole point of having a list.
+        val dryOnly = TestSignals.noise(1.0, rate, amplitude = 0.5)
+        var dryEnergy = 0.0
+        for (sample in dryOnly.channels[0]) dryEnergy += sample.toDouble() * sample
 
+        val levels = LinkedHashMap<String, Double>()
         for (preset in VoiceSpacePreset.entries) {
             val settings = preset.settings.effectiveAmbience
             if (settings.isBypassed) continue
-            val wet = wetOnly(settings)
-            val processed = source.copy()
-            Ambience(wet, rate, 1).process(processed)
 
-            val level = 20.0 * log10((rms(processed.channels[0]) / dry).coerceAtLeast(1e-9))
+            // The window has to contain the tail, and the comparison has to be of energy rather
+            // than RMS. A room redistributes energy in time; comparing RMS across windows of
+            // different lengths just measures how long the tail is and reads every large space
+            // as too quiet.
+            val frames = ((1.0 + settings.decaySeconds) * rate).toInt()
+            val padded = AudioBuffer.silence(1, frames, rate)
+            dryOnly.channels[0].copyInto(padded.channels[0], 0)
+            Ambience(wetOnly(settings), rate, 1).process(padded)
+
+            var wetEnergy = 0.0
+            for (sample in padded.channels[0]) wetEnergy += sample.toDouble() * sample
+            levels[preset.displayName] = 10.0 * log10((wetEnergy / dryEnergy).coerceAtLeast(1e-12))
+        }
+
+        // Comparability is a statement about the *spread*, not about any one preset: what breaks
+        // an audition is one space arriving twice as loud as the last, not the whole set sitting
+        // a few decibels down.
+        val quietest = levels.minBy { it.value }
+        val loudest = levels.maxBy { it.value }
+        assertTrue(
+            "The spaces span ${loudest.value - quietest.value} dB, from ${quietest.key} at " +
+                "${quietest.value} dB to ${loudest.key} at ${loudest.value} dB — too wide to " +
+                "compare by ear",
+            loudest.value - quietest.value <= 12.0,
+        )
+        for ((name, level) in levels) {
             assertTrue(
-                "${preset.displayName}: wet level is $level dB relative to dry",
-                level in -18.0..6.0,
+                "$name returns $level dB of the energy put into it",
+                level in -14.0..8.0,
             )
         }
     }
@@ -353,6 +378,196 @@ class AmbienceTest {
         stillRinging.process(TestSignals.noise(0.5, rate, amplitude = 0.9))
         stillRinging.process(ringing)
         assertNotEquals(0f, ringing.peak())
+    }
+
+    /**
+     * Spectral crest: the peakiest bin against the average.
+     *
+     * A ringing tail concentrates its energy in a few resonant bins and reads high; a smeared one
+     * spreads across many and reads low. This is what "metallic" is, measured.
+     */
+    private fun spectralCrest(samples: FloatArray, from: Int, count: Int): Double {
+        val n = Integer.highestOneBit(count)
+        val real = DoubleArray(n)
+        for (i in 0 until n) {
+            // Hann, so the measurement is of the tail and not of the window's own edges.
+            val w = 0.5 - 0.5 * kotlin.math.cos(2.0 * Math.PI * i / (n - 1))
+            real[i] = samples[from + i].toDouble() * w
+        }
+        val imaginary = DoubleArray(n)
+        Fft(n).forward(real, imaginary)
+        val spectrum = DoubleArray(n / 2) { sqrt(real[it] * real[it] + imaginary[it] * imaginary[it]) }
+        // Measured inside narrow sub-bands and averaged. Crest across one wide band confuses
+        // ringing with tone: a tail that is simply darker has a lower mean and therefore a
+        // higher crest, without ringing at all. A 500 Hz band is locally flat, so what is left
+        // is the peakiness itself.
+        var total = 0.0
+        var bands = 0
+        var edge = 500.0
+        while (edge < 4_000.0) {
+            val lo = (edge * n / rate).toInt()
+            val hi = ((edge + 500.0) * n / rate).toInt().coerceAtMost(spectrum.size - 1)
+            if (hi > lo) {
+                var peak = 0.0
+                var sum = 0.0
+                for (i in lo..hi) {
+                    if (spectrum[i] > peak) peak = spectrum[i]
+                    sum += spectrum[i]
+                }
+                val mean = sum / (hi - lo + 1)
+                if (mean > 0.0) {
+                    total += peak / mean
+                    bands++
+                }
+            }
+            edge += 500.0
+        }
+        return if (bands == 0) 0.0 else total / bands
+    }
+
+    @Test
+    fun `keeping the tail moving removes the metallic ring`() {
+        // The single biggest difference between a tail that sounds like a room and one that
+        // sounds like an effect. Static combs resonate at fixed frequencies; a wandering read
+        // position smears those resonances into a continuous response.
+        val base = wetOnly(
+            AmbienceSettings(
+                roomSize = 0.7, decaySeconds = 2.0, preDelayMs = 0.0, earlyReflections = 0.0,
+                damping = 0.3, diffusion = 0.6, presence = 0.0, speechPriority = 0.0,
+                wetDryMix = 1.0,
+            ),
+        )
+        val still = impulseResponse(base.copy(tailSmoothness = 0.0), 2.0)
+        val moving = impulseResponse(base.copy(tailSmoothness = 1.0), 2.0)
+
+        // Measured well into the tail, where the ringing is all that is left.
+        val at = (0.5 * rate).toInt()
+        val window = 16_384
+        val ringing = spectralCrest(still.channels[0], at, window)
+        val smeared = spectralCrest(moving.channels[0], at, window)
+
+        assertTrue(
+            "A still tail should ring more than a moving one: still $ringing, moving $smeared",
+            smeared < ringing,
+        )
+    }
+
+    @Test
+    fun `diffusion multiplies the reflections instead of leaving them countable`() {
+        // Low diffusion is heard as separate ticks; high diffusion as texture. Counting sign
+        // changes in the tail is a fair proxy for how many distinct events are arriving.
+        fun density(diffusion: Double): Int {
+            val settings = wetOnly(
+                AmbienceSettings(
+                    roomSize = 0.8, decaySeconds = 2.0, preDelayMs = 0.0, earlyReflections = 0.0,
+                    diffusion = diffusion, tailSmoothness = 0.0, presence = 0.0,
+                    speechPriority = 0.0, wetDryMix = 1.0,
+                ),
+            )
+            val response = impulseResponse(settings, 1.0).channels[0]
+            var crossings = 0
+            for (i in (rate / 10) until (rate / 2)) {
+                if (response[i - 1] <= 0f && response[i] > 0f) crossings++
+            }
+            return crossings
+        }
+
+        val sparse = density(0.0)
+        val dense = density(1.0)
+        assertTrue("Diffusion did not thicken the tail: $sparse then $dense", dense > sparse)
+    }
+
+    @Test
+    fun `the reverb send loses the bottom so a large room does not turn to mud`() {
+        // Voice energy below about 200 Hz carries no intelligibility and a great deal of power.
+        // Putting it into a long tail is exactly what makes a big space unusable for speech.
+        fun wetAt(frequency: Double): Double {
+            val settings = wetOnly(
+                AmbienceSettings(
+                    roomSize = 0.8, decaySeconds = 2.0, preDelayMs = 0.0, earlyReflections = 0.5,
+                    presence = 0.0, speechPriority = 0.0, wetDryMix = 1.0,
+                ),
+            )
+            val source = TestSignals.sine(frequency, 1.0, rate, amplitude = 0.5)
+            Ambience(settings, rate, 1).process(source)
+            return rms(source.channels[0].copyOfRange(rate / 2, rate))
+        }
+
+        val low = wetAt(70.0)
+        val speech = wetAt(1_000.0)
+        assertTrue(
+            "70 Hz reached the room at $low against $speech at 1 kHz — the send is not filtered",
+            low < speech * 0.5,
+        )
+    }
+
+    @Test
+    fun `speech priority makes the room stand back while a word is being spoken`() {
+        // What keeps a cathedral intelligible, and what a mixing engineer does by hand.
+        val settings = AmbienceSettings(
+            roomSize = 0.85, decaySeconds = 2.5, preDelayMs = 30.0, earlyReflections = 0.4,
+            wetDryMix = 0.4, amount = 1.0,
+        )
+
+        // A word, then a gap, then a word.
+        val frames = rate * 3
+        val source = AudioBuffer.silence(1, frames, rate)
+        val step = 2.0 * Math.PI * 300.0 / rate
+        for (i in 0 until rate) source.channels[0][i] = (0.6 * kotlin.math.sin(step * i)).toFloat()
+
+        fun tailInTheGap(priority: Double): Double {
+            val processed = source.copy()
+            Ambience(
+                settings.copy(speechPriority = priority, amount = 1.0, wetDryMix = 1.0),
+                rate,
+                1,
+            ).process(processed)
+            // 200 ms after the word stops: the room, with no voice on top of it.
+            return rms(processed.channels[0].copyOfRange(rate + rate / 5, rate + rate / 2))
+        }
+
+        // Measured on the room alone. Measuring the mixture instead confuses "the room got
+        // quieter" with "the whole output got quieter", which are not the same claim.
+        fun roomDuringSpeech(priority: Double): Double {
+            val processed = source.copy()
+            Ambience(
+                settings.copy(speechPriority = priority, amount = 1.0, wetDryMix = 1.0),
+                rate,
+                1,
+            ).process(processed)
+            return rms(processed.channels[0].copyOfRange(rate / 2, rate))
+        }
+
+        val off = roomDuringSpeech(0.0)
+        val on = roomDuringSpeech(1.0)
+        assertTrue("Speech priority did not duck the room: $off then $on", on < off)
+
+        // And the room must still be there in the gap — ducking, not removing.
+        assertTrue("The tail vanished entirely", tailInTheGap(1.0) > 1e-5)
+    }
+
+    @Test
+    fun `every mode is the same room at a different strength`() {
+        val space = VoiceSpacePreset.LECTURE_HALL.settings.ambience
+        val natural = AmbienceMode.NATURAL.applyTo(space)
+        val studio = AmbienceMode.STUDIO.applyTo(space)
+        val immersive = AmbienceMode.IMMERSIVE.applyTo(space)
+
+        assertTrue(natural.wetDryMix < studio.wetDryMix)
+        assertTrue(studio.wetDryMix < immersive.wetDryMix)
+
+        // The room itself is unchanged — only how much of it there is.
+        assertEquals(space.decaySeconds, immersive.decaySeconds, 0.0)
+        assertEquals(space.roomSize, immersive.roomSize, 0.0)
+        assertEquals(space.preDelayMs, immersive.preDelayMs, 0.0)
+
+        // More room means less speech, so the protection scales with the thing it protects
+        // against: turning the room up cannot quietly cost intelligibility.
+        assertTrue(natural.speechPriority >= space.speechPriority)
+        assertTrue(immersive.speechPriority > 0.0)
+
+        // A bypassed space stays bypassed rather than acquiring a room from a mode.
+        assertTrue(AmbienceMode.IMMERSIVE.applyTo(AmbienceSettings.NONE).isBypassed)
     }
 
     @Test

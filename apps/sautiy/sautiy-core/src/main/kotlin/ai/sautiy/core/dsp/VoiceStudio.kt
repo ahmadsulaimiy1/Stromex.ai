@@ -496,6 +496,13 @@ public data class VoiceStudioSettings(
     val dynamics: DynamicsStage = DynamicsStage(),
     val refinement: VoiceRefinement = VoiceRefinement(),
     val ambience: AmbienceSettings = AmbienceSettings.NONE,
+    /**
+     * How much of the chosen room the user wants.
+     *
+     * Separate from the space itself, so someone who likes Lecture Hall but finds it too much can
+     * say so without hunting for a smaller-sounding preset and losing the character they chose.
+     */
+    val ambienceMode: AmbienceMode = AmbienceMode.STUDIO,
     val loudness: LoudnessStage = LoudnessStage(),
     val outputGainDb: Double = 0.0,
 ) {
@@ -508,13 +515,18 @@ public data class VoiceStudioSettings(
      */
     public val effectiveAmbience: AmbienceSettings
         get() {
+            if (ambience.isBypassed) return ambience
             val depth = refinement.depth
-            if (depth == 0.0 || ambience.isBypassed) return ambience
-            return ambience.copy(
-                wetDryMix = (ambience.wetDryMix * (1.0 + depth * 0.8)).coerceIn(0.0, 1.0),
-                preDelayMs = (ambience.preDelayMs * (1.0 + depth * 0.5)).coerceIn(0.0, 250.0),
-                roomSize = (ambience.roomSize + depth * 0.15).coerceIn(0.0, 1.0),
-            )
+            val withDepth = if (depth == 0.0) {
+                ambience
+            } else {
+                ambience.copy(
+                    wetDryMix = (ambience.wetDryMix * (1.0 + depth * 0.8)).coerceIn(0.0, 1.0),
+                    preDelayMs = (ambience.preDelayMs * (1.0 + depth * 0.5)).coerceIn(0.0, 250.0),
+                    roomSize = (ambience.roomSize + depth * 0.15).coerceIn(0.0, 1.0),
+                )
+            }
+            return ambienceMode.applyTo(withDepth)
         }
 
     /** True when this would change nothing, so "Original" is an honest label. */
@@ -528,19 +540,25 @@ public data class VoiceStudioSettings(
 }
 
 /**
- * The twelve spaces.
+ * The spaces.
  *
  * Each is named for a place rather than for a process, and each is a complete voice — cleanup,
  * dynamics, tone and room together — because a room chosen without the voice that belongs in it
  * is how a recording ends up sounding like a voice with reverb on it.
+ *
+ * **These numbers are starting points, not final tuning.** They are derived from the acoustics
+ * of the places they are named for: a plastered room absorbs less treble than a carpeted one, a
+ * larger space answers later and needs more diffusion to stop sounding grainy, and a longer tail
+ * needs more speech priority to stay intelligible. That reasoning gets a preset close. Only
+ * listening gets it right, and a listener has to do that part.
  */
 public enum class VoiceSpacePreset(
     public val displayName: String,
     public val summary: String,
     public val settings: VoiceStudioSettings,
 ) {
-    DRY_STUDIO(
-        "Dry Studio",
+    PURE_STUDIO(
+        "Pure Studio",
         "No room at all. The voice exactly as the microphone heard it, cleaned.",
         VoiceStudioSettings(
             cleanup = CleanupStage(highPassHz = 80.0),
@@ -548,8 +566,27 @@ public enum class VoiceSpacePreset(
                 compressor = DynamicsStage.CompressorSettings(thresholdDb = -20.0, ratio = 3.0),
                 deEsser = DynamicsStage.DeEsserSettings(thresholdDb = -26.0),
             ),
-            refinement = VoiceRefinement(clarity = 0.25, presence = 0.2),
+            refinement = VoiceRefinement(clarity = 0.25, presence = 0.20),
             ambience = AmbienceSettings.NONE,
+        ),
+    ),
+
+    NATURAL_PRESENCE(
+        "Natural Presence",
+        "Almost nothing. Only enough space that the recording stops sounding dead.",
+        VoiceStudioSettings(
+            cleanup = CleanupStage(highPassHz = 75.0),
+            dynamics = DynamicsStage(
+                compressor = DynamicsStage.CompressorSettings(thresholdDb = -18.0, ratio = 2.0, kneeDb = 8.0),
+            ),
+            refinement = VoiceRefinement(clarity = 0.15),
+            ambience = AmbienceSettings(
+                roomSize = 0.2, decaySeconds = 0.38, preDelayMs = 8.0,
+                earlyReflections = 0.78, lateReflections = 0.5, diffusion = 0.5,
+                damping = 0.55, warmth = 0.52, brightness = 0.5,
+                presence = 0.28, tailSmoothness = 0.6, speechPriority = 0.35,
+                width = 1.0, wetDryMix = 0.05,
+            ),
         ),
     ),
 
@@ -562,33 +599,14 @@ public enum class VoiceSpacePreset(
                 compressor = DynamicsStage.CompressorSettings(thresholdDb = -20.0, ratio = 3.0),
                 deEsser = DynamicsStage.DeEsserSettings(thresholdDb = -26.0),
             ),
-            refinement = VoiceRefinement(clarity = 0.3, presence = 0.25),
+            refinement = VoiceRefinement(clarity = 0.30, presence = 0.25),
             ambience = AmbienceSettings(
-                roomSize = 0.12, decaySeconds = 0.35, preDelayMs = 7.0,
-                earlyReflections = 0.8, width = 0.6, warmth = 0.55,
-                brightness = 0.5, wetDryMix = 0.09,
+                roomSize = 0.1, decaySeconds = 0.3, preDelayMs = 6.0,
+                earlyReflections = 0.85, lateReflections = 0.55, diffusion = 0.45,
+                damping = 0.6, warmth = 0.55, brightness = 0.5,
+                presence = 0.3, tailSmoothness = 0.55, speechPriority = 0.35,
+                width = 1.0, wetDryMix = 0.07,
             ),
-        ),
-    ),
-
-    BROADCAST_STUDIO(
-        "Broadcast Studio",
-        "Tight, dense and even, delivered to the −23 LUFS broadcast standard.",
-        VoiceStudioSettings(
-            cleanup = CleanupStage(highPassHz = 90.0),
-            dynamics = DynamicsStage(
-                compressor = DynamicsStage.CompressorSettings(
-                    thresholdDb = -24.0, ratio = 4.0, attackMs = 5.0, releaseMs = 90.0,
-                ),
-                deEsser = DynamicsStage.DeEsserSettings(thresholdDb = -30.0, ratio = 5.0),
-            ),
-            refinement = VoiceRefinement(clarity = 0.4, presence = 0.3, body = 0.15),
-            ambience = AmbienceSettings(
-                roomSize = 0.18, decaySeconds = 0.45, preDelayMs = 10.0,
-                earlyReflections = 0.7, width = 0.5, warmth = 0.6,
-                brightness = 0.5, wetDryMix = 0.07,
-            ),
-            loudness = LoudnessStage(target = "BROADCAST", limiterCeilingDb = -1.0),
         ),
     ),
 
@@ -600,17 +618,40 @@ public enum class VoiceSpacePreset(
             dynamics = DynamicsStage(
                 compressor = DynamicsStage.CompressorSettings(thresholdDb = -20.0, ratio = 2.5),
             ),
-            refinement = VoiceRefinement(warmth = 0.5, richness = 0.35, body = 0.3, air = -0.15),
+            refinement = VoiceRefinement(warmth = 0.50, richness = 0.35, body = 0.30, air = -0.15),
             ambience = AmbienceSettings(
-                roomSize = 0.3, decaySeconds = 0.75, preDelayMs = 15.0,
-                earlyReflections = 0.6, width = 0.7, warmth = 0.75,
-                brightness = 0.35, wetDryMix = 0.13,
+                roomSize = 0.3, decaySeconds = 0.7, preDelayMs = 14.0,
+                earlyReflections = 0.65, lateReflections = 0.85, diffusion = 0.6,
+                damping = 0.7, warmth = 0.72, brightness = 0.38,
+                presence = 0.35, tailSmoothness = 0.7, speechPriority = 0.35,
+                width = 1.0, wetDryMix = 0.12,
             ),
         ),
     ),
 
-    PODCAST_STUDIO(
-        "Podcast Studio",
+    BROADCAST(
+        "Broadcast",
+        "Tight, dense and even, delivered to the −23 LUFS broadcast standard.",
+        VoiceStudioSettings(
+            cleanup = CleanupStage(highPassHz = 90.0),
+            dynamics = DynamicsStage(
+                compressor = DynamicsStage.CompressorSettings(thresholdDb = -24.0, ratio = 4.0, attackMs = 5.0, releaseMs = 90.0),
+                deEsser = DynamicsStage.DeEsserSettings(thresholdDb = -30.0, ratio = 5.0),
+            ),
+            refinement = VoiceRefinement(clarity = 0.40, presence = 0.30, body = 0.15),
+            ambience = AmbienceSettings(
+                roomSize = 0.18, decaySeconds = 0.42, preDelayMs = 9.0,
+                earlyReflections = 0.75, lateReflections = 0.6, diffusion = 0.55,
+                damping = 0.62, warmth = 0.52, brightness = 0.52,
+                presence = 0.45, tailSmoothness = 0.6, speechPriority = 0.45,
+                width = 1.0, wetDryMix = 0.06,
+            ),
+            loudness = LoudnessStage(target = "BROADCAST", limiterCeilingDb = -1.0),
+        ),
+    ),
+
+    PODCAST(
+        "Podcast",
         "Close and companionable, at the −16 LUFS podcast standard.",
         VoiceStudioSettings(
             cleanup = CleanupStage(highPassHz = 80.0),
@@ -618,11 +659,13 @@ public enum class VoiceSpacePreset(
                 compressor = DynamicsStage.CompressorSettings(thresholdDb = -22.0, ratio = 3.5),
                 deEsser = DynamicsStage.DeEsserSettings(),
             ),
-            refinement = VoiceRefinement(clarity = 0.3, warmth = 0.25, presence = 0.3, body = 0.2),
+            refinement = VoiceRefinement(clarity = 0.30, warmth = 0.25, presence = 0.30, body = 0.20),
             ambience = AmbienceSettings(
-                roomSize = 0.22, decaySeconds = 0.55, preDelayMs = 12.0,
-                earlyReflections = 0.65, width = 0.6, warmth = 0.6,
-                brightness = 0.5, wetDryMix = 0.10,
+                roomSize = 0.22, decaySeconds = 0.52, preDelayMs = 12.0,
+                earlyReflections = 0.7, lateReflections = 0.75, diffusion = 0.58,
+                damping = 0.6, warmth = 0.58, brightness = 0.5,
+                presence = 0.4, tailSmoothness = 0.65, speechPriority = 0.4,
+                width = 1.0, wetDryMix = 0.09,
             ),
             loudness = LoudnessStage(target = "PODCAST", limiterCeilingDb = -1.0),
         ),
@@ -634,17 +677,76 @@ public enum class VoiceSpacePreset(
         VoiceStudioSettings(
             cleanup = CleanupStage(highPassHz = 100.0),
             dynamics = DynamicsStage(
-                compressor = DynamicsStage.CompressorSettings(
-                    thresholdDb = -26.0, ratio = 4.0, releaseMs = 200.0,
-                ),
+                compressor = DynamicsStage.CompressorSettings(thresholdDb = -26.0, ratio = 4.0, releaseMs = 200.0),
             ),
-            refinement = VoiceRefinement(clarity = 0.45, presence = 0.35, depth = 0.2),
+            refinement = VoiceRefinement(clarity = 0.45, presence = 0.35, depth = 0.20),
             ambience = AmbienceSettings(
-                roomSize = 0.62, decaySeconds = 1.3, preDelayMs = 26.0,
-                earlyReflections = 0.55, width = 0.85, warmth = 0.5,
-                brightness = 0.5, wetDryMix = 0.17,
+                roomSize = 0.6, decaySeconds = 1.25, preDelayMs = 26.0,
+                earlyReflections = 0.55, lateReflections = 1.0, diffusion = 0.7,
+                damping = 0.52, warmth = 0.5, brightness = 0.5,
+                presence = 0.55, tailSmoothness = 0.78, speechPriority = 0.5,
+                width = 1.0, wetDryMix = 0.15,
             ),
             loudness = LoudnessStage(target = "SPOKEN_WORD", limiterCeilingDb = -1.5),
+        ),
+    ),
+
+    SMALL_MOSQUE(
+        "Small Mosque",
+        "Plaster and carpet. A room that answers gently and lets every word through.",
+        VoiceStudioSettings(
+            cleanup = CleanupStage(highPassHz = 80.0),
+            dynamics = DynamicsStage(
+                compressor = DynamicsStage.CompressorSettings(thresholdDb = -19.0, ratio = 2.2, kneeDb = 8.0),
+                deEsser = DynamicsStage.DeEsserSettings(thresholdDb = -25.0, ratio = 3.0),
+            ),
+            refinement = VoiceRefinement(clarity = 0.30, presence = 0.22, air = 0.22, depth = 0.25),
+            ambience = AmbienceSettings(
+                roomSize = 0.55, decaySeconds = 1.6, preDelayMs = 22.0,
+                earlyReflections = 0.6, lateReflections = 1.0, diffusion = 0.72,
+                damping = 0.45, warmth = 0.55, brightness = 0.55,
+                presence = 0.5, tailSmoothness = 0.8, speechPriority = 0.5,
+                width = 1.0, wetDryMix = 0.17,
+            ),
+        ),
+    ),
+
+    LARGE_MOSQUE(
+        "Large Mosque",
+        "Stone, height and distance. Long, open, and still intelligible.",
+        VoiceStudioSettings(
+            cleanup = CleanupStage(highPassHz = 75.0),
+            dynamics = DynamicsStage(
+                compressor = DynamicsStage.CompressorSettings(thresholdDb = -17.0, ratio = 2.0, kneeDb = 9.0),
+                deEsser = DynamicsStage.DeEsserSettings(thresholdDb = -24.0, ratio = 3.0),
+            ),
+            refinement = VoiceRefinement(clarity = 0.28, presence = 0.20, air = 0.30, depth = 0.40),
+            ambience = AmbienceSettings(
+                roomSize = 0.85, decaySeconds = 2.8, preDelayMs = 38.0,
+                earlyReflections = 0.45, lateReflections = 1.0, diffusion = 0.82,
+                damping = 0.42, warmth = 0.52, brightness = 0.58,
+                presence = 0.58, tailSmoothness = 0.85, speechPriority = 0.6,
+                width = 1.0, wetDryMix = 0.22,
+            ),
+        ),
+    ),
+
+    GRAND_HALL(
+        "Grand Hall",
+        "Stone and height. A tail that answers three seconds later.",
+        VoiceStudioSettings(
+            cleanup = CleanupStage(highPassHz = 90.0),
+            dynamics = DynamicsStage(
+                compressor = DynamicsStage.CompressorSettings(thresholdDb = -22.0, ratio = 2.5),
+            ),
+            refinement = VoiceRefinement(clarity = 0.35, presence = 0.25, depth = 0.40),
+            ambience = AmbienceSettings(
+                roomSize = 0.92, decaySeconds = 3.2, preDelayMs = 44.0,
+                earlyReflections = 0.38, lateReflections = 1.0, diffusion = 0.85,
+                damping = 0.45, warmth = 0.5, brightness = 0.54,
+                presence = 0.6, tailSmoothness = 0.88, speechPriority = 0.6,
+                width = 1.0, wetDryMix = 0.24,
+            ),
         ),
     ),
 
@@ -656,30 +758,15 @@ public enum class VoiceSpacePreset(
             dynamics = DynamicsStage(
                 compressor = DynamicsStage.CompressorSettings(thresholdDb = -24.0, ratio = 3.0),
             ),
-            refinement = VoiceRefinement(clarity = 0.4, presence = 0.3, depth = 0.3),
+            refinement = VoiceRefinement(clarity = 0.40, presence = 0.30, depth = 0.30),
             ambience = AmbienceSettings(
-                roomSize = 0.82, decaySeconds = 2.1, preDelayMs = 36.0,
-                earlyReflections = 0.45, width = 0.95, warmth = 0.45,
-                brightness = 0.55, wetDryMix = 0.21,
+                roomSize = 0.8, decaySeconds = 2.0, preDelayMs = 34.0,
+                earlyReflections = 0.48, lateReflections = 1.0, diffusion = 0.78,
+                damping = 0.48, warmth = 0.5, brightness = 0.55,
+                presence = 0.55, tailSmoothness = 0.82, speechPriority = 0.55,
+                width = 1.0, wetDryMix = 0.19,
             ),
             loudness = LoudnessStage(target = "SPOKEN_WORD", limiterCeilingDb = -1.5),
-        ),
-    ),
-
-    LARGE_HALL(
-        "Large Hall",
-        "Stone and height. A long tail that answers three seconds later.",
-        VoiceStudioSettings(
-            cleanup = CleanupStage(highPassHz = 90.0),
-            dynamics = DynamicsStage(
-                compressor = DynamicsStage.CompressorSettings(thresholdDb = -22.0, ratio = 2.5),
-            ),
-            refinement = VoiceRefinement(clarity = 0.35, presence = 0.25, depth = 0.4),
-            ambience = AmbienceSettings(
-                roomSize = 1.0, decaySeconds = 3.1, preDelayMs = 45.0,
-                earlyReflections = 0.35, width = 1.0, warmth = 0.5,
-                brightness = 0.5, wetDryMix = 0.26,
-            ),
         ),
     ),
 
@@ -689,18 +776,16 @@ public enum class VoiceSpacePreset(
         VoiceStudioSettings(
             cleanup = CleanupStage(highPassHz = 70.0),
             dynamics = DynamicsStage(
-                // Deliberately light. Recitation lives on its dynamics, and flattening them is
-                // the one thing a reciter will never forgive.
-                compressor = DynamicsStage.CompressorSettings(
-                    thresholdDb = -18.0, ratio = 2.0, kneeDb = 8.0,
-                ),
+                compressor = DynamicsStage.CompressorSettings(thresholdDb = -18.0, ratio = 2.0, kneeDb = 8.0),
                 deEsser = DynamicsStage.DeEsserSettings(thresholdDb = -24.0, ratio = 3.0),
             ),
-            refinement = VoiceRefinement(clarity = 0.3, presence = 0.2, air = 0.3, depth = 0.25),
+            refinement = VoiceRefinement(clarity = 0.30, presence = 0.20, air = 0.30, depth = 0.25),
             ambience = AmbienceSettings(
                 roomSize = 0.7, decaySeconds = 1.8, preDelayMs = 30.0,
-                earlyReflections = 0.5, width = 0.9, warmth = 0.4,
-                brightness = 0.6, wetDryMix = 0.19,
+                earlyReflections = 0.52, lateReflections = 1.0, diffusion = 0.76,
+                damping = 0.4, warmth = 0.48, brightness = 0.6,
+                presence = 0.52, tailSmoothness = 0.84, speechPriority = 0.5,
+                width = 1.0, wetDryMix = 0.18,
             ),
         ),
     ),
@@ -711,35 +796,36 @@ public enum class VoiceSpacePreset(
         VoiceStudioSettings(
             cleanup = CleanupStage(highPassHz = 70.0),
             dynamics = DynamicsStage(
-                compressor = DynamicsStage.CompressorSettings(
-                    thresholdDb = -16.0, ratio = 1.8, kneeDb = 10.0,
-                ),
+                compressor = DynamicsStage.CompressorSettings(thresholdDb = -16.0, ratio = 1.8, kneeDb = 10.0),
                 deEsser = DynamicsStage.DeEsserSettings(thresholdDb = -24.0, ratio = 3.0),
             ),
-            refinement = VoiceRefinement(clarity = 0.25, presence = 0.2, air = 0.35, depth = 0.5),
+            refinement = VoiceRefinement(clarity = 0.25, presence = 0.20, air = 0.35, depth = 0.50),
             ambience = AmbienceSettings(
                 roomSize = 1.0, decaySeconds = 3.6, preDelayMs = 55.0,
-                earlyReflections = 0.4, width = 1.0, warmth = 0.45,
-                brightness = 0.58, wetDryMix = 0.28,
+                earlyReflections = 0.4, lateReflections = 1.0, diffusion = 0.88,
+                damping = 0.44, warmth = 0.5, brightness = 0.58,
+                presence = 0.62, tailSmoothness = 0.9, speechPriority = 0.65,
+                width = 1.0, wetDryMix = 0.26,
             ),
         ),
     ),
 
-    NATURAL_PRESENCE(
-        "Natural Presence",
-        "Almost nothing. Only enough space that the recording stops sounding dead.",
+    ROYAL_PRESENCE(
+        "Royal Presence",
+        "Weight and ceremony. A large room heard from the front of it.",
         VoiceStudioSettings(
-            cleanup = CleanupStage(highPassHz = 75.0),
+            cleanup = CleanupStage(highPassHz = 70.0),
             dynamics = DynamicsStage(
-                compressor = DynamicsStage.CompressorSettings(
-                    thresholdDb = -18.0, ratio = 2.0, kneeDb = 8.0,
-                ),
+                compressor = DynamicsStage.CompressorSettings(thresholdDb = -19.0, ratio = 2.4, attackMs = 12.0),
+                deEsser = DynamicsStage.DeEsserSettings(thresholdDb = -26.0),
             ),
-            refinement = VoiceRefinement(clarity = 0.15),
+            refinement = VoiceRefinement(warmth = 0.25, body = 0.35, presence = 0.28, air = 0.20, depth = 0.35),
             ambience = AmbienceSettings(
-                roomSize = 0.2, decaySeconds = 0.4, preDelayMs = 9.0,
-                earlyReflections = 0.75, width = 0.55, warmth = 0.55,
-                brightness = 0.5, wetDryMix = 0.06,
+                roomSize = 0.75, decaySeconds = 2.2, preDelayMs = 40.0,
+                earlyReflections = 0.55, lateReflections = 1.0, diffusion = 0.8,
+                damping = 0.5, warmth = 0.6, brightness = 0.52,
+                presence = 0.55, tailSmoothness = 0.85, speechPriority = 0.55,
+                width = 1.0, wetDryMix = 0.2,
             ),
         ),
     ),
@@ -750,25 +836,27 @@ public enum class VoiceSpacePreset(
         VoiceStudioSettings(
             cleanup = CleanupStage(highPassHz = 55.0),
             dynamics = DynamicsStage(
-                compressor = DynamicsStage.CompressorSettings(
-                    thresholdDb = -22.0, ratio = 3.5, attackMs = 15.0,
-                ),
+                compressor = DynamicsStage.CompressorSettings(thresholdDb = -22.0, ratio = 3.5, attackMs = 15.0),
                 deEsser = DynamicsStage.DeEsserSettings(thresholdDb = -28.0),
             ),
-            refinement = VoiceRefinement(
-                warmth = 0.3, richness = 0.25, body = 0.5, presence = 0.2, depth = 0.45,
-            ),
+            refinement = VoiceRefinement(warmth = 0.30, richness = 0.25, body = 0.50, presence = 0.20, depth = 0.45),
             ambience = AmbienceSettings(
-                roomSize = 0.9, decaySeconds = 2.5, preDelayMs = 40.0,
-                earlyReflections = 0.3, width = 1.0, warmth = 0.75,
-                brightness = 0.32, wetDryMix = 0.23,
+                roomSize = 0.88, decaySeconds = 2.5, preDelayMs = 42.0,
+                earlyReflections = 0.32, lateReflections = 1.0, diffusion = 0.84,
+                damping = 0.72, warmth = 0.74, brightness = 0.32,
+                presence = 0.58, tailSmoothness = 0.86, speechPriority = 0.55,
+                width = 1.0, wetDryMix = 0.21,
             ),
         ),
     ),
+
     ;
 
     /** Ready to render or to audition. */
     public fun studio(): VoiceStudio = VoiceStudio(settings)
+
+    /** The same space at a different strength. */
+    public fun inMode(mode: AmbienceMode): VoiceStudioSettings = settings.copy(ambienceMode = mode)
 
     public companion object {
         /**
@@ -778,9 +866,9 @@ public enum class VoiceSpacePreset(
          * where the right answer usually is.
          */
         public val cardOrder: List<VoiceSpacePreset> = listOf(
-            DRY_STUDIO, NATURAL_PRESENCE, VOCAL_BOOTH, PODCAST_STUDIO, BROADCAST_STUDIO,
-            WARM_STUDIO, LECTURE_HALL, PRESTIGE_RECITATION, AUDITORIUM, CINEMATIC_VOICE,
-            LARGE_HALL, MAJESTIC_RECITATION,
+            PURE_STUDIO, NATURAL_PRESENCE, VOCAL_BOOTH, PODCAST, BROADCAST, WARM_STUDIO,
+            LECTURE_HALL, SMALL_MOSQUE, PRESTIGE_RECITATION, AUDITORIUM, ROYAL_PRESENCE,
+            CINEMATIC_VOICE, LARGE_MOSQUE, GRAND_HALL, MAJESTIC_RECITATION,
         )
 
         init {
@@ -818,10 +906,18 @@ public object OneTap {
 
     /** 🎙 Studio Voice — the finished production: enhancement plus a treated room. */
     public fun studioVoice(): VoiceStudioSettings =
-        VoiceSpacePreset.PODCAST_STUDIO.settings.copy(
-            cleanup = VoiceSpacePreset.PODCAST_STUDIO.settings.cleanup.copy(
-                noiseReduction = 1.4,
-                noiseFloorDb = -20.0,
-            ),
-        )
+        VoiceSpacePreset.PODCAST.settings.let { base ->
+            base.copy(
+                cleanup = base.cleanup.copy(noiseReduction = 1.4, noiseFloorDb = -20.0),
+                // Richer than Enhance Voice on purpose: this is the button for narration,
+                // recitation and presentation, where a little more body and air is the point.
+                refinement = base.refinement.copy(
+                    warmth = 0.32,
+                    richness = 0.30,
+                    air = 0.28,
+                    depth = 0.20,
+                ),
+                ambienceMode = AmbienceMode.STUDIO,
+            )
+        }
 }

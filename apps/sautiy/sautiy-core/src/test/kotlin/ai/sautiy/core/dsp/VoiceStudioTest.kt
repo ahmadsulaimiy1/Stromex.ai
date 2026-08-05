@@ -120,7 +120,7 @@ class VoiceStudioTest {
     fun `render leaves the caller's audio untouched`() {
         val source = voice(0.3)
         val before = source.channels[0].copyOf()
-        VoiceSpacePreset.LARGE_HALL.studio().render(source)
+        VoiceSpacePreset.GRAND_HALL.studio().render(source)
         assertTrue("render must not modify its input", before.contentEquals(source.channels[0]))
     }
 
@@ -128,8 +128,8 @@ class VoiceStudioTest {
 
     @Test
     fun `every space is complete, named and appears in the panel exactly once`() {
-        assertEquals(12, VoiceSpacePreset.entries.size)
-        assertEquals(12, VoiceSpacePreset.cardOrder.size)
+        assertEquals(15, VoiceSpacePreset.entries.size)
+        assertEquals(15, VoiceSpacePreset.cardOrder.size)
         assertEquals(VoiceSpacePreset.entries.toSet(), VoiceSpacePreset.cardOrder.toSet())
 
         val names = VoiceSpacePreset.entries.map { it.displayName }
@@ -141,11 +141,11 @@ class VoiceStudioTest {
     }
 
     @Test
-    fun `the twelve spaces named in the brief all exist`() {
+    fun `every space named in the brief exists`() {
         val expected = listOf(
-            "Dry Studio", "Vocal Booth", "Broadcast Studio", "Warm Studio", "Podcast Studio",
-            "Lecture Hall", "Auditorium", "Large Hall", "Prestige Recitation",
-            "Majestic Recitation", "Natural Presence", "Cinematic Voice",
+            "Pure Studio", "Vocal Booth", "Warm Studio", "Broadcast", "Podcast", "Lecture Hall",
+            "Small Mosque", "Large Mosque", "Grand Hall", "Auditorium", "Majestic Recitation",
+            "Prestige Recitation", "Royal Presence", "Cinematic Voice", "Natural Presence",
         )
         assertEquals(expected.toSet(), VoiceSpacePreset.entries.map { it.displayName }.toSet())
     }
@@ -174,7 +174,7 @@ class VoiceStudioTest {
     @Test
     fun `only Dry Studio and the safe one-tap have no room at all`() {
         val roomless = VoiceSpacePreset.entries.filter { it.settings.ambience.isBypassed }
-        assertEquals(listOf(VoiceSpacePreset.DRY_STUDIO), roomless)
+        assertEquals(listOf(VoiceSpacePreset.PURE_STUDIO), roomless)
         assertTrue(OneTap.enhanceVoice().ambience.isBypassed)
         assertFalse(OneTap.studioVoice().ambience.isBypassed)
     }
@@ -229,7 +229,7 @@ class VoiceStudioTest {
         val source = AudioBuffer.mono(samples, rate)
 
         val recitation = VoiceSpacePreset.PRESTIGE_RECITATION.studio().render(source).audio
-        val broadcast = VoiceSpacePreset.BROADCAST_STUDIO.studio().render(source).audio
+        val broadcast = VoiceSpacePreset.BROADCAST.studio().render(source).audio
 
         val recitationRange = Loudness.loudnessRange(recitation)
         val broadcastRange = Loudness.loudnessRange(broadcast)
@@ -261,7 +261,7 @@ class VoiceStudioTest {
         val order = listOf(
             VoiceSpacePreset.VOCAL_BOOTH,
             VoiceSpacePreset.NATURAL_PRESENCE,
-            VoiceSpacePreset.PODCAST_STUDIO,
+            VoiceSpacePreset.PODCAST,
             VoiceSpacePreset.LECTURE_HALL,
             VoiceSpacePreset.AUDITORIUM,
             VoiceSpacePreset.MAJESTIC_RECITATION,
@@ -411,7 +411,7 @@ class VoiceStudioTest {
     @Test
     fun `the report measures what happened rather than what was configured`() {
         val source = voice(2.0)
-        val rendered = VoiceSpacePreset.BROADCAST_STUDIO.studio().render(source)
+        val rendered = VoiceSpacePreset.BROADCAST.studio().render(source)
 
         assertTrue(rendered.report.inputLufs.isFinite())
         assertTrue(rendered.report.outputLufs.isFinite())

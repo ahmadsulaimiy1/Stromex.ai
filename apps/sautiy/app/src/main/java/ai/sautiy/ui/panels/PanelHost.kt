@@ -2,6 +2,7 @@ package ai.sautiy.ui.workspace
 
 import ai.sautiy.core.analysis.Loudness
 import ai.sautiy.core.codec.Encoders
+import ai.sautiy.core.dsp.AmbienceMode
 import ai.sautiy.core.dsp.AmbienceSettings
 import ai.sautiy.core.dsp.VoiceRefinement
 import ai.sautiy.core.dsp.VoiceSpacePreset
@@ -181,6 +182,38 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                     modifier = Modifier.weight(1f),
                     filled = false,
                 )
+            }
+        }
+
+        item {
+            // How much room, separate from which room. Someone who likes Lecture Hall but finds
+            // it too much should say so here rather than hunt for a smaller-sounding preset and
+            // lose the character they chose.
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = SautiySpace.s),
+                horizontalArrangement = Arrangement.spacedBy(SautiySpace.xs),
+            ) {
+                for (mode in AmbienceMode.entries) {
+                    val chosen = state.voice?.ambienceMode == mode
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .sizeIn(minHeight = SautiySpace.minTouchTarget)
+                            .clip(SautiyShapes.pill)
+                            .background(if (chosen) colours.signalSelection else colours.surfaceRaised)
+                            .clickable(onClickLabel = mode.displayName, role = Role.Button) {
+                                actions.onAmbienceModeChanged(mode)
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = mode.displayName,
+                            style = SautiyTheme.type.labelLarge,
+                            color = if (chosen) colours.signal else colours.textSecondary,
+                            modifier = Modifier.padding(vertical = SautiySpace.s),
+                        )
+                    }
+                }
             }
         }
 
@@ -870,6 +903,33 @@ private fun SpacePanel(state: WorkspaceUiState, actions: WorkspaceActions) {
             0f..1f,
             percent(ambience.earlyReflections),
         ) { update(ambience.copy(earlyReflections = it)) }
+        StudioSlider(
+            "Late reflections",
+            ambience.lateReflections,
+            0f..1f,
+            percent(ambience.lateReflections),
+        ) { update(ambience.copy(lateReflections = it)) }
+        StudioSlider("Diffusion", ambience.diffusion, 0f..1f, percent(ambience.diffusion)) {
+            update(ambience.copy(diffusion = it))
+        }
+        StudioSlider("Damping", ambience.damping, 0f..1f, percent(ambience.damping)) {
+            update(ambience.copy(damping = it))
+        }
+        StudioSlider("Presence", ambience.presence, 0f..1f, percent(ambience.presence)) {
+            update(ambience.copy(presence = it))
+        }
+        StudioSlider(
+            "Tail smoothness",
+            ambience.tailSmoothness,
+            0f..1f,
+            percent(ambience.tailSmoothness),
+        ) { update(ambience.copy(tailSmoothness = it)) }
+        StudioSlider(
+            "Speech priority",
+            ambience.speechPriority,
+            0f..1f,
+            percent(ambience.speechPriority),
+        ) { update(ambience.copy(speechPriority = it)) }
         StudioSlider("Width", ambience.width, 0f..1f, percent(ambience.width)) {
             update(ambience.copy(width = it))
         }
@@ -881,6 +941,13 @@ private fun SpacePanel(state: WorkspaceUiState, actions: WorkspaceActions) {
         }
 
         Spacer(modifier = Modifier.height(SautiySpace.s))
+        Text(
+            text = "Presence and speech priority keep words above the room: one takes the room " +
+                "out of the consonant band, the other makes it stand back while you speak.",
+            style = SautiyTheme.type.bodyMedium,
+            color = SautiyTheme.colours.textTertiary,
+        )
+        Spacer(modifier = Modifier.height(SautiySpace.xs))
         Text(
             text = "Warmth and brightness here shape the room. The same controls in Voice shape " +
                 "the speaker.",

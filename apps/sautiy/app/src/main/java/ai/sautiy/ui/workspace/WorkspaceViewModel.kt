@@ -6,6 +6,7 @@ import ai.sautiy.core.audio.CaptureQuality
 import ai.sautiy.core.audio.Decibels
 import ai.sautiy.core.codec.ExportJob
 import ai.sautiy.core.codec.WavStreamReader
+import ai.sautiy.core.dsp.AmbienceMode
 import ai.sautiy.core.dsp.AmbienceSettings
 import ai.sautiy.core.dsp.OneTap
 import ai.sautiy.core.dsp.VoiceRefinement
@@ -108,6 +109,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         onEnhanceVoice = { applyVoice(OneTap.enhanceVoice(), preset = null) },
         onStudioVoice = { applyVoice(OneTap.studioVoice(), preset = null) },
         onAmbienceChanged = ::changeAmbience,
+        onAmbienceModeChanged = ::changeAmbienceMode,
         onRefinementChanged = ::changeRefinement,
         onChooseExportFormat = { format -> _state.update { it.copy(exportFormat = format) } },
         onExport = ::export,
@@ -397,6 +399,12 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
     private fun changeAmbience(ambience: AmbienceSettings) {
         val base = _state.value.voice ?: VoiceStudioSettings()
         applyVoice(base.copy(ambience = ambience), preset = null)
+    }
+
+    /** The mode changes how much room, and keeps the preset it was chosen for. */
+    private fun changeAmbienceMode(mode: AmbienceMode) {
+        val base = _state.value.voice ?: VoiceStudioSettings()
+        applyVoice(base.copy(ambienceMode = mode), preset = _state.value.appliedPreset)
     }
 
     private fun changeRefinement(refinement: VoiceRefinement) {

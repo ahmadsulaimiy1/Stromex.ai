@@ -89,7 +89,7 @@ class ExportJobTest {
         val enhanced = ByteArrayOutputStream()
         val result = ExportJob(
             timeline, provider, ExportFormat.WAV,
-            voice = VoiceSpacePreset.PODCAST_STUDIO.settings,
+            voice = VoiceSpacePreset.PODCAST.settings,
         ).run(enhanced)
 
         assertTrue(
@@ -126,7 +126,7 @@ class ExportJobTest {
         val (timeline, provider) = project(audio)
 
         val seen = mutableListOf<Pair<Double, ExportJob.Stage>>()
-        ExportJob(timeline, provider, ExportFormat.FLAC, voice = VoiceSpacePreset.DRY_STUDIO.settings)
+        ExportJob(timeline, provider, ExportFormat.FLAC, voice = VoiceSpacePreset.PURE_STUDIO.settings)
             .run(ByteArrayOutputStream()) { fraction, stage -> seen += fraction to stage }
 
         assertTrue("Progress must be reported", seen.size > 3)
