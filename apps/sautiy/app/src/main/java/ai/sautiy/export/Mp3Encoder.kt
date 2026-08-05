@@ -69,7 +69,16 @@ public class Mp3Encoder(
             while (frame < totalFrames) {
                 val count = minOf(framesPerBlock, totalFrames - frame)
                 val written = nativeEncode(handle, pcm, frame * bytesPerFrame, count, out)
-                if (written < 0) error("LAME reported an encoding failure ($written)")
+                if (written < 0) {
+                    error(
+                        when (written) {
+                            -1 -> "The MP3 encoder was closed before the encode finished"
+                            -2 -> "The MP3 encoder could not reach the audio buffer"
+                            -3 -> "The MP3 encoder was asked for $count frames beyond the audio"
+                            else -> "LAME reported an encoding failure ($written)"
+                        },
+                    )
+                }
                 if (written > 0) output.write(out, 0, written)
                 frame += count
                 progress(frame.toDouble() / totalFrames)

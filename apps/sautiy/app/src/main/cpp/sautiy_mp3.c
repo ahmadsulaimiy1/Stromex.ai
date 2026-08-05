@@ -60,12 +60,34 @@ JNIEXPORT jint JNICALL SAUTIY_JNI(nativeEncode)(
         return -2;
     }
 
-    const short *interleaved = (const short *) (pcmBytes + offset);
+    short *samples = (short *) (pcmBytes + offset);
     const jsize outCapacity = (*env)->GetArrayLength(env, out);
+    const int channels = lame_get_num_channels(lame);
 
-    /* Interleaved 16-bit in, whatever the channel count: LAME's own entry point for it. */
-    int written = lame_encode_buffer_interleaved(
-            lame, (short *) interleaved, frames, (unsigned char *) outBytes, outCapacity);
+    /* Refuse a read that would run off the end of the array rather than performing it.
+     * Without this a wrong frame count is a native segfault that takes the whole process with
+     * it, and the Java side sees no exception, no message and no stack — just a dead app. */
+    const jsize pcmLength = (*env)->GetArrayLength(env, pcm);
+    const long needed = (long) offset + (long) frames * channels * 2L;
+    if (offset < 0 || frames < 0 || needed > (long) pcmLength) {
+        (*env)->ReleasePrimitiveArrayCritical(env, pcm, pcmBytes, JNI_ABORT);
+        (*env)->ReleasePrimitiveArrayCritical(env, out, outBytes, JNI_ABORT);
+        return -3;
+    }
+
+    int written;
+    if (channels == 1) {
+        /* lame_encode_buffer_interleaved is documented for stereo and reads two samples per
+         * frame regardless of the configured channel count. Handing it mono audio makes it read
+         * twice the data that is there — an overrun that crashes the process rather than
+         * returning an error. Mono goes through the separate-channel entry point, which reads
+         * only the left buffer when the encoder is mono. */
+        written = lame_encode_buffer(
+                lame, samples, samples, frames, (unsigned char *) outBytes, outCapacity);
+    } else {
+        written = lame_encode_buffer_interleaved(
+                lame, samples, frames, (unsigned char *) outBytes, outCapacity);
+    }
 
     (*env)->ReleasePrimitiveArrayCritical(env, pcm, pcmBytes, JNI_ABORT);
     (*env)->ReleasePrimitiveArrayCritical(env, out, outBytes, 0);
