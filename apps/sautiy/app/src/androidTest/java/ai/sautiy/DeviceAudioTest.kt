@@ -260,7 +260,7 @@ class DeviceAudioTest {
             assertTrue("Playback stalled with a space applied", advanced > quarterSecond)
 
             // Changing the room mid-playback must not stop it.
-            player.setVoice(VoiceSpacePreset.DRY_STUDIO.settings)
+            player.setVoice(VoiceSpacePreset.PURE_STUDIO.settings)
             Thread.sleep(300)
             assertTrue("Changing the space stopped playback", player.playing.value)
         } finally {
@@ -332,7 +332,7 @@ class DeviceAudioTest {
                 timeline = timeline,
                 provider = provider,
                 format = format,
-                voice = VoiceSpacePreset.PODCAST_STUDIO.settings,
+                voice = VoiceSpacePreset.PODCAST.settings,
                 channelCount = 1,
             ).run(sink)
 
@@ -364,7 +364,7 @@ class DeviceAudioTest {
         val seen = mutableListOf<Double>()
         ExportJob(
             timeline, provider, ExportFormat.WAV,
-            voice = VoiceSpacePreset.BROADCAST_STUDIO.settings,
+            voice = VoiceSpacePreset.BROADCAST.settings,
             channelCount = 1,
         ).run(ByteArrayOutputStream()) { fraction, _ -> seen += fraction }
 
