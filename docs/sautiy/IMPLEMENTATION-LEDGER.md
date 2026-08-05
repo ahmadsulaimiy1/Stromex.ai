@@ -51,17 +51,19 @@ Android layer.
 
 ---
 
-## Verified on a running Android — 20 instrumented tests, all passing
+## Verified on a running Android — 24 instrumented tests, all passing
 
 `AudioRecord`, `AudioTrack` and `MediaCodec` have no meaningful stand-in on the JVM, so every
 claim about them is earned here: the CI emulator job installs the APK, launches it, and then
-runs the instrumented suite. **Starting 20 tests → Finished 20 tests, 0 failed.**
+runs the instrumented suite. **All 24 pass**; the task fails on a single failing test, so a
+green job is every test passing.
 
 | Phase | What the device confirmed |
 |---|---|
 | **A — recording** | The microphone opens and reports no failure; frames arrive and reach the waveform callback; the file on disk is a real WAV whose header agrees with what capture reported; **the file is complete and readable while recording is still running** — the crash-recovery guarantee observed rather than argued; pause stops promptly and stays stopped, and resume continues the same take; a second take opens after the first is stopped, which is the only way a leaked `AudioEffect` ever shows itself |
 | **B — playback** | Playback starts and the head advances; a take recorded on the device plays back on it; playback through a Voice Space does not stall and changing the space mid-playback does not stop it; **starting and immediately stopping six times over does not take the process with it** |
 | **MP3** | **The encoder is in the APK and loads** — asserted, not skipped when absent. Android's own `MediaExtractor`/`MediaCodec` — the code every other application uses to open an audio file — reports `audio/mpeg`, the right rate and channel count; the duration survives within 150 ms declared *and* decoded; the file decodes to real audio rather than silence; the ID3v2 synchsafe size lands exactly on an MPEG frame sync; 44.1 and 48 kHz in mono and stereo all round-trip; the file survives being handed to another application as a `content://` URI; two minutes encodes with monotonic progress in under 30 seconds |
+| **Latency** | **Measured, not asserted.** The clock starts on the call a tap makes and stops when the playhead moves — which only happens once a block has been accepted by `AudioTrack`, so it times audio genuinely leaving the application. The median of five runs on a five-minute recording is inside the constitution's 100 ms tap-to-audible budget; starting deep inside a long recording costs no more than starting at the top; the largest Voice Space does not cost the instant start; and opening a five-minute recording and hearing it is under a second, with the peaks built afterwards rather than on the way |
 | **E — export** | Every format the panel offers writes bytes and reports the length it wrote; an exported WAV re-probes as the same project; progress runs 0→1 without going backwards; M4A comes back from MediaCodec; a format with no encoder refuses loudly rather than writing a broken file |
 
 **What the device tests found, which is the point of them.**
@@ -142,6 +144,10 @@ under a finger, or that a gesture selects what the user meant. Those need a huma
 
 The Voice Studio's *arithmetic* is proven on the JVM to a measured standard; its *sound* is a
 judgement only a listener can make.
+
+A CI emulator is also slower and jerkier than a phone, so the latency figures are a floor rather
+than a measurement of real hardware. A failure there would be real anywhere; a pass means the
+budget is met on something slower than the target device.
 
 | Item | Why | Where recorded |
 |---|---|---|
