@@ -279,6 +279,60 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         )
         currentTakeId = null
         publish()
+
+        // The whole product, in one decision.
+        //
+        // The first thirty seconds of SAUTIY are: open, Record, speak, Stop, Play. Until now, the
+        // sound at "Play" was the raw recording — a phone recording of a room, which is what every
+        // other recorder gives you. There was nothing at that moment worth reacting to, and that
+        // moment is the only one where a first-time user decides whether this app is different.
+        //
+        // So a finished take is cleaned up before it is ever played. Not a room — never a room,
+        // because a space nobody asked for is the change most likely to be wrong. Only the four
+        // things that are wrong with almost every phone recording and right with almost no taste
+        // judgement: rumble, an uneven level, background noise where there is some, and a voice
+        // sitting too far back. On an already-clean recording `Restraint` makes this nearly
+        // inaudible, which is the correct outcome and is asserted by a test.
+        //
+        // And it is reversible in one tap: Original is already on the context bar, already
+        // sample-accurate, already the same renderer. Something applied unasked has to be
+        // removable without being explained.
+        if (frames > 0) autoImprove()
+    }
+
+    /**
+     * Measures the take that just finished and applies what it needs — nothing more.
+     *
+     * Deliberately silent about itself beyond one line on the canvas. A modal explaining what was
+     * done to your recording is not a delightful first experience; hearing that it already sounds
+     * better is.
+     */
+    private fun autoImprove() {
+        // Never overrides a decision the user already made. Someone who chose Prestige Recitation
+        // before recording chose it for the recording they were about to make.
+        if (_state.value.voice != null) return
+        val timeline = history.current
+        if (timeline.lengthFrames == 0L) return
+
+        viewModelScope.launch {
+            val measured = withContext(Dispatchers.IO) {
+                runCatching {
+                    val frames = minOf(timeline.lengthFrames, 20L * timeline.sampleRate).toInt()
+                    val audio = ai.sautiy.core.edit.TimelineRenderer.render(
+                        timeline = timeline,
+                        provider = audioSources,
+                        startFrame = 0,
+                        frameCount = frames,
+                        channelCount = _state.value.channelCount,
+                    )
+                    val analysis = VoiceAnalysis.of(audio)
+                    VoiceAdvisor.enhance(analysis) to Restraint.of(analysis)
+                }.getOrNull()
+            } ?: return@launch
+
+            applyVoice(measured.first)
+            _state.update { it.copy(restraint = measured.second, autoImproved = true) }
+        }
     }
 
     private var currentTakeId: String? = null
@@ -425,6 +479,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
     private fun revertPreset() {
         _state.update {
             it.copy(
+                autoImproved = false,
                 appliedOutcome = null,
                 voice = null,
                 deferredStages = emptyList(),

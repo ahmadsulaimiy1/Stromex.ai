@@ -127,6 +127,15 @@ data class WorkspaceUiState(
     val activeSoundId: String? = null,
     /** What listeners have said about the applied preset, or null when too few have said anything. */
     val listeningEvidence: String? = null,
+    /**
+     * True when the take that just finished was cleaned up without being asked.
+     *
+     * Shown as one line, once, with the way to undo it. The first thirty seconds of this app are
+     * open, Record, speak, Stop, Play — and until this existed, the sound at "Play" was a phone
+     * recording of a room, which is what every other recorder gives you. Nothing worth reacting to
+     * at the only moment a first-time user decides whether this is different.
+     */
+    val autoImproved: Boolean = false,
     /** The live voice, including any hand edits made after a space was chosen. */
     val voice: VoiceStudioSettings? = null,
     /**

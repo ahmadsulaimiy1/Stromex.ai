@@ -123,6 +123,27 @@ fun SautiyWorkspace(
                         .padding(top = SautiySpace.xxl),
                 )
 
+                // One line, once, at the moment it matters — and the way to undo it is already on
+                // the context bar. Confident rather than apologetic: it says what happened, not
+                // what it might have done wrong.
+                if (state.autoImproved && !state.transport.isCapturing) {
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(horizontal = SautiySpace.pageInset, vertical = SautiySpace.l)
+                            .clip(SautiyShapes.pill)
+                            .background(colours.signalSelection)
+                            .padding(horizontal = SautiySpace.l, vertical = SautiySpace.s),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = if (state.comparingOriginal) "Original" else "Cleaned up",
+                            style = SautiyTheme.type.labelLarge,
+                            color = colours.signal,
+                        )
+                    }
+                }
+
                 if (state.transport.isCapturing || state.monitoring) {
                     LiveStudio(
                         state = state,

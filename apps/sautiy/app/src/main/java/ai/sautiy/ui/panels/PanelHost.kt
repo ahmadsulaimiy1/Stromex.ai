@@ -394,8 +394,8 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                 // Said plainly rather than implied. A preview that quietly differs from the
                 // export is how a person ships something they never heard.
                 Text(
-                    text = "Heard on export, not in preview: " +
-                        state.deferredStages.joinToString(", ").lowercase(),
+                    text = "The finished file will be a little cleaner and evener than this " +
+                        "preview — some of the work can only be done on the whole recording.",
                     style = SautiyTheme.type.bodyMedium,
                     color = colours.textTertiary,
                     modifier = Modifier.padding(vertical = SautiySpace.xs),
@@ -512,6 +512,25 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
         // will never scroll this far and lose nothing by it. Someone who wants a particular
         // acoustic character, rather than a particular result, finds it here.
 
+        // Layer two, behind one row — Phase ΩΩ directives 5 and 7.
+        //
+        // The panel had thirty-odd rows in it: ten outcomes, eight environments, seven recitation
+        // profiles, a disclosure, the saved sounds and four buttons. Every one of them was
+        // justified and the whole was a wall. Most people will never want a named room, and the
+        // ones who do know they want it, so it costs them one tap and costs everyone else nothing.
+        item {
+            Text(
+                text = if (state.advanced) "Hide rooms" else "Choose a room instead",
+                style = SautiyTheme.type.labelLarge,
+                color = colours.signal,
+                modifier = Modifier
+                    .sizeIn(minHeight = SautiySpace.minTouchTarget)
+                    .padding(top = SautiySpace.l)
+                    .pressable(label = "Choose a room instead", onClick = actions.onToggleAdvanced),
+            )
+        }
+
+        if (state.advanced) {
         item {
             SectionHeading(
                 title = "Acoustic Space",
@@ -545,14 +564,16 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
         }
 
         item {
-            // Always shown, never behind a tap. The people who care most about these recordings
-            // are exactly the people a name like "Makkah Inspired" could mislead.
+            // Always shown wherever the profiles are, never behind a further tap. The people who
+            // care most about these recordings are exactly the people a name like "Makkah
+            // Inspired" could mislead.
             Text(
                 text = RecitationProfile.DISCLOSURE,
                 style = SautiyTheme.type.bodyMedium,
                 color = colours.textTertiary,
                 modifier = Modifier.padding(top = SautiySpace.s, bottom = SautiySpace.l),
             )
+        }
         }
     }
 }
