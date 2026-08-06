@@ -24,6 +24,32 @@ set -euo pipefail
 ROOT="${1:-apps/sautiy/app/src/main/java}"
 STATUS=0
 
+# --- 0. break/continue inside an inline lambda -----------------------------------------------------
+#
+# Non-local `break` and `continue` from an inline lambda are not available on Kotlin 2.0.21 — they
+# landed in 2.2. So the natural way to bail out of a loop when a guarded call fails,
+#
+#     val block = runCatching { render(...) }.getOrElse { break }
+#
+# does not compile: "'break' or 'continue' jumps across a function or a class boundary". Read the
+# result into a local and test it outside the lambda instead.
+#
+# Caught by hand while fixing the playback crash, one keystroke before pushing it. Rule 4 of the
+# lockdown asks for justification before adding a check: this is a compile error that the sandbox
+# cannot see, in the exact shape of the fix a guarded call invites, and it costs one grep.
+
+while IFS= read -r hit; do
+  echo "error: break/continue inside a lambda — not supported until Kotlin 2.2, and this is 2.0.21."
+  echo "       $hit"
+  echo "       Read the value into a local with getOrNull(), then break outside the lambda."
+  STATUS=1
+# Comment lines are excluded, and that is not a detail: the first version of this rule fired on the
+# comment in AudioPlayer explaining the very bug it checks for. A check that cries wolf gets ignored,
+# and an ignored check is worse than an absent one.
+done < <(grep -rnE '\{[^}]*\b(break|continue)\b[^}]*\}' "$ROOT" --include='*.kt' \
+  | grep -E '(getOrElse|let|run|also|apply|forEach|map|filter|onFailure|onSuccess)\s*\{' \
+  | grep -vE '^[^:]*:[0-9]+:[[:space:]]*(//|\*)' || true)
+
 if [ ! -d "$ROOT" ]; then
   echo "no Compose sources at $ROOT" >&2
   exit 1
