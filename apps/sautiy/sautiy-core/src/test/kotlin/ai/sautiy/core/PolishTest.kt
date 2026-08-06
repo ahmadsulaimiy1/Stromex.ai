@@ -113,7 +113,7 @@ class WorkflowFrictionTest {
             "recall (${Workflows.recallSound.taps}) must beat save (${Workflows.saveSound.taps})",
             Workflows.recallSound.taps < Workflows.saveSound.taps,
         )
-        assertTrue(Workflows.recallSound.taps <= Workflows.enhance.taps)
+        assertTrue(Workflows.recallSound.taps <= Workflows.refine.taps)
     }
 
     @Test
@@ -131,7 +131,9 @@ class WorkflowFrictionTest {
         // A step with a weak justification is the next one to delete. Writing the justification
         // down is what makes that visible.
         for (workflow in Workflows.all) {
-            assertTrue("${workflow.name} has no steps", workflow.steps.isNotEmpty())
+            // A zero-step workflow is the best possible outcome, not a malformed one: `improve`
+            // costs nothing because the app does it. It is listed so that adding a tap to it has to
+            // be argued against a number.
             assertTrue("${workflow.name} has no stated goal", workflow.goal.length > 10)
             for (step in workflow.steps) {
                 assertTrue("a step with no label in ${workflow.name}", step.tap.isNotBlank())
@@ -305,5 +307,90 @@ class PresetDistinctnessTest {
         // Groups exist so the ten are four short lists rather than one long one.
         val groups = VoiceOutcome.entries.groupBy { it.group }
         assertTrue("a group with more than four members is a list again", groups.values.all { it.size <= 4 })
+    }
+}
+
+
+/**
+ * The Trust Principle, in the one place it can be enforced rather than promised.
+ *
+ * Four of the five prohibitions are properties of the interface and are checked by reading it. The
+ * second — never pretend an improvement happened when it did not — is arithmetic, and arithmetic can
+ * be tested: the app's claim and the app's audio have to agree.
+ */
+class TrustPrincipleTest {
+
+    @Test
+    fun `a recording that needed nothing is never described as improved`() {
+        // The claim the interface makes comes from `Restraint`. If a transparent recording's own
+        // summary boasted, the label would inherit the boast.
+        val clean = ai.sautiy.core.dsp.Restraint.of(
+            ai.sautiy.core.dsp.VoiceAnalysis(
+                integratedLufs = -21.0,
+                truePeakDb = -6.0,
+                loudnessRangeLu = 6.0,
+                noiseFloorDb = -64.0,
+                lowTiltDb = -8.0,
+                presenceTiltDb = -12.0,
+                sibilanceTiltDb = -16.0,
+            ),
+        )
+        assertTrue("this fixture is supposed to need almost nothing", clean.isTransparent)
+        val summary = clean.summary.lowercase()
+        assertTrue("the summary must say the recording was already clean", summary.contains("already clean"))
+        for (boast in listOf("improved", "enhanced", "better", "professional", "studio quality")) {
+            assertTrue("a transparent recording claimed to be '$boast': ${clean.summary}", !summary.contains(boast))
+        }
+    }
+
+    @Test
+    fun `the work reported is the work done`() {
+        // Restraint drives both the label and the chain, so a recording that reports no work must
+        // also receive none. Two numbers that could drift apart are one lie waiting to happen.
+        val clean = ai.sautiy.core.dsp.Restraint.of(
+            ai.sautiy.core.dsp.VoiceAnalysis(-21.0, -6.0, 6.0, -64.0, -8.0, -12.0, -16.0),
+        )
+        val settings = ai.sautiy.core.dsp.VoiceAdvisor.enhance(
+            ai.sautiy.core.dsp.VoiceAnalysis(-21.0, -6.0, 6.0, -64.0, -8.0, -12.0, -16.0),
+        )
+        assertTrue(clean.isTransparent)
+        assertTrue("reported no work but compressed anyway", settings.dynamics.compressor == null)
+        assertTrue("reported no work but shaped the tone anyway", settings.refinement.isNeutral)
+        assertTrue("reported no work but added a room anyway", settings.ambience.isBypassed)
+    }
+
+    @Test
+    fun `nothing automatic is irreversible`() {
+        // The only automatic change in the product is cleanup, and it is a `VoiceStudioSettings`
+        // applied at playback and export. Reverting is dropping it, which is why the original file
+        // can never be affected: `VoiceStudio.render` copies its input and leaves the caller's audio
+        // untouched, and that is asserted in VoiceStudioTest.
+        val enhanced = ai.sautiy.core.dsp.VoiceAdvisor.enhance(
+            ai.sautiy.core.dsp.VoiceAnalysis(-34.0, -12.0, 15.0, -46.0, -14.0, -24.0, -6.0),
+        )
+        assertTrue("the enhanced chain must be a value, not a mutation", !enhanced.isTransparent)
+
+        // What "revert" actually is, corrected by this test.
+        //
+        // The first version asserted that the *default* settings are transparent. They are not: the
+        // default carries a −1 dBTP limiter ceiling, which is right for anything being exported and
+        // is still processing. Naming that value "untouched" would have been the exact category of
+        // small untruth this class exists to catch.
+        //
+        // Reverting in the app is not a transparent chain — it is *no chain*: `revertPreset` sets
+        // the voice to null and the player stops applying anything. So the guarantee to assert is
+        // that a provably-transparent value is *constructible*, which is what makes "no processing"
+        // a state the engine can represent rather than a claim the UI makes.
+        val untouched = ai.sautiy.core.dsp.VoiceStudioSettings(
+            loudness = ai.sautiy.core.dsp.LoudnessStage(target = null, limiterCeilingDb = null),
+        )
+        assertTrue(
+            "there must be a representable setting that provably does nothing",
+            untouched.isTransparent,
+        )
+        assertTrue(
+            "the default chain is not transparent — it limits — and must not be described as such",
+            !ai.sautiy.core.dsp.VoiceStudioSettings().isTransparent,
+        )
     }
 }

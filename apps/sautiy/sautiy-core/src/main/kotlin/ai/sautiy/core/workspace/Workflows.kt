@@ -66,20 +66,47 @@ public object Workflows {
     )
 
     /**
-     * Enhance. **Two taps.**
+     * Improve a recording. **Zero taps.**
      *
-     * Studio, then Enhance Voice. It could be one if enhancement lived on the dock, and it
-     * deliberately does not: the dock's five slots are the transport, for the life of the product,
-     * and a sixth slot that changes the sound would make the dock a place where the sound can
-     * change by accident.
+     * The one workflow that got shorter by disappearing. Cleanup runs when a take ends, so the user
+     * does nothing at all to get the better result — and the Original / Enhanced pair on the canvas
+     * is how they know it happened and how they undo it.
+     *
+     * Kept in this list precisely *because* it is zero, so that anybody who later adds a tap to it
+     * has to argue against a number rather than against a habit.
      */
-    public val enhance: Workflow = Workflow(
-        name = "Enhance",
-        goal = "Make this sound better without learning anything",
+    public val improve: Workflow = Workflow(
+        name = "Improve",
+        goal = "Have this sound better than my phone recorded it",
+        budget = 0,
+        steps = emptyList(),
+    )
+
+    /**
+     * Refine it deliberately. **Two taps.**
+     *
+     * Studio, then an outcome. Distinct in purpose from [improve] rather than a faster version of
+     * it: Auto Improve produces a result, and this is where somebody who wants a different result
+     * goes to choose one.
+     *
+     * A one-tap version of this was tried and removed. "Enhance Voice" ran the same chain that now
+     * runs automatically, so pressing it changed nothing audible — a control that appears broken.
+     * "Studio Voice" was that chain plus a Podcast room, which is what the Podcast card does, under
+     * a name that says what it is for.
+     */
+    public val refine: Workflow = Workflow(
+        name = "Refine",
+        goal = "Make this sound the way I want rather than the way it came out",
         budget = 2,
         steps = listOf(
-            Step("Studio", "The one place the sound is decided."),
-            Step("Enhance Voice", "Measures the recording and does only what it needs."),
+            Step(
+                "Studio",
+                "The one place the sound is decided, and the only place it changes on purpose.",
+            ),
+            Step(
+                "Podcast",
+                "An outcome named for the job it does, applied to what is playing and to what will be exported.",
+            ),
         ),
     )
 
@@ -165,7 +192,7 @@ public object Workflows {
 
     /** Every workflow, for the test and for anyone auditing the friction. */
     public val all: List<Workflow> = listOf(
-        record, play, enhance, saveSound, recallSound, export, share,
+        record, play, improve, refine, saveSound, recallSound, export, share,
     )
 
     /** Total taps across every common workflow. One number to watch over releases. */

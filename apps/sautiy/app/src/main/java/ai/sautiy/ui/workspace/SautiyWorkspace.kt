@@ -122,61 +122,65 @@ fun SautiyWorkspace(
                         .padding(top = SautiySpace.xxl),
                 )
 
-                // One line, once, at the moment it matters — and the way to undo it is already on
-                // the context bar. Confident rather than apologetic: it says what happened, not
-                // what it might have done wrong.
+                // Original / Enhanced, and the way into Studio.
+                //
+                // This was a single pill reading "Cleaned up", and a label that reports one state is
+                // not enough to make automation trustworthy. A user looking at it has to work out
+                // whether their recording was changed, whether they are hearing the change, and how
+                // to get back — three questions a label cannot answer at once.
+                //
+                // A pair answers all three by existing. Both versions are always on screen, the one
+                // playing is the one lit, and switching is one tap. Enhanced is selected by default
+                // because it is the better first result; Original is never more than a tap away and
+                // the captured WAV is never modified, so nothing here is a decision the user cannot
+                // take back.
+                //
+                // Studio sits beside them with a different job. Auto Improve produces a result;
+                // Studio is where somebody goes to refine it on purpose. Separate responsibilities,
+                // no overlap — which is the reason this is two controls and not one clever one.
                 if (state.autoImproved && !state.transport.isCapturing) {
-                    // The announcement *is* the control.
-                    //
-                    // Rule 9 says never apply hidden processing, and this pill is where that rule
-                    // and the thirty-second rule meet. Automatic cleanup is the reason a first take
-                    // sounds better than the phone recording it was; it is also processing nobody
-                    // asked for, which is exactly what Rule 9 forbids.
-                    //
-                    // A label that only reports is not enough to settle that. So tapping this is
-                    // the A/B: it says what was done, and touching it undoes it and says so. The
-                    // original take on disk is never modified either way — captured WAVs are
-                    // write-once and every change lives in the timeline.
-                    //
-                    // Announced, one tap away, and non-destructive. That is the most this can be
-                    // while still being automatic, and if it is not enough the answer is to stop
-                    // doing it automatically rather than to describe it more softly.
                     Row(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
-                            .padding(horizontal = SautiySpace.pageInset, vertical = SautiySpace.l)
-                            .clip(SautiyShapes.pill)
-                            .background(colours.signalSelection)
-                            .pressable(
-                                label = if (state.comparingOriginal) {
-                                    "Hear the cleaned version"
-                                } else {
-                                    "Hear the original"
-                                },
-                                onClick = actions.onToggleCompare,
-                            )
-                            .padding(horizontal = SautiySpace.l, vertical = SautiySpace.s),
+                            .padding(horizontal = SautiySpace.pageInset, vertical = SautiySpace.l),
                         verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(SautiySpace.m),
                     ) {
-                        // Never a claim the app cannot support.
-                        //
-                        // This said "Cleaned up" unconditionally, including on a recording that
-                        // `Restraint` had correctly decided needed almost nothing — so the app was
-                        // taking credit for work it had not done. That is the exact opposite of
-                        // what builds trust in an automatic decision: a user who compares against
-                        // Original, hears no difference, and has been told something was cleaned
-                        // will stop believing the next thing the app says.
-                        //
-                        // So when the honest answer is "your recording was already clean", it says
-                        // that instead.
+                        Row(
+                            modifier = Modifier
+                                .clip(SautiyShapes.pill)
+                                .background(colours.surface),
+                        ) {
+                            VersionChoice(
+                                label = "Original",
+                                selected = state.comparingOriginal,
+                                onSelect = { if (!state.comparingOriginal) actions.onToggleCompare() },
+                            )
+                            VersionChoice(
+                                label = if (state.restraint?.isTransparent == true) {
+                                    // Never a claim the app cannot support: when the honest answer is
+                                    // that the take needed almost nothing, the label says so rather
+                                    // than taking credit for work it did not do.
+                                    "Already clean"
+                                } else {
+                                    "Enhanced"
+                                },
+                                selected = !state.comparingOriginal,
+                                onSelect = { if (state.comparingOriginal) actions.onToggleCompare() },
+                            )
+                        }
+
                         Text(
-                            text = when {
-                                state.comparingOriginal -> "Original"
-                                state.restraint?.isTransparent == true -> "Already clean"
-                                else -> "Cleaned up"
-                            },
+                            text = "Studio",
                             style = SautiyTheme.type.labelLarge,
                             color = colours.signal,
+                            modifier = Modifier
+                                .sizeIn(minHeight = SautiySpace.minTouchTarget)
+                                .pressable(
+                                    label = "Open Studio to refine this recording",
+                                    onClick = { actions.onOpenPanel(Panel.STUDIO) },
+                                )
+                                .padding(horizontal = SautiySpace.s),
                         )
                     }
                 }
@@ -434,6 +438,33 @@ private fun LiveStudio(state: WorkspaceUiState, modifier: Modifier = Modifier) {
                 warning = state.qualityScore < 55,
             )
         }
+    }
+}
+
+/**
+ * One half of the Original / Enhanced pair.
+ *
+ * Both halves are always present and always legible. A control that hides the alternative makes the
+ * user remember what the other state was called, which is the small unkindness that turns an
+ * automatic improvement into a thing people distrust.
+ */
+@Composable
+private fun VersionChoice(label: String, selected: Boolean, onSelect: () -> Unit) {
+    val colours = SautiyTheme.colours
+    Box(
+        modifier = Modifier
+            .sizeIn(minHeight = SautiySpace.minTouchTarget)
+            .clip(SautiyShapes.pill)
+            .background(if (selected) colours.signalSelection else Color.Transparent)
+            .pressable(label = "Hear the $label version", onClick = onSelect)
+            .padding(horizontal = SautiySpace.l, vertical = SautiySpace.s),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            style = SautiyTheme.type.labelLarge,
+            color = if (selected) colours.signal else colours.textTertiary,
+        )
     }
 }
 
