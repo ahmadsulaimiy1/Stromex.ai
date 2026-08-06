@@ -17,6 +17,7 @@ on:
       # The gate itself. Without this a change to the smoke script does not run the smoke
       # script, which is the one file where that matters most.
       - '.github/scripts/sautiy-smoke.sh'
+      - '.github/scripts/sautiy-compose-check.sh'
   workflow_dispatch:
 
 permissions:
@@ -94,6 +95,13 @@ jobs:
             echo "::error::LAME sources are missing, so this APK would ship without MP3 export."
             exit 1
           }
+
+      # Runs before the build because it is a second, not four minutes, and it catches the two
+      # Compose mistakes that have each cost a whole cycle: a non-local return out of a composable
+      # content lambda, and a cross-module smart cast.
+      - name: Check the Compose layer for known shape errors
+        working-directory: ${{ github.workspace }}
+        run: ./.github/scripts/sautiy-compose-check.sh apps/sautiy/app/src/main/java
 
       - name: Build the debug APK
         run: ./gradlew --no-daemon :app:assembleDebug

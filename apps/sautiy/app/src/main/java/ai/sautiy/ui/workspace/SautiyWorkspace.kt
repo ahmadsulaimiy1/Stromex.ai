@@ -310,12 +310,15 @@ private fun LiveStudio(state: WorkspaceUiState, modifier: Modifier = Modifier) {
     val colours = SautiyTheme.colours
     val guidance = state.guidance
     val quiet = state.noiseFloorDb < RecordingAdvisor.NOISY_ROOM_DB
+    // Read into a local: `action` is a property of a class in another module, so the compiler
+    // cannot smart-cast it to non-null after the check even though nothing could change it.
+    val action = guidance.action
 
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        if (!guidance.isSilent && guidance.action != null) {
+        if (!guidance.isSilent && action != null) {
             // One sentence, in the weight the problem deserves. A warning is ember because it will
             // damage the recording; a suggestion is not, because the take is still usable.
             Column(
@@ -332,7 +335,7 @@ private fun LiveStudio(state: WorkspaceUiState, modifier: Modifier = Modifier) {
                     .padding(SautiySpace.m),
             ) {
                 Text(
-                    text = guidance.action,
+                    text = action,
                     style = SautiyTheme.type.titleMedium,
                     color = if (guidance.weight == RecordingAdvisor.Weight.WARNING) {
                         colours.critical
