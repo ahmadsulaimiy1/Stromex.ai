@@ -129,18 +129,52 @@ class AudioPlayer(
         loop = scope.launch(Dispatchers.IO) {
             var position = fromFrame
             val total = timeline.lengthFrames
+            // Set when a source stops being readable underneath us. Distinguishes "the take ended"
+            // from "the audio went away", which are the same silence and not the same event.
+            var unreadable = false
 
             while (isActive) {
                 if (position >= total && loopRegion == null) break
 
                 val wanted = blockFrames
-                var block = TimelineRenderer.render(
-                    timeline = timeline,
-                    provider = provider,
-                    startFrame = position,
-                    frameCount = wanted,
-                    channelCount = channelCount,
-                )
+                // Guarded, and it is the *reason* this loop had a crash in it.
+                //
+                // A source can stop being readable while it is playing: a file deleted by another
+                // app, a card removed, or an owner that closed its reader while this loop was still
+                // in flight. `scope.launch` carries no CoroutineExceptionHandler, so an exception
+                // escaping here does not end playback — it kills the process. That is exactly what
+                // happened to PlaybackLatencyTest (EBADF through WavStreamReader), and on a phone it
+                // is a crash in the middle of listening.
+                //
+                // Every other risky call in this loop was already wrapped — `voice.process`, and
+                // every `audioTrack.write`. This was the only one that reaches a file descriptor,
+                // and it was the only one left bare.
+                //
+                // Read into a local and test it *outside* the lambda: `break` from inside an inline
+                // lambda is not available on Kotlin 2.0.21 (non-local break/continue landed in 2.2),
+                // so the obvious `getOrElse { break }` does not compile.
+                val rendered = runCatching {
+                    TimelineRenderer.render(
+                        timeline = timeline,
+                        provider = provider,
+                        startFrame = position,
+                        frameCount = wanted,
+                        channelCount = channelCount,
+                    )
+                }.getOrNull()
+
+                if (rendered == null) {
+                    // Stop, rather than write silence and carry on.
+                    //
+                    // Substituting silence would keep the playhead moving over audio the app can no
+                    // longer read — the transport would report playing, the position would advance,
+                    // and the user would hear nothing. That is the app pretending, which the Trust
+                    // Principle forbids outright. Stopping is audible, immediate and true.
+                    unreadable = true
+                    break
+                }
+
+                var block = rendered
 
                 // The voice before the speed change: the Voice Studio's filters were designed
                 // at the project's rate, and this is also the order the export uses, so what is
@@ -166,7 +200,7 @@ class AudioPlayer(
             // Reaching the end is a different event from being stopped, and only one of them
             // is news. A cancelled loop that reported "finished" would move the transport to
             // STOPPED behind the back of whatever just stopped it.
-            val reachedTheEnd = isActive
+            val reachedTheEnd = isActive && !unreadable
             _playing.value = false
 
             // The track is released *here*, and only here.
@@ -237,14 +271,44 @@ class AudioPlayer(
     }
 
     /**
-     * Stops playback.
+     * Stops playback, without waiting for the render loop to finish leaving.
      *
-     * Pause and flush come first, and they are what actually ends it: they unblock the write
-     * the render loop is sitting in, so it can see its own cancellation. The loop then releases
-     * the track on its way out. Nothing here touches the native object, because doing so while
-     * a write is in flight is precisely the crash this ordering exists to prevent.
+     * The right call for a thumb on a button: audio is silent by the time this returns, because the
+     * pause and flush inside [stopping] are what actually end it. The loop then releases the track on
+     * its own way out, a moment later.
+     *
+     * Use [stopAndAwait] instead if you are about to free something the player is reading.
      */
     fun stop() {
+        stopping()
+    }
+
+    /**
+     * Stops, and does not return until the render loop has actually left.
+     *
+     * [stop] cancels and returns immediately, which is right for a thumb on a button — the UI must
+     * never block on audio teardown. It is wrong for anyone who owns the *source*: cancellation is a
+     * request, not an event, and the loop can still be inside a block read when `stop` returns. A
+     * caller that closes its reader on the next line is then racing it, and the loop reads a closed
+     * descriptor.
+     *
+     * That race is what killed the test process, and guarding the render made it survivable rather
+     * than impossible. This makes it impossible: anything that owns a file the player is reading
+     * should stop it with this, not with [stop].
+     */
+    suspend fun stopAndAwait() {
+        stopping()?.join()
+    }
+
+    /**
+     * The shared body. Returns the loop that was cancelled, so [stopAndAwait] has something to join.
+     *
+     * Pause and flush come first, and they are what actually ends it: they unblock the write the
+     * render loop is sitting in, so it can see its own cancellation. Nothing here touches the native
+     * object, because doing so while a write is in flight is precisely the crash the loop's own
+     * ownership of `release()` exists to prevent.
+     */
+    private fun stopping(): Job? {
         val running = loop
         val audioTrack = track
         loop = null
@@ -256,5 +320,6 @@ class AudioPlayer(
             runCatching { it.flush() }
         }
         running?.cancel()
+        return running
     }
 }

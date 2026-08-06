@@ -116,7 +116,14 @@ class PlaybackLatencyTest {
             assertTrue("Playback never produced audio", reached.get() > 0)
             (reached.get() - started) / 1_000_000
         } finally {
-            player.stop()
+            // Awaited, not fired and forgotten.
+            //
+            // `player.stop()` returns as soon as cancellation is *requested*, and the render loop can
+            // still be inside a block read. Every caller of this helper closes the reader those blocks
+            // come from, so returning early meant the loop read a closed descriptor — an EBADF that
+            // escaped the player's coroutine and took the whole instrumentation process with it,
+            // failing this test and stealing the twenty-fourth.
+            runBlocking { player.stopAndAwait() }
         }
     }
 
