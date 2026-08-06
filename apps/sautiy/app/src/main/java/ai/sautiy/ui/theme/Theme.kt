@@ -4,6 +4,7 @@ import ai.sautiy.R
 import ai.sautiy.core.design.Motion
 import ai.sautiy.core.design.Radius
 import ai.sautiy.core.design.SautiyColours
+import ai.sautiy.core.design.Sizes
 import ai.sautiy.core.design.Space
 import ai.sautiy.core.design.TypeScale
 import ai.sautiy.core.design.TypeStyle
@@ -215,6 +216,40 @@ object SautiySpace {
 
     /** Chapter 3.2.4 / 17: nothing interactive is ever smaller than this. */
     val minTouchTarget = ai.sautiy.core.PerformanceBudget.MIN_TOUCH_TARGET_DP.dp
+}
+
+/**
+ * Every component size, as dp — Phase Ω.
+ *
+ * A call site never chooses a size, the same way it never chooses a corner radius or a colour. Each
+ * of these comes from `Sizes` in the tested module, and a test scans the Compose sources to make
+ * sure no new number gets invented in a hurry. That scan is the point: four icon sizes in four
+ * files is not something a person can hold in their head, and it is exactly what makes an interface
+ * feel assembled rather than designed.
+ */
+object SautiySize {
+    val iconSmall = Sizes.ICON_SMALL.dp
+    val icon = Sizes.ICON_MEDIUM.dp
+    val iconLarge = Sizes.ICON_LARGE.dp
+    val dot = Sizes.DOT.dp
+    val hairline = Sizes.HAIRLINE.dp
+    val borderSelected = Sizes.BORDER_SELECTED.dp
+    val handleWidth = Sizes.HANDLE_WIDTH.dp
+    val handleHeight = Sizes.HANDLE_HEIGHT.dp
+    val meterHeight = Sizes.METER_HEIGHT.dp
+    val gaugeSmall = Sizes.GAUGE_SMALL.dp
+    val gaugeLarge = Sizes.GAUGE_LARGE.dp
+    val transport = Sizes.TRANSPORT.dp
+    val transportPrimary = Sizes.TRANSPORT_PRIMARY.dp
+    val dockHeight = Sizes.DOCK_HEIGHT.dp
+    val iconHero = Sizes.ICON_HERO.dp
+    val contextToolHeight = Sizes.CONTEXT_TOOL_HEIGHT.dp
+    val contextBarHeight = Sizes.CONTEXT_BAR_HEIGHT.dp
+    val canvasStroke = Sizes.CANVAS_STROKE.dp
+    val ringInset = Sizes.RING_INSET.dp
+
+    /** Zero, named, so "no border" is a stated choice rather than a bare literal. */
+    val none = 0.dp
 }
 
 private val LocalSautiyColours = staticCompositionLocalOf { SautiyColourScheme.Dark }

@@ -2,7 +2,9 @@ package ai.sautiy.ui.workspace
 
 import ai.sautiy.core.workspace.TransportState
 import ai.sautiy.ui.icons.SautiyIcons
+import ai.sautiy.ui.components.Press
 import ai.sautiy.ui.theme.SautiyMotion
+import ai.sautiy.ui.theme.SautiySize
 import ai.sautiy.ui.theme.SautiySpace
 import ai.sautiy.ui.theme.SautiyTheme
 import androidx.compose.animation.animateColorAsState
@@ -123,7 +125,7 @@ private fun RecordButton(transport: TransportState, onClick: () -> Unit) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val pressScale by animateFloatAsState(
-        targetValue = if (pressed) 0.94f else 1f,
+        targetValue = if (pressed) Press.PRESS_SCALE_LARGE else 1f,
         animationSpec = SautiyMotion.fast(),
         label = "recordPress",
     )
@@ -161,8 +163,8 @@ private fun RecordButton(transport: TransportState, onClick: () -> Unit) {
         modifier = Modifier
             .size(RECORD_DIAMETER)
             .scale(pressScale * breath)
-            .border(width = 2.dp, color = colours.textPrimary.copy(alpha = 0.85f), shape = CircleShape)
-            .padding(5.dp)
+            .border(width = SautiySize.borderSelected, color = colours.textPrimary.copy(alpha = 0.85f), shape = CircleShape)
+            .padding(SautiySize.ringInset)
             .background(
                 color = fill,
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(percent = cornerPercent.toInt()),
@@ -185,7 +187,7 @@ private fun CommitButton(enabled: Boolean, onClick: () -> Unit) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.94f else 1f,
+        targetValue = if (pressed) Press.PRESS_SCALE_LARGE else 1f,
         animationSpec = SautiyMotion.fast(),
         label = "commitPress",
     )
@@ -210,7 +212,7 @@ private fun CommitButton(enabled: Boolean, onClick: () -> Unit) {
             imageVector = SautiyIcons.Commit,
             contentDescription = null,
             tint = if (enabled) colours.onCommit else colours.textDisabled,
-            modifier = Modifier.size(22.dp),
+            modifier = Modifier.size(SautiySize.iconLarge),
         )
     }
 }
@@ -243,7 +245,7 @@ private fun TransportButton(
             imageVector = icon,
             contentDescription = null,
             tint = tint,
-            modifier = Modifier.size(26.dp),
+            modifier = Modifier.size(SautiySize.iconLarge),
         )
     }
 }
@@ -270,5 +272,5 @@ private fun Modifier.clickableTarget(
     )
     .semantics { contentDescription = description }
 
-private val RECORD_DIAMETER: Dp = 76.dp
-private val SECONDARY_DIAMETER: Dp = 52.dp
+private val RECORD_DIAMETER: Dp = SautiySize.transportPrimary
+private val SECONDARY_DIAMETER: Dp = SautiySize.transport

@@ -81,6 +81,27 @@ if findings:
 sys.exit(0)
 PYTHON
 
+# --- 3. Invented sizes ----------------------------------------------------------------------------
+#
+# Phase Ω, directive 6: consistency is quality. The app once drew icons at 20, 22, 24 and 26 dp in
+# four files, dots at 8 and 10, strokes at 1.5 and 2. None of it was a decision. A user cannot name
+# that, but they can see it — it is exactly what makes an interface feel assembled rather than
+# designed.
+#
+# So every size lives in `Sizes` in the tested module and is exposed as `SautiySize`. This finds any
+# raw dp literal that has crept back into a composable. The theme file itself is exempt: that is
+# where the tokens are turned into dp, and it is the one place a number belongs.
+
+RAW=$(grep -rnE '\b[0-9]+(\.[0-9]+)?\.dp\b' "$ROOT" --include='*.kt' \
+      | grep -v '/ui/theme/Theme.kt' || true)
+
+if [ -n "$RAW" ]; then
+  echo "error: raw dp literals in the Compose layer. Every size belongs in Sizes/SautiySize —"
+  echo "       four icon sizes in four files is what makes an interface look assembled."
+  echo "$RAW" | sed 's/^/       /'
+  STATUS=1
+fi
+
 if [ "$STATUS" -eq 0 ]; then
   echo "Compose shape checks passed."
 fi

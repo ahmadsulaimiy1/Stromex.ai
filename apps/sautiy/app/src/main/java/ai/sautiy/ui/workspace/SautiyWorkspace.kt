@@ -9,9 +9,11 @@ import ai.sautiy.core.record.RecordingAdvisor
 import ai.sautiy.ui.components.ConditionDot
 import ai.sautiy.ui.components.LevelMeter
 import ai.sautiy.ui.components.StorageIndicator
+import ai.sautiy.ui.components.pressable
 import ai.sautiy.ui.icons.SautiyIcons
 import ai.sautiy.ui.theme.SautiyMotion
 import ai.sautiy.ui.theme.SautiyShapes
+import ai.sautiy.ui.theme.SautiySize
 import ai.sautiy.ui.theme.SautiySpace
 import ai.sautiy.ui.theme.SautiyTheme
 import androidx.compose.animation.AnimatedVisibility
@@ -175,9 +177,8 @@ fun SautiyWorkspace(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(colours.canvas.copy(alpha = 0.45f))
-                    .clickable(
-                        onClickLabel = "Close panel",
-                        role = Role.Button,
+                    .pressable(
+                        label = "Close panel",
                         onClick = actions.onDismissPanel,
                     ),
             )
@@ -238,7 +239,7 @@ private fun StatusRail(
             modifier = Modifier
                 .weight(1f)
                 .sizeIn(minHeight = SautiySpace.minTouchTarget)
-                .clickable(onClickLabel = "Project and library", role = Role.Button, onClick = onProject),
+                .pressable(label = "Project and library", onClick = onProject),
             verticalArrangement = Arrangement.Center,
         ) {
             Text(
@@ -281,14 +282,14 @@ private fun StatusRail(
         Box(
             modifier = Modifier
                 .size(SautiySpace.minTouchTarget)
-                .clickable(onClickLabel = "Settings", role = Role.Button, onClick = onSettings),
+                .pressable(label = "Settings", onClick = onSettings),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = SautiyIcons.Settings,
                 contentDescription = null,
                 tint = colours.textSecondary,
-                modifier = Modifier.size(22.dp),
+                modifier = Modifier.size(SautiySize.icon),
             )
         }
     }
@@ -389,7 +390,7 @@ private fun LiveStudio(state: WorkspaceUiState, modifier: Modifier = Modifier) {
 private fun RecordingIndicator() {
     Box(
         modifier = Modifier
-            .size(10.dp)
+            .size(SautiySize.dot)
             .background(SautiyTheme.colours.ember, RoundedCornerShape(percent = 50)),
     )
 }
@@ -414,7 +415,7 @@ private fun LayerStrip(
                 modifier = Modifier
                     .fillMaxWidth()
                     .sizeIn(minHeight = SautiySpace.minTouchTarget)
-                    .clickable(onClickLabel = "Add layer", role = Role.Button, onClick = onAddLayer)
+                    .pressable(label = "Add layer", onClick = onAddLayer)
                     .padding(horizontal = SautiySpace.pageInset),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(SautiySpace.m),
@@ -423,7 +424,7 @@ private fun LayerStrip(
                     imageVector = SautiyIcons.Add,
                     contentDescription = null,
                     tint = colours.textPrimary,
-                    modifier = Modifier.size(22.dp),
+                    modifier = Modifier.size(SautiySize.icon),
                 )
                 Text(
                     text = "Add layer",
@@ -438,11 +439,11 @@ private fun LayerStrip(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .height(SautiySize.contextToolHeight)
                     .padding(horizontal = SautiySpace.s, vertical = SautiySpace.xxs)
                     .clip(SautiyShapes.small)
                     .background(if (selected) colours.signalSelection else colours.surface)
-                    .clickable(onClickLabel = layer.name, role = Role.Button) { onSelect(layer.id) }
+                    .pressable(label = layer.name) { onSelect(layer.id) }
                     .padding(horizontal = SautiySpace.m),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(SautiySpace.m),
@@ -451,7 +452,7 @@ private fun LayerStrip(
                     imageVector = SautiyIcons.Waveform,
                     contentDescription = null,
                     tint = if (layer.muted) colours.textDisabled else colours.signal,
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(SautiySize.icon),
                 )
                 Text(
                     text = layer.name,
@@ -527,7 +528,7 @@ private fun ContextTool(
     Column(
         modifier = Modifier
             .sizeIn(minWidth = SautiySpace.minTouchTarget, minHeight = SautiySpace.minTouchTarget)
-            .clickable(onClickLabel = label, role = Role.Button, onClick = onClick),
+            .pressable(label = label, onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -535,7 +536,7 @@ private fun ContextTool(
             imageVector = icon,
             contentDescription = null,
             tint = tint,
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier.size(SautiySize.iconLarge),
         )
         // Chapter 2.5 icon law 2: anything not universally understood carries a persistent
         // label. Trim, split and normalise are not universally understood.
@@ -601,7 +602,7 @@ private fun EmptyCanvas() {
             imageVector = SautiyIcons.Waveform,
             contentDescription = null,
             tint = SautiyTheme.colours.textDisabled,
-            modifier = Modifier.size(48.dp),
+            modifier = Modifier.size(SautiySize.iconHero),
         )
         Spacer(modifier = Modifier.height(SautiySpace.xxl))
         Text(
@@ -619,5 +620,5 @@ private fun EmptyCanvas() {
     }
 }
 
-internal val DOCK_HEIGHT = 108.dp
-internal val CONTEXT_BAR_HEIGHT = 76.dp
+internal val DOCK_HEIGHT = SautiySize.dockHeight
+internal val CONTEXT_BAR_HEIGHT = SautiySize.contextBarHeight

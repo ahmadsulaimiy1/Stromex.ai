@@ -1,5 +1,6 @@
 package ai.sautiy.ui.components
 
+import ai.sautiy.ui.theme.SautiySize
 import ai.sautiy.ui.theme.SautiySpace
 import ai.sautiy.ui.theme.SautiyTheme
 import androidx.compose.animation.core.animateFloatAsState
@@ -65,7 +66,7 @@ fun ValueArc(
     value: Double,
     reading: String,
     modifier: Modifier = Modifier,
-    diameter: Dp = 64.dp,
+    diameter: Dp = SautiySize.gaugeLarge,
     tint: Color? = null,
     sweet: ClosedFloatingPointRange<Float>? = null,
 ) {
@@ -171,7 +172,7 @@ fun ConditionDot(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(SautiySpace.xs),
     ) {
-        Canvas(modifier = Modifier.size(8.dp)) {
+        Canvas(modifier = Modifier.size(SautiySize.dot)) {
             drawCircle(color = colour)
         }
         Text(text = label, style = SautiyTheme.type.labelSmall, color = colours.textSecondary)
@@ -219,7 +220,7 @@ fun RangeBar(
             )
         }
         Spacer(modifier = Modifier.height(SautiySpace.xxs))
-        Canvas(modifier = Modifier.fillMaxWidth().height(6.dp)) {
+        Canvas(modifier = Modifier.fillMaxWidth().height(SautiySize.meterHeight)) {
             val radius = size.height / 2
             drawRoundRect(
                 color = colours.surfaceRaised,

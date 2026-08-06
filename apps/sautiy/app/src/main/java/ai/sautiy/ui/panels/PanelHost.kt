@@ -17,8 +17,10 @@ import ai.sautiy.ui.components.QualityGauge
 import ai.sautiy.ui.components.ConditionDot
 import ai.sautiy.ui.components.GaugeRow
 import ai.sautiy.ui.components.ValueArc
+import ai.sautiy.ui.components.pressable
 import ai.sautiy.ui.icons.SautiyIcons
 import ai.sautiy.ui.theme.SautiyShapes
+import ai.sautiy.ui.theme.SautiySize
 import ai.sautiy.ui.theme.SautiySpace
 import ai.sautiy.ui.theme.SautiyTheme
 import androidx.compose.foundation.background
@@ -127,8 +129,8 @@ private fun PanelScaffold(
         ) {
             Box(
                 modifier = Modifier
-                    .width(36.dp)
-                    .height(4.dp)
+                    .width(SautiySize.handleWidth)
+                    .height(SautiySize.handleHeight)
                     .background(colours.border, RoundedCornerShape(percent = 50)),
             )
         }
@@ -148,14 +150,14 @@ private fun PanelScaffold(
             Box(
                 modifier = Modifier
                     .size(SautiySpace.minTouchTarget)
-                    .clickable(onClickLabel = "Close panel", role = Role.Button, onClick = onDismiss),
+                    .pressable(label = "Close panel", onClick = onDismiss),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = SautiyIcons.Close,
                     contentDescription = null,
                     tint = colours.textSecondary,
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(SautiySize.icon),
                 )
             }
         }
@@ -330,7 +332,7 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                         label = "Work done",
                         value = restraint.strength,
                         reading = "${restraint.percent}%",
-                        diameter = 56.dp,
+                        diameter = SautiySize.gaugeSmall,
                     )
                     Spacer(modifier = Modifier.width(SautiySpace.m))
                     Text(
@@ -418,11 +420,11 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                     .clip(SautiyShapes.medium)
                     .background(if (applied) colours.signalSelection else colours.surfaceRaised)
                     .border(
-                        width = if (applied) 1.5.dp else 0.dp,
+                        width = if (applied) SautiySize.borderSelected else SautiySize.none,
                         color = if (applied) colours.signal else colours.surfaceRaised,
                         shape = SautiyShapes.medium,
                     )
-                    .clickable(onClickLabel = outcome.displayName, role = Role.Button) {
+                    .pressable(label = outcome.displayName) {
                         actions.onApplyOutcome(outcome)
                     }
                     .padding(SautiySpace.l),
@@ -496,9 +498,8 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                         color = colours.signal,
                         modifier = Modifier
                             .sizeIn(minHeight = SautiySpace.minTouchTarget)
-                            .clickable(
-                                onClickLabel = "Revert to original",
-                                role = Role.Button,
+                            .pressable(
+                                label = "Revert to original",
                                 onClick = actions.onRevertPreset,
                             ),
                     )
@@ -603,7 +604,7 @@ private fun SavedSoundRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .sizeIn(minHeight = SautiySpace.minTouchTarget)
-                    .clickable(onClickLabel = "Use ${sound.name}", role = Role.Button, onClick = onRecall),
+                    .pressable(label = "Use ${sound.name}", onClick = onRecall),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
@@ -647,7 +648,7 @@ private fun TextAction(
         color = if (destructive) SautiyTheme.colours.critical else SautiyTheme.colours.signal,
         modifier = Modifier
             .sizeIn(minHeight = SautiySpace.minTouchTarget)
-            .clickable(onClickLabel = label, role = Role.Button, onClick = onClick)
+            .pressable(label = label, onClick = onClick)
             .padding(vertical = SautiySpace.s),
     )
 }
@@ -697,7 +698,7 @@ private fun SaveSoundRow(onSave: (String) -> Unit) {
                             .sizeIn(minHeight = SautiySpace.minTouchTarget)
                             .clip(SautiyShapes.pill)
                             .background(colours.surface)
-                            .clickable(onClickLabel = suggestion, role = Role.Button) {
+                            .pressable(label = suggestion) {
                                 onSave(suggestion)
                                 naming = false
                             },
@@ -766,7 +767,7 @@ private fun ChooserRow(
             .fillMaxWidth()
             .clip(SautiyShapes.small)
             .background(if (selected) colours.signalSelection else colours.surface)
-            .clickable(onClickLabel = title, role = Role.Button, onClick = onClick)
+            .pressable(label = title, onClick = onClick)
             .padding(horizontal = SautiySpace.m, vertical = SautiySpace.s)
             .sizeIn(minHeight = SautiySpace.minTouchTarget),
         verticalAlignment = Alignment.CenterVertically,
@@ -817,7 +818,7 @@ private fun ListenerNoteChips(onNote: (ListenerNote) -> Unit) {
                             .sizeIn(minHeight = SautiySpace.minTouchTarget)
                             .clip(SautiyShapes.pill)
                             .background(if (isAcceptance) colours.commit else colours.surface)
-                            .clickable(onClickLabel = note.displayName, role = Role.Button) {
+                            .pressable(label = note.displayName) {
                                 onNote(note)
                             },
                         contentAlignment = Alignment.Center,
@@ -929,7 +930,7 @@ private fun ExportPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                     .padding(vertical = SautiySpace.xxs)
                     .clip(SautiyShapes.medium)
                     .background(if (chosen) colours.signalSelection else colours.surfaceRaised)
-                    .clickable(onClickLabel = format.displayName, role = Role.Button) {
+                    .pressable(label = format.displayName) {
                         actions.onChooseExportFormat(format)
                     }
                     .padding(SautiySpace.l),
@@ -1021,10 +1022,10 @@ private fun PrimaryAction(
     Box(
         modifier = modifier
             .sizeIn(minHeight = SautiySpace.minTouchTarget)
-            .height(52.dp)
+            .height(SautiySize.transport)
             .clip(SautiyShapes.pill)
             .background(if (filled) colours.commit else colours.surfaceRaised)
-            .clickable(onClickLabel = label, role = Role.Button, onClick = onClick),
+            .pressable(label = label, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -1137,13 +1138,13 @@ private fun LibraryPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                     imageVector = SautiyIcons.Waveform,
                     contentDescription = null,
                     tint = colours.signal,
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(SautiySize.icon),
                 )
                 Column(
                     modifier = Modifier
                         .weight(1f)
                         .clip(SautiyShapes.small)
-                        .clickable(onClickLabel = row.title, role = Role.Button) {
+                        .pressable(label = row.title) {
                             actions.onOpenRecording(row.id)
                         }
                         .padding(vertical = SautiySpace.s),
@@ -1199,7 +1200,7 @@ private fun LibraryPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                         color = colours.textSecondary,
                         modifier = Modifier
                             .sizeIn(minHeight = SautiySpace.minTouchTarget)
-                            .clickable(onClickLabel = "Keep", role = Role.Button) { confirming = null }
+                            .pressable(label = "Keep") { confirming = null }
                             .padding(SautiySpace.s),
                     )
                     Text(
@@ -1208,7 +1209,7 @@ private fun LibraryPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                         color = colours.critical,
                         modifier = Modifier
                             .sizeIn(minHeight = SautiySpace.minTouchTarget)
-                            .clickable(onClickLabel = "Delete ${row.title}", role = Role.Button) {
+                            .pressable(label = "Delete ${row.title}") {
                                 actions.onDelete(row.id)
                                 confirming = null
                             }
@@ -1236,7 +1237,7 @@ private fun LibraryPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                         color = colours.signal,
                         modifier = Modifier
                             .sizeIn(minHeight = SautiySpace.minTouchTarget)
-                            .clickable(onClickLabel = "Save name", role = Role.Button) {
+                            .pressable(label = "Save name") {
                                 val title = pending.second.trim()
                                 if (title.isNotEmpty()) actions.onRename(row.id, title)
                                 renaming = null
@@ -1262,10 +1263,10 @@ private fun RowAction(
         modifier = Modifier
             .size(SautiySpace.minTouchTarget)
             .clip(SautiyShapes.small)
-            .clickable(onClickLabel = label, role = Role.Button, onClick = onClick),
+            .pressable(label = label, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(imageVector = icon, contentDescription = label, tint = tint, modifier = Modifier.size(20.dp))
+        Icon(imageVector = icon, contentDescription = label, tint = tint, modifier = Modifier.size(SautiySize.icon))
     }
 }
 
@@ -1283,7 +1284,7 @@ private fun HistoryPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                     .sizeIn(minHeight = SautiySpace.minTouchTarget)
                     .clip(SautiyShapes.small)
                     .background(if (current) colours.signalSelection else colours.surface)
-                    .clickable(onClickLabel = state.historySteps[index], role = Role.Button) {
+                    .pressable(label = state.historySteps[index]) {
                         actions.onTravelHistory(index)
                     }
                     .padding(horizontal = SautiySpace.m, vertical = SautiySpace.m),
@@ -1312,7 +1313,7 @@ private fun LayersPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .sizeIn(minHeight = SautiySpace.minTouchTarget)
-                    .clickable(onClickLabel = layer.name, role = Role.Button) { actions.onSelectLayer(layer.id) }
+                    .pressable(label = layer.name) { actions.onSelectLayer(layer.id) }
                     .padding(vertical = SautiySpace.m),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -1344,7 +1345,7 @@ private fun MarkersPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .sizeIn(minHeight = SautiySpace.minTouchTarget)
-                    .clickable(onClickLabel = "Jump", role = Role.Button) { actions.onSeek(frame) }
+                    .pressable(label = "Jump") { actions.onSeek(frame) }
                     .padding(vertical = SautiySpace.m),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -1489,9 +1490,8 @@ private fun SpacePanel(state: WorkspaceUiState, actions: WorkspaceActions) {
             color = SautiyTheme.colours.signal,
             modifier = Modifier
                 .sizeIn(minHeight = SautiySpace.minTouchTarget)
-                .clickable(
-                    onClickLabel = "Advanced Studio",
-                    role = Role.Button,
+                .pressable(
+                    label = "Advanced Studio",
                     onClick = actions.onToggleAdvanced,
                 ),
         )

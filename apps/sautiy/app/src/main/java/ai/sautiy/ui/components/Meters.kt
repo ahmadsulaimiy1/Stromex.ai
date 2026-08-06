@@ -2,6 +2,7 @@ package ai.sautiy.ui.components
 
 import ai.sautiy.core.audio.Decibels
 import ai.sautiy.core.design.Motion
+import ai.sautiy.ui.theme.SautiySize
 import ai.sautiy.ui.theme.SautiySpace
 import ai.sautiy.ui.theme.SautiyTheme
 import androidx.compose.foundation.Canvas
@@ -51,7 +52,7 @@ fun LevelMeter(
     peakDb: Double,
     rmsDb: Double,
     modifier: Modifier = Modifier,
-    height: androidx.compose.ui.unit.Dp = 8.dp,
+    height: androidx.compose.ui.unit.Dp = SautiySize.meterHeight,
 ) {
     val colours = SautiyTheme.colours
 
@@ -119,7 +120,7 @@ fun LevelMeter(
             color = if (displayedPeak >= -0.1f) colours.critical else colours.textPrimary,
             start = Offset(peakX, 0f),
             end = Offset(peakX, size.height),
-            strokeWidth = 2.dp.toPx(),
+            strokeWidth = SautiySize.canvasStroke.toPx(),
             cap = StrokeCap.Round,
         )
 
@@ -130,7 +131,7 @@ fun LevelMeter(
             color = if (heldPeak >= -0.1f) colours.critical else colours.textTertiary,
             start = Offset(heldX, 0f),
             end = Offset(heldX, size.height),
-            strokeWidth = 1.5.dp.toPx(),
+            strokeWidth = SautiySize.canvasStroke.toPx(),
             cap = StrokeCap.Round,
         )
     }
@@ -165,7 +166,7 @@ fun QualityGauge(
     score: Int,
     reason: String,
     modifier: Modifier = Modifier,
-    diameter: androidx.compose.ui.unit.Dp = 56.dp,
+    diameter: androidx.compose.ui.unit.Dp = SautiySize.gaugeSmall,
 ) {
     val colours = SautiyTheme.colours
     val ringColour = when {
@@ -182,7 +183,7 @@ fun QualityGauge(
     ) {
         Box(contentAlignment = Alignment.Center) {
             Canvas(modifier = Modifier.size(diameter)) {
-                val stroke = 4.dp.toPx()
+                val stroke = SautiySize.ringInset.toPx()
                 drawArc(
                     color = colours.surfaceRaised,
                     startAngle = 135f,

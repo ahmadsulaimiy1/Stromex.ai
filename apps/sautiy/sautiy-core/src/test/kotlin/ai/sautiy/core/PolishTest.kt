@@ -1,0 +1,284 @@
+package ai.sautiy.core
+
+import ai.sautiy.core.audio.AudioBuffer
+import ai.sautiy.core.design.Radius
+import ai.sautiy.core.design.Sizes
+import ai.sautiy.core.design.Space
+import ai.sautiy.core.dsp.Biquad
+import ai.sautiy.core.dsp.VoiceOutcome
+import ai.sautiy.core.dsp.VoiceStudio
+import ai.sautiy.core.workspace.Workflows
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.log10
+import kotlin.math.sin
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+/**
+ * Phase Ω — the polish that can be enforced rather than reviewed.
+ *
+ * Craftsmanship is mostly invisible individually and unmistakable in aggregate. What a test can
+ * hold is the aggregate: that no size was invented, that no workflow grew a step, that no two
+ * presets are hard to tell apart. What a test cannot hold is whether the result feels premium, and
+ * that is stated as unproven rather than claimed.
+ */
+class ConsistencyTest {
+
+    @Test
+    fun `every component size is on the grid or a deliberate exception`() {
+        // 4 dp grid, chapter 5. The exceptions are named rather than tolerated: a hairline is 1 dp
+        // because it is one pixel of intent, and a 2 dp stroke is the thinnest line that survives
+        // being drawn on a canvas at low density.
+        val exceptions = setOf(Sizes.HAIRLINE, Sizes.BORDER_SELECTED, Space.XXS)
+        for (size in Sizes.all) {
+            assertTrue(
+                "$size dp is neither on the 4 dp grid nor a named exception",
+                Space.isOnGrid(size) || size in exceptions,
+            )
+        }
+    }
+
+    @Test
+    fun `there is exactly one size for each job`() {
+        // The defect this exists to prevent: icons at 20, 22, 24 and 26 dp in four files. Three icon
+        // sizes is a scale; four is an accident. Each must be clearly distinct or they are not
+        // three decisions, they are one decision made badly three times.
+        val icons = listOf(Sizes.ICON_SMALL, Sizes.ICON_MEDIUM, Sizes.ICON_LARGE)
+        assertEquals("three icon sizes, no more", 3, icons.distinct().size)
+        for ((smaller, larger) in icons.zipWithNext()) {
+            assertTrue(
+                "$smaller and $larger are too close to be separate decisions",
+                larger - smaller >= 4,
+            )
+        }
+    }
+
+    @Test
+    fun `nothing interactive can be smaller than a thumb`() {
+        assertEquals(PerformanceBudget.MIN_TOUCH_TARGET_DP, Sizes.MIN_TOUCH_TARGET)
+        assertTrue("48 dp is the floor, chapter 17", Sizes.MIN_TOUCH_TARGET >= 48)
+        // The transport controls are the ones a thumb finds without looking.
+        assertTrue(Sizes.TRANSPORT >= Sizes.MIN_TOUCH_TARGET)
+        assertTrue(
+            "the record control must be the largest target on screen",
+            Sizes.TRANSPORT_PRIMARY > Sizes.TRANSPORT,
+        )
+    }
+
+    @Test
+    fun `radii form a scale rather than a collection`() {
+        val scale = listOf(Radius.XS, Radius.S, Radius.M, Radius.L, Radius.XL, Radius.SHEET)
+        for ((smaller, larger) in scale.zipWithNext()) {
+            assertTrue("$smaller then $larger is not ascending", larger > smaller)
+        }
+        // A corner that differs by less than 4 dp from the next is not a distinguishable choice.
+        for ((smaller, larger) in scale.dropLast(1).zipWithNext()) {
+            assertTrue("$smaller and $larger are indistinguishable", larger - smaller >= 4)
+        }
+    }
+}
+
+/** Friction, counted. Phase Ω directive 2: count every tap, remove every unnecessary decision. */
+class WorkflowFrictionTest {
+
+    @Test
+    fun `every common workflow is within its tap budget`() {
+        val over = Workflows.all.filterNot { it.isWithinBudget }
+        assertTrue(
+            "these workflows grew: " + over.joinToString { "${it.name} takes ${it.taps}, budget ${it.budget}" },
+            over.isEmpty(),
+        )
+    }
+
+    @Test
+    fun `recording is one tap and can never become two`() {
+        // The most important number in the product. A recorder that asks anything before recording
+        // has already lost the thought the user was trying to capture.
+        assertEquals(1, Workflows.record.taps)
+        assertEquals(1, Workflows.record.budget)
+    }
+
+    @Test
+    fun `playing is one tap`() {
+        assertEquals(1, Workflows.play.taps)
+    }
+
+    @Test
+    fun `recalling a saved sound costs less than building one`() {
+        // The whole justification for Voice DNA. If recalling were not cheaper than choosing a
+        // preset and adjusting it, the feature would be decoration.
+        assertTrue(
+            "recall (${Workflows.recallSound.taps}) must beat save (${Workflows.saveSound.taps})",
+            Workflows.recallSound.taps < Workflows.saveSound.taps,
+        )
+        assertTrue(Workflows.recallSound.taps <= Workflows.enhance.taps)
+    }
+
+    @Test
+    fun `sharing does not require exporting first`() {
+        // Making the user export and then share would write the same file twice and add a step
+        // whose reason they cannot see.
+        assertTrue(
+            "share (${Workflows.share.taps}) must not cost more than export (${Workflows.export.taps})",
+            Workflows.share.taps <= Workflows.export.taps,
+        )
+    }
+
+    @Test
+    fun `every step states why it cannot be removed`() {
+        // A step with a weak justification is the next one to delete. Writing the justification
+        // down is what makes that visible.
+        for (workflow in Workflows.all) {
+            assertTrue("${workflow.name} has no steps", workflow.steps.isNotEmpty())
+            assertTrue("${workflow.name} has no stated goal", workflow.goal.length > 10)
+            for (step in workflow.steps) {
+                assertTrue("a step with no label in ${workflow.name}", step.tap.isNotBlank())
+                assertTrue(
+                    "'${step.tap}' in ${workflow.name} does not say why it exists",
+                    step.because.length > 20,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `the total friction across the product is recorded`() {
+        // One number to watch across releases. Not a limit — a tripwire: if this climbs, something
+        // was added that nobody argued for.
+        assertEquals(
+            "total taps across every common workflow changed; that needs an argument, not a commit",
+            14,
+            Workflows.totalTaps,
+        )
+    }
+}
+
+/**
+ * Phase Ω directive 8: every preset must be worth keeping.
+ *
+ * "If two presets are difficult to distinguish, merge or redesign them." That is testable, and it is
+ * the one place a listening judgement has a measurable proxy: render the same phrase through two
+ * presets and compare what came out. If the difference is below what anybody could hear, the two
+ * presets are one preset with two names, and a list of ten names for eight sounds is worse than a
+ * list of eight.
+ */
+class PresetDistinctnessTest {
+
+    /** A phrase with speech-like structure: pitch, formants, sibilance and gaps. */
+    private fun phrase(rate: Int = 48_000, seconds: Double = 2.5): AudioBuffer {
+        val frames = (seconds * rate).toInt()
+        val samples = FloatArray(frames)
+        for (i in 0 until frames) {
+            val t = i.toDouble() / rate
+            val phase = (t * 1000).toInt() % 700
+            if (phase >= 480) continue
+            val envelope = 0.5 * (1 - kotlin.math.cos(2 * PI * (phase / 480.0)))
+            samples[i] = (
+                0.22 * sin(2 * PI * 132.0 * t) +
+                    0.13 * sin(2 * PI * 560.0 * t) +
+                    0.07 * sin(2 * PI * 1_900.0 * t) +
+                    0.04 * sin(2 * PI * 4_200.0 * t) +
+                    0.02 * sin(2 * PI * 7_800.0 * t)
+                ).toFloat() * envelope.toFloat()
+        }
+        return AudioBuffer(arrayOf(samples), rate)
+    }
+
+    /**
+     * How different two presets sound, in decibels, across the bands speech lives in.
+     *
+     * Band energy plus tail length. Not a perceptual model — a proxy, and named as one. What it can
+     * honestly detect is two presets that do nearly the same arithmetic, which is the failure mode
+     * a list of ten names has.
+     */
+    private fun difference(a: AudioBuffer, b: AudioBuffer): Double {
+        val bands = listOf(
+            80.0 to 250.0, 250.0 to 800.0, 800.0 to 2_500.0,
+            2_500.0 to 6_000.0, 6_000.0 to 12_000.0,
+        )
+        var worst = 0.0
+        for ((low, high) in bands) {
+            worst = maxOf(worst, abs(bandDb(a, low, high) - bandDb(b, low, high)))
+        }
+        // Tail length matters as much as tone: two presets can be identically bright and one of them
+        // can be a hall.
+        val tail = abs(tailSeconds(a) - tailSeconds(b))
+        return maxOf(worst, tail * 6.0)
+    }
+
+    private fun bandDb(buffer: AudioBuffer, low: Double, high: Double): Double {
+        val rate = buffer.sampleRate
+        val filters = listOf(
+            Biquad.highPass(low, rate), Biquad.highPass(low, rate),
+            Biquad.lowPass(minOf(high, rate * 0.45), rate),
+            Biquad.lowPass(minOf(high, rate * 0.45), rate),
+        )
+        var energy = 0.0
+        for (sample in buffer.channels[0]) {
+            var value = sample.toDouble()
+            for (filter in filters) value = filter.processSample(value)
+            energy += value * value
+        }
+        return 10.0 * log10((energy / buffer.frameCount).coerceAtLeast(1e-20))
+    }
+
+    /** How long the sound goes on after the last of the input, as a stand-in for room size. */
+    private fun tailSeconds(buffer: AudioBuffer): Double {
+        val samples = buffer.channels[0]
+        var last = 0
+        val threshold = 1e-4
+        for (i in samples.indices.reversed()) {
+            if (abs(samples[i]) > threshold) {
+                last = i
+                break
+            }
+        }
+        return last.toDouble() / buffer.sampleRate
+    }
+
+    @Test
+    fun `no two outcomes are difficult to distinguish`() {
+        val source = phrase()
+        val rendered = VoiceOutcome.entries.associateWith { VoiceStudio(it.settings).render(source).audio }
+
+        // 1.5 dB, or a quarter-second of tail. Below that, two presets are one preset with two
+        // names — and a list of ten names for eight sounds is worse than a list of eight.
+        val floor = 1.5
+        val tooClose = mutableListOf<String>()
+        val outcomes = VoiceOutcome.entries.toList()
+        for (i in outcomes.indices) {
+            for (j in i + 1 until outcomes.size) {
+                val delta = difference(rendered.getValue(outcomes[i]), rendered.getValue(outcomes[j]))
+                if (delta < floor) {
+                    tooClose += "${outcomes[i].displayName} vs ${outcomes[j].displayName}: " +
+                        "%.2f dB".format(delta)
+                }
+            }
+        }
+        assertTrue(
+            "these presets are hard to tell apart and should be merged or redesigned:\n" +
+                tooClose.joinToString("\n") { "  $it" },
+            tooClose.isEmpty(),
+        )
+    }
+
+    @Test
+    fun `every outcome states a distinct purpose and audience`() {
+        // Directive 8: a distinct purpose, a distinct sound, a distinct audience. The sound is
+        // measured above; the words are checked here, because two presets whose descriptions could
+        // be swapped without anybody noticing are two presets nobody can choose between.
+        val purposes = VoiceOutcome.entries.map { it.purpose.lowercase() }
+        assertEquals("two outcomes share a description", purposes.size, purposes.distinct().size)
+        for (outcome in VoiceOutcome.entries) {
+            assertTrue(
+                "${outcome.displayName} does not say what it is for",
+                outcome.purpose.length > 20,
+            )
+        }
+        // Groups exist so the ten are four short lists rather than one long one.
+        val groups = VoiceOutcome.entries.groupBy { it.group }
+        assertTrue("a group with more than four members is a list again", groups.values.all { it.size <= 4 })
+    }
+}

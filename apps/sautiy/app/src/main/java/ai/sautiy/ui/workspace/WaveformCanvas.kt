@@ -101,7 +101,7 @@ fun WaveformCanvas(
         Canvas(modifier = Modifier.fillMaxSize()) {
             val height = size.height
             val centre = height / 2f
-            val strokeWidth = with(density) { 1.5.dp.toPx() }
+            val strokeWidth = with(density) { SautiySize.canvasStroke.toPx() }
 
             drawCentreLine(centre, colours.border, strokeWidth / 2f)
 
@@ -169,7 +169,7 @@ fun WaveformCanvas(
                     color = colours.textPrimary,
                     start = Offset(playheadX, 0f),
                     end = Offset(playheadX, height),
-                    strokeWidth = with(density) { 2.dp.toPx() },
+                    strokeWidth = with(density) { SautiySize.canvasStroke.toPx() },
                 )
             }
         }
