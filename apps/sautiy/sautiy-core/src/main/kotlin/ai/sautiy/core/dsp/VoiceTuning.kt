@@ -381,7 +381,7 @@ public object VoiceAdvisor {
                 depth = 0.18,
             ),
             ambience = VoiceSpacePreset.PODCAST.settings.ambience,
-            ambienceMode = AmbienceMode.STUDIO,
+            character = VoiceCharacter(VoiceCharacter.REFINED),
             loudness = LoudnessStage(target = "PODCAST", limiterCeilingDb = -1.0),
         )
     }
@@ -461,46 +461,132 @@ public object VoiceAdvisor {
 }
 
 /**
- * The presets a user chooses from, named for what they are *for*.
+ * What the user is trying to achieve. The only names the interface shows.
  *
- * "Small Mosque" describes a room. "Prestige Recitation" describes an outcome. Only one of those
- * is a thing a person picking a preset actually knows about themselves — they know what they
- * recorded and what they want it to sound like, and they do not know the reverberation time of
- * the building they would like to be in.
+ * There is exactly one naming system on screen, and it names *results*. A person who sees both
+ * "Prestige Recitation" and "Large Mosque" has to work out which of the two to choose, and the
+ * honest answer — that one is the outcome and the other is how it is achieved — is not something
+ * they should have to learn. So the acoustic spaces stay underneath as the implementation, and
+ * appear only in engineering documentation and in Advanced Mode's "Based on" line.
  *
- * The acoustic spaces remain, underneath, as the implementation. This is the list that is shown.
+ * Ten. Not because ten is a round number, but because one preset that is unmistakably right is
+ * worth more than a list nobody can tell apart, and a list this length can be auditioned end to
+ * end in under a minute.
  */
 public enum class VoiceOutcome(
     public val displayName: String,
     public val purpose: String,
-    public val space: VoiceSpacePreset,
-    public val mode: AmbienceMode = AmbienceMode.STUDIO,
+    public val group: VoiceOutcomeGroup,
+    /**
+     * The acoustic profile underneath.
+     *
+     * Shown to the user only in Advanced Mode, as "Based on: …". It is transparency for someone
+     * who wants it, not a second thing for everyone else to choose between.
+     */
+    public val basedOn: VoiceSpacePreset,
+    public val character: Double = VoiceCharacter.REFINED,
 ) {
-    CLEAR_SPEECH("Clear Speech", "Every word plain. For notes, interviews and meetings.", VoiceSpacePreset.PURE_STUDIO),
-    STUDIO("Studio", "Clean and close, as though recorded in a treated room.", VoiceSpacePreset.VOCAL_BOOTH),
-    WARM_VOICE("Warm Voice", "Softer and fuller. For a thin or harsh recording.", VoiceSpacePreset.WARM_STUDIO),
-    PODCAST("Podcast", "Companionable and consistent, at the podcast standard.", VoiceSpacePreset.PODCAST),
-    BROADCAST("Broadcast", "Tight and even, at the broadcast standard.", VoiceSpacePreset.BROADCAST),
-    RICH_NARRATION("Rich Narration", "Weight and polish. For audiobooks and voice-over.", VoiceSpacePreset.ROYAL_PRESENCE),
-    LECTURE("Lecture", "Carries across a room, and every word still lands.", VoiceSpacePreset.LECTURE_HALL),
-    PRESTIGE_RECITATION("Prestige Recitation", "Clarity, air and dignity, with the dynamics intact.", VoiceSpacePreset.PRESTIGE_RECITATION),
-    GRAND_SPACE("Grand Space", "A large room you can hear. For recitation and performance.", VoiceSpacePreset.GRAND_HALL),
-    IMMERSIVE("Immersive", "The largest space, deliberately.", VoiceSpacePreset.MAJESTIC_RECITATION, AmbienceMode.IMMERSIVE),
+    CLEAR_SPEECH(
+        "Clear Speech",
+        "Every word plain. For notes, interviews, meetings and lectures.",
+        VoiceOutcomeGroup.SPEECH,
+        VoiceSpacePreset.PURE_STUDIO,
+        VoiceCharacter.NATURAL,
+    ),
+    WARM_VOICE(
+        "Warm Voice",
+        "Softer and fuller. For a thin, harsh or tiring recording.",
+        VoiceOutcomeGroup.SPEECH,
+        VoiceSpacePreset.WARM_STUDIO,
+    ),
+    RICH_NARRATION(
+        "Rich Narration",
+        "Weight and polish. For audiobooks, voice-over and presentation.",
+        VoiceOutcomeGroup.SPEECH,
+        VoiceSpacePreset.ROYAL_PRESENCE,
+        VoiceCharacter.RICH,
+    ),
+
+    STUDIO(
+        "Studio",
+        "Clean and close, as though recorded in a treated room.",
+        VoiceOutcomeGroup.PROFESSIONAL,
+        VoiceSpacePreset.VOCAL_BOOTH,
+    ),
+    BROADCAST(
+        "Broadcast",
+        "Tight and even, delivered to the broadcast standard.",
+        VoiceOutcomeGroup.PROFESSIONAL,
+        VoiceSpacePreset.BROADCAST,
+    ),
+    PODCAST(
+        "Podcast",
+        "Companionable and consistent, at the podcast standard.",
+        VoiceOutcomeGroup.PROFESSIONAL,
+        VoiceSpacePreset.PODCAST,
+    ),
+
+    PRESTIGE_RECITATION(
+        "Prestige Recitation",
+        "Clarity, air and dignity, with the dynamics of the voice intact.",
+        VoiceOutcomeGroup.RECITATION,
+        VoiceSpacePreset.PRESTIGE_RECITATION,
+        VoiceCharacter.RICH,
+    ),
+    MAJESTIC_RECITATION(
+        "Majestic Recitation",
+        "Long, wide and unhurried, for a voice that carries it.",
+        VoiceOutcomeGroup.RECITATION,
+        VoiceSpacePreset.MAJESTIC_RECITATION,
+        VoiceCharacter.GRAND,
+    ),
+
+    GRAND_SPACE(
+        "Grand Space",
+        "A large room you can hear. For recitation and performance.",
+        VoiceOutcomeGroup.SPACE,
+        VoiceSpacePreset.GRAND_HALL,
+        VoiceCharacter.GRAND,
+    ),
+    IMMERSIVE(
+        "Immersive",
+        "The largest space, deliberately. For when the room is the point.",
+        VoiceOutcomeGroup.SPACE,
+        VoiceSpacePreset.MAJESTIC_RECITATION,
+        VoiceCharacter.IMMERSIVE,
+    ),
     ;
 
-    public val settings: VoiceStudioSettings get() = space.settings.copy(ambienceMode = mode)
+    public val settings: VoiceStudioSettings
+        get() = basedOn.settings.copy(character = VoiceCharacter(character))
 
     public fun studio(): VoiceStudio = VoiceStudio(settings)
 
+    /** The transparency line for Advanced Mode. Never shown otherwise. */
+    public val advancedDetail: String get() = "Based on: ${basedOn.displayName}"
+
     public companion object {
-        /** Panel order: the everyday outcomes first, the deliberate ones last. */
-        public val cardOrder: List<VoiceOutcome> = entries.toList()
+        /** Panel order: grouped, everyday first. */
+        public val cardOrder: List<VoiceOutcome> = entries.sortedBy { it.group.ordinal }
 
         init {
-            check(cardOrder.size == entries.size)
+            check(entries.size == 10) { "Ten outcomes. One that is right beats a list nobody can tell apart." }
             check(entries.map { it.displayName }.toSet().size == entries.size) { "Two outcomes share a name" }
         }
     }
+}
+
+/**
+ * The four things people are trying to do.
+ *
+ * Headings, not a second level of choice: a person scans to the group that describes their
+ * situation and reads three names, rather than reading ten and deciding.
+ */
+public enum class VoiceOutcomeGroup(public val displayName: String) {
+    SPEECH("Speech"),
+    PROFESSIONAL("Professional"),
+    RECITATION("Recitation"),
+    SPACE("Space"),
 }
 
 /** Root-mean-square, for the analysis above. Kept here so the file is self-contained. */

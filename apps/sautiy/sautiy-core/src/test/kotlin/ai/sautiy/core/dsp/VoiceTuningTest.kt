@@ -412,22 +412,78 @@ class VoiceTuningTest {
     // --- Outcome names ----------------------------------------------------------------------
 
     @Test
-    fun `the presets a user sees are named for outcomes, not for rooms`() {
+    fun `the presets a user sees are named for outcomes, grouped by what they are for`() {
         val expected = listOf(
-            "Clear Speech", "Studio", "Warm Voice", "Podcast", "Broadcast",
-            "Rich Narration", "Lecture", "Prestige Recitation", "Grand Space", "Immersive",
+            "Clear Speech", "Warm Voice", "Rich Narration",
+            "Studio", "Broadcast", "Podcast",
+            "Prestige Recitation", "Majestic Recitation",
+            "Grand Space", "Immersive",
         )
         assertEquals(expected, VoiceOutcome.cardOrder.map { it.displayName })
+        assertEquals("Ten. One that is right beats a list nobody can tell apart.", 10, VoiceOutcome.entries.size)
 
         for (outcome in VoiceOutcome.entries) {
             assertTrue("${outcome.displayName} has no stated purpose", outcome.purpose.length > 15)
-            // Named for the job, not the acoustics: no user picks a preset by reverberation time.
+            // Named for the job, not the acoustics: nobody picks a preset by reverberation time.
             assertFalse(
                 "${outcome.displayName} is named after a building",
-                outcome.displayName.contains("Mosque") || outcome.displayName.contains("Hall") ||
-                    outcome.displayName.contains("Booth") || outcome.displayName.contains("Auditorium"),
+                listOf("Mosque", "Hall", "Booth", "Auditorium", "Room").any { outcome.displayName.contains(it) },
             )
         }
+
+        // Every group is used, and the cards arrive in group order so a person scans to their
+        // situation and reads three names rather than reading ten and deciding.
+        assertEquals(
+            VoiceOutcomeGroup.entries.toSet(),
+            VoiceOutcome.entries.map { it.group }.toSet(),
+        )
+        assertEquals(
+            VoiceOutcome.cardOrder.map { it.group },
+            VoiceOutcome.cardOrder.map { it.group }.sortedBy { it.ordinal },
+        )
+    }
+
+    @Test
+    fun `the acoustic space appears only as an Advanced Mode disclosure`() {
+        // One naming system on screen. The room is transparency for a professional who wants it,
+        // not a second thing for everyone else to choose between.
+        for (outcome in VoiceOutcome.entries) {
+            assertTrue(
+                "${outcome.displayName} should disclose what it is based on",
+                outcome.advancedDetail.startsWith("Based on: "),
+            )
+            assertTrue(outcome.advancedDetail.contains(outcome.basedOn.displayName))
+        }
+
+        // Two outcomes share a name with the space that produces them, which is fine: the space
+        // name is never on screen unless Advanced Mode is on. What matters is that the visible
+        // list contains no name a user would have to interpret as an acoustic term.
+        val visible = VoiceOutcome.cardOrder.map { it.displayName }
+        assertFalse(
+            "A room name reached the card list",
+            visible.any { name -> listOf("Mosque", "Booth", "Auditorium", "Hall", "Room").any(name::contains) },
+        )
+    }
+
+    @Test
+    fun `each outcome arrives at its own character position`() {
+        assertEquals(VoiceCharacter.NATURAL, VoiceOutcome.CLEAR_SPEECH.character, 0.0)
+        assertEquals(VoiceCharacter.IMMERSIVE, VoiceOutcome.IMMERSIVE.character, 0.0)
+        assertTrue(VoiceOutcome.RICH_NARRATION.character > VoiceOutcome.WARM_VOICE.character)
+        assertTrue(VoiceOutcome.MAJESTIC_RECITATION.character > VoiceOutcome.PRESTIGE_RECITATION.character)
+
+        // And the character reaches the audio: the same space at two positions is two sounds.
+        val source = voice(1.5)
+        val natural = VoiceStudio(VoiceOutcome.GRAND_SPACE.settings.copy(character = VoiceCharacter(VoiceCharacter.NATURAL)))
+            .render(source).audio
+        val immersive = VoiceStudio(VoiceOutcome.GRAND_SPACE.settings.copy(character = VoiceCharacter(VoiceCharacter.IMMERSIVE)))
+            .render(source).audio
+
+        var difference = 0.0
+        for (i in 0 until source.frameCount) {
+            difference += kotlin.math.abs(immersive.channels[0][i] - natural.channels[0][i]).toDouble()
+        }
+        assertTrue("The character control did not reach the audio", difference / source.frameCount > 1e-4)
     }
 
     @Test

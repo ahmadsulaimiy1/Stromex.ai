@@ -3,12 +3,10 @@ package ai.sautiy.ui.workspace
 import ai.sautiy.core.analysis.WaveformColumns
 import ai.sautiy.core.audio.CaptureQuality
 import ai.sautiy.core.codec.ExportFormat
-import ai.sautiy.core.dsp.AmbienceMode
 import ai.sautiy.core.dsp.ListenerNote
 import ai.sautiy.core.dsp.VoiceOutcome
 import ai.sautiy.core.dsp.AmbienceSettings
 import ai.sautiy.core.dsp.VoiceRefinement
-import ai.sautiy.core.dsp.VoiceSpacePreset
 import ai.sautiy.core.dsp.VoiceStudioSettings
 import ai.sautiy.core.play.PlaybackSpeed
 import ai.sautiy.core.workspace.Panel
@@ -96,8 +94,6 @@ data class WorkspaceUiState(
     val historySteps: List<String> = emptyList(),
     val historyIndex: Int = 0,
 
-    /** The space currently selected, or `null` when the recording is heard as captured. */
-    val appliedPreset: VoiceSpacePreset? = null,
     /** The preset currently being auditioned, when the listening cycle is running. */
     val auditioning: VoiceOutcome? = null,
     /** The preset in force, named for the job it does. Null once controls have been hand-moved. */
@@ -159,15 +155,14 @@ data class WorkspaceActions(
     val onOpenLibrary: () -> Unit = {},
     val onOpenSettings: () -> Unit = {},
 
-    val onApplyPreset: (VoiceSpacePreset) -> Unit = {},
     val onRevertPreset: () -> Unit = {},
     /** ✨ Enhance Voice — clean it up, change nothing about where it was recorded. */
     val onEnhanceVoice: () -> Unit = {},
     /** 🎙 Studio Voice — the finished production, room and all. */
     val onStudioVoice: () -> Unit = {},
     val onAmbienceChanged: (AmbienceSettings) -> Unit = {},
-    /** How much room, independent of which room. */
-    val onAmbienceModeChanged: (AmbienceMode) -> Unit = {},
+    /** Natural through Immersive, as one continuous control. */
+    val onCharacterChanged: (Double) -> Unit = {},
     /** Play one passage through every space in turn — the only honest way to choose one. */
     val onAuditionSpaces: () -> Unit = {},
     val onStopAudition: () -> Unit = {},

@@ -576,40 +576,71 @@ public data class AmbienceSettings(
 }
 
 /**
- * How much room the user wants, independent of which room.
+ * How much of the chosen character the user wants — one control, five stops.
  *
- * The same space at three strengths, rather than three sets of presets. A person who likes
- * Lecture Hall but finds it too much should be able to say so in one control without having to
- * find a different, smaller-sounding preset and lose the character they chose.
+ * This replaces a set of mode buttons, and the reason is worth stating: a person who likes a
+ * preset but finds it too much does not want a different preset, they want *less of this one*. A
+ * row of modes makes that a choice between three discrete things; a continuum makes it the one
+ * gesture it actually is, and lets a listener stop anywhere between the stops.
+ *
+ * The stops are named for the result, not for a quantity. "Rich" is a description of a voice.
+ * "0.5" is a description of a slider.
  */
-public enum class AmbienceMode(
-    public val displayName: String,
-    public val summary: String,
-    internal val mixScale: Double,
-    internal val speechPriorityFloor: Double,
-) {
-    /** Subtle. The recording stops sounding dead and nothing else changes. */
-    NATURAL("Natural", "Just enough room that the recording stops sounding dead.", 0.55, 0.5),
+@Serializable
+public data class VoiceCharacter(val position: Double = REFINED) {
 
-    /** The default: polished and controlled, for podcasts and narration. */
-    STUDIO("Studio", "Polished and controlled. For narration and podcasts.", 1.0, 0.35),
+    init {
+        require(position in 0.0..1.0) { "Character runs from 0 to 1, was $position" }
+    }
 
-    /** Deliberately large, for someone who wants to hear the space. */
-    IMMERSIVE("Immersive", "A room you can hear. For recitation and performance.", 1.6, 0.25),
-    ;
+    /** The nearest named stop, for the panel to print. */
+    public val displayName: String
+        get() = stops.minBy { kotlin.math.abs(it.second - position) }.first
 
     /**
-     * Applies the mode to a space.
+     * Applies the character to a space.
      *
-     * Immersive raises the mix, and because more room means less speech, it also raises the floor
-     * under [AmbienceSettings.speechPriority] — the protection scales with the thing it protects
-     * against, so turning the room up cannot quietly cost intelligibility.
+     * Four things move together, because "more character" is not one parameter. The room grows
+     * and lasts longer as well as getting louder — a bigger mix on an unchanged room sounds like
+     * the volume of an effect, not like a larger place. And the protection scales with what it
+     * protects against: turning the character up cannot quietly cost intelligibility, which is
+     * the failure that makes every large setting on every other mobile recorder unusable.
      */
     public fun applyTo(settings: AmbienceSettings): AmbienceSettings {
         if (settings.isBypassed) return settings
         return settings.copy(
-            wetDryMix = (settings.wetDryMix * mixScale).coerceIn(0.0, 1.0),
-            speechPriority = maxOf(settings.speechPriority, speechPriorityFloor).coerceIn(0.0, 1.0),
+            wetDryMix = (settings.wetDryMix * (0.45 + position * 1.55)).coerceIn(0.0, 1.0),
+            roomSize = (settings.roomSize + position * 0.12).coerceIn(0.0, 1.0),
+            decaySeconds = (settings.decaySeconds * (1.0 + position * 0.35)).coerceIn(0.05, 20.0),
+            speechPriority = maxOf(settings.speechPriority, 0.30 + position * 0.35).coerceIn(0.0, 1.0),
+        )
+    }
+
+    /** Body and air come up with the character too, so "rich" is the voice as well as the room. */
+    public fun applyTo(refinement: VoiceRefinement): VoiceRefinement {
+        val above = (position - RICH).coerceAtLeast(0.0)
+        if (above <= 0.0) return refinement
+        return refinement.copy(
+            richness = (refinement.richness + above * 0.30).coerceIn(-1.0, 1.0),
+            air = (refinement.air + above * 0.24).coerceIn(-1.0, 1.0),
+            depth = (refinement.depth + above * 0.40).coerceIn(-1.0, 1.0),
+        )
+    }
+
+    public companion object {
+        public const val NATURAL: Double = 0.0
+        public const val REFINED: Double = 0.25
+        public const val RICH: Double = 0.5
+        public const val GRAND: Double = 0.75
+        public const val IMMERSIVE: Double = 1.0
+
+        /** The five stops, in order, as the slider labels them. */
+        public val stops: List<Pair<String, Double>> = listOf(
+            "Natural" to NATURAL,
+            "Refined" to REFINED,
+            "Rich" to RICH,
+            "Grand" to GRAND,
+            "Immersive" to IMMERSIVE,
         )
     }
 }

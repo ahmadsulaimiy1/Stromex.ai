@@ -6,13 +6,12 @@ import ai.sautiy.core.audio.CaptureQuality
 import ai.sautiy.core.audio.Decibels
 import ai.sautiy.core.codec.ExportJob
 import ai.sautiy.core.codec.WavStreamReader
-import ai.sautiy.core.dsp.AmbienceMode
+import ai.sautiy.core.dsp.VoiceCharacter
 import ai.sautiy.core.dsp.AmbienceSettings
 import ai.sautiy.core.dsp.ListenerNote
 import ai.sautiy.core.dsp.OneTap
 import ai.sautiy.core.dsp.VoiceOutcome
 import ai.sautiy.core.dsp.VoiceRefinement
-import ai.sautiy.core.dsp.VoiceSpacePreset
 import ai.sautiy.core.dsp.VoiceStudio
 import ai.sautiy.core.dsp.VoiceStudioSettings
 import ai.sautiy.core.edit.AppendRecording
@@ -108,12 +107,11 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         onAddLayer = ::addLayer,
         onOpenLibrary = { openPanel(Panel.LIBRARY) },
         onOpenSettings = {},
-        onApplyPreset = ::applyPreset,
         onRevertPreset = ::revertPreset,
-        onEnhanceVoice = { applyVoice(OneTap.enhanceVoice(), preset = null) },
-        onStudioVoice = { applyVoice(OneTap.studioVoice(), preset = null) },
+        onEnhanceVoice = { applyVoice(OneTap.enhanceVoice()) },
+        onStudioVoice = { applyVoice(OneTap.studioVoice()) },
         onAmbienceChanged = ::changeAmbience,
-        onAmbienceModeChanged = ::changeAmbienceMode,
+        onCharacterChanged = ::changeCharacter,
         onAuditionSpaces = ::auditionSpaces,
         onApplyOutcome = ::applyOutcome,
         onListenerNote = ::applyListenerNote,
@@ -382,14 +380,9 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
      * printed numbers, and not one sample was ever processed. Nothing here is allowed to record
      * an intention without carrying it out.
      */
-    private fun applyPreset(preset: VoiceSpacePreset) {
-        applyVoice(preset.settings, preset)
-    }
-
-    private fun applyVoice(settings: VoiceStudioSettings, preset: VoiceSpacePreset?) {
+    private fun applyVoice(settings: VoiceStudioSettings) {
         _state.update {
             it.copy(
-                appliedPreset = preset,
                 voice = settings,
                 deferredStages = VoiceStudio(settings).deferredStages,
             )
@@ -399,7 +392,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     private fun revertPreset() {
-        _state.update { it.copy(appliedPreset = null, voice = null, deferredStages = emptyList()) }
+        _state.update { it.copy(appliedOutcome = null, voice = null, deferredStages = emptyList()) }
         player.setVoice(null)
     }
 
@@ -437,14 +430,14 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         workspace = workspace.copy(transport = TransportState.PLAYING)
         publish()
 
-        val mode = _state.value.voice?.ambienceMode ?: AmbienceMode.STUDIO
+        val character = _state.value.voice?.character
         auditionJob = viewModelScope.launch {
-            _state.update { it.copy(auditioning = null, appliedPreset = null, voice = null) }
+            _state.update { it.copy(auditioning = null, appliedOutcome = null, voice = null) }
             player.setVoice(null)
             delay(AUDITION_SECONDS * 1_000L)
 
             for (outcome in VoiceOutcome.cardOrder) {
-                val settings = outcome.settings.copy(ambienceMode = mode)
+                val settings = character?.let { outcome.settings.copy(character = it) } ?: outcome.settings
                 _state.update {
                     it.copy(
                         auditioning = outcome,
@@ -474,8 +467,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
 
     /** A preset named for the job it does. What the panel actually offers. */
     private fun applyOutcome(outcome: VoiceOutcome) {
-        val mode = _state.value.voice?.ambienceMode ?: outcome.mode
-        applyVoice(outcome.settings.copy(ambienceMode = mode), preset = null)
+        applyVoice(outcome.settings)
         _state.update { it.copy(appliedOutcome = outcome) }
     }
 
@@ -495,7 +487,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         val adjusted = note.applyTo(base)
         // Hand-adjusted, so it is no longer the named preset it started as.
         _state.update { it.copy(appliedOutcome = null) }
-        applyVoice(adjusted, preset = null)
+        applyVoice(adjusted)
     }
 
     /** Stops the cycle and keeps whatever was playing when it stopped. */
@@ -510,18 +502,26 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
     /** An ambience control moved. The space stops being a named preset the moment it is edited. */
     private fun changeAmbience(ambience: AmbienceSettings) {
         val base = _state.value.voice ?: VoiceStudioSettings()
-        applyVoice(base.copy(ambience = ambience), preset = null)
+        applyVoice(base.copy(ambience = ambience))
     }
 
-    /** The mode changes how much room, and keeps the preset it was chosen for. */
-    private fun changeAmbienceMode(mode: AmbienceMode) {
+    /**
+     * The character changes how much of the chosen sound there is, and keeps the preset.
+     *
+     * Unlike the detailed controls this does not clear the preset name, because the user has not
+     * left the preset — they have said how much of it they want, which is the one adjustment the
+     * preset is designed to accept.
+     */
+    private fun changeCharacter(position: Double) {
         val base = _state.value.voice ?: VoiceStudioSettings()
-        applyVoice(base.copy(ambienceMode = mode), preset = _state.value.appliedPreset)
+        val outcome = _state.value.appliedOutcome
+        applyVoice(base.copy(character = VoiceCharacter(position.coerceIn(0.0, 1.0))))
+        _state.update { it.copy(appliedOutcome = outcome) }
     }
 
     private fun changeRefinement(refinement: VoiceRefinement) {
         val base = _state.value.voice ?: VoiceStudioSettings()
-        applyVoice(base.copy(refinement = refinement), preset = null)
+        applyVoice(base.copy(refinement = refinement))
     }
 
     /**

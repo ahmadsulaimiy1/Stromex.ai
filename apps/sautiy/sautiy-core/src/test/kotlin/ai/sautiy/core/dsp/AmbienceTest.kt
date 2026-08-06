@@ -547,27 +547,37 @@ class AmbienceTest {
     }
 
     @Test
-    fun `every mode is the same room at a different strength`() {
+    fun `the character control is one continuum, not a set of modes`() {
         val space = VoiceSpacePreset.LECTURE_HALL.settings.ambience
-        val natural = AmbienceMode.NATURAL.applyTo(space)
-        val studio = AmbienceMode.STUDIO.applyTo(space)
-        val immersive = AmbienceMode.IMMERSIVE.applyTo(space)
+        val stops = VoiceCharacter.stops.map { VoiceCharacter(it.second).applyTo(space) }
 
-        assertTrue(natural.wetDryMix < studio.wetDryMix)
-        assertTrue(studio.wetDryMix < immersive.wetDryMix)
+        // Monotonic across all five stops, and continuous between them: a listener must be able
+        // to stop anywhere, not only on a named position.
+        for (i in 1 until stops.size) {
+            assertTrue("Character is not monotonic at stop $i", stops[i].wetDryMix > stops[i - 1].wetDryMix)
+        }
+        val between = VoiceCharacter(0.6).applyTo(space)
+        assertTrue(between.wetDryMix > stops[2].wetDryMix)
+        assertTrue(between.wetDryMix < stops[3].wetDryMix)
 
-        // The room itself is unchanged — only how much of it there is.
-        assertEquals(space.decaySeconds, immersive.decaySeconds, 0.0)
-        assertEquals(space.roomSize, immersive.roomSize, 0.0)
-        assertEquals(space.preDelayMs, immersive.preDelayMs, 0.0)
+        // More character is a bigger, longer room and not just a louder one — a raised mix on an
+        // unchanged room sounds like the volume of an effect rather than a larger place.
+        val natural = stops.first()
+        val immersive = stops.last()
+        assertTrue(immersive.roomSize > natural.roomSize)
+        assertTrue(immersive.decaySeconds > natural.decaySeconds)
 
-        // More room means less speech, so the protection scales with the thing it protects
-        // against: turning the room up cannot quietly cost intelligibility.
-        assertTrue(natural.speechPriority >= space.speechPriority)
-        assertTrue(immersive.speechPriority > 0.0)
+        // The protection scales with what it protects against, at every stop.
+        for (stop in stops) assertTrue(stop.speechPriority >= 0.30)
+        assertTrue(immersive.speechPriority > natural.speechPriority)
 
-        // A bypassed space stays bypassed rather than acquiring a room from a mode.
-        assertTrue(AmbienceMode.IMMERSIVE.applyTo(AmbienceSettings.NONE).isBypassed)
+        // A bypassed space stays bypassed rather than acquiring a room from a slider.
+        assertTrue(VoiceCharacter(VoiceCharacter.IMMERSIVE).applyTo(AmbienceSettings.NONE).isBypassed)
+
+        // And the stops are named for the result, not for a number.
+        assertEquals("Natural", VoiceCharacter(VoiceCharacter.NATURAL).displayName)
+        assertEquals("Immersive", VoiceCharacter(VoiceCharacter.IMMERSIVE).displayName)
+        assertTrue(runCatching { VoiceCharacter(1.4) }.isFailure)
     }
 
     @Test

@@ -2,7 +2,7 @@ package ai.sautiy.ui.workspace
 
 import ai.sautiy.core.analysis.Loudness
 import ai.sautiy.core.codec.Encoders
-import ai.sautiy.core.dsp.AmbienceMode
+import ai.sautiy.core.dsp.VoiceCharacter
 import ai.sautiy.core.dsp.ListenerNote
 import ai.sautiy.core.dsp.VoiceOutcome
 import ai.sautiy.core.dsp.AmbienceSettings
@@ -251,35 +251,17 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
         }
 
         item {
-            // How much room, separate from which room. Someone who likes Lecture Hall but finds
-            // it too much should say so here rather than hunt for a smaller-sounding preset and
-            // lose the character they chose.
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = SautiySpace.s),
-                horizontalArrangement = Arrangement.spacedBy(SautiySpace.xs),
-            ) {
-                for (mode in AmbienceMode.entries) {
-                    val chosen = state.voice?.ambienceMode == mode
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .sizeIn(minHeight = SautiySpace.minTouchTarget)
-                            .clip(SautiyShapes.pill)
-                            .background(if (chosen) colours.signalSelection else colours.surfaceRaised)
-                            .clickable(onClickLabel = mode.displayName, role = Role.Button) {
-                                actions.onAmbienceModeChanged(mode)
-                            },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = mode.displayName,
-                            style = SautiyTheme.type.labelLarge,
-                            color = if (chosen) colours.signal else colours.textSecondary,
-                            modifier = Modifier.padding(vertical = SautiySpace.s),
-                        )
-                    }
-                }
-            }
+            // One control, five named stops. Someone who likes a preset but finds it too much
+            // wants less of *this one* — a single gesture, not a choice between three modes. The
+            // stops are named for the result, because "Rich" describes a voice and "0.5" does not.
+            val character = state.voice?.character?.position ?: VoiceCharacter.REFINED
+            StudioSlider(
+                label = "Character",
+                value = character,
+                range = 0f..1f,
+                display = VoiceCharacter(character).displayName,
+            ) { actions.onCharacterChanged(it) }
+            Spacer(modifier = Modifier.height(SautiySpace.s))
         }
 
         if (state.deferredStages.isNotEmpty()) {
@@ -298,6 +280,15 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
 
         items(VoiceOutcome.cardOrder) { outcome ->
             val applied = state.appliedOutcome == outcome
+            val isFirstOfGroup = VoiceOutcome.cardOrder.first { it.group == outcome.group } == outcome
+            if (isFirstOfGroup) {
+                Text(
+                    text = outcome.group.displayName,
+                    style = SautiyTheme.type.labelSmall,
+                    color = colours.textTertiary,
+                    modifier = Modifier.padding(top = SautiySpace.s, bottom = SautiySpace.xxs),
+                )
+            }
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -351,6 +342,16 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                     settings.loudness.target?.let {
                         ParameterRow("Loudness", "${Loudness.Target.valueOf(it).lufs} LUFS")
                     }
+
+                    // The acoustic profile underneath, for a professional who wants to know.
+                    // Transparency, not a second thing to choose between — which is why it lives
+                    // here, behind a tap, rather than in the list.
+                    Spacer(modifier = Modifier.height(SautiySpace.xs))
+                    Text(
+                        text = outcome.advancedDetail,
+                        style = SautiyTheme.type.labelSmall,
+                        color = colours.textTertiary,
+                    )
 
                     Spacer(modifier = Modifier.height(SautiySpace.s))
                     Text(

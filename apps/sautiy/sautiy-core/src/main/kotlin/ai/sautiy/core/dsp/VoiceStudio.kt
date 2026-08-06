@@ -161,7 +161,7 @@ public class LiveVoiceStudio(
     // A 12 kHz air shelf is meaningless on a 16 kHz voice memo, and a biquad designed at or
     // above Nyquist is not merely inaudible — it is unstable. Bands are moved down to stay
     // inside the band the recording actually has.
-    private val toneBands = settings.refinement.bands().map { band ->
+    private val toneBands = settings.character.applyTo(settings.refinement).bands().map { band ->
         val ceiling = sampleRate * 0.45
         if (band.frequency <= ceiling) band else band.copy(frequency = ceiling)
     }
@@ -497,12 +497,12 @@ public data class VoiceStudioSettings(
     val refinement: VoiceRefinement = VoiceRefinement(),
     val ambience: AmbienceSettings = AmbienceSettings.NONE,
     /**
-     * How much of the chosen room the user wants.
+     * How much of the chosen character the user wants — Natural through Immersive.
      *
-     * Separate from the space itself, so someone who likes Lecture Hall but finds it too much can
-     * say so without hunting for a smaller-sounding preset and losing the character they chose.
+     * One control rather than a row of modes: someone who likes a preset but finds it too much
+     * wants *less of this one*, which is a single gesture and not a choice between three things.
      */
-    val ambienceMode: AmbienceMode = AmbienceMode.STUDIO,
+    val character: VoiceCharacter = VoiceCharacter(),
     val loudness: LoudnessStage = LoudnessStage(),
     val outputGainDb: Double = 0.0,
 ) {
@@ -526,7 +526,7 @@ public data class VoiceStudioSettings(
                     roomSize = (ambience.roomSize + depth * 0.15).coerceIn(0.0, 1.0),
                 )
             }
-            return ambienceMode.applyTo(withDepth)
+            return character.applyTo(withDepth)
         }
 
     /** True when this would change nothing, so "Original" is an honest label. */
@@ -855,8 +855,9 @@ public enum class VoiceSpacePreset(
     /** Ready to render or to audition. */
     public fun studio(): VoiceStudio = VoiceStudio(settings)
 
-    /** The same space at a different strength. */
-    public fun inMode(mode: AmbienceMode): VoiceStudioSettings = settings.copy(ambienceMode = mode)
+    /** The same space at a different character. */
+    public fun at(character: Double): VoiceStudioSettings =
+        settings.copy(character = VoiceCharacter(character))
 
     public companion object {
         /**
@@ -917,7 +918,7 @@ public object OneTap {
                     air = 0.28,
                     depth = 0.20,
                 ),
-                ambienceMode = AmbienceMode.STUDIO,
+                character = VoiceCharacter(VoiceCharacter.REFINED),
             )
         }
 }
