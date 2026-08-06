@@ -102,6 +102,51 @@ if [ -n "$RAW" ]; then
   STATUS=1
 fi
 
+# --- 4. A symbol used without its import ----------------------------------------------------------
+#
+# The third distinct class of mistake CI has caught in this project, and the cheapest of the three:
+# a size-token sweep replaced literals in a file whose import anchor did not match, so the file
+# referenced SautiySize without importing it. Four compile errors, four minutes of CI, one grep.
+#
+# Kotlin has no wildcard here worth relying on, so the rule is simple: if a file names one of the
+# design objects, it must import it.
+
+python3 - "$ROOT" <<'PYTHON' || STATUS=1
+import os, re, sys
+
+root = sys.argv[1]
+symbols = {
+    'SautiySize': 'ai.sautiy.ui.theme.SautiySize',
+    'SautiySpace': 'ai.sautiy.ui.theme.SautiySpace',
+    'SautiyShapes': 'ai.sautiy.ui.theme.SautiyShapes',
+    'SautiyTheme': 'ai.sautiy.ui.theme.SautiyTheme',
+    'SautiyMotion': 'ai.sautiy.ui.theme.SautiyMotion',
+    'SautiyIcons': 'ai.sautiy.ui.icons.SautiyIcons',
+}
+missing = []
+for directory, _, files in os.walk(root):
+    for name in files:
+        if not name.endswith('.kt'):
+            continue
+        path = os.path.join(directory, name)
+        text = open(path, encoding='utf-8').read()
+        for symbol, importPath in symbols.items():
+            # Declared here rather than used? Then no import is needed.
+            if re.search(r'\bobject\s+' + symbol + r'\b', text):
+                continue
+            if not re.search(r'\b' + symbol + r'\.', text):
+                continue
+            if f'import {importPath}' not in text:
+                missing.append(f'{path} uses {symbol} without importing it')
+
+if missing:
+    print('error: a design symbol is used without its import — this does not compile.')
+    for entry in missing:
+        print(f'       {entry}')
+    sys.exit(1)
+sys.exit(0)
+PYTHON
+
 if [ "$STATUS" -eq 0 ]; then
   echo "Compose shape checks passed."
 fi

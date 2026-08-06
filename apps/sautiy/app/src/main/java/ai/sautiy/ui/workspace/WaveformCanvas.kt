@@ -1,6 +1,7 @@
 package ai.sautiy.ui.workspace
 
 import ai.sautiy.core.analysis.WaveformColumns
+import ai.sautiy.ui.theme.SautiySize
 import ai.sautiy.ui.theme.SautiyTheme
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
