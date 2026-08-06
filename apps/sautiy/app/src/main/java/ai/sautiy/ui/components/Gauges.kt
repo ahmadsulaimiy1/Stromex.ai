@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
@@ -172,6 +173,25 @@ fun ConditionDot(
             drawCircle(color = colour)
         }
         Text(text = label, style = SautiyTheme.type.labelSmall, color = colours.textSecondary)
+    }
+}
+
+/**
+ * A row of arcs, evenly spaced, so a panel of instruments cannot drift out of alignment.
+ *
+ * Exists so the spacing is decided once rather than at each of the two call sites.
+ */
+@Composable
+fun GaugeRow(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.Top,
+    ) {
+        content()
     }
 }
 
