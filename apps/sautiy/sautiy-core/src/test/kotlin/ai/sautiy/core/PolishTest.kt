@@ -381,15 +381,26 @@ class TrustPrincipleTest {
         // the voice to null and the player stops applying anything. So the guarantee to assert is
         // that a provably-transparent value is *constructible*, which is what makes "no processing"
         // a state the engine can represent rather than a claim the UI makes.
+        // Two rounds of this test were wrong before it was right, and both errors were the same
+        // shape: assuming the engine's defaults mean "do nothing". They do not. `LoudnessStage`
+        // defaults to a −1 dBTP ceiling and `CleanupStage` defaults to an 80 Hz high-pass — both
+        // correct for anything on its way to a file, and both processing.
+        //
+        // A bypass has to be asked for explicitly, stage by stage. That is the right design: a
+        // recorder whose default is "untouched" ships rumble. But it means "no processing" is a
+        // value somebody has to construct deliberately, and the app's revert path does not
+        // construct it — it drops the chain entirely, which is stronger.
         val untouched = ai.sautiy.core.dsp.VoiceStudioSettings(
+            cleanup = ai.sautiy.core.dsp.CleanupStage(highPassHz = null),
             loudness = ai.sautiy.core.dsp.LoudnessStage(target = null, limiterCeilingDb = null),
         )
         assertTrue(
-            "there must be a representable setting that provably does nothing",
+            "there must be a representable setting that provably does nothing: " + untouched,
             untouched.isTransparent,
         )
         assertTrue(
-            "the default chain is not transparent — it limits — and must not be described as such",
+            "the default chain is not transparent — it high-passes and limits — and the interface " +
+                "must never describe it as leaving a recording alone",
             !ai.sautiy.core.dsp.VoiceStudioSettings().isTransparent,
         )
     }
