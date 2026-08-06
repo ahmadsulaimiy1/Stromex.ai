@@ -299,21 +299,20 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
             Spacer(modifier = Modifier.height(SautiySpace.s))
         }
 
-        item {
-            Row(horizontalArrangement = Arrangement.spacedBy(SautiySpace.m)) {
-                PrimaryAction(
-                    label = "\u2728 Enhance Voice",
-                    onClick = actions.onEnhanceVoice,
-                    modifier = Modifier.weight(1f),
-                )
-                PrimaryAction(
-                    label = "\uD83C\uDF99 Studio Voice",
-                    onClick = actions.onStudioVoice,
-                    modifier = Modifier.weight(1f),
-                    filled = false,
-                )
-            }
-        }
+        // Enhance Voice and Studio Voice were here, beside Auto Studio. Three one-tap buttons at
+        // the top of one panel, and Rule 4 asks whether five controls can become one.
+        //
+        // They could, because two of the three had already stopped earning their place:
+        //
+        //   * Enhance Voice ran the measure-and-clean chain. That now happens by itself when a take
+        //     ends, so the button offered to do something the app had already done — and a user who
+        //     presses it and hears no change has been handed a control that appears broken.
+        //   * Studio Voice was Enhance plus a Podcast room, which is exactly what tapping the
+        //     Podcast card does one row further down, under a name that says what it is for.
+        //
+        // What remains is Auto Studio: it measures, proposes an outcome and an intensity, and says
+        // why. One intelligent control instead of three overlapping ones. The chain is untouched —
+        // `enhanceVoice()` still runs on every finished take.
 
         // How much work was actually done, drawn rather than claimed. On a clean recording this
         // reads near zero and says so, which is the honest outcome and the one an app that always

@@ -122,8 +122,6 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         onAddLayer = ::addLayer,
         onOpenLibrary = { openPanel(Panel.LIBRARY) },
         onRevertPreset = ::revertPreset,
-        onEnhanceVoice = ::enhanceVoice,
-        onStudioVoice = { applyVoice(OneTap.studioVoice()) },
         onAmbienceChanged = ::changeAmbience,
         onCharacterChanged = ::changeCharacter,
         onChooseSpace = ::chooseSpace,

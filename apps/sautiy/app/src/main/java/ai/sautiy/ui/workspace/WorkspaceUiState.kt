@@ -192,10 +192,6 @@ data class WorkspaceActions(
     val onOpenLibrary: () -> Unit = {},
 
     val onRevertPreset: () -> Unit = {},
-    /** ✨ Enhance Voice — clean it up, change nothing about where it was recorded. */
-    val onEnhanceVoice: () -> Unit = {},
-    /** 🎙 Studio Voice — the finished production, room and all. */
-    val onStudioVoice: () -> Unit = {},
     val onAmbienceChanged: (AmbienceSettings) -> Unit = {},
     /** Natural through Immersive, as one continuous control. */
     val onCharacterChanged: (Double) -> Unit = {},

@@ -126,12 +126,35 @@ fun SautiyWorkspace(
                 // the context bar. Confident rather than apologetic: it says what happened, not
                 // what it might have done wrong.
                 if (state.autoImproved && !state.transport.isCapturing) {
+                    // The announcement *is* the control.
+                    //
+                    // Rule 9 says never apply hidden processing, and this pill is where that rule
+                    // and the thirty-second rule meet. Automatic cleanup is the reason a first take
+                    // sounds better than the phone recording it was; it is also processing nobody
+                    // asked for, which is exactly what Rule 9 forbids.
+                    //
+                    // A label that only reports is not enough to settle that. So tapping this is
+                    // the A/B: it says what was done, and touching it undoes it and says so. The
+                    // original take on disk is never modified either way — captured WAVs are
+                    // write-once and every change lives in the timeline.
+                    //
+                    // Announced, one tap away, and non-destructive. That is the most this can be
+                    // while still being automatic, and if it is not enough the answer is to stop
+                    // doing it automatically rather than to describe it more softly.
                     Row(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .padding(horizontal = SautiySpace.pageInset, vertical = SautiySpace.l)
                             .clip(SautiyShapes.pill)
                             .background(colours.signalSelection)
+                            .pressable(
+                                label = if (state.comparingOriginal) {
+                                    "Hear the cleaned version"
+                                } else {
+                                    "Hear the original"
+                                },
+                                onClick = actions.onToggleCompare,
+                            )
                             .padding(horizontal = SautiySpace.l, vertical = SautiySpace.s),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
