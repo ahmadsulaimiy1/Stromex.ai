@@ -23,7 +23,7 @@ Android layer.
 
 ## Verified — tests written and executed, passing
 
-**331 tests, 0 failures.** Reproduce with `cd apps/sautiy && gradle :sautiy-core:test`.
+**371 tests, 0 failures.** Reproduce with `cd apps/sautiy && gradle :sautiy-core:test`.
 
 | Area | Tests | What was actually measured |
 |---|---|---|
@@ -34,20 +34,22 @@ Android layer.
 | **Ch.7 PCM/format** | 15 | All six encodings round-trip within a quantisation step; +1.0 never wraps negative; capture hot path matches the byte path |
 | **Ch.7 WAV** | 14 | Chunk-tolerant reading; **after every flush the file is a complete playable WAV**; a process kill recovers every flushed frame |
 | **WAV stream reader** | 12 | Every block matches the reference reader sample for sample; reads independent of order; stale scratch bytes never leak into a short read; both edges padded; streamed peaks equal in-memory peaks exactly |
-| **Ch.7/8 transport** | 22 | Both state machines; illegal transitions refused; flush cadence inside the loss ceiling; storage critical at exactly two minutes |
+| **Ch.7/8 transport** | 23 | Both state machines; illegal transitions refused; flush cadence inside the loss ceiling; storage critical at exactly two minutes |
 | **Resampling** | 12 | 20 kHz → 32 kHz alias below −60 dBFS; per-tier rejection floors; no edge fade; channel independence |
 | **Ch.15 waveform** | 13 | Decimation preserves extremes exactly; the loudest sample survives full zoom-out; incremental build matches one-shot |
 | **Ch.9 edit engine** | 35 | Invariants unconstructable when violated; ripple law; 5 ms seam fades; equal-power crossfades hold power where linear provably dips; exact undo/redo/time-travel |
 | **Ch.9.7 silence** | 10 | Threshold follows the room; sub-350 ms pauses preserved as rhythm |
-| **Ch.10 DSP** | 29 | 4:1 means 4:1; continuous knee; limiter holds its ceiling and stays time-aligned; noise profile in real signal RMS |
-| **Ambience engine** | 15 | **Measured T30 matches the stated RT60 within 25% at 0.5, 1, 2 and 3 seconds**; pre-delay is a real gap and never delays the dry voice; width 0 gives one room in both ears and width 1 two; warmth cuts the 8 kHz tail by more than half while leaving 200 Hz alone; a larger room answers later; **137-frame blocks are bit-identical to one pass**; every space finite and within ±18/+6 dB of dry |
-| **Voice Studio** | 30 | **Preview output is sample-identical to the render**, and identical at 97-frame blocks as at 4 096; the stages a preview cannot run are named rather than faked; each of the eight controls moves its own range >2 dB in both directions and a centred control is bit-transparent; tone provably cannot reach the compressor's detector; the de-esser cuts 7 kHz >3 dB while moving a 300 Hz vowel <1 dB; hum removal takes the fundamental *and* two harmonics >20 dB; all twelve spaces render finite and unclipped; every stated delivery standard is reached within 2 LU and every ceiling respected |
-| **Ch.10.4 loudness** | 15 | **−20 dBFS 1 kHz reads −23.0 LUFS at 44.1, 48, 32 and 96 kHz**; 20 s silences do not shift programme loudness; true peak exceeds sample peak on inter-sample material |
+| **Ch.10 DSP** | 26 | 4:1 means 4:1; continuous knee; limiter holds its ceiling and stays time-aligned; noise profile in real signal RMS |
+| **Ambience engine** | 20 | **Measured T30 matches the stated RT60 within 25% at 0.5, 1, 2 and 3 seconds**; pre-delay is a real gap and never delays the dry voice; width 0 gives one room in both ears and width 1 two; warmth cuts the 8 kHz tail by more than half while leaving 200 Hz alone; a larger room answers later; **137-frame blocks are bit-identical to one pass**; every space finite and within ±18/+6 dB of dry |
+| **Voice Studio** | 29 | **Preview output is sample-identical to the render**, and identical at 97-frame blocks as at 4 096; the stages a preview cannot run are named rather than faked; each of the eight controls moves its own range >2 dB in both directions and a centred control is bit-transparent; tone provably cannot reach the compressor's detector; the de-esser cuts 7 kHz >3 dB while moving a 300 Hz vowel <1 dB; hum removal takes the fundamental *and* two harmonics >20 dB; all twelve spaces render finite and unclipped; every stated delivery standard is reached within 2 LU and every ceiling respected |
+| **Ch.10.4 loudness** | 17 | **−20 dBFS 1 kHz reads −23.0 LUFS at 44.1, 48, 32 and 96 kHz**; 20 s silences do not shift programme loudness; true peak exceeds sample peak on inter-sample material |
 | **Ch.14 FLAC** | 12 | **Bit-exact round trips** through SAUTIY's own decoder; 2 s silence under 2 KB; speech under 75% of WAV |
 | **Ch.14 export registry** | 5 | Unregistered formats fail loudly; platform encoders register without core knowledge |
-| **Ch.13 library store** | 28 | Save survives restart; delete goes to trash with a stated date; atomic write leaves no temp file; a corrupt index does not take the recordings with it |
-| **Ch.4.6 search** | 13 | Full ranking order title > tag > marker > transcript > date; trashed entries never appear; an unrecognised phrase matches nothing rather than guessing |
-| **Ch.14 export pipeline** | 12 | What is exported is what was heard; progress is monotonic 0→1; a format that cannot carry the project rate is resampled to the nearest legal rate at or above it |
+| **Ch.13 library store** | 19 | Save survives restart; delete goes to trash with a stated date; atomic write leaves no temp file; a corrupt index does not take the recordings with it |
+| **Ch.4.6 search** | 12 | Full ranking order title > tag > marker > transcript > date; trashed entries never appear; an unrecognised phrase matches nothing rather than guessing |
+| **Ch.14 export pipeline** | 13 | What is exported is what was heard; progress is monotonic 0→1; a format that cannot carry the project rate is resampled to the nearest legal rate at or above it |
+| **Voice tuning** | 28 | Each of the seven listener words moves the voice in the direction it names, and too-bright/too-dark undo each other; a panel applies only the majority's notes and applies them once; every `VoiceAdvisor` rule fires on material that warrants it and stays silent on material that does not; Voice Match closes half the measured gap and never claims to close it |
+| **Voice Space layers** | 7 | Choosing an acoustic environment changes the room and provably nothing else; all eight are distinct, finite and unclipped, and their decays order the way the names imply; the seven recitation profiles are distinct rooms and each preserves a recited phrase's loudest-to-quietest ratio at 2.5 or better; the disclosure denies both reproduction and affiliation; Auto Studio returns a defensible outcome and a reason for it |
 
 ---
 
@@ -139,7 +141,7 @@ would be exactly the disconnected-sliders problem the reset rejects.
 The emulator has no microphone in front of it and no speaker behind it. So the device tests
 establish that the platform objects open, that frames flow, that files are written and reopen
 correctly, and that nothing crashes — but **not** that the captured audio sounds like the room,
-that playback is audible, that the twelve spaces sound like their names, that the waveform draws
+that playback is audible, that any space sounds like its name, that the waveform draws
 under a finger, or that a gesture selects what the user meant. Those need a human with a phone.
 
 The Voice Studio's *arithmetic* is proven on the JVM to a measured standard; its *sound* is a
@@ -157,6 +159,10 @@ budget is met on something slower than the target device.
 | **Media session / lock screen** | Not implemented. | Ch. 8.7 |
 | **Settings and About screens** | Not built. | Ch. 4.1.2, 22.3 |
 | **Instrumented UI tests** | Require a device. | Ch. 19.7 |
+| **Voice Match reference picker** | The analysis, the half-gap match and the honest explanation are written and tested; there is no file picker to point them at a reference recording, so the feature is unreachable from the app. | Ch. 10 |
+| **Listening panel persistence** | `ListeningPanel` computes consensus correctly; notes are not stored between sessions, so a multi-listener panel cannot yet be run over days. | Ch. 10 |
+| **Waveform editing** | Deliberately not started. Blocked behind the four listening questions. | Ch. 9 |
+| **Rename before export** | Exports take the project name; there is no field to change it at the moment of export. | Ch. 14 |
 
 ---
 
@@ -199,24 +205,68 @@ it loops one five-second passage, starts on the original, and changes the room u
 same phrase every five seconds, so the whole roster is one tap and seventy-five seconds instead
 of fifteen separate manual comparisons.
 
-## One naming system, and the tuning loop
+## Two layers, one path through them
 
-**What the user sees are outcomes.** Ten, in four groups: Speech (Clear Speech, Warm Voice, Rich
-Narration), Professional (Studio, Broadcast, Podcast), Recitation (Prestige, Majestic), Space
-(Grand Space, Immersive). Group headings rather than a second level of choice.
+**Layer one is outcomes.** Ten, in four groups: Speech (Clear Speech, Warm Voice, Rich Narration),
+Professional (Studio, Broadcast, Podcast, Lecture), Recitation (Prestige Recitation), Space (Grand
+Space, Immersive). Group headings rather than a second level of choice. Lecture is in the list
+because a lecture is a thing people record, not an acoustic to be inferred; Majestic Recitation
+left it because a list of ten is only useful while it stays ten.
 
-**What the engine has are rooms.** The fifteen acoustic spaces remain as the implementation and
-appear to the user only as an Advanced disclosure — "Based on: Grand Hall" — inside an applied
-card. A person who sees both "Prestige Recitation" and "Large Mosque" has to work out which to
-choose, and the honest answer is not something they should have to learn. **Room names belong in
-this document, not in the interface.**
+**Layer two is acoustic space, and it is optional.** Eight environments — Vocal Booth, Broadcast
+Booth, Small Hall, Large Hall, Auditorium, Small Mosque, Large Mosque, Grand Mosque — below
+everything else, as rows rather than cards. Two sets of equally-weighted cards read as two
+competing answers to one question, so the visual weight carries the hierarchy. **Choosing an
+environment changes the room and nothing else**: `chooseSpace` copies the ambience profile over the
+current voice and leaves cleanup, dynamics and tone exactly where they were. Someone who moves to a
+larger hall did not ask for a different voice, and an environment that quietly re-tuned the tone
+would make the two layers indistinguishable, which is the confusion having two layers exists to
+avoid. A test asserts this directly.
 
-**Character is one control with five stops** — Natural, Refined, Rich, Grand, Immersive — and a
-listener may stop anywhere between them. Four things move together, because more character is not
+**The Recitation Studio** is seven complete recitation voices — Natural, Makkah Inspired, Madinah
+Inspired, Grand Mosque, Prestige, Majestic, Immersive — each built on Prestige Recitation's
+treatment (light compression that leaves the delivery's dynamics alone, a gentle de-esser, no
+presence lift) in a space of its own character. Grand Mosque and Majestic were literally the same
+room until a test caught them sharing a decay; they are now different rooms, and the test that
+caught it stayed. A second test holds the loudest-to-quietest ratio of a recited phrase at or above
+2.5 through every profile: flattening the delivery is the one thing a reciter will never forgive.
+
+**The disclosure is always on screen**, under the list, not behind a tap:
+
+> Creative ambience profiles inspired by the character of large stone spaces. They do not reproduce
+> any specific building, and SAUTIY is not affiliated with any mosque or institution.
+
+A test asserts the text denies both reproduction and affiliation. The people who care most about
+these recordings are exactly the people a name like "Makkah Inspired" could mislead.
+
+**Auto Studio proposes, and waits.** One tap renders at most twenty seconds, measures it with
+`VoiceAnalysis`, and returns an outcome, an intensity and a reason in one sentence — "The recording
+sounds distant, so this brings the voice forward before anything else." Nothing is applied until
+the user accepts. A recommendation that simply happens to your recording is a decision taken on
+your behalf; one you can read and disagree with is a starting point. The rules are ordered by how
+confidently each can be read from audio: noise and distance first, because they are unmistakable,
+and the safe middle answer where nothing stands out.
+
+**Voice Space is one control** — the old Character slider, renamed for what it is and read as a
+percentage with its name ("50% · Rich"). It is the only room control the Space panel shows by
+default. Fifteen sliders is the correct set of controls and the wrong first screen; Advanced Studio
+reveals all fifteen, and reveals all of them, because the reason a professional opened it is the
+one control that would have been left out of a curated subset.
+
+**What sits under an outcome is a room**, and the fifteen `VoiceSpacePreset` acoustics remain the
+implementation of every outcome. Inside layer one they appear only as an Advanced disclosure —
+"Based on: Grand Hall" — inside an applied card, never as a thing to choose. **Layer two is the one
+place a room is chosen by its own name, and it is a deliberate detour rather than the main path.** A
+person offered "Prestige Recitation" and "Large Mosque" as equals has to work out which to pick, and
+the honest answer is not something they should have to learn; offered the outcome first and the room
+below it, they only reach the room if they came for a room.
+
+**Voice Space has five stops** — Natural, Refined, Rich, Grand, Immersive — and a
+listener may stop anywhere between them. Four things move together, because more space is not
 one parameter: the room grows, lasts longer and gets louder, and the speech protection rises with
 all three. A raised mix on an unchanged room sounds like the volume of an effect rather than a
 larger place. Above Rich it also adds richness, air and depth to the voice, so the word means what
-it says. Moving Character keeps the preset name; moving a detailed control clears it.
+it says. Moving Voice Space keeps the preset name; moving a detailed control clears it.
 
 **The tuning loop.** Seven words — too bright, too dark, too harsh, too muddy, too much room, too
 little room, excellent — each mapping to a defined adjustment, tested for direction and for the
@@ -242,12 +292,16 @@ be answered from code and are not claimed.
 
 The signal chain is fixed: `Input → Cleanup → Dynamics → Tone → Ambience → Loudness → Output`.
 
-**Twelve spaces**, each a complete voice rather than a reverb setting: Dry Studio, Natural
-Presence, Vocal Booth, Podcast Studio, Broadcast Studio, Warm Studio, Lecture Hall, Prestige
-Recitation, Auditorium, Cinematic Voice, Large Hall, Majestic Recitation.
+**Fifteen acoustics** (`VoiceSpacePreset`), each a complete voice rather than a reverb setting:
+Pure Studio, Natural Presence, Vocal Booth, Warm Studio, Broadcast, Podcast, Lecture Hall, Small
+Mosque, Large Mosque, Grand Hall, Auditorium, Prestige Recitation, Majestic Recitation, Royal
+Presence, Cinematic Voice. These are the engine's vocabulary; ten of them reach layer one under
+outcome names, eight environments reach layer two under their own.
 
-**Nine ambience controls**: amount, wet/dry mix, room size, decay time (RT60 in seconds),
-pre-delay, early reflections, width, warmth, brightness.
+**Fifteen ambience controls**: amount, wet/dry mix, room size, decay time (RT60 in seconds),
+pre-delay, early reflections, late reflections, diffusion, damping, presence, tail smoothness,
+speech priority, width, warmth, brightness. All fifteen behind Advanced Studio; one Voice Space
+control in front of it.
 
 **Eight refinement controls**, each −1 to +1 with 0 exactly transparent: clarity, warmth,
 richness, presence, body, air, brightness, depth. Warmth and brightness appear in both groups
