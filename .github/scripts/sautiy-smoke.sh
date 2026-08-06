@@ -94,7 +94,17 @@ cd apps/sautiy
 ./gradlew --no-daemon :app:connectedDebugAndroidTest
 
 # The gate, after the evidence. A red build either way, but never a red build with nothing to read.
+#
+# The manifest and the failed-lookup diagnostic are re-printed *here*, at the end, because the
+# original copies sit ~1,300 lines up the log behind the native-build warnings and the retrieval
+# available to whoever is reading this returns a tail. Evidence that cannot be reached has not been
+# produced.
 if [ "$SCREENSHOTS_OK" -ne 0 ]; then
-  echo "::error::device tests passed but the screenshot set is incomplete — see the manifest above"
+  echo "=== screenshot evidence, repeated where a log tail can reach it ==="
+  cat "$GITHUB_WORKSPACE/screenshots/missing.txt" 2>/dev/null || echo "(no missing.txt written)"
+  echo "--- controls the failed lookups actually found on screen ---"
+  cat "$GITHUB_WORKSPACE/screenshots/diagnostic.txt" 2>/dev/null || echo "(no diagnostic.txt written)"
+  echo "=== end screenshot evidence ==="
+  echo "::error::device tests passed; the screenshot set is incomplete. Names above."
   exit 1
 fi

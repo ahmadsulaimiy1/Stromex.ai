@@ -57,6 +57,15 @@ tap_by_description() {
     # What *is* on screen. Two screens have failed to capture twice running, and inferring their
     # control names from outside the emulator has not worked — so the run says what it can see.
     echo "  controls present:"
+    # Written as well as echoed. This diagnostic has now been produced twice and read zero times:
+    # it lands roughly 1,300 lines from the end of the job log, behind the LAME compiler warnings,
+    # and the only retrieval available here returns a tail. A diagnostic nobody can reach is not a
+    # diagnostic — so it also goes to a file the caller re-prints at the very end, where the tail
+    # does reach.
+    {
+      echo "when looking for '$needle', the screen contained:"
+      adb shell cat /sdcard/ui.xml | grep -oE '(content-desc|text)="[^"]+"' | sort -u | head -40
+    } >> "$SHOTS/diagnostic.txt" 2>/dev/null || true
     { adb shell cat /sdcard/ui.xml | grep -oE '(content-desc|text)="[^"]+"' \
       | sort -u | head -30 | sed 's/^/    /'; } || true
     return 1
@@ -129,9 +138,11 @@ for name in $EXPECTED; do
 done
 
 if [ -n "$MISSING" ]; then
+  echo "missing:$MISSING" > "$SHOTS/missing.txt"
   echo "::error::screenshots missing:$MISSING — a screen that cannot be captured is a screen"
   echo "::error::nobody can review, and the control names this script taps by may have changed."
   exit 1
 fi
+rm -f "$SHOTS/missing.txt"
 
 echo "all 8 screens captured."
