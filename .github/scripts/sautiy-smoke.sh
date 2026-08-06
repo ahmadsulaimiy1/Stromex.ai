@@ -76,13 +76,25 @@ echo "SAUTIY launched, is alive, and its activity is resumed."
 # this app can see it — there is no emulator in the development sandbox — so these are the only
 # pictures of it that exist, and they are pictures of the real thing rather than of an intention.
 echo "=== screenshots ==="
-# Not swallowed any more. Screenshots are part of the release: a screen nobody can capture is a
-# screen nobody can review, and the failure usually means a control this script taps by name has
-# been renamed — which is exactly the kind of drift that should stop a build.
-bash "$GITHUB_WORKSPACE/.github/scripts/sautiy-screenshots.sh" "$GITHUB_WORKSPACE/screenshots"
+# Captured here, while the launched copy is still on screen — but the *gate* on them is deferred to
+# the end of this script.
+#
+# For two runs the missing-screenshot check aborted before the device tests ever started, so a
+# missing picture of the Analysis panel cost the evidence about whether recording, playback and
+# export still work. Screenshots remain part of the release and still fail the build; they no longer
+# mask the verification that matters more.
+SCREENSHOTS_OK=0
+bash "$GITHUB_WORKSPACE/.github/scripts/sautiy-screenshots.sh" "$GITHUB_WORKSPACE/screenshots" \
+  || SCREENSHOTS_OK=1
 
 echo "=== device audio tests ==="
 adb uninstall "$PACKAGE" || true
 
 cd apps/sautiy
 ./gradlew --no-daemon :app:connectedDebugAndroidTest
+
+# The gate, after the evidence. A red build either way, but never a red build with nothing to read.
+if [ "$SCREENSHOTS_OK" -ne 0 ]; then
+  echo "::error::device tests passed but the screenshot set is incomplete — see the manifest above"
+  exit 1
+fi

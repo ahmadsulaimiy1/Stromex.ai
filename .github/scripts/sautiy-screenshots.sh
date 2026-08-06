@@ -54,6 +54,11 @@ tap_by_description() {
     | grep -oE '[0-9]+' | tr '\n' ' '; } || true )
   if [ -z "$bounds" ]; then
     echo "::warning::no control matching '$needle' in the view hierarchy"
+    # What *is* on screen. Two screens have failed to capture twice running, and inferring their
+    # control names from outside the emulator has not worked — so the run says what it can see.
+    echo "  controls present:"
+    { adb shell cat /sdcard/ui.xml | grep -oE '(content-desc|text)="[^"]+"' \
+      | sort -u | head -30 | sed 's/^/    /'; } || true
     return 1
   fi
   # shellcheck disable=SC2086
