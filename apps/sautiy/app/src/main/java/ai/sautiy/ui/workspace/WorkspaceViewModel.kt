@@ -245,9 +245,10 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
             // here is a real take rather than a fragment.
             launch {
                 engine.writeFailure.collect { failure ->
-                    if (failure == null) return@collect
-                    _state.update { it.copy(error = failure.toError()) }
-                    stopRecording()
+                    if (failure != null) {
+                        _state.update { it.copy(error = failure.toError()) }
+                        stopRecording()
+                    }
                 }
             }
         }
