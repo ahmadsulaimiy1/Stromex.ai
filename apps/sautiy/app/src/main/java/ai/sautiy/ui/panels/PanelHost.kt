@@ -1089,9 +1089,31 @@ private fun PrimaryAction(
     }
 }
 
-/** The Analysis panel — every number measured, none estimated (chapter 10.4). */
+/**
+ * The Analysis panel — every number measured, none estimated (chapter 10.4).
+ *
+ * That sentence was a promise this function broke. With nothing recorded, `qualityScore` defaults to
+ * **100** and `noiseFloorDb` to **−120 dB**, so the panel opened on a perfect quality gauge and a
+ * silent room — for audio that did not exist. Two of the Trust Principle's prohibitions in one
+ * screen: exaggerating quality, and claiming a measurement never taken. It is the third instance of
+ * this pattern found in this release, after the hard-coded −62 dB floor and the Long.MAX_VALUE
+ * storage readout, and this one was on the screen a reviewer opens to check the numbers.
+ *
+ * So the panel now refuses to draw instruments with nothing to measure. An empty state says what the
+ * panel is for; the gauges appear when there is audio behind them.
+ */
 @Composable
 private fun AnalysisPanel(state: WorkspaceUiState) {
+    if (!state.hasAudio) {
+        EmptyPanelState(
+            title = "Nothing measured yet",
+            body = "Record something and this shows what was actually captured — level, noise floor, " +
+                "dynamic range and headroom. Every figure here is measured, so there are none until " +
+                "there is audio.",
+        )
+        return
+    }
+
     val snr = state.rmsDb - state.noiseFloorDb
 
     Column {
