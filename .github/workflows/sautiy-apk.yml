@@ -1,0 +1,256 @@
+name: SAUTIY APK
+
+# RC-1 delivery build.
+#
+# This exists because the development sandbox cannot reach dl.google.com, so the Android module
+# cannot be compiled there. GitHub-hosted runners ship the Android SDK, NDK and CMake and have
+# unrestricted access to the Google Maven repository — so this is where SAUTIY actually gets
+# built, and where the APK comes from.
+
+on:
+  push:
+    branches:
+      - 'claude/sautiy-**'
+    paths:
+      - 'apps/sautiy/**'
+      - '.github/workflows/sautiy-apk.yml'
+      # The gate itself. Without this a change to the smoke script does not run the smoke
+      # script, which is the one file where that matters most.
+      - '.github/scripts/sautiy-smoke.sh'
+      - '.github/scripts/sautiy-compose-check.sh'
+      - '.github/scripts/sautiy-screenshots.sh'
+      - '.github/scripts/sautiy-test-summary.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and verify
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/sautiy
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          # NDK and CMake are not optional extras: MP3 export is a release blocker and it is
+          # native, because Android has never shipped an MP3 encoder.
+          packages: >-
+            platform-tools
+            platforms;android-35
+            build-tools;35.0.0
+            ndk;27.0.12077973
+            cmake;3.22.1
+
+      - name: Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('apps/sautiy/**/*.gradle.kts', 'apps/sautiy/gradle/libs.versions.toml') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      # The engine tests are the gate. They run first and on their own, so a DSP or edit-engine
+      # regression fails the build before any time is spent on the Android layer.
+      - name: Verify the audio engine
+        run: ./gradlew --no-daemon :sautiy-core:test
+
+      - name: Confirm the Android SDK is visible to Gradle
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          test -d "$ANDROID_HOME/platforms" || { echo "No Android platforms installed"; exit 1; }
+
+      # LAME is fetched on every build, not on request. MP3 export is a release blocker, and
+      # the app's Gradle build turns the native component on by itself once these sources exist
+      # — so every APK this workflow produces has a working MP3 encoder in it.
+      - name: Cache the LAME sources
+        id: lame-cache
+        uses: actions/cache@v4
+        with:
+          path: apps/sautiy/app/src/main/cpp/lame
+          key: lame-3.100
+
+      - name: Fetch LAME
+        if: steps.lame-cache.outputs.cache-hit != 'true'
+        run: |
+          cd app/src/main/cpp
+          curl -fL --retry 3 -o lame.tar.gz \
+            https://downloads.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz
+          tar xzf lame.tar.gz && mv lame-3.100 lame && rm lame.tar.gz
+
+      - name: Confirm MP3 will be built
+        run: |
+          test -f app/src/main/cpp/lame/libmp3lame/lame.c || {
+            echo "::error::LAME sources are missing, so this APK would ship without MP3 export."
+            exit 1
+          }
+
+      # Runs before the build because it is a second, not four minutes, and it catches the two
+      # Compose mistakes that have each cost a whole cycle: a non-local return out of a composable
+      # content lambda, and a cross-module smart cast.
+      - name: Check the Compose layer for known shape errors
+        working-directory: ${{ github.workspace }}
+        run: ./.github/scripts/sautiy-compose-check.sh apps/sautiy/app/src/main/java
+
+      - name: Build the debug APK
+        run: ./gradlew --no-daemon :app:assembleDebug
+
+      - name: Lint the Android layer
+        continue-on-error: true
+        run: ./gradlew --no-daemon :app:lintDebug
+
+      # A release blocker gets checked, not assumed. If the encoder is not in the APK, MP3 is
+      # silently absent from the export panel — which is exactly the failure this guards.
+      - name: Confirm the MP3 encoder is in the APK
+        run: |
+          apk=$(find app/build/outputs/apk -name '*.apk' | head -1)
+          if ! unzip -l "$apk" | grep -q 'libsautiymp3.so'; then
+            echo "::error::libsautiymp3.so is not in the APK — MP3 export would be absent"
+            unzip -l "$apk" | grep '\.so' || echo "(no native libraries at all)"
+            exit 1
+          fi
+          echo "MP3 encoder present:"
+          unzip -l "$apk" | grep 'libsautiymp3.so'
+
+      - name: Report what was produced
+        run: |
+          echo "### APK" >> "$GITHUB_STEP_SUMMARY"
+          for apk in $(find app/build/outputs/apk -name '*.apk'); do
+            echo "- \`$apk\` — $(du -h "$apk" | cut -f1)" >> "$GITHUB_STEP_SUMMARY"
+          done
+          # A debug APK is signed with the standard debug keystore, so it installs directly.
+          "$ANDROID_HOME"/build-tools/35.0.0/aapt2 dump badging \
+            $(find app/build/outputs/apk -name '*.apk' | head -1) | head -5 >> "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Upload the APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: sautiy-debug-apk
+          path: apps/sautiy/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload build reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sautiy-build-reports
+          path: |
+            apps/sautiy/app/build/reports/**
+            apps/sautiy/sautiy-core/build/reports/**
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # A build that compiles is not a build that runs, and a build that runs is not a build that
+  # records. This job installs the APK on a real emulator, launches it, and then runs the
+  # instrumented tests that exercise capture, playback and export against the actual platform.
+  smoke:
+    name: Device tests
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download the APK
+        uses: actions/download-artifact@v4
+        with:
+          name: sautiy-debug-apk
+          path: apk
+
+      # The instrumented tests are built here, so this job needs the same Gradle state the
+      # build job had.
+      - name: Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('apps/sautiy/**/*.gradle.kts', 'apps/sautiy/gradle/libs.versions.toml') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      # GitHub's Linux runners expose KVM, but the device node is not world-writable by default.
+      # This job rebuilds the app to produce the instrumentation APK, so it needs the LAME
+      # sources too. Without them its rebuild silently drops the native encoder, and the MP3
+      # tests fail against a build that is not the one shipped — which is exactly what happened.
+      - name: Restore the LAME sources
+        id: lame-cache
+        uses: actions/cache@v4
+        with:
+          path: apps/sautiy/app/src/main/cpp/lame
+          key: lame-3.100
+
+      - name: Fetch LAME
+        if: steps.lame-cache.outputs.cache-hit != 'true'
+        working-directory: apps/sautiy
+        run: |
+          cd app/src/main/cpp
+          curl -fL --retry 3 -o lame.tar.gz \
+            https://downloads.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz
+          tar xzf lame.tar.gz && mv lame-3.100 lame && rm lame.tar.gz
+
+      - name: Confirm MP3 will be built into the test APK
+        run: |
+          test -f apps/sautiy/app/src/main/cpp/lame/libmp3lame/lame.c || {
+            echo "::error::LAME is missing in the device-test job, so MP3 would be tested against a build that lacks it."
+            exit 1
+          }
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Install, launch, and exercise the audio device
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          profile: pixel_5
+          disable-animations: true
+          # The action's default options include -noaudio, which disables audio support
+          # outright and would stop AudioRecord opening at all. Everything else is kept.
+          emulator-options: -no-window -gpu swiftshader_indirect -no-boot-anim -camera-back none
+          script: bash .github/scripts/sautiy-smoke.sh
+
+      # The only pictures of SAUTIY that exist, because nobody building it has an emulator.
+      - name: Upload the screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sautiy-screenshots
+          path: screenshots/**
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload the instrumented test report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sautiy-device-test-reports
+          path: apps/sautiy/app/build/reports/androidTests/**
+          if-no-files-found: ignore
+          retention-days: 7

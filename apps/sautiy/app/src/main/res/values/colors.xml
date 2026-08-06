@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mirrors ai.sautiy.core.design.SautiyTokens. The Kotlin object is the source of truth;
+     these exist only for the few places the platform needs a resource (icon, splash). -->
+<resources>
+    <color name="ink_900">#FF05070A</color>
+    <color name="signal_500">#FF2F80FF</color>
+</resources>

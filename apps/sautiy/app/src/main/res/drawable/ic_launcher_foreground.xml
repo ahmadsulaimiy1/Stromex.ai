@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Aperture (chapter 2.2): five strokes on a 48-unit grid, heights following
+  0.34 : 0.68 : 1.00 : 0.68 : 0.34, fully rounded caps, drawn here on Android's 108dp
+  adaptive canvas so the mark sits entirely inside the 66dp safe circle and no launcher mask
+  can clip it.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Stroke width 5 units on the 48 grid scales to 11.25 on 108; gap 4 scales to 9. -->
+    <path
+        android:strokeColor="@color/signal_500"
+        android:strokeWidth="8"
+        android:strokeLineCap="round"
+        android:pathData="M 33.5,47.2 L 33.5,60.8" />
+    <path
+        android:strokeColor="@color/signal_500"
+        android:strokeWidth="8"
+        android:strokeLineCap="round"
+        android:pathData="M 43.75,40.4 L 43.75,67.6" />
+    <path
+        android:strokeColor="@color/signal_500"
+        android:strokeWidth="8"
+        android:strokeLineCap="round"
+        android:pathData="M 54,34 L 54,74" />
+    <path
+        android:strokeColor="@color/signal_500"
+        android:strokeWidth="8"
+        android:strokeLineCap="round"
+        android:pathData="M 64.25,40.4 L 64.25,67.6" />
+    <path
+        android:strokeColor="@color/signal_500"
+        android:strokeWidth="8"
+        android:strokeLineCap="round"
+        android:pathData="M 74.5,47.2 L 74.5,60.8" />
+</vector>

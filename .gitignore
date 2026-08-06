@@ -43,3 +43,10 @@ apps/web/android/local.properties
 *.swp
 tsconfig.tsbuildinfo
 dump.rdb
+
+# SAUTIY / Gradle
+apps/sautiy/.gradle/
+apps/sautiy/build/
+apps/sautiy/*/build/
+apps/sautiy/local.properties
+apps/sautiy/.kotlin/
