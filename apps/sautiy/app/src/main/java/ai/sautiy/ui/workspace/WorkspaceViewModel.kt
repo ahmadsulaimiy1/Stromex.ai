@@ -57,6 +57,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.Dispatchers
 import ai.sautiy.core.play.LoopRegion
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -78,6 +79,16 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
     private val player = AudioPlayer(viewModelScope)
 
     private var capture: AudioCapture? = null
+
+    /**
+     * The collectors watching the live capture, held so they can be stopped with it.
+     *
+     * They used to be launched loose into `viewModelScope`. A `StateFlow` never completes, so each
+     * one outlived the recording it was watching and kept its [AudioCapture] — and the microphone
+     * objects behind it — reachable for the life of the screen. Invisible after one take, and a
+     * genuine accumulation for anybody recording all afternoon.
+     */
+    private var captureObservers: Job? = null
     private var peaks = PeakBuilder()
 
     /**
@@ -210,16 +221,34 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         workspace = workspace.copy(transport = TransportState.RECORDING)
         ai.sautiy.record.RecordingService.start(getApplication())
 
-        viewModelScope.launch {
-            engine.level.collect { level ->
-                recording = recording.copy(
-                    peakLinear = level.peakLinear,
-                    rmsLinear = level.rmsLinear,
-                    elapsedFrames = engine.framesWritten.value,
-                    clippedSampleCount = engine.clippedSamples.value,
-                    freeBytes = files.freeBytes(),
-                )
-                publish()
+        captureObservers?.cancel()
+        captureObservers = viewModelScope.launch {
+            launch {
+                engine.level.collect { level ->
+                    recording = recording.copy(
+                        peakLinear = level.peakLinear,
+                        rmsLinear = level.rmsLinear,
+                        elapsedFrames = engine.framesWritten.value,
+                        clippedSampleCount = engine.clippedSamples.value,
+                        freeBytes = files.freeBytes(),
+                    )
+                    publish()
+                }
+            }
+
+            // A take that has stopped being written has to say so, and then stop.
+            //
+            // The capture loop breaks out when a write fails, so without this the frame counter
+            // would simply stop advancing while the transport still read RECORDING — the app
+            // displaying a recording in progress that is not being recorded. Everything flushed
+            // before the failure is already a complete, playable WAV on disk, so what gets saved
+            // here is a real take rather than a fragment.
+            launch {
+                engine.writeFailure.collect { failure ->
+                    if (failure == null) return@collect
+                    _state.update { it.copy(error = failure.toError()) }
+                    stopRecording()
+                }
             }
         }
     }
@@ -236,6 +265,11 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         val id = currentTakeId ?: return
         val frames = engine.stop()
         capture = null
+        // Stopped with the recording they were watching. A StateFlow never completes, so a collector
+        // left running holds its engine — and the microphone objects behind it — for the life of the
+        // screen.
+        captureObservers?.cancel()
+        captureObservers = null
         ai.sautiy.record.RecordingService.stop(getApplication())
 
         if (frames > 0) {

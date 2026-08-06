@@ -75,6 +75,17 @@ class AudioCapture(
     private val _clippedSamples = MutableStateFlow(0)
     val clippedSamples: StateFlow<Int> = _clippedSamples.asStateFlow()
 
+    /**
+     * Set when the take can no longer be written — a full volume, or storage removed mid-recording.
+     *
+     * Exists because the alternative is worse than an error. If a write fails and nothing says so,
+     * the frame counter simply stops advancing while the transport still reads RECORDING: the app
+     * showing a recording in progress that is no longer being recorded. That is the Trust Principle's
+     * first prohibition, and a frozen timer is not a way of telling anybody.
+     */
+    private val _writeFailure = MutableStateFlow<CaptureFailure?>(null)
+    val writeFailure: StateFlow<CaptureFailure?> = _writeFailure.asStateFlow()
+
     /** Emitted per captured block, for the live waveform. Consumers must not block. */
     var onBlock: ((AudioBuffer) -> Unit)? = null
 
@@ -191,16 +202,33 @@ class AudioCapture(
             _level.value = Waveform.instantLevel(block)
             onBlock?.invoke(block)
 
-            streamWriter.append(block)
-            _framesWritten.value = streamWriter.frameCount
+            // Guarded, and for the same reason the render loop in AudioPlayer is.
+            //
+            // `scope.launch` carries no CoroutineExceptionHandler, so an IOException from here does
+            // not stop the recording — it kills the process, mid-take, which is the one outcome this
+            // app may never produce. A volume that fills during a ninety-minute lecture is not an
+            // exotic case; neither is storage being removed.
+            val written = runCatching {
+                streamWriter.append(block)
+                sinceFlush += block.frameCount
+                if (sinceFlush >= flushEvery) {
+                    // The durability promise of chapter 1.3.5: after this returns, the file on disk
+                    // is already a complete, playable WAV of everything captured.
+                    streamWriter.flush()
+                    sinceFlush = 0
+                }
+            }.isSuccess
 
-            sinceFlush += block.frameCount
-            if (sinceFlush >= flushEvery) {
-                // The durability promise of chapter 1.3.5: after this returns, the file on disk
-                // is already a complete, playable WAV of everything captured.
-                streamWriter.flush()
-                sinceFlush = 0
+            if (!written) {
+                // Say so and stop. Everything flushed before this point is already a complete,
+                // playable WAV on disk — that is what the flush interval is for — so the take up to
+                // here survives. Continuing to spin against a dead file would only overwrite that
+                // truth with a longer silence.
+                _writeFailure.value = CaptureFailure.STORAGE_UNAVAILABLE
+                break
             }
+
+            _framesWritten.value = streamWriter.frameCount
         }
     }
 
@@ -225,8 +253,27 @@ class AudioCapture(
 
     /** Stops, flushes and closes. Returns the frames captured. */
     fun stop(): Long {
-        loop?.cancel()
+        // Cancelled *and waited for*, before anything it writes to is closed.
+        //
+        // Cancellation is a request, not an event: the loop can be inside `append` or `flush` when
+        // this returns, and the writer is closed a few lines below. That is the same race that killed
+        // the test process in the playback path, and here it would cost the last block of a take as
+        // well — writing to a descriptor that has just been closed.
+        //
+        // Bounded, and blocking is the right call rather than a compromise. The loop leaves within one
+        // buffer period of cancellation — twenty milliseconds at the capture window — and `stop()` is
+        // called once, when a thumb lifts off the record button. The timeout exists only so a wedged
+        // read can never hang the app; it is not expected to be reached.
+        val running = loop
         loop = null
+        running?.cancel()
+        if (running != null) {
+            runCatching {
+                kotlinx.coroutines.runBlocking {
+                    kotlinx.coroutines.withTimeoutOrNull(LOOP_EXIT_TIMEOUT_MS) { running.join() }
+                }
+            }
+        }
 
         record?.let { recorder ->
             runCatching { recorder.stop() }
@@ -265,6 +312,17 @@ class AudioCapture(
         if (NoiseSuppressor.isAvailable()) disable { NoiseSuppressor.create(sessionId) }
         if (AcousticEchoCanceler.isAvailable()) disable { AcousticEchoCanceler.create(sessionId) }
         if (AutomaticGainControl.isAvailable()) disable { AutomaticGainControl.create(sessionId) }
+    }
+
+    private companion object {
+        /**
+         * How long [stop] waits for the read loop to leave before closing the file underneath it.
+         *
+         * Half a second against an expected twenty milliseconds. Generous on purpose: the cost of
+         * waiting slightly too long is imperceptible, and the cost of not waiting is a write to a
+         * closed descriptor at the end of somebody's recording.
+         */
+        const val LOOP_EXIT_TIMEOUT_MS = 500L
     }
 }
 
