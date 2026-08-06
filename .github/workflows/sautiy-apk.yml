@@ -19,6 +19,7 @@ on:
       - '.github/scripts/sautiy-smoke.sh'
       - '.github/scripts/sautiy-compose-check.sh'
       - '.github/scripts/sautiy-screenshots.sh'
+      - '.github/scripts/sautiy-test-summary.py'
   workflow_dispatch:
 
 permissions:
