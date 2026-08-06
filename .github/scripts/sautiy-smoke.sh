@@ -72,6 +72,14 @@ echo "SAUTIY launched, is alive, and its activity is resumed."
 # own, and Gradle is about to build and install its own copy of the same package. Android
 # refuses that as INSTALL_FAILED_UPDATE_INCOMPATIBLE, and the run reports "Finished 0 tests" —
 # a green-looking failure to run anything at all. Remove the launched copy first.
+# Screenshots first, while the launched copy is still installed and on screen. Nobody working on
+# this app can see it — there is no emulator in the development sandbox — so these are the only
+# pictures of it that exist, and they are pictures of the real thing rather than of an intention.
+echo "=== screenshots ==="
+bash "$GITHUB_WORKSPACE/.github/scripts/sautiy-screenshots.sh" "$GITHUB_WORKSPACE/screenshots" || {
+  echo "::warning::screenshot capture failed; this does not fail the build"
+}
+
 echo "=== device audio tests ==="
 adb uninstall "$PACKAGE" || true
 

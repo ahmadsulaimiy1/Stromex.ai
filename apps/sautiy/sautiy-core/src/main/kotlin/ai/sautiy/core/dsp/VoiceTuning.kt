@@ -507,13 +507,32 @@ public enum class VoiceOutcome(
      */
     public val basedOn: VoiceSpacePreset,
     public val character: Double = VoiceCharacter.REFINED,
+    /**
+     * How much room this outcome wants, overriding the acoustic it is based on.
+     *
+     * Added because a distinctness test found three of these ten inside 1.1 dB of each other, which
+     * means the list had ten names for seven sounds. The cause was that the acoustics were chosen
+     * for their *character* and then played at an intensity that made the character inaudible:
+     * Studio was a vocal booth at 6% wet, which is a treated room you cannot hear, and therefore
+     * was not distinguishable from Clear Speech, which has no room at all.
+     *
+     * The acoustic still decides *what kind* of room it is. This decides how much of it there is,
+     * per outcome, so a name and a sound cannot drift apart.
+     */
+    private val roomLevel: Double? = null,
+    /** Tone this outcome insists on, where the acoustic alone does not make it what its name says. */
+    private val tone: VoiceRefinement? = null,
 ) {
     CLEAR_SPEECH(
         "Clear Speech",
-        "Every word plain. For notes, interviews, meetings and lectures.",
+        "Every word plain. For notes, interviews and meetings.",
         VoiceOutcomeGroup.SPEECH,
         VoiceSpacePreset.PURE_STUDIO,
         VoiceCharacter.NATURAL,
+        // The driest and most forward of the ten, deliberately. Its identity is intelligibility
+        // and nothing else, which is only a distinct identity if it is taken further than the
+        // others: more consonant, less body, no room whatsoever.
+        tone = VoiceRefinement(clarity = 0.38, presence = 0.26, warmth = -0.10),
     ),
     WARM_VOICE(
         "Warm Voice",
@@ -523,10 +542,15 @@ public enum class VoiceOutcome(
     ),
     RICH_NARRATION(
         "Rich Narration",
-        "Weight and polish. For audiobooks, voice-over and presentation.",
+        "Weight and polish, close to the ear. For audiobooks and voice-over.",
         VoiceOutcomeGroup.SPEECH,
-        VoiceSpacePreset.ROYAL_PRESENCE,
-        VoiceCharacter.RICH,
+        // Was a 2.2-second hall, which is wrong for the name regardless of distinctness:
+        // audiobooks are recorded close and dry, and a narrator in a hall sounds like a
+        // narrator in the wrong place. The weight comes from the voice, not from the room.
+        VoiceSpacePreset.WARM_STUDIO,
+        VoiceCharacter.REFINED,
+        roomLevel = 0.06,
+        tone = VoiceRefinement(warmth = 0.30, richness = 0.34, body = 0.28, clarity = 0.14),
     ),
 
     STUDIO(
@@ -534,6 +558,12 @@ public enum class VoiceOutcome(
         "Clean and close, as though recorded in a treated room.",
         VoiceOutcomeGroup.PROFESSIONAL,
         VoiceSpacePreset.VOCAL_BOOTH,
+        VoiceCharacter.RICH,
+        // 6% of a 0.3-second booth is a treated room nobody can hear, which is why this measured
+        // 0.55 dB from Clear Speech — two names for one sound. A booth is audible as early
+        // reflections and a tight, short answer, and it has to actually be there.
+        roomLevel = 0.17,
+        tone = VoiceRefinement(clarity = 0.20, air = 0.16, presence = 0.10),
     ),
     BROADCAST(
         "Broadcast",
@@ -552,6 +582,11 @@ public enum class VoiceOutcome(
         "Carries across a room, and every word still lands.",
         VoiceOutcomeGroup.PROFESSIONAL,
         VoiceSpacePreset.LECTURE_HALL,
+        VoiceCharacter.RICH,
+        // Audibly a hall, or the name means nothing. The speech protection in the acoustic is
+        // what keeps this from becoming the washy lecture recording everyone has heard.
+        roomLevel = 0.24,
+        tone = VoiceRefinement(clarity = 0.24, presence = 0.16),
     ),
 
     PRESTIGE_RECITATION(
@@ -568,6 +603,9 @@ public enum class VoiceOutcome(
         VoiceOutcomeGroup.SPACE,
         VoiceSpacePreset.GRAND_HALL,
         VoiceCharacter.GRAND,
+        // Held back so Immersive has somewhere to go. Two presets at the top of the same scale
+        // are one preset, and "the largest space" has to be larger than something.
+        roomLevel = 0.19,
     ),
     IMMERSIVE(
         "Immersive",
@@ -575,11 +613,21 @@ public enum class VoiceOutcome(
         VoiceOutcomeGroup.SPACE,
         VoiceSpacePreset.MAJESTIC_RECITATION,
         VoiceCharacter.IMMERSIVE,
+        // At the house ceiling once the intensity has multiplied it. This is the one outcome
+        // where the room is the subject, and the ceiling is what stops it burying the words.
+        roomLevel = 0.30,
     ),
     ;
 
     public val settings: VoiceStudioSettings
-        get() = basedOn.settings.copy(character = VoiceCharacter(character))
+        get() {
+            val base = basedOn.settings
+            return base.copy(
+                character = VoiceCharacter(character),
+                ambience = roomLevel?.let { base.ambience.copy(wetDryMix = it) } ?: base.ambience,
+                refinement = tone ?: base.refinement,
+            )
+        }
 
     public fun studio(): VoiceStudio = VoiceStudio(settings)
 

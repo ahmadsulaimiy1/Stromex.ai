@@ -18,6 +18,7 @@ on:
       # script, which is the one file where that matters most.
       - '.github/scripts/sautiy-smoke.sh'
       - '.github/scripts/sautiy-compose-check.sh'
+      - '.github/scripts/sautiy-screenshots.sh'
   workflow_dispatch:
 
 permissions:
@@ -233,6 +234,16 @@ jobs:
           # outright and would stop AudioRecord opening at all. Everything else is kept.
           emulator-options: -no-window -gpu swiftshader_indirect -no-boot-anim -camera-back none
           script: bash .github/scripts/sautiy-smoke.sh
+
+      # The only pictures of SAUTIY that exist, because nobody building it has an emulator.
+      - name: Upload the screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sautiy-screenshots
+          path: screenshots/**
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Upload the instrumented test report on failure
         if: failure()
