@@ -36,17 +36,50 @@ cannot disagree about what a complete set is.
 | File | Name in the summary | Reached by |
 | --- | --- | --- |
 | `01-workspace-empty` | Home | nothing — the app opens here |
-| `02-recording-live-studio` | Recording | `Record` |
-| `03-after-recording` | Playback | `Stop` |
+| `02-recording-live-studio` | Recording | `Start recording` |
+| `03-after-recording` | Playback | `Stop recording` |
 | `04-studio-panel` | Studio | `Studio` |
 | `05-studio-scrolled` | Studio, scrolled | `Studio`, then a swipe |
 | `06-studio-layer-two` | Studio, second layer | `Studio`, then two swipes |
-| `07-export-panel` | Export | `Export` |
-| `08-analysis-gauges` | Analysis | `Analysis` |
+| `07-export-panel` | Export | `Export this recording` |
+| `08-analysis-gauges` | Analysis | `Quality` |
 
 Rows 5 and 6 name `Studio` deliberately. They are gated behind that one tap, so when it fails it
 costs three screens rather than one, and a summary that blamed a swipe would send the fix to the
 wrong place.
+
+Row 8 is the one worth explaining. The panel is titled *Analysis*, but nothing opens it by that
+name: it is reached by the Tier-2 context action `ctx.analysis`, whose label is `Quality`. The script
+taps what a thumb taps, never what a panel calls itself.
+
+Every selector above is the string the control actually carries, read out of the Compose sources.
+Version 1's table was inferred, and two of its guesses were wrong in the most expensive way
+available — see below.
+
+## What version 1's guesses cost
+
+Worth recording, because the lesson is not "check your selectors" but something narrower.
+
+`grep -iF "Record"` matched the hint copy *"Press record to begin. Everything is saved from the first
+moment."* before it ever reached the transport button. So the script tapped a caption. Recording
+never started, `Stop` was consequently never on screen, and `02-recording-live-studio` and
+`03-after-recording` were captured — successfully, with no warning of any kind — as two pictures of
+the idle workspace, for three consecutive runs.
+
+The set was never six of eight. It was four of eight plus two screenshots of the wrong screen, filed
+under the right names.
+
+**A selector that matches the wrong thing is a worse defect than a selector that matches nothing.**
+A missing screenshot announces itself. A screenshot of the wrong screen is indistinguishable from a
+screenshot of the right one, and it is *evidence* — so it does not merely fail to help, it actively
+misleads the review it exists to serve. A substring match against user-facing prose is therefore not
+a weak selector; it is an unsafe one.
+
+`KEYCODE_BACK` was the second guess. It does not dismiss a panel in SAUTIY — it leaves the
+application, so Export and Analysis were looked for on the Android launcher, and the summary faithfully
+reported "selector not found" for controls that were merely on a different app. Navigation now checks
+the resumed activity after every BACK and brings the app back to the front when it has gone: a script
+that navigates by sending keys and hoping is a script whose failures cannot be attributed.
 
 ## Rules this subsystem is held to
 
@@ -125,6 +158,17 @@ screenshot script never ran, which is itself the finding.
 
 **Success criterion.** The next screenshot failure is diagnosable from the last screen of the CI log
 alone. If identifying the problem needs a search through 1,500 lines, this subsystem is not finished.
+
+## Known weakness of the summary itself
+
+The visible-selector list is the **union** across every failed lookup in the run, with no attribution
+of which selector was on screen at which failure. In run 31112969584 that union mixed the workspace
+with the launcher, and separating the two took reasoning rather than reading. The summary was still
+sufficient — the launcher entries are unmistakable — but sufficient is not the same as unambiguous.
+
+Attributing each visible set to the lookup that failed would remove the reasoning step. It is not
+being done now: the subsystem is frozen for stability, and this cost one inference rather than one
+wasted run.
 
 ## Known weakness, deliberately not yet fixed
 
