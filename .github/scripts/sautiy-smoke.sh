@@ -95,16 +95,27 @@ cd apps/sautiy
 
 # The gate, after the evidence. A red build either way, but never a red build with nothing to read.
 #
-# The manifest and the failed-lookup diagnostic are re-printed *here*, at the end, because the
-# original copies sit ~1,300 lines up the log behind the native-build warnings and the retrieval
-# available to whoever is reading this returns a tail. Evidence that cannot be reached has not been
-# produced.
+# The Release Summary is re-printed *here*, last, because the screenshot script's own copy is now
+# behind two minutes of Gradle output and the log retrieval available to whoever is reading this
+# returns a tail. It is printed whether the set is complete or not: every release tool ends with a
+# summary, and "PASSED" at the tail is the evidence that the run got that far.
+if [ ! -s "$GITHUB_WORKSPACE/screenshots/summary.txt" ]; then
+  # The summary is emitted from an EXIT trap, so its absence means the script never ran at all.
+  echo "=========================="
+  echo "SAUTIY SCREENSHOT SUMMARY"
+  echo "=========================="
+  echo "Result: FAILED"
+  echo "Failure reason:"
+  echo "  No summary was written. The screenshot script did not start, or the runner killed it"
+  echo "  before its exit trap could run."
+  echo "Next action:"
+  echo "  Search this log for '=== screenshots ===' — the failure is above that line, not below it."
+  echo "=========================="
+else
+  cat "$GITHUB_WORKSPACE/screenshots/summary.txt"
+fi
+
 if [ "$SCREENSHOTS_OK" -ne 0 ]; then
-  echo "=== screenshot evidence, repeated where a log tail can reach it ==="
-  cat "$GITHUB_WORKSPACE/screenshots/missing.txt" 2>/dev/null || echo "(no missing.txt written)"
-  echo "--- controls the failed lookups actually found on screen ---"
-  cat "$GITHUB_WORKSPACE/screenshots/diagnostic.txt" 2>/dev/null || echo "(no diagnostic.txt written)"
-  echo "=== end screenshot evidence ==="
-  echo "::error::device tests passed; the screenshot set is incomplete. Names above."
+  echo "::error::device tests passed; the screenshot set is incomplete. See the summary above."
   exit 1
 fi
