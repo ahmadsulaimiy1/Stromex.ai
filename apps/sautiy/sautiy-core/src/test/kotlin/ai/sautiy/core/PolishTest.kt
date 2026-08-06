@@ -202,10 +202,49 @@ class PresetDistinctnessTest {
         for ((low, high) in bands) {
             worst = maxOf(worst, abs(bandDb(a, low, high) - bandDb(b, low, high)))
         }
-        // Tail length matters as much as tone: two presets can be identically bright and one of them
-        // can be a hall.
-        val tail = abs(tailSeconds(a) - tailSeconds(b))
-        return maxOf(worst, tail * 6.0)
+        // How much room there is, measured directly.
+        //
+        // The first version of this compared the moment the signal fell below a fixed threshold,
+        // which is a single brittle sample and read a 30%-wet hall as barely different from a dry
+        // recording. Reverb is mostly the *same spectrum* as the voice that caused it, so band
+        // energy alone cannot see it either — and loudness normalisation then flattens what little
+        // remains. The energy that arrives *in the gaps between words* is the room and nothing but
+        // the room, so that is what to compare.
+        val room = abs(roomEnergyDb(a) - roomEnergyDb(b))
+        return maxOf(worst, room)
+    }
+
+    /**
+     * Energy in the pauses, relative to energy during speech, in decibels.
+     *
+     * A dry recording is near-silent between words. A hall is not. This is the one measurement that
+     * corresponds to what a listener means by "how big is the room", and it is immune to loudness
+     * normalisation because it is a ratio within the same file.
+     */
+    private fun roomEnergyDb(buffer: AudioBuffer): Double {
+        val samples = buffer.channels[0]
+        val rate = buffer.sampleRate
+        // The fixture speaks for 480 ms in every 700 ms. The last 150 ms of each cycle is a gap in
+        // the *input*, so anything there came from the processing.
+        var gap = 0.0
+        var gapCount = 0
+        var speech = 0.0
+        var speechCount = 0
+        for (i in samples.indices) {
+            val msInCycle = (i.toDouble() / rate * 1000).toInt() % 700
+            val value = samples[i].toDouble()
+            if (msInCycle in 550..690) {
+                gap += value * value
+                gapCount++
+            } else if (msInCycle in 100..400) {
+                speech += value * value
+                speechCount++
+            }
+        }
+        if (gapCount == 0 || speechCount == 0) return -120.0
+        val gapMean = (gap / gapCount).coerceAtLeast(1e-20)
+        val speechMean = (speech / speechCount).coerceAtLeast(1e-20)
+        return 10.0 * log10(gapMean / speechMean)
     }
 
     private fun bandDb(buffer: AudioBuffer, low: Double, high: Double): Double {
@@ -222,20 +261,6 @@ class PresetDistinctnessTest {
             energy += value * value
         }
         return 10.0 * log10((energy / buffer.frameCount).coerceAtLeast(1e-20))
-    }
-
-    /** How long the sound goes on after the last of the input, as a stand-in for room size. */
-    private fun tailSeconds(buffer: AudioBuffer): Double {
-        val samples = buffer.channels[0]
-        var last = 0
-        val threshold = 1e-4
-        for (i in samples.indices.reversed()) {
-            if (abs(samples[i]) > threshold) {
-                last = i
-                break
-            }
-        }
-        return last.toDouble() / buffer.sampleRate
     }
 
     @Test

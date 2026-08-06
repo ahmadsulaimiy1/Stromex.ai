@@ -470,7 +470,22 @@ class VoiceTuningTest {
     fun `each outcome arrives at its own character position`() {
         assertEquals(VoiceCharacter.NATURAL, VoiceOutcome.CLEAR_SPEECH.character, 0.0)
         assertEquals(VoiceCharacter.IMMERSIVE, VoiceOutcome.IMMERSIVE.character, 0.0)
-        assertTrue(VoiceOutcome.RICH_NARRATION.character > VoiceOutcome.WARM_VOICE.character)
+        // Rich Narration used to be asserted as the higher intensity of the two, which encoded an
+        // assumption that turned out to be wrong: its richness belongs to the *voice*, not to a
+        // room. Audiobooks are recorded close and dry, and the preset sat in a 2.2-second hall
+        // until a distinctness test made that visible. What must be true is the thing the name
+        // promises — more weight than Warm Voice, and not more room.
+        val narration = VoiceOutcome.RICH_NARRATION.settings
+        val warm = VoiceOutcome.WARM_VOICE.settings
+        assertTrue(
+            "Rich Narration must carry more body than Warm Voice",
+            narration.refinement.richness + narration.refinement.body >
+                warm.refinement.richness + warm.refinement.body,
+        )
+        assertTrue(
+            "Rich Narration must not be roomier than Warm Voice",
+            narration.effectiveAmbience.wetDryMix <= warm.effectiveAmbience.wetDryMix + 1e-9,
+        )
 
         // And the character reaches the audio: the same space at two positions is two sounds.
         val source = voice(1.5)

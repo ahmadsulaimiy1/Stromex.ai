@@ -547,10 +547,18 @@ public enum class VoiceOutcome(
         // Was a 2.2-second hall, which is wrong for the name regardless of distinctness:
         // audiobooks are recorded close and dry, and a narrator in a hall sounds like a
         // narrator in the wrong place. The weight comes from the voice, not from the room.
-        VoiceSpacePreset.WARM_STUDIO,
+        //
+        // Nor Warm Studio, which is what Warm Voice is built on: moving it there fixed one
+        // collision by creating another, and the test said so immediately. Natural Presence is
+        // the closest, driest acoustic in the set, which is what a narration booth is.
+        VoiceSpacePreset.NATURAL_PRESENCE,
         VoiceCharacter.REFINED,
-        roomLevel = 0.06,
-        tone = VoiceRefinement(warmth = 0.30, richness = 0.34, body = 0.28, clarity = 0.14),
+        roomLevel = 0.05,
+        // Deeper and more sculpted than Warm Voice, which is a *repair* — soft and forgiving.
+        // This is a production: weight low down, presence in the middle, controlled top.
+        tone = VoiceRefinement(
+            warmth = 0.20, richness = 0.42, body = 0.36, clarity = 0.22, air = 0.12,
+        ),
     ),
 
     STUDIO(
@@ -586,7 +594,10 @@ public enum class VoiceOutcome(
         // Audibly a hall, or the name means nothing. The speech protection in the acoustic is
         // what keeps this from becoming the washy lecture recording everyone has heard.
         roomLevel = 0.24,
-        tone = VoiceRefinement(clarity = 0.24, presence = 0.16),
+        // Clear Speech and this were both given clarity and presence, which pointed them the same
+        // way and left 0.66 dB between them. A hall is warmer and airier than a close microphone,
+        // not just louder — so the tone here goes where the room goes.
+        tone = VoiceRefinement(clarity = 0.18, warmth = 0.16, air = 0.20, body = 0.14),
     ),
 
     PRESTIGE_RECITATION(
