@@ -2,6 +2,8 @@ package ai.sautiy.ui.workspace
 
 import ai.sautiy.core.analysis.Loudness
 import ai.sautiy.core.codec.Encoders
+import ai.sautiy.core.dsp.AcousticSpace
+import ai.sautiy.core.dsp.RecitationProfile
 import ai.sautiy.core.dsp.VoiceCharacter
 import ai.sautiy.core.dsp.ListenerNote
 import ai.sautiy.core.dsp.VoiceOutcome
@@ -171,6 +173,62 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
 
     LazyColumn(verticalArrangement = Arrangement.spacedBy(SautiySpace.s)) {
         item {
+            // The one tap for someone who does not yet know what any of the words below mean.
+            // It proposes, with its reason, and waits: a starting point they can disagree with
+            // rather than a decision taken on their behalf.
+            val recommendation = state.recommendation
+            if (recommendation != null) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(SautiyShapes.medium)
+                        .background(colours.signalSelection)
+                        .padding(SautiySpace.l),
+                ) {
+                    Text(
+                        text = "Suggested: ${recommendation.outcome.displayName}",
+                        style = SautiyTheme.type.titleMedium,
+                        color = colours.signal,
+                    )
+                    Spacer(modifier = Modifier.height(SautiySpace.xxs))
+                    Text(
+                        text = "Voice Space ${VoiceCharacter(recommendation.intensity).percent}% " +
+                            "· ${VoiceCharacter(recommendation.intensity).displayName}",
+                        style = SautiyTheme.type.labelLarge,
+                        color = colours.textSecondary,
+                    )
+                    Spacer(modifier = Modifier.height(SautiySpace.xs))
+                    Text(
+                        text = recommendation.reason,
+                        style = SautiyTheme.type.bodyMedium,
+                        color = colours.textTertiary,
+                    )
+                    Spacer(modifier = Modifier.height(SautiySpace.m))
+                    Row(horizontalArrangement = Arrangement.spacedBy(SautiySpace.m)) {
+                        PrimaryAction(
+                            label = "Use this",
+                            onClick = actions.onAcceptRecommendation,
+                            modifier = Modifier.weight(1f),
+                        )
+                        PrimaryAction(
+                            label = "Choose myself",
+                            onClick = actions.onDismissRecommendation,
+                            modifier = Modifier.weight(1f),
+                            filled = false,
+                        )
+                    }
+                }
+            } else {
+                PrimaryAction(
+                    label = "✨ Auto Studio",
+                    onClick = actions.onAutoStudio,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            Spacer(modifier = Modifier.height(SautiySpace.s))
+        }
+
+        item {
             // Choosing a room is a listening decision and nothing else. This plays one passage
             // through every space in turn, starting from the original, so the comparison is of
             // the same phrase rather than of two memories a minute apart.
@@ -251,15 +309,16 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
         }
 
         item {
-            // One control, five named stops. Someone who likes a preset but finds it too much
-            // wants less of *this one* — a single gesture, not a choice between three modes. The
-            // stops are named for the result, because "Rich" describes a voice and "0.5" does not.
+            // One control, five named stops, moving every parameter underneath it together.
+            // Someone who likes a preset but finds it too much wants *less of this one* — a single
+            // gesture. Almost nobody wants ten sliders; they want more, or less.
             val character = state.voice?.character?.position ?: VoiceCharacter.REFINED
+            val stop = VoiceCharacter(character)
             StudioSlider(
-                label = "Character",
+                label = "Voice Space",
                 value = character,
                 range = 0f..1f,
-                display = VoiceCharacter(character).displayName,
+                display = "${stop.percent}% · ${stop.displayName}",
             ) { actions.onCharacterChanged(it) }
             Spacer(modifier = Modifier.height(SautiySpace.s))
         }
@@ -368,6 +427,115 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                     )
                 }
             }
+        }
+
+        // ── Layer two ────────────────────────────────────────────────────────────────────────
+        // Below everything above, and deliberately quieter: smaller rows, no cards. Most people
+        // will never scroll this far and lose nothing by it. Someone who wants a particular
+        // acoustic character, rather than a particular result, finds it here.
+
+        item {
+            SectionHeading(
+                title = "Acoustic Space",
+                body = "These are not presets. They are acoustic environments. Choosing one " +
+                    "changes the room around your voice and nothing about the voice itself.",
+            )
+        }
+
+        items(AcousticSpace.order) { space ->
+            ChooserRow(
+                title = space.displayName,
+                body = space.summary,
+                selected = state.appliedSpace == space,
+            ) { actions.onChooseSpace(space) }
+        }
+
+        item {
+            SectionHeading(
+                title = "Recitation Studio",
+                body = "Complete voices for recitation, each in a space of its own character.",
+            )
+        }
+
+        items(RecitationProfile.order) { profile ->
+            ChooserRow(
+                title = profile.displayName,
+                body = profile.summary,
+                selected = state.appliedRecitation == profile,
+                trailing = "${VoiceCharacter(profile.defaultIntensity).percent}%",
+            ) { actions.onChooseRecitation(profile) }
+        }
+
+        item {
+            // Always shown, never behind a tap. The people who care most about these recordings
+            // are exactly the people a name like "Makkah Inspired" could mislead.
+            Text(
+                text = RecitationProfile.DISCLOSURE,
+                style = SautiyTheme.type.bodyMedium,
+                color = colours.textTertiary,
+                modifier = Modifier.padding(top = SautiySpace.s, bottom = SautiySpace.l),
+            )
+        }
+    }
+}
+
+/** A quiet heading for a section that is optional rather than part of the main path. */
+@Composable
+private fun SectionHeading(title: String, body: String) {
+    val colours = SautiyTheme.colours
+    Column(modifier = Modifier.padding(top = SautiySpace.l, bottom = SautiySpace.xs)) {
+        Text(text = title, style = SautiyTheme.type.titleMedium, color = colours.textPrimary)
+        Spacer(modifier = Modifier.height(SautiySpace.xxs))
+        Text(text = body, style = SautiyTheme.type.bodyMedium, color = colours.textTertiary)
+    }
+}
+
+/**
+ * One choice in a secondary list: a name, a line about it, and whether it is the one in force.
+ *
+ * A row rather than a card, because the outcome cards above are the primary decision and two sets
+ * of identically-weighted cards would read as two competing answers to the same question.
+ */
+@Composable
+private fun ChooserRow(
+    title: String,
+    body: String,
+    selected: Boolean,
+    trailing: String? = null,
+    onClick: () -> Unit,
+) {
+    val colours = SautiyTheme.colours
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(SautiyShapes.small)
+            .background(if (selected) colours.signalSelection else colours.surface)
+            .clickable(onClickLabel = title, role = Role.Button, onClick = onClick)
+            .padding(horizontal = SautiySpace.m, vertical = SautiySpace.s)
+            .sizeIn(minHeight = SautiySpace.minTouchTarget),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = SautiyTheme.type.bodyLarge,
+                color = if (selected) colours.signal else colours.textPrimary,
+            )
+            Text(
+                text = body,
+                style = SautiyTheme.type.bodyMedium,
+                color = colours.textTertiary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        if (trailing != null) {
+            Spacer(modifier = Modifier.width(SautiySpace.s))
+            Text(text = trailing, style = SautiyTheme.type.numeric, color = colours.textSecondary)
+        }
+        if (selected) {
+            Spacer(modifier = Modifier.width(SautiySpace.s))
+            Text(text = "Applied", style = SautiyTheme.type.labelSmall, color = colours.signal)
         }
     }
 }
@@ -958,7 +1126,14 @@ private fun DynamicsPanel(state: WorkspaceUiState) {
     }
 }
 
-/** The ambience controls. Nine of them, in the order a room is built rather than alphabetically. */
+/**
+ * The Space panel — one control by default, and everything behind a tap.
+ *
+ * Fifteen sliders is the correct set of controls and the wrong first screen. Almost everyone who
+ * opens this wants the room to be a bit more, or a bit less, and one control does that to every
+ * parameter at once in the way each parameter should move. The rest are for the person who came
+ * here to change a specific number, and they know they did.
+ */
 @Composable
 private fun SpacePanel(state: WorkspaceUiState, actions: WorkspaceActions) {
     val ambience = state.voice?.ambience
@@ -981,6 +1156,65 @@ private fun SpacePanel(state: WorkspaceUiState, actions: WorkspaceActions) {
 
     fun update(next: AmbienceSettings) = actions.onAmbienceChanged(next)
 
+    Column {
+        // The one control. Named for what it is rather than for the parameter it moves, because
+        // nobody thinks "I would like a higher wet/dry mix".
+        val character = state.voice?.character?.position ?: VoiceCharacter.REFINED
+        val stop = VoiceCharacter(character)
+        StudioSlider(
+            label = "Voice Space",
+            value = character,
+            range = 0f..1f,
+            display = "${stop.percent}% · ${stop.displayName}",
+        ) { actions.onCharacterChanged(it) }
+
+        Spacer(modifier = Modifier.height(SautiySpace.s))
+        Text(
+            text = if (state.advanced) "Hide Advanced Studio" else "Advanced Studio",
+            style = SautiyTheme.type.labelLarge,
+            color = SautiyTheme.colours.signal,
+            modifier = Modifier
+                .sizeIn(minHeight = SautiySpace.minTouchTarget)
+                .clickable(
+                    onClickLabel = "Advanced Studio",
+                    role = Role.Button,
+                    onClick = actions.onToggleAdvanced,
+                ),
+        )
+
+        Spacer(modifier = Modifier.height(SautiySpace.s))
+        if (state.advanced) {
+            AdvancedAmbienceControls(ambience) { update(it) }
+        } else {
+            Text(
+                text = "One control moves decay, size, reflections and mix together, in the " +
+                    "proportions a real space moves them.",
+                style = SautiyTheme.type.bodyMedium,
+                color = SautiyTheme.colours.textTertiary,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(SautiySpace.m))
+        PrimaryAction(
+            label = "Remove the room",
+            onClick = { actions.onAmbienceChanged(AmbienceSettings.NONE) },
+            modifier = Modifier.fillMaxWidth(),
+            filled = false,
+        )
+    }
+}
+
+/**
+ * Advanced Studio: every parameter of the room, in the order a room is built.
+ *
+ * Hidden by default, and complete once shown. A professional who opens this is not helped by a
+ * curated subset — the reason they came here is the one control that was left out.
+ */
+@Composable
+private fun AdvancedAmbienceControls(
+    ambience: AmbienceSettings,
+    update: (AmbienceSettings) -> Unit,
+) {
     Column {
         StudioSlider("Amount", ambience.amount, 0f..1f, percent(ambience.amount)) {
             update(ambience.copy(amount = it))
@@ -1059,13 +1293,6 @@ private fun SpacePanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                 "the speaker.",
             style = SautiyTheme.type.bodyMedium,
             color = SautiyTheme.colours.textTertiary,
-        )
-        Spacer(modifier = Modifier.height(SautiySpace.m))
-        PrimaryAction(
-            label = "Remove the room",
-            onClick = { actions.onAmbienceChanged(AmbienceSettings.NONE) },
-            modifier = Modifier.fillMaxWidth(),
-            filled = false,
         )
     }
 }

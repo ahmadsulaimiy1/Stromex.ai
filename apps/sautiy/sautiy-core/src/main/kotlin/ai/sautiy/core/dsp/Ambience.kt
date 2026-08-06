@@ -593,9 +593,17 @@ public data class VoiceCharacter(val position: Double = REFINED) {
         require(position in 0.0..1.0) { "Character runs from 0 to 1, was $position" }
     }
 
-    /** The nearest named stop, for the panel to print. */
+    /** The nearest named stop, for the panel to print alongside the percentage. */
     public val displayName: String
         get() = stops.minBy { kotlin.math.abs(it.second - position) }.first
+
+    /**
+     * The control as a percentage, which is what the panel shows.
+     *
+     * Most people want "more" or "less", and a percentage is the only scale that needs no
+     * explanation at all. The named stops sit underneath it as landmarks rather than as steps.
+     */
+    public val percent: Int get() = kotlin.math.round(position * 100).toInt()
 
     /**
      * Applies the character to a space.

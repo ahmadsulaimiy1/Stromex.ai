@@ -3,7 +3,10 @@ package ai.sautiy.ui.workspace
 import ai.sautiy.core.analysis.WaveformColumns
 import ai.sautiy.core.audio.CaptureQuality
 import ai.sautiy.core.codec.ExportFormat
+import ai.sautiy.core.dsp.AcousticSpace
+import ai.sautiy.core.dsp.AutoStudio
 import ai.sautiy.core.dsp.ListenerNote
+import ai.sautiy.core.dsp.RecitationProfile
 import ai.sautiy.core.dsp.VoiceOutcome
 import ai.sautiy.core.dsp.AmbienceSettings
 import ai.sautiy.core.dsp.VoiceRefinement
@@ -98,6 +101,14 @@ data class WorkspaceUiState(
     val auditioning: VoiceOutcome? = null,
     /** The preset in force, named for the job it does. Null once controls have been hand-moved. */
     val appliedOutcome: VoiceOutcome? = null,
+    /** The acoustic environment chosen deliberately in layer two, if any. */
+    val appliedSpace: AcousticSpace? = null,
+    /** The recitation profile in force, if the Recitation Studio was used. */
+    val appliedRecitation: RecitationProfile? = null,
+    /** What one tap recommended, awaiting acceptance. */
+    val recommendation: AutoStudio.Recommendation? = null,
+    /** Whether the detailed controls are shown. Hidden by default. */
+    val advanced: Boolean = false,
     /** The live voice, including any hand edits made after a space was chosen. */
     val voice: VoiceStudioSettings? = null,
     /**
@@ -163,6 +174,13 @@ data class WorkspaceActions(
     val onAmbienceChanged: (AmbienceSettings) -> Unit = {},
     /** Natural through Immersive, as one continuous control. */
     val onCharacterChanged: (Double) -> Unit = {},
+    val onChooseSpace: (AcousticSpace) -> Unit = {},
+    val onChooseRecitation: (RecitationProfile) -> Unit = {},
+    /** One tap: analyse, recommend an outcome and an intensity, and say why. */
+    val onAutoStudio: () -> Unit = {},
+    val onAcceptRecommendation: () -> Unit = {},
+    val onDismissRecommendation: () -> Unit = {},
+    val onToggleAdvanced: () -> Unit = {},
     /** Play one passage through every space in turn — the only honest way to choose one. */
     val onAuditionSpaces: () -> Unit = {},
     val onStopAudition: () -> Unit = {},

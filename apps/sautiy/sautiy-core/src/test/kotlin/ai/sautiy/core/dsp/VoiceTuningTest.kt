@@ -3,6 +3,7 @@ package ai.sautiy.core.dsp
 import ai.sautiy.core.audio.AudioBuffer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -415,8 +416,8 @@ class VoiceTuningTest {
     fun `the presets a user sees are named for outcomes, grouped by what they are for`() {
         val expected = listOf(
             "Clear Speech", "Warm Voice", "Rich Narration",
-            "Studio", "Broadcast", "Podcast",
-            "Prestige Recitation", "Majestic Recitation",
+            "Studio", "Broadcast", "Podcast", "Lecture",
+            "Prestige Recitation",
             "Grand Space", "Immersive",
         )
         assertEquals(expected, VoiceOutcome.cardOrder.map { it.displayName })
@@ -470,7 +471,6 @@ class VoiceTuningTest {
         assertEquals(VoiceCharacter.NATURAL, VoiceOutcome.CLEAR_SPEECH.character, 0.0)
         assertEquals(VoiceCharacter.IMMERSIVE, VoiceOutcome.IMMERSIVE.character, 0.0)
         assertTrue(VoiceOutcome.RICH_NARRATION.character > VoiceOutcome.WARM_VOICE.character)
-        assertTrue(VoiceOutcome.MAJESTIC_RECITATION.character > VoiceOutcome.PRESTIGE_RECITATION.character)
 
         // And the character reaches the audio: the same space at two positions is two sounds.
         val source = voice(1.5)
@@ -509,5 +509,160 @@ class VoiceTuningTest {
         val roomed = VoiceOutcome.entries.filterNot { it.settings.ambience.isBypassed }
         val largest = roomed.maxBy { it.settings.effectiveAmbience.wetDryMix }
         assertEquals(VoiceOutcome.IMMERSIVE, largest)
+    }
+}
+
+/**
+ * The second layer, the Recitation Studio, and the one-tap recommendation.
+ *
+ * Layer two exists for someone who has decided they want a particular place. The test that
+ * matters is that choosing a room changes only the room: a person who moves to a larger hall has
+ * not asked for a different voice, and an environment that quietly re-tuned the tone would make
+ * the two layers indistinguishable — which is the confusion the two layers exist to avoid.
+ */
+class VoiceSpacesTest {
+
+    private val rate = 48_000
+
+    private fun voice(seconds: Double = 2.0): AudioBuffer {
+        val frames = (seconds * rate).toInt()
+        val samples = FloatArray(frames)
+        for ((frequency, level) in listOf(140.0 to 0.35, 280.0 to 0.22, 900.0 to 0.14, 3_000.0 to 0.08)) {
+            for (i in 0 until frames) {
+                samples[i] += (level * kotlin.math.sin(2.0 * Math.PI * frequency * i / rate)).toFloat()
+            }
+        }
+        return AudioBuffer.mono(samples, rate)
+    }
+
+    @Test
+    fun `choosing a room changes the room and nothing else`() {
+        val outcome = VoiceOutcome.RICH_NARRATION.settings
+        val inAHall = AcousticSpace.LARGE_HALL.applyTo(outcome)
+
+        assertEquals("The voice must not change with the room", outcome.cleanup, inAHall.cleanup)
+        assertEquals(outcome.dynamics, inAHall.dynamics)
+        assertEquals(outcome.refinement, inAHall.refinement)
+        assertEquals(outcome.loudness, inAHall.loudness)
+        assertNotEquals(outcome.ambience, inAHall.ambience)
+    }
+
+    @Test
+    fun `every acoustic space is a real, distinct room`() {
+        val source = voice()
+        val mixes = AcousticSpace.entries.map { it.applyTo(VoiceOutcome.STUDIO.settings).ambience.wetDryMix }
+        assertEquals("Two spaces are identical", mixes.size, mixes.toSet().size)
+
+        for (space in AcousticSpace.entries) {
+            assertTrue("${space.displayName} has no summary", space.summary.length > 20)
+            val rendered = VoiceStudio(space.applyTo(VoiceOutcome.STUDIO.settings)).render(source)
+            assertFalse("${space.displayName} clipped", rendered.report.clipped)
+            for (sample in rendered.audio.channels[0]) {
+                assertTrue("${space.displayName} produced $sample", sample.isFinite())
+            }
+        }
+
+        // Bigger rooms last longer, in the order a person would expect.
+        assertTrue(
+            AcousticSpace.GRAND_MOSQUE.applyTo(VoiceOutcome.STUDIO.settings).ambience.decaySeconds >
+                AcousticSpace.SMALL_MOSQUE.applyTo(VoiceOutcome.STUDIO.settings).ambience.decaySeconds,
+        )
+        assertTrue(
+            AcousticSpace.LARGE_HALL.applyTo(VoiceOutcome.STUDIO.settings).ambience.decaySeconds >
+                AcousticSpace.SMALL_HALL.applyTo(VoiceOutcome.STUDIO.settings).ambience.decaySeconds,
+        )
+        assertTrue(
+            AcousticSpace.VOCAL_BOOTH.applyTo(VoiceOutcome.STUDIO.settings).ambience.decaySeconds <
+                AcousticSpace.SMALL_HALL.applyTo(VoiceOutcome.STUDIO.settings).ambience.decaySeconds,
+        )
+    }
+
+    @Test
+    fun `the Recitation Studio keeps the dynamics recitation lives on`() {
+        // Flattening the delivery is the one thing a reciter will never forgive, so every profile
+        // has to inherit the light-compression treatment rather than a generic chain.
+        for (profile in RecitationProfile.entries) {
+            val compressor = profile.settings.dynamics.compressor
+            assertNotNull("${profile.displayName} has no dynamics at all", compressor)
+            assertTrue(
+                "${profile.displayName} compresses at ${compressor!!.ratio}:1 — too hard for recitation",
+                compressor.ratio <= 2.5,
+            )
+            assertTrue("${profile.displayName} has no summary", profile.summary.length > 20)
+        }
+    }
+
+    @Test
+    fun `every recitation profile is distinct, finite and unclipped`() {
+        val source = voice(3.0)
+        val decays = RecitationProfile.entries.map { it.settings.ambience.decaySeconds }
+        assertEquals("Two profiles are the same room", decays.size, decays.toSet().size)
+
+        for (profile in RecitationProfile.entries) {
+            val rendered = profile.studio().render(source)
+            assertFalse("${profile.displayName} clipped", rendered.report.clipped)
+            for (sample in rendered.audio.channels[0]) {
+                assertTrue("${profile.displayName} produced $sample", sample.isFinite())
+            }
+        }
+
+        // Natural really is the smallest, and Immersive the largest.
+        assertEquals(RecitationProfile.NATURAL, RecitationProfile.entries.minBy { it.settings.ambience.decaySeconds })
+        assertEquals(RecitationProfile.IMMERSIVE, RecitationProfile.entries.maxBy { it.settings.ambience.decaySeconds })
+    }
+
+    @Test
+    fun `the inspired profiles say what they are and are not`() {
+        // The people who care most about these recordings are exactly the people a name implying
+        // more than it can do would mislead.
+        assertTrue(RecitationProfile.MAKKAH_INSPIRED.displayName.contains("Inspired"))
+        assertTrue(RecitationProfile.MADINAH_INSPIRED.displayName.contains("Inspired"))
+
+        val disclosure = RecitationProfile.DISCLOSURE
+        assertTrue("The disclosure must deny reproduction", disclosure.contains("do not reproduce"))
+        assertTrue("The disclosure must deny affiliation", disclosure.contains("not affiliated"))
+    }
+
+    @Test
+    fun `intensity reads as a percentage, because more and less need no explanation`() {
+        assertEquals(0, VoiceCharacter(VoiceCharacter.NATURAL).percent)
+        assertEquals(50, VoiceCharacter(VoiceCharacter.RICH).percent)
+        assertEquals(100, VoiceCharacter(VoiceCharacter.IMMERSIVE).percent)
+        assertEquals(37, VoiceCharacter(0.37).percent)
+    }
+
+    @Test
+    fun `one tap recommends something defensible and says why`() {
+        fun analysisOf(buffer: AudioBuffer) = VoiceAnalysis.of(buffer)
+
+        // Noisy: the safe answer, and no room.
+        val noisy = AudioBuffer.mono(
+            FloatArray(6 * rate).also { samples ->
+                val random = java.util.Random(3)
+                for (i in samples.indices) {
+                    val speaking = (i % (1.2 * rate).toInt()) < (0.7 * rate).toInt()
+                    if (speaking) samples[i] = (0.14 * kotlin.math.sin(2.0 * Math.PI * 160.0 * i / rate)).toFloat()
+                    samples[i] += (random.nextGaussian() * 0.04).toFloat()
+                }
+            },
+            rate,
+        )
+        // The property that matters is what the user gets, not which rule fired: a compromised
+        // recording gets the plain answer and no room. Pinning the exact intensity would test the
+        // rule ordering rather than the recommendation.
+        val forNoisy = AutoStudio.recommend(analysisOf(noisy))
+        assertEquals(VoiceOutcome.CLEAR_SPEECH, forNoisy.outcome)
+        assertTrue("A compromised recording must not be given a room", forNoisy.settings.ambience.isBypassed)
+        assertTrue(forNoisy.intensity <= VoiceCharacter.REFINED)
+
+        // Every recommendation explains itself in a sentence a person can disagree with.
+        for (buffer in listOf(noisy, voice(4.0))) {
+            val recommendation = AutoStudio.recommend(analysisOf(buffer))
+            assertTrue("A recommendation with no reason is a decision made for you", recommendation.reason.length > 30)
+            assertTrue(recommendation.intensity in 0.0..1.0)
+            // And it renders.
+            val rendered = VoiceStudio(recommendation.settings).render(voice(2.0))
+            assertFalse(rendered.report.clipped)
+        }
     }
 }

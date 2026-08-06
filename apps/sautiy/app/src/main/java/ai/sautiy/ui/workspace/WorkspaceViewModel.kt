@@ -8,7 +8,11 @@ import ai.sautiy.core.codec.ExportJob
 import ai.sautiy.core.codec.WavStreamReader
 import ai.sautiy.core.dsp.VoiceCharacter
 import ai.sautiy.core.dsp.AmbienceSettings
+import ai.sautiy.core.dsp.AcousticSpace
+import ai.sautiy.core.dsp.AutoStudio
 import ai.sautiy.core.dsp.ListenerNote
+import ai.sautiy.core.dsp.RecitationProfile
+import ai.sautiy.core.dsp.VoiceAnalysis
 import ai.sautiy.core.dsp.OneTap
 import ai.sautiy.core.dsp.VoiceOutcome
 import ai.sautiy.core.dsp.VoiceRefinement
@@ -112,6 +116,12 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         onStudioVoice = { applyVoice(OneTap.studioVoice()) },
         onAmbienceChanged = ::changeAmbience,
         onCharacterChanged = ::changeCharacter,
+        onChooseSpace = ::chooseSpace,
+        onChooseRecitation = ::chooseRecitation,
+        onAutoStudio = ::autoStudio,
+        onAcceptRecommendation = ::acceptRecommendation,
+        onDismissRecommendation = { _state.update { it.copy(recommendation = null) } },
+        onToggleAdvanced = { _state.update { it.copy(advanced = !it.advanced) } },
         onAuditionSpaces = ::auditionSpaces,
         onApplyOutcome = ::applyOutcome,
         onListenerNote = ::applyListenerNote,
@@ -465,10 +475,71 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    /**
+     * Layer two: a room chosen deliberately, under the outcome already chosen.
+     *
+     * Only the room changes. Someone who moves to a larger hall has not asked for a different
+     * voice, and an environment that quietly re-tuned the tone would make the two layers
+     * indistinguishable — which is the confusion having two layers exists to avoid.
+     */
+    private fun chooseSpace(space: AcousticSpace) {
+        val base = _state.value.voice ?: VoiceOutcome.CLEAR_SPEECH.settings
+        applyVoice(space.applyTo(base))
+        _state.update { it.copy(appliedSpace = space, appliedRecitation = null) }
+    }
+
+    /** The Recitation Studio: a complete recitation voice in one of its spaces. */
+    private fun chooseRecitation(profile: RecitationProfile) {
+        applyVoice(profile.settings)
+        _state.update { it.copy(appliedRecitation = profile, appliedSpace = null, appliedOutcome = null) }
+    }
+
+    /**
+     * One tap: look at the recording and propose a starting point, with its reason.
+     *
+     * Proposed rather than applied. A recommendation the user can read and disagree with is a
+     * starting point; one that simply happens to their recording is a decision made for them.
+     */
+    private fun autoStudio() {
+        val timeline = history.current
+        if (timeline.lengthFrames == 0L) return
+        viewModelScope.launch {
+            val recommendation = withContext(Dispatchers.IO) {
+                runCatching {
+                    // A sample is enough to characterise a recording, and a ninety-minute lecture
+                    // must not be read whole to answer a question about its tone.
+                    val frames = minOf(timeline.lengthFrames, 20L * timeline.sampleRate).toInt()
+                    val audio = ai.sautiy.core.edit.TimelineRenderer.render(
+                        timeline = timeline,
+                        provider = audioSources,
+                        startFrame = 0,
+                        frameCount = frames,
+                        channelCount = _state.value.channelCount,
+                    )
+                    AutoStudio.recommend(VoiceAnalysis.of(audio))
+                }.getOrNull()
+            } ?: return@launch
+            _state.update { it.copy(recommendation = recommendation) }
+        }
+    }
+
+    private fun acceptRecommendation() {
+        val recommendation = _state.value.recommendation ?: return
+        applyVoice(recommendation.settings)
+        _state.update {
+            it.copy(
+                recommendation = null,
+                appliedOutcome = recommendation.outcome,
+                appliedSpace = null,
+                appliedRecitation = null,
+            )
+        }
+    }
+
     /** A preset named for the job it does. What the panel actually offers. */
     private fun applyOutcome(outcome: VoiceOutcome) {
         applyVoice(outcome.settings)
-        _state.update { it.copy(appliedOutcome = outcome) }
+        _state.update { it.copy(appliedOutcome = outcome, appliedSpace = null, appliedRecitation = null) }
     }
 
     /**

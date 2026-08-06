@@ -525,6 +525,12 @@ public enum class VoiceOutcome(
         VoiceOutcomeGroup.PROFESSIONAL,
         VoiceSpacePreset.PODCAST,
     ),
+    LECTURE(
+        "Lecture",
+        "Carries across a room, and every word still lands.",
+        VoiceOutcomeGroup.PROFESSIONAL,
+        VoiceSpacePreset.LECTURE_HALL,
+    ),
 
     PRESTIGE_RECITATION(
         "Prestige Recitation",
@@ -532,13 +538,6 @@ public enum class VoiceOutcome(
         VoiceOutcomeGroup.RECITATION,
         VoiceSpacePreset.PRESTIGE_RECITATION,
         VoiceCharacter.RICH,
-    ),
-    MAJESTIC_RECITATION(
-        "Majestic Recitation",
-        "Long, wide and unhurried, for a voice that carries it.",
-        VoiceOutcomeGroup.RECITATION,
-        VoiceSpacePreset.MAJESTIC_RECITATION,
-        VoiceCharacter.GRAND,
     ),
 
     GRAND_SPACE(
