@@ -76,9 +76,10 @@ echo "SAUTIY launched, is alive, and its activity is resumed."
 # this app can see it — there is no emulator in the development sandbox — so these are the only
 # pictures of it that exist, and they are pictures of the real thing rather than of an intention.
 echo "=== screenshots ==="
-bash "$GITHUB_WORKSPACE/.github/scripts/sautiy-screenshots.sh" "$GITHUB_WORKSPACE/screenshots" || {
-  echo "::warning::screenshot capture failed; this does not fail the build"
-}
+# Not swallowed any more. Screenshots are part of the release: a screen nobody can capture is a
+# screen nobody can review, and the failure usually means a control this script taps by name has
+# been renamed — which is exactly the kind of drift that should stop a build.
+bash "$GITHUB_WORKSPACE/.github/scripts/sautiy-screenshots.sh" "$GITHUB_WORKSPACE/screenshots"
 
 echo "=== device audio tests ==="
 adb uninstall "$PACKAGE" || true

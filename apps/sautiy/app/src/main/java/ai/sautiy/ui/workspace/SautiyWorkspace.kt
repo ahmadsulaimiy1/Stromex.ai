@@ -90,7 +90,7 @@ fun SautiyWorkspace(
         val totalHeight = maxHeight
 
         Column(modifier = Modifier.fillMaxSize()) {
-            StatusRail(state = state, onProject = actions.onOpenLibrary, onSettings = actions.onOpenSettings)
+            StatusRail(state = state, onProject = actions.onOpenLibrary)
 
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 if (state.hasAudio || state.transport.isCapturing) {
@@ -103,7 +103,6 @@ fun SautiyWorkspace(
                         isRecording = state.transport == TransportState.RECORDING,
                         onSeek = actions.onSeek,
                         onSelectionChanged = actions.onSelectionChanged,
-                        onZoom = actions.onZoom,
                     )
                 } else {
                     EmptyCanvas()
@@ -246,7 +245,6 @@ fun SautiyWorkspace(
 private fun StatusRail(
     state: WorkspaceUiState,
     onProject: () -> Unit,
-    onSettings: () -> Unit,
 ) {
     val colours = SautiyTheme.colours
 
@@ -300,19 +298,14 @@ private fun StatusRail(
             Spacer(modifier = Modifier.width(SautiySpace.m))
         }
 
-        Box(
-            modifier = Modifier
-                .size(SautiySpace.minTouchTarget)
-                .pressable(label = "Settings", onClick = onSettings),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = SautiyIcons.Settings,
-                contentDescription = null,
-                tint = colours.textSecondary,
-                modifier = Modifier.size(SautiySize.icon),
-            )
-        }
+        // The settings icon used to sit here, wired to `{}`. It was a control that did nothing,
+        // shipped, in the corner of the first screen anybody sees — and a dead control is worse
+        // than an absent one, because tapping it teaches the user that this app does not respond.
+        //
+        // Under a feature freeze the correct fix is removal, not implementation. Nothing in SAUTIY
+        // currently needs a settings screen: capture quality follows the recording, the sound is
+        // decided in Studio, and the library is a panel. When something genuinely needs to be
+        // configured, this comes back with a destination behind it.
     }
 }
 

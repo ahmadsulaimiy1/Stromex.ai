@@ -6,7 +6,6 @@ import ai.sautiy.ui.theme.SautiyTheme
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -51,7 +50,6 @@ fun WaveformCanvas(
     isRecording: Boolean = false,
     onSeek: (Long) -> Unit = {},
     onSelectionChanged: (LongRange?) -> Unit = {},
-    onZoom: (Float) -> Unit = {},
 ) {
     val colours = SautiyTheme.colours
     val density = LocalDensity.current
@@ -95,9 +93,11 @@ fun WaveformCanvas(
                     }
                 }
             }
-            .pointerInput(Unit) {
-                detectTransformGestures { _, _, zoom, _ -> if (zoom != 1f) onZoom(zoom) }
-            },
+            // A third pointerInput used to detect a pinch and hand it to a callback wired to
+            // `{}`: the user pinched, the app did nothing, and there was no way to tell that from
+            // a missed gesture. Zoom belongs to waveform editing (chapter 9) and comes back with
+            // the implementation rather than ahead of it.
+            ,
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val height = size.height

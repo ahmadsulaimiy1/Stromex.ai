@@ -181,7 +181,6 @@ data class WorkspaceActions(
 
     val onSeek: (Long) -> Unit = {},
     val onSelectionChanged: (LongRange?) -> Unit = {},
-    val onZoom: (Float) -> Unit = {},
 
     val onContextAction: (WorkspaceAction) -> Unit = {},
     val onDismissPanel: () -> Unit = {},
@@ -191,7 +190,6 @@ data class WorkspaceActions(
     val onAddLayer: () -> Unit = {},
 
     val onOpenLibrary: () -> Unit = {},
-    val onOpenSettings: () -> Unit = {},
 
     val onRevertPreset: () -> Unit = {},
     /** ✨ Enhance Voice — clean it up, change nothing about where it was recorded. */
@@ -237,5 +235,4 @@ data class WorkspaceActions(
     val onSearchLibrary: (String) -> Unit = {},
 
     val onDismissError: () -> Unit = {},
-    val onErrorRemedy: (SautiyError) -> Unit = {},
 )

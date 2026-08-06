@@ -115,14 +115,12 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         onCommit = { openPanel(Panel.EXPORT) },
         onSeek = ::seek,
         onSelectionChanged = ::selectRange,
-        onZoom = {},
         onContextAction = ::performContextAction,
         onDismissPanel = ::dismissPanel,
         onOpenPanel = ::openPanel,
         onSelectLayer = ::selectLayer,
         onAddLayer = ::addLayer,
         onOpenLibrary = { openPanel(Panel.LIBRARY) },
-        onOpenSettings = {},
         onRevertPreset = ::revertPreset,
         onEnhanceVoice = ::enhanceVoice,
         onStudioVoice = { applyVoice(OneTap.studioVoice()) },
@@ -159,7 +157,6 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
             refreshLibrary()
         },
         onDismissError = { _state.update { it.copy(error = null) } },
-        onErrorRemedy = {},
     )
 
     init {

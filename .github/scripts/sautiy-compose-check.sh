@@ -147,6 +147,53 @@ if missing:
 sys.exit(0)
 PYTHON
 
+# --- 5. Dead controls -----------------------------------------------------------------------------
+#
+# A control wired to `{}` is worse than an absent one: tapping it teaches the user that this app
+# does not respond, and there is no way for them to tell that from a missed tap. The settings icon
+# sat in the corner of the first screen anybody sees, doing nothing, for weeks. A pinch gesture on
+# the waveform did nothing. Neither was visible in review because both looked like finished code.
+#
+# So: no action in the WorkspaceActions constructor may be `{}` unless the line above it says why.
+# A deliberate no-op is fine — an undeclared one is a shipped defect.
+
+python3 - "$ROOT" <<'PYTHON' || STATUS=1
+import re, sys, os
+
+root = sys.argv[1]
+viewmodel = None
+for directory, _, files in os.walk(root):
+    for name in files:
+        if name == 'WorkspaceViewModel.kt':
+            viewmodel = os.path.join(directory, name)
+if viewmodel is None:
+    sys.exit(0)
+
+lines = open(viewmodel, encoding='utf-8').read().split('\n')
+inside = False
+dead = []
+for index, line in enumerate(lines):
+    if 'WorkspaceActions(' in line:
+        inside = True
+        continue
+    if inside and line.strip() == ')':
+        break
+    if not inside:
+        continue
+    if re.search(r'^\s*on\w+ = \{\s*\},?\s*$', line):
+        previous = lines[index - 1].strip() if index else ''
+        if not previous.startswith('//'):
+            dead.append(f'{viewmodel}:{index + 1} {line.strip()}')
+
+if dead:
+    print('error: a control is wired to a no-op with no stated reason. Remove the control, or')
+    print('       write a comment above it saying why it deliberately does nothing.')
+    for entry in dead:
+        print(f'       {entry}')
+    sys.exit(1)
+sys.exit(0)
+PYTHON
+
 if [ "$STATUS" -eq 0 ]; then
   echo "Compose shape checks passed."
 fi

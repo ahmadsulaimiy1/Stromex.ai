@@ -97,5 +97,30 @@ if tap_by_description "Analysis"; then
   shot "08-analysis-gauges"
 fi
 
-echo "=== captured ==="
-ls -la "$SHOTS"
+# --- The manifest -------------------------------------------------------------------------------
+#
+# "If screenshots fail, the release is incomplete." So a missing screen is an error rather than a
+# line in a log nobody reads. The last run uploaded six of the eight this script attempts and
+# nothing said so; the count was only visible in the upload step's own output.
+
+echo "=== manifest ==="
+EXPECTED="01-workspace-empty 02-recording-live-studio 03-after-recording 04-studio-panel \
+05-studio-scrolled 06-studio-layer-two 07-export-panel 08-analysis-gauges"
+
+MISSING=""
+for name in $EXPECTED; do
+  if [ -s "$SHOTS/$name.png" ]; then
+    printf "  ok      %-28s %s bytes\n" "$name" "$(stat -c%s "$SHOTS/$name.png")"
+  else
+    printf "  MISSING %s\n" "$name"
+    MISSING="$MISSING $name"
+  fi
+done
+
+if [ -n "$MISSING" ]; then
+  echo "::error::screenshots missing:$MISSING — a screen that cannot be captured is a screen"
+  echo "::error::nobody can review, and the control names this script taps by may have changed."
+  exit 1
+fi
+
+echo "all 8 screens captured."
