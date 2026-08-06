@@ -3,6 +3,7 @@ package ai.sautiy.ui.workspace
 import ai.sautiy.core.analysis.Loudness
 import ai.sautiy.core.codec.Encoders
 import ai.sautiy.core.dsp.AcousticSpace
+import ai.sautiy.core.dsp.VoiceDna
 import ai.sautiy.core.dsp.RecitationProfile
 import ai.sautiy.core.dsp.VoiceCharacter
 import ai.sautiy.core.dsp.ListenerNote
@@ -10,8 +11,12 @@ import ai.sautiy.core.dsp.VoiceOutcome
 import ai.sautiy.core.dsp.AmbienceSettings
 import ai.sautiy.core.dsp.VoiceRefinement
 import ai.sautiy.core.play.PlaybackSpeed
+import ai.sautiy.core.record.RecordingAdvisor
 import ai.sautiy.core.workspace.Panel
 import ai.sautiy.ui.components.QualityGauge
+import ai.sautiy.ui.components.ConditionDot
+import ai.sautiy.ui.components.GaugeRow
+import ai.sautiy.ui.components.ValueArc
 import ai.sautiy.ui.icons.SautiyIcons
 import ai.sautiy.ui.theme.SautiyShapes
 import ai.sautiy.ui.theme.SautiySpace
@@ -308,6 +313,65 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
             }
         }
 
+        // How much work was actually done, drawn rather than claimed. On a clean recording this
+        // reads near zero and says so, which is the honest outcome and the one an app that always
+        // "enhances" can never report.
+        state.restraint?.let { restraint ->
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(SautiyShapes.medium)
+                        .background(colours.surfaceRaised)
+                        .padding(SautiySpace.m),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    ValueArc(
+                        label = "Work done",
+                        value = restraint.strength,
+                        reading = "${restraint.percent}%",
+                        diameter = 56.dp,
+                    )
+                    Spacer(modifier = Modifier.width(SautiySpace.m))
+                    Text(
+                        text = restraint.summary,
+                        style = SautiyTheme.type.bodyMedium,
+                        color = colours.textSecondary,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+        }
+
+        // --- The user's own sounds ------------------------------------------------------------
+        //
+        // Above the presets, because somebody who has one wants that one. A reciter who got their
+        // Qur'an voice right once should never have to find it among ten generic names again.
+
+        if (state.savedSounds.isNotEmpty()) {
+            item {
+                Text(
+                    text = "Your sounds",
+                    style = SautiyTheme.type.labelSmall,
+                    color = colours.textTertiary,
+                    modifier = Modifier.padding(top = SautiySpace.s, bottom = SautiySpace.xxs),
+                )
+            }
+            items(state.savedSounds, key = { it.id }) { sound ->
+                SavedSoundRow(
+                    sound = sound,
+                    active = state.activeSoundId == sound.id,
+                    onRecall = { actions.onRecallSound(sound.id) },
+                    onRename = { actions.onRenameSound(sound.id, it) },
+                    onDelete = { actions.onDeleteSound(sound.id) },
+                )
+            }
+        }
+
+        if (state.voice != null) {
+            item { SaveSoundRow(onSave = actions.onSaveSound) }
+        }
+
         item {
             // One control, five named stops, moving every parameter underneath it together.
             // Someone who likes a preset but finds it too much wants *less of this one* — a single
@@ -412,6 +476,19 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                         color = colours.textTertiary,
                     )
 
+                    // What listeners on this device have said about it, once enough of them have
+                    // said anything. Shown because a preset that has been shaped by real listening
+                    // is a different claim from one that has only been reasoned about, and the user
+                    // is entitled to know which they are hearing.
+                    state.listeningEvidence?.let { evidence ->
+                        Spacer(modifier = Modifier.height(SautiySpace.xxs))
+                        Text(
+                            text = evidence,
+                            style = SautiyTheme.type.labelSmall,
+                            color = colours.commit,
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(SautiySpace.s))
                     Text(
                         text = "Revert to original",
@@ -475,6 +552,185 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                 color = colours.textTertiary,
                 modifier = Modifier.padding(top = SautiySpace.s, bottom = SautiySpace.l),
             )
+        }
+    }
+}
+
+/**
+ * One of the user's own sounds: one tap to have it back, and the two edits it will ever need.
+ *
+ * The tap target is the whole row and it recalls — not a menu, not a detail screen. The reason
+ * Voice DNA exists is that restoring a finished sound should cost one gesture; putting rename and
+ * delete behind that same tap would have thrown the gesture away.
+ */
+@Composable
+private fun SavedSoundRow(
+    sound: VoiceDna,
+    active: Boolean,
+    onRecall: () -> Unit,
+    onRename: (String) -> Unit,
+    onDelete: () -> Unit,
+) {
+    val colours = SautiyTheme.colours
+    var renaming by remember { mutableStateOf(false) }
+    var draft by remember(sound.id) { mutableStateOf(sound.name) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(SautiyShapes.medium)
+            .background(if (active) colours.signalSelection else colours.surfaceRaised)
+            .padding(SautiySpace.m),
+    ) {
+        if (renaming) {
+            TextField(
+                value = draft,
+                onValueChange = { draft = it },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(SautiySpace.m)) {
+                TextAction(label = "Save name") {
+                    onRename(draft)
+                    renaming = false
+                }
+                TextAction(label = "Cancel") {
+                    draft = sound.name
+                    renaming = false
+                }
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .sizeIn(minHeight = SautiySpace.minTouchTarget)
+                    .clickable(onClickLabel = "Use ${sound.name}", role = Role.Button, onClick = onRecall),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = sound.name,
+                        style = SautiyTheme.type.titleMedium,
+                        color = if (active) colours.signal else colours.textPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = sound.summary,
+                        style = SautiyTheme.type.bodyMedium,
+                        color = colours.textTertiary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                if (active) {
+                    Text(text = "In use", style = SautiyTheme.type.labelSmall, color = colours.signal)
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(SautiySpace.m)) {
+                TextAction(label = "Rename") { renaming = true }
+                TextAction(label = "Delete", destructive = true, onClick = onDelete)
+            }
+        }
+    }
+}
+
+/** A text button inside a row. Sized to the touch target even though it draws no box. */
+@Composable
+private fun TextAction(
+    label: String,
+    destructive: Boolean = false,
+    onClick: () -> Unit,
+) {
+    Text(
+        text = label,
+        style = SautiyTheme.type.labelLarge,
+        color = if (destructive) SautiyTheme.colours.critical else SautiyTheme.colours.signal,
+        modifier = Modifier
+            .sizeIn(minHeight = SautiySpace.minTouchTarget)
+            .clickable(onClickLabel = label, role = Role.Button, onClick = onClick)
+            .padding(vertical = SautiySpace.s),
+    )
+}
+
+/**
+ * Save what is set up now, with a name.
+ *
+ * The four suggestions appear as chips because naming is the step at which people abandon a save:
+ * asked to invent a name they close the sheet, and the sound is lost. Tapping "My Qur'an Voice"
+ * is one gesture and is right for most of the people who will ever use this.
+ */
+@Composable
+private fun SaveSoundRow(onSave: (String) -> Unit) {
+    val colours = SautiyTheme.colours
+    var naming by remember { mutableStateOf(false) }
+    var draft by remember { mutableStateOf("") }
+
+    if (!naming) {
+        PrimaryAction(
+            label = "Save this as my own sound",
+            onClick = { naming = true },
+            modifier = Modifier.fillMaxWidth(),
+            filled = false,
+        )
+        return
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(SautiyShapes.medium)
+            .background(colours.surfaceRaised)
+            .padding(SautiySpace.m),
+    ) {
+        Text(
+            text = "Name this sound",
+            style = SautiyTheme.type.titleMedium,
+            color = colours.textPrimary,
+        )
+        Spacer(modifier = Modifier.height(SautiySpace.xs))
+        for (row in VoiceDna.suggestedNames.chunked(2)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(SautiySpace.xs)) {
+                for (suggestion in row) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .sizeIn(minHeight = SautiySpace.minTouchTarget)
+                            .clip(SautiyShapes.pill)
+                            .background(colours.surface)
+                            .clickable(onClickLabel = suggestion, role = Role.Button) {
+                                onSave(suggestion)
+                                naming = false
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = suggestion,
+                            style = SautiyTheme.type.labelLarge,
+                            color = colours.textPrimary,
+                            maxLines = 1,
+                            modifier = Modifier.padding(SautiySpace.s),
+                        )
+                    }
+                }
+                if (row.size == 1) Spacer(modifier = Modifier.weight(1f))
+            }
+            Spacer(modifier = Modifier.height(SautiySpace.xs))
+        }
+        TextField(
+            value = draft,
+            onValueChange = { draft = it },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(SautiySpace.m)) {
+            TextAction(label = "Save") {
+                if (draft.isNotBlank()) onSave(draft)
+                naming = false
+                draft = ""
+            }
+            TextAction(label = "Cancel") {
+                naming = false
+                draft = ""
+            }
         }
     }
 }
@@ -782,13 +1038,71 @@ private fun PrimaryAction(
 /** The Analysis panel — every number measured, none estimated (chapter 10.4). */
 @Composable
 private fun AnalysisPanel(state: WorkspaceUiState) {
+    val snr = state.rmsDb - state.noiseFloorDb
+
     Column {
         QualityGauge(score = state.qualityScore, reason = state.qualityReason)
         Spacer(modifier = Modifier.height(SautiySpace.l))
+
+        // Shown as instruments rather than as a table. The three that matter — where the level
+        // sits, how far above the room it is, and how much work the enhancement is doing — are
+        // things a person judges by position, and a row of decibel figures makes them read four
+        // numbers to answer one question.
+        GaugeRow {
+            ValueArc(
+                label = "Level",
+                value = RecordingAdvisor.levelPosition(state.rmsDb),
+                reading = ai.sautiy.core.audio.Decibels.format(state.rmsDb),
+                // The band a recording ought to sit in, so the arc is a target and not a score.
+                sweet = 0.35f..0.72f,
+            )
+            ValueArc(
+                label = "Above room",
+                value = (snr / 60.0).coerceIn(0.0, 1.0),
+                reading = "${snr.toInt()} dB",
+                sweet = 0.4f..1.0f,
+            )
+            state.restraint?.let {
+                ValueArc(
+                    label = "Work done",
+                    value = it.strength,
+                    reading = "${it.percent}%",
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(SautiySpace.l))
+        Row(horizontalArrangement = Arrangement.spacedBy(SautiySpace.l)) {
+            ConditionDot(
+                label = if (state.hasClipped) "Clipped" else "No clipping",
+                good = !state.hasClipped,
+                warning = state.hasClipped,
+            )
+            ConditionDot(
+                label = if (state.noiseFloorDb < RecordingAdvisor.NOISY_ROOM_DB) {
+                    "Quiet room"
+                } else {
+                    "Audible background"
+                },
+                good = state.noiseFloorDb < RecordingAdvisor.NOISY_ROOM_DB,
+                warning = state.noiseFloorDb > -36.0,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(SautiySpace.l))
+        state.restraint?.principal?.let {
+            Text(
+                text = "Mainly: $it",
+                style = SautiyTheme.type.bodyMedium,
+                color = SautiyTheme.colours.textSecondary,
+            )
+            Spacer(modifier = Modifier.height(SautiySpace.s))
+        }
+
+        // The numbers stay, underneath. A professional needs to write them down, compare two takes
+        // and describe a problem to somebody else, and a gauge cannot be quoted.
         ParameterRow("Peak", ai.sautiy.core.audio.Decibels.format(state.peakDb))
         ParameterRow("Noise floor", ai.sautiy.core.audio.Decibels.format(state.noiseFloorDb))
-        ParameterRow("Signal to noise", "${(state.peakDb - state.noiseFloorDb).toInt()} dB")
-        ParameterRow("Clipping", if (state.hasClipped) "Yes" else "None")
         ParameterRow("Duration", formatDuration(state.totalFrames, state.sampleRate))
     }
 }

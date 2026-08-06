@@ -11,12 +11,18 @@ import ai.sautiy.core.dsp.AmbienceSettings
 import ai.sautiy.core.dsp.AcousticSpace
 import ai.sautiy.core.dsp.AutoStudio
 import ai.sautiy.core.dsp.ListenerNote
+import ai.sautiy.core.dsp.ListeningDatabase
 import ai.sautiy.core.dsp.RecitationProfile
+import ai.sautiy.core.dsp.Restraint
 import ai.sautiy.core.dsp.VoiceAnalysis
+import ai.sautiy.core.dsp.VoiceDna
+import ai.sautiy.core.dsp.VoiceDnaLibrary
+import ai.sautiy.core.record.RecordingAdvisor
 import ai.sautiy.core.dsp.OneTap
 import ai.sautiy.core.dsp.VoiceOutcome
 import ai.sautiy.core.dsp.VoiceRefinement
 import ai.sautiy.core.dsp.VoiceStudio
+import ai.sautiy.core.dsp.VoiceAdvisor
 import ai.sautiy.core.dsp.VoiceStudioSettings
 import ai.sautiy.core.edit.AppendRecording
 import ai.sautiy.core.edit.DeleteRange
@@ -87,6 +93,12 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
     /** The library. Verified on the JVM; this class only calls it. */
     private val store = RecordingStore(files.libraryIndex)
 
+    /** The user's own saved sounds, and what listeners have said about the built-in ones. */
+    private val sounds = ai.sautiy.data.VoiceDnaStore(files.voiceDnaFile)
+    private val listening = ai.sautiy.data.ListeningStore(files.listeningFile)
+    private var soundLibrary = VoiceDnaLibrary()
+    private var listeningDatabase = ListeningDatabase()
+
     private var workspace = WorkspaceState()
     private var history = EditHistory.of(Timeline.empty(CaptureQuality.STUDIO.format.sampleRate))
     private var recording = RecordingState()
@@ -112,7 +124,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         onOpenLibrary = { openPanel(Panel.LIBRARY) },
         onOpenSettings = {},
         onRevertPreset = ::revertPreset,
-        onEnhanceVoice = { applyVoice(OneTap.enhanceVoice()) },
+        onEnhanceVoice = ::enhanceVoice,
         onStudioVoice = { applyVoice(OneTap.studioVoice()) },
         onAmbienceChanged = ::changeAmbience,
         onCharacterChanged = ::changeCharacter,
@@ -122,6 +134,10 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         onAcceptRecommendation = ::acceptRecommendation,
         onDismissRecommendation = { _state.update { it.copy(recommendation = null) } },
         onToggleAdvanced = { _state.update { it.copy(advanced = !it.advanced) } },
+        onSaveSound = ::saveSound,
+        onRecallSound = ::recallSound,
+        onRenameSound = { id, name -> updateSounds(soundLibrary.rename(id, name)) },
+        onDeleteSound = { id -> updateSounds(soundLibrary.delete(id)) },
         onAuditionSpaces = ::auditionSpaces,
         onApplyOutcome = ::applyOutcome,
         onListenerNote = ::applyListenerNote,
@@ -149,6 +165,11 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
     init {
         pruneTrash()
         refreshLibrary()
+        // Read on the main thread deliberately: both files are small, and a saved sound that
+        // appears a moment after the panel opens reads as the app forgetting it.
+        soundLibrary = sounds.load()
+        listeningDatabase = listening.load()
+        _state.update { it.copy(savedSounds = soundLibrary.ordered) }
         publish()
     }
 
@@ -402,8 +423,64 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     private fun revertPreset() {
-        _state.update { it.copy(appliedOutcome = null, voice = null, deferredStages = emptyList()) }
+        _state.update {
+            it.copy(
+                appliedOutcome = null,
+                voice = null,
+                deferredStages = emptyList(),
+                activeSoundId = null,
+                listeningEvidence = null,
+            )
+        }
         player.setVoice(null)
+    }
+
+    // --- Voice DNA ------------------------------------------------------------------------------
+
+    /**
+     * Saves everything currently set up as one of the user's own sounds.
+     *
+     * The whole instrument, not a reference to a preset with adjustments recorded on top. A preset
+     * that gets re-tuned in a later version would otherwise silently change a sound the user had
+     * already decided was finished, and a saved sound is a promise that it will not move.
+     */
+    private fun saveSound(desiredName: String) {
+        val settings = _state.value.voice ?: return
+        val provenance = _state.value.appliedRecitation?.displayName
+            ?: _state.value.appliedSpace?.displayName
+            ?: _state.value.appliedOutcome?.displayName
+        val name = VoiceDna.uniqueName(desiredName, soundLibrary.entries)
+        val dna = VoiceDna.of(
+            id = "dna-${System.currentTimeMillis()}",
+            name = name,
+            settings = settings,
+            createdAtEpochMs = System.currentTimeMillis(),
+            basedOn = provenance,
+        )
+        updateSounds(soundLibrary.save(dna))
+        _state.update { it.copy(activeSoundId = dna.id) }
+    }
+
+    /** One tap: the complete sound back, exactly as it was saved. */
+    private fun recallSound(id: String) {
+        val (library, dna) = soundLibrary.recall(id) ?: return
+        updateSounds(library)
+        applyVoice(dna.settings)
+        _state.update {
+            it.copy(
+                activeSoundId = dna.id,
+                appliedOutcome = null,
+                appliedSpace = null,
+                appliedRecitation = null,
+                listeningEvidence = null,
+            )
+        }
+    }
+
+    private fun updateSounds(library: VoiceDnaLibrary) {
+        soundLibrary = library
+        _state.update { it.copy(savedSounds = library.ordered) }
+        viewModelScope.launch(Dispatchers.IO) { sounds.save(library) }
     }
 
     /**
@@ -516,10 +593,60 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                         frameCount = frames,
                         channelCount = _state.value.channelCount,
                     )
-                    AutoStudio.recommend(VoiceAnalysis.of(audio))
+                    val analysis = VoiceAnalysis.of(audio)
+                    AutoStudio.recommend(analysis) to Restraint.of(analysis)
                 }.getOrNull()
             } ?: return@launch
-            _state.update { it.copy(recommendation = recommendation) }
+            _state.update {
+                it.copy(recommendation = recommendation.first, restraint = recommendation.second)
+            }
+        }
+    }
+
+    /**
+     * Enhance Voice: measure the recording first, then do only what it needs.
+     *
+     * `OneTap.enhanceVoice()` is the generic chain. Measuring first is the difference between a
+     * button that does the same thing to everything and one that leaves a good recording alone,
+     * which is the whole of the adaptive-processing requirement. The strength is published so the
+     * panel can show how much was done rather than claiming something happened.
+     */
+    private fun enhanceVoice() {
+        val timeline = history.current
+        if (timeline.lengthFrames == 0L) {
+            applyVoice(OneTap.enhanceVoice())
+            return
+        }
+        viewModelScope.launch {
+            val measured = withContext(Dispatchers.IO) {
+                runCatching {
+                    val frames = minOf(timeline.lengthFrames, 20L * timeline.sampleRate).toInt()
+                    val audio = ai.sautiy.core.edit.TimelineRenderer.render(
+                        timeline = timeline,
+                        provider = audioSources,
+                        startFrame = 0,
+                        frameCount = frames,
+                        channelCount = _state.value.channelCount,
+                    )
+                    val analysis = VoiceAnalysis.of(audio)
+                    VoiceAdvisor.enhance(analysis) to Restraint.of(analysis)
+                }.getOrNull()
+            }
+            if (measured == null) {
+                // Measurement failed, so the generic chain is used rather than nothing happening.
+                applyVoice(OneTap.enhanceVoice())
+                return@launch
+            }
+            applyVoice(measured.first)
+            _state.update {
+                it.copy(
+                    restraint = measured.second,
+                    appliedOutcome = null,
+                    appliedSpace = null,
+                    appliedRecitation = null,
+                    activeSoundId = null,
+                )
+            }
         }
     }
 
@@ -538,8 +665,18 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
 
     /** A preset named for the job it does. What the panel actually offers. */
     private fun applyOutcome(outcome: VoiceOutcome) {
-        applyVoice(outcome.settings)
-        _state.update { it.copy(appliedOutcome = outcome, appliedSpace = null, appliedRecitation = null) }
+        // As the listeners on this device would have it. Returns the preset untouched until three
+        // independent notes agree, so a fresh install behaves exactly as the documentation says.
+        applyVoice(listeningDatabase.tuned(outcome.displayName, outcome.settings))
+        _state.update {
+            it.copy(
+                appliedOutcome = outcome,
+                appliedSpace = null,
+                appliedRecitation = null,
+                activeSoundId = null,
+                listeningEvidence = listeningDatabase.evidence(outcome.displayName),
+            )
+        }
     }
 
     /**
@@ -550,6 +687,12 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
      * nothing needs an engineer to interpret them — the mapping lives in `ListenerNote`.
      */
     private fun applyListenerNote(note: ListenerNote) {
+        // Recorded against whatever preset is being heard, before anything is applied. This is the
+        // listening database: over time, what real listeners said about a preset moves that preset
+        // for everyone on this device. Nothing leaves the phone.
+        val heard = _state.value.auditioning ?: _state.value.appliedOutcome
+        if (heard != null) recordListenerNote(heard.displayName, note)
+
         if (note == ListenerNote.EXCELLENT) {
             stopAudition()
             return
@@ -557,8 +700,15 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         val base = _state.value.voice ?: VoiceStudioSettings()
         val adjusted = note.applyTo(base)
         // Hand-adjusted, so it is no longer the named preset it started as.
-        _state.update { it.copy(appliedOutcome = null) }
+        _state.update { it.copy(appliedOutcome = null, activeSoundId = null) }
         applyVoice(adjusted)
+    }
+
+    private fun recordListenerNote(preset: String, note: ListenerNote) {
+        listeningDatabase = listeningDatabase.record(preset, note)
+        val database = listeningDatabase
+        _state.update { it.copy(listeningEvidence = database.evidence(preset)) }
+        viewModelScope.launch(Dispatchers.IO) { listening.save(database) }
     }
 
     /** Stops the cycle and keeps whatever was playing when it stopped. */
@@ -938,8 +1088,22 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         }
 
         val peakDb = Decibels.fromLinear(recording.peakLinear.toDouble())
-        val noiseFloorDb = -62.0
+        val rmsDb = Decibels.fromLinear(recording.rmsLinear)
+        val noiseFloorDb = measuredNoiseFloor(rmsDb)
         val score = recording.qualityScore(noiseFloorDb)
+
+        // Guidance is only offered while the microphone is actually open. Advice about a recording
+        // that has already been made is not advice, it is a complaint.
+        val guidance = if (workspace.transport.isCapturing || _state.value.monitoring) {
+            RecordingAdvisor.assess(
+                peakDb = peakDb,
+                rmsDb = rmsDb,
+                noiseFloorDb = noiseFloorDb,
+                clippedAlready = recording.hasClipped,
+            )
+        } else {
+            RecordingAdvisor.Guidance.NONE
+        }
 
         _state.update { previous ->
             previous.copy(
@@ -954,7 +1118,8 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                     LayerRow(layer.id, layer.name, layer.muted, layer.soloed, layer.colourIndex)
                 },
                 peakDb = peakDb,
-                rmsDb = Decibels.fromLinear(recording.rmsLinear),
+                rmsDb = rmsDb,
+                guidance = guidance,
                 hasClipped = recording.hasClipped,
                 qualityScore = score,
                 qualityReason = qualityReason(score, peakDb, recording.hasClipped),
@@ -974,6 +1139,36 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                 historyIndex = history.index,
             )
         }
+    }
+
+    /**
+     * The level between words, tracked as a decaying minimum of the running level.
+     *
+     * This used to be the constant −62 dB, which meant every quality score and every piece of
+     * guidance about background noise was about a number nobody had measured. Somebody recording in
+     * a car with the engine running was told their floor was clean.
+     *
+     * The quietest recent level *is* the floor: speech has gaps, and the gaps are the room. The
+     * decay upwards means a floor measured during a long silence does not stay believed for the
+     * rest of a lecture; the fast fall means a genuinely quiet gap is picked up immediately.
+     */
+    private var noiseFloorEstimateDb = -62.0
+
+    private fun measuredNoiseFloor(rmsDb: Double): Double {
+        if (!workspace.transport.isCapturing && !_state.value.monitoring) {
+            noiseFloorEstimateDb = -62.0
+            return noiseFloorEstimateDb
+        }
+        // Nothing arriving at all is not a floor measurement — it is a closed microphone.
+        if (rmsDb <= -80.0) return noiseFloorEstimateDb
+        noiseFloorEstimateDb = if (rmsDb < noiseFloorEstimateDb) {
+            rmsDb
+        } else {
+            // Roughly 1 dB per publish, so a floor recovers over a couple of seconds rather than
+            // being pinned forever by one quiet moment.
+            (noiseFloorEstimateDb + 1.0).coerceAtMost(rmsDb)
+        }
+        return noiseFloorEstimateDb
     }
 
     /** One sentence a person can act on. A score with no explanation gets ignored. */

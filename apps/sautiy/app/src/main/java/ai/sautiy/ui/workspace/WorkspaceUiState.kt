@@ -7,6 +7,9 @@ import ai.sautiy.core.dsp.AcousticSpace
 import ai.sautiy.core.dsp.AutoStudio
 import ai.sautiy.core.dsp.ListenerNote
 import ai.sautiy.core.dsp.RecitationProfile
+import ai.sautiy.core.dsp.Restraint
+import ai.sautiy.core.dsp.VoiceDna
+import ai.sautiy.core.record.RecordingAdvisor
 import ai.sautiy.core.dsp.VoiceOutcome
 import ai.sautiy.core.dsp.AmbienceSettings
 import ai.sautiy.core.dsp.VoiceRefinement
@@ -109,6 +112,21 @@ data class WorkspaceUiState(
     val recommendation: AutoStudio.Recommendation? = null,
     /** Whether the detailed controls are shown. Hidden by default. */
     val advanced: Boolean = false,
+    /**
+     * Guidance about the live input, or silence.
+     *
+     * Silence is the normal case and the intended one: this speaks when something is wrong and
+     * says nothing when it is not, so what it says is read rather than ignored.
+     */
+    val guidance: RecordingAdvisor.Guidance = RecordingAdvisor.Guidance.NONE,
+    /** How much work the current recording actually needs, once it has been looked at. */
+    val restraint: Restraint? = null,
+    /** The user's own saved sounds, most-reached-for first. */
+    val savedSounds: List<VoiceDna> = emptyList(),
+    /** Which saved sound is in force, if one was recalled and nothing has been changed since. */
+    val activeSoundId: String? = null,
+    /** What listeners have said about the applied preset, or null when too few have said anything. */
+    val listeningEvidence: String? = null,
     /** The live voice, including any hand edits made after a space was chosen. */
     val voice: VoiceStudioSettings? = null,
     /**
@@ -181,6 +199,12 @@ data class WorkspaceActions(
     val onAcceptRecommendation: () -> Unit = {},
     val onDismissRecommendation: () -> Unit = {},
     val onToggleAdvanced: () -> Unit = {},
+    /** Save everything currently set up as one of the user's own sounds. */
+    val onSaveSound: (String) -> Unit = {},
+    /** One tap: the complete sound back, exactly as it was saved. */
+    val onRecallSound: (String) -> Unit = {},
+    val onRenameSound: (String, String) -> Unit = { _, _ -> },
+    val onDeleteSound: (String) -> Unit = {},
     /** Play one passage through every space in turn — the only honest way to choose one. */
     val onAuditionSpaces: () -> Unit = {},
     val onStopAudition: () -> Unit = {},

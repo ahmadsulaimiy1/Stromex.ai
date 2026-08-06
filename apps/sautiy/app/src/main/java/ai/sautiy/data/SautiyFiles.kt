@@ -31,6 +31,18 @@ class SautiyFiles(private val context: Context) {
     /** The library index. One file, written atomically (see `RecordingStore`). */
     val libraryIndex: File get() = projects.resolve("library.json")
 
+    /**
+     * The user's own saved sounds.
+     *
+     * Separate from the library index because they have different lifetimes: recordings come and
+     * go, and a Voice DNA is meant to outlive every one of them. Losing this file loses judgement
+     * somebody made about their own voice, which is why it is written the same atomic way.
+     */
+    val voiceDnaFile: File get() = projects.resolve("voice-dna.json")
+
+    /** What listeners have said about each preset. Opinions, so a loss costs nothing irreplaceable. */
+    val listeningFile: File get() = projects.resolve("listening.json")
+
     /** Deletes the audio for a purged entry. Called only by the owner of the take, never by the store. */
     fun deleteTake(takeId: String): Boolean = takeFile(takeId).delete()
 

@@ -5,6 +5,8 @@ import ai.sautiy.core.workspace.Panel
 import ai.sautiy.core.workspace.PanelLaw
 import ai.sautiy.core.workspace.TransportState
 import ai.sautiy.core.workspace.WorkspaceAction
+import ai.sautiy.core.record.RecordingAdvisor
+import ai.sautiy.ui.components.ConditionDot
 import ai.sautiy.ui.components.LevelMeter
 import ai.sautiy.ui.components.StorageIndicator
 import ai.sautiy.ui.icons.SautiyIcons
@@ -120,9 +122,8 @@ fun SautiyWorkspace(
                 )
 
                 if (state.transport.isCapturing || state.monitoring) {
-                    LevelMeter(
-                        peakDb = state.peakDb,
-                        rmsDb = state.rmsDb,
+                    LiveStudio(
+                        state = state,
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .padding(horizontal = SautiySpace.pageInset, vertical = SautiySpace.l),
@@ -130,17 +131,24 @@ fun SautiyWorkspace(
                 }
             }
 
-            LayerStrip(
-                layers = state.layers,
-                selectedLayerId = state.selectedLayerId,
-                onSelect = actions.onSelectLayer,
-                onAddLayer = actions.onAddLayer,
-                // A layer cannot be added mid-take: it would start a second capture stream the
-                // hardware has no way to provide.
-                canAddLayer = state.transport != TransportState.RECORDING,
-            )
+            // Live Studio: while the microphone is open, everything that is not about the sound
+            // arriving goes away. The layer strip, the context tools and their labels are all
+            // things to decide about, and a person who is speaking cannot decide about anything.
+            // What is left is the waveform, the level, and the four conditions that would ruin
+            // the take. Recording should feel calm, and calm is mostly subtraction.
+            if (!state.transport.isCapturing) {
+                LayerStrip(
+                    layers = state.layers,
+                    selectedLayerId = state.selectedLayerId,
+                    onSelect = actions.onSelectLayer,
+                    onAddLayer = actions.onAddLayer,
+                    // A layer cannot be added mid-take: it would start a second capture stream the
+                    // hardware has no way to provide.
+                    canAddLayer = true,
+                )
 
-            ContextBar(actions = state.contextActions, onAction = actions.onContextAction)
+                ContextBar(actions = state.contextActions, onAction = actions.onContextAction)
+            }
 
             TransportDock(
                 transport = state.transport,
@@ -281,6 +289,93 @@ private fun StatusRail(
                 contentDescription = null,
                 tint = colours.textSecondary,
                 modifier = Modifier.size(22.dp),
+            )
+        }
+    }
+}
+
+/**
+ * Live Studio — the five things worth knowing while the microphone is open, and nothing else.
+ *
+ * Level, clipping, background noise and quality. Every one of them is a reason a take gets thrown
+ * away, and every one of them is fixable in the moment. Nothing else is here, because everything
+ * else is a decision, and a person mid-sentence cannot make one.
+ *
+ * The guidance line is the only prose, it appears only when something is actually wrong, and it
+ * says what to *do* — "move a little closer" — rather than what is wrong. It never blocks the
+ * transport and never asks for a response.
+ */
+@Composable
+private fun LiveStudio(state: WorkspaceUiState, modifier: Modifier = Modifier) {
+    val colours = SautiyTheme.colours
+    val guidance = state.guidance
+    val quiet = state.noiseFloorDb < RecordingAdvisor.NOISY_ROOM_DB
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        if (!guidance.isSilent && guidance.action != null) {
+            // One sentence, in the weight the problem deserves. A warning is ember because it will
+            // damage the recording; a suggestion is not, because the take is still usable.
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(SautiyShapes.medium)
+                    .background(
+                        if (guidance.weight == RecordingAdvisor.Weight.WARNING) {
+                            colours.critical.copy(alpha = 0.16f)
+                        } else {
+                            colours.surfaceRaised
+                        },
+                    )
+                    .padding(SautiySpace.m),
+            ) {
+                Text(
+                    text = guidance.action,
+                    style = SautiyTheme.type.titleMedium,
+                    color = if (guidance.weight == RecordingAdvisor.Weight.WARNING) {
+                        colours.critical
+                    } else {
+                        colours.textPrimary
+                    },
+                )
+                guidance.because?.let {
+                    Text(
+                        text = it,
+                        style = SautiyTheme.type.bodyMedium,
+                        color = colours.textTertiary,
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(SautiySpace.m))
+        }
+
+        LevelMeter(peakDb = state.peakDb, rmsDb = state.rmsDb)
+
+        Spacer(modifier = Modifier.height(SautiySpace.m))
+
+        // Four conditions, each a word and a dot. Read in peripheral vision by somebody who is
+        // speaking, which is why none of them is a number.
+        Row(horizontalArrangement = Arrangement.spacedBy(SautiySpace.l)) {
+            ConditionDot(
+                label = if (state.hasClipped) "Clipped" else "Headroom",
+                good = !state.hasClipped,
+                warning = state.hasClipped,
+            )
+            ConditionDot(
+                label = if (quiet) "Quiet room" else "Background",
+                good = quiet,
+                warning = !quiet && state.noiseFloorDb > -36.0,
+            )
+            ConditionDot(
+                label = when {
+                    state.qualityScore >= 80 -> "Good"
+                    state.qualityScore >= 55 -> "Usable"
+                    else -> "Poor"
+                },
+                good = state.qualityScore >= 80,
+                warning = state.qualityScore < 55,
             )
         }
     }

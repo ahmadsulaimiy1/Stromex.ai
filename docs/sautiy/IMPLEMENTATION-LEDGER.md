@@ -23,7 +23,7 @@ Android layer.
 
 ## Verified — tests written and executed, passing
 
-**371 tests, 0 failures.** Reproduce with `cd apps/sautiy && gradle :sautiy-core:test`.
+**411 tests, 0 failures.** Reproduce with `cd apps/sautiy && gradle :sautiy-core:test`.
 
 | Area | Tests | What was actually measured |
 |---|---|---|
@@ -50,6 +50,11 @@ Android layer.
 | **Ch.14 export pipeline** | 13 | What is exported is what was heard; progress is monotonic 0→1; a format that cannot carry the project rate is resampled to the nearest legal rate at or above it |
 | **Voice tuning** | 28 | Each of the seven listener words moves the voice in the direction it names, and too-bright/too-dark undo each other; a panel applies only the majority's notes and applies them once; every `VoiceAdvisor` rule fires on material that warrants it and stays silent on material that does not; Voice Match closes half the measured gap and never claims to close it |
 | **Voice Space layers** | 7 | Choosing an acoustic environment changes the room and provably nothing else; all eight are distinct, finite and unclipped, and their decays order the way the names imply; the seven recitation profiles are distinct rooms and each preserves a recited phrase's loudest-to-quietest ratio at 2.5 or better; the disclosure denies both reproduction and affiliation; Auto Studio returns a defensible outcome and a reason for it |
+| **Signature sound** | 9 | **Every acoustic, outcome, acoustic space and recitation profile is inside the house style — at all five intensity stops.** The pre-delay floor scales with decay and is monotonic in it, so a booth may answer in 6 ms and a hall may not; every decibel of room provably buys a matching amount of ducking, and that relationship is monotonic; Voice Space at 100% can no longer reach a room level that drowns the voice; a hand-edited voice with every slider at its end is brought inside the rules and *still has a big room*; `applyTo` is idempotent on all ten outcomes; every rule states an audible consequence |
+| **Voice DNA** | 10 | A saved sound restores the complete instrument including hand edits, not a preset reference; saving puts it inside the house style; a file written by an older version still loads; a corrupt file loses the sounds and not the app; saving over an existing sound replaces rather than duplicates; the list orders by what the user reaches for; two lecture series can both be saved; the summary cannot disagree with the settings it describes; a blank name is refused at construction |
+| **Adaptive restraint** | 5 | **A clean recording comes out within 1 dB of how it went in, in every band** — measured, not inferred from which stages were enabled — with no compressor, no de-esser, no noise reduction and no tone shaping; a noisy, quiet, uneven, sibilant recording gets all four; four small imperfections produce less than 35% of the treatment; strength never leaves 0–1 and the summary is never blank |
+| **Recording guidance** | 8 | **A good signal produces silence.** Clipping outranks everything and only one thing is ever said; distance advice is a physical action with no decibels or gain in it; a noisy room is a suggestion and not a warning; a closed microphone produces nothing rather than advice about silence; a noisy room is never told to add a large space; the level gauge puts the ideal level in the middle and is monotonic across the whole range |
+| **Listening database** | 8 | One listener never moves a preset; a majority calling it too bright makes it less bright; a panel of 40 moves a preset exactly as far as a panel of 3; every critical note in majority at once still leaves the result inside the house style with its room intact; a well-liked preset can prove it; unheard and disliked are never the same value; the tally survives a round trip and fails an empty database on a corrupt file |
 
 ---
 
@@ -163,6 +168,9 @@ budget is met on something slower than the target device.
 | **Listening panel persistence** | `ListeningPanel` computes consensus correctly; notes are not stored between sessions, so a multi-listener panel cannot yet be run over days. | Ch. 10 |
 | **Waveform editing** | Deliberately not started. Blocked behind the four listening questions. | Ch. 9 |
 | **Rename before export** | Exports take the project name; there is no field to change it at the moment of export. | Ch. 14 |
+| **That the signature sound is recognisable** | The rules hold everywhere and that is tested. Whether they add up to a sound a person could identify blind is a listening judgement, and it is not claimed. | Ch. 10 |
+| **Playback "like Spotify"** | Start latency is measured inside the 100 ms budget on an emulator, and reads are streamed rather than reopening the file per block. Whether it *feels* instant and fluid on a real phone under a real finger has not been seen. | Ch. 8 |
+| **That the Studio feels like a mastering suite** | Deliberately not claimed. Gauges, restraint reporting and a calm recording view are the parts that can be built; how it feels is the user's to judge. | Ch. 6 |
 
 ---
 
@@ -204,6 +212,150 @@ gets it right, and no one has listened to these yet. **Hear every space** exists
 it loops one five-second passage, starts on the original, and changes the room underneath the
 same phrase every five seconds, so the whole roster is one tap and seventy-five seconds instead
 of fifteen separate manual comparisons.
+
+## The signature sound, as rules the build enforces
+
+A signature sound is not a preset. It is what is true of **every** SAUTIY recording, whichever
+preset made it — the reason someone could recognise the app across ten voices in ten rooms. Reverb
+engines have no signature; record labels and mastering houses do, and the difference is that a house
+has rules. `SignatureSound` is the house, and it is written as rules rather than as a preset:
+
+* **The voice is in front of the room.** Pre-delay is not a fixed minimum — the rule is a
+  *relationship*: 5 ms floor plus 3.5 ms per second of the room's own tail. A vocal booth genuinely
+  answers in 6 ms, and forcing it to 12 would make it a different room; a 3.6-second hall answering
+  in 6 ms is a voice smeared with a hall. Stated as a house rule chosen to hold of real rooms, not
+  as anything derived from Sabine.
+* **Every decibel of room buys a matching amount of standing back.** `requiredProtection(mix)` ties
+  the two together, so a preset cannot add room without adding the ducking that keeps words above
+  it. This is the central law and the thing most likely to be audibly different from other mobile
+  recorders, where turning the reverb up buries the speech.
+* **Never harsh, never thin, one ceiling.** Presence capped, air capped, warmth floored once a room
+  is present, room brightness capped, −1 dBTP on everything that leaves.
+
+`verify()` returns the rules a setting breaks **and what each one sounds like** — a rule whose
+consequence cannot be described to a listener was invented for the code. A test runs every acoustic,
+every outcome, every acoustic space and every recitation profile through it, at all five intensity
+stops. **A preset that breaks the house style fails the build rather than shipping.**
+
+**What this does not claim.** That the rules produce a sound anyone recognises is a listening
+judgement and is not asserted. What is asserted is that the rules hold everywhere — which is the
+part a listener could not check for themselves, and the part that has to be true first.
+
+### What writing the rules down immediately caught
+
+Turning Voice Space to 100% on an already-wet preset reached **73% room against 65% ducking**. That
+is the washy sound the control exists to avoid, and it was reachable in two taps by anybody. Someone
+asking for a bigger space did not ask to be buried in one. `VoiceCharacter` now clamps the mix to
+the house ceiling and raises protection to match, so **the control is safe at its maximum** — which
+is not true of the equivalent control in any mobile recorder I know of.
+
+A second, quieter defect came out of the same test: `applyTo` computed the pre-delay floor from the
+*stored* decay, but the character control lengthens the tail — so every saved sound sat one notch of
+intensity away from breaking its own rule. Both floors are now computed from the room the listener
+actually gets.
+
+## Voice DNA — your own sound, saved whole
+
+The problem is not storage. A reciter who spent twenty minutes getting their Qur'an voice right, and
+who records twice a week, currently has to get it right again every time — and will not. They will
+settle for the nearest preset, and twenty minutes of judgement about *their own voice* is discarded
+every session.
+
+So a Voice DNA is the **complete** instrument: cleanup, dynamics, tone, room, intensity, loudness,
+output gain. Not a preset reference with adjustments on top — a preset re-tuned in a later version
+would silently change a sound the user had already decided was finished. **A saved sound is a promise
+that it will not move.**
+
+* Names are occasions, not settings. "My Qur'an Voice", offered as a chip, because naming is the
+  step at which people abandon a save.
+* Two lecture series can both be saved: a duplicate name gets a number rather than a refusal.
+* Written atomically — temp file, `fsync`, rename. The flush is the part people leave out, and
+  without it a power loss leaves a correctly-named empty file, which is worse than a corrupt one
+  because nothing detects it.
+* Tolerant decode: a file written by an older version still loads after a field is added. A test
+  asserts it, because losing somebody's saved Qur'an voice to an app update is unforgivable and
+  entirely preventable.
+* Saving runs the sound through `SignatureSound.applyTo`, which is idempotent — a test asserts that,
+  because `applyTo` runs on every save and a function that drifted would slowly change finished work.
+
+## Restraint — the best enhancement is often none
+
+The failure mode of every "enhance" button is that it does the same amount of work to everything.
+Hand it a clean, close, well-levelled recording and it compresses, brightens and de-esses anyway,
+and the output is worse than the input — leaving the user in the worst position an app can create:
+the feature made it worse and they cannot tell which part.
+
+`Restraint` measures four deficits — noise, level, balance, movement — each scaled against the point
+at which it stops being a problem rather than against perfection. The **mean**, not the sum: four
+small imperfections are not one large problem, and a test asserts that a recording slightly short of
+ideal in four ways gets less than 35% of the treatment.
+
+Below 18% total deficit, `enhance` returns **no compressor, no de-esser, no noise reduction, no tone
+shaping** — a 70 Hz high-pass and a delivery level, nothing else. The test for this does not count
+enabled stages; it measures band energy before and after and requires every band to move **less than
+1 dB**. That is as close as a machine can get to "it sounds like itself".
+
+The other half is asserted too: a noisy, quiet, uneven, sibilant recording gets the compressor, the
+noise reduction, the de-esser and the presence lift. Restraint must not become inertia.
+
+## Intelligent recording — guidance that stays quiet
+
+Almost every bad recording is bad for one of four reasons, all fixable in the two seconds before the
+take: too far, too close, too loud, or too noisy a room. **None is fixable afterwards.** Noise
+reduction is repair; moving 15 cm is prevention, and prevention sounds better than any processing.
+
+`RecordingAdvisor` reads the live input and says **one** thing, only when something is wrong, in
+words that need no equipment — "move closer, about a hand's width from the microphone", never
+"increase input gain by 6 dB". It never blocks, never confirms, never asks. A test asserts that a
+good signal produces **silence**: advice that always appears is wallpaper, and wallpaper is not read
+when it matters.
+
+It also decides how much Voice Space the room can carry afterwards, because ambience is a delay line
+fed by whatever the microphone heard — a large space on a noisy recording gives the noise a tail. A
+test asserts a noisy room is never told to add a large space.
+
+**A defect this exposed:** the noise floor was the constant `-62.0` in the ViewModel. Every quality
+score and every claim about background noise was about a number nobody had measured — somebody
+recording in a car with the engine running was told their floor was clean. It is now a decaying
+minimum of the running level, because the gaps between words *are* the room.
+
+## Live Studio — recording should feel calm
+
+While the microphone is open, the layer strip and the context tools disappear. Both are things to
+decide about, and a person mid-sentence cannot decide about anything. What is left is the waveform,
+the level meter, and three conditions as words-with-dots: headroom, quiet room, quality. **Calm is
+mostly subtraction.**
+
+## The listening database — presets shaped by real listeners
+
+Not machine learning, not a cloud service, nothing leaves the phone. A tally: every "too bright"
+tapped while auditioning Rich Narration lands against Rich Narration, and once enough people agree,
+the preset moves.
+
+No amount of acoustic reasoning can tell you whether Grand Space is slightly too bright on the
+average person's headphones. Only the average person can, and they will say so for free if tapping a
+word costs one second.
+
+Five limits, each tested:
+* **Three independent notes minimum.** One note is a person's taste, their headphones, and possibly
+  a mistap.
+* **Each agreed note applied once**, however many said it. A test asserts a panel of 40 moves a
+  preset exactly as far as a panel of 3.
+* **Two steps maximum** per preset, so it can be improved and cannot be walked off a cliff. A test
+  puts every critical note in majority at once and asserts the result is still inside the house style
+  and still has a room.
+* **Approval is counted too**, so a preset most people like can prove it rather than only complaints
+  being recorded.
+* **Unheard and disliked are never shown as the same thing** — `null` versus `0.0`, because a gauge
+  that conflates them is lying.
+
+## Premium visual feedback
+
+`ValueArc`, `ConditionDot` and `RangeBar` replace prose where prose made the user read during the one
+activity where they should be listening. Three rules hold across all of them: **a number is always
+available** (professionals must be able to write a setting down and quote it), **colour is never the
+only signal** (roughly one man in twelve cannot rely on it), and **nothing animates faster than the
+eye integrates**.
 
 ## Two layers, one path through them
 

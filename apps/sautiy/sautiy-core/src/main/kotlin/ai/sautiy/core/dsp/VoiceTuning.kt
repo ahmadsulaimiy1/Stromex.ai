@@ -301,6 +301,24 @@ public object VoiceAdvisor {
      * one that has been mangled.
      */
     public fun enhance(analysis: VoiceAnalysis): VoiceStudioSettings {
+        // How much work this recording actually needs. On a clean, close, well-levelled take the
+        // honest answer is almost none, and the honest answer is the one taken: no compression,
+        // no tone shaping, no de-esser. The best enhancement of a good recording is restraint,
+        // and an "enhance" button that cannot leave something alone will eventually make
+        // somebody's best take worse.
+        val restraint = Restraint.of(analysis)
+        if (restraint.isTransparent) {
+            return VoiceStudioSettings(
+                // Rumble is the one thing removed unconditionally: nothing below 60 Hz in a voice
+                // recording is wanted by anybody, and it costs headroom every other stage needs.
+                cleanup = CleanupStage(highPassHz = 70.0),
+                dynamics = DynamicsStage(),
+                refinement = VoiceRefinement(),
+                ambience = AmbienceSettings.NONE,
+                loudness = LoudnessStage(target = "SPOKEN_WORD", limiterCeilingDb = -1.0),
+            )
+        }
+
         // Rumble and handling noise sit under the voice. A recording that is already thin does
         // not need as much taken out of it as one that is thick.
         val highPass = if (analysis.lowTiltDb > -6.0) 95.0 else 75.0
@@ -352,8 +370,12 @@ public object VoiceAdvisor {
                 deEsser = deEsser,
             ),
             refinement = VoiceRefinement(
-                clarity = 0.28,
-                presence = presence,
+                // Scaled by how much work the recording needs, so a nearly-good take gets a
+                // nearly-invisible lift rather than the full one. A fixed 0.28 of clarity on
+                // material that was already clear is audible as processing, which is the one
+                // thing a one-tap button must never be.
+                clarity = 0.28 * restraint.strength.coerceAtLeast(0.35),
+                presence = presence * restraint.strength.coerceAtLeast(0.35),
                 // A thin recording is given body; a thick one is not given more.
                 body = if (analysis.lowTiltDb < -12.0) 0.25 else 0.0,
                 warmth = if (analysis.lowTiltDb < -12.0) 0.15 else 0.0,

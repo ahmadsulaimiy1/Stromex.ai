@@ -616,11 +616,24 @@ public data class VoiceCharacter(val position: Double = REFINED) {
      */
     public fun applyTo(settings: AmbienceSettings): AmbienceSettings {
         if (settings.isBypassed) return settings
+        // Ceiling on the room's level, and protection that keeps pace with it.
+        //
+        // Without the ceiling, an already-wet preset at 100% reached 73% room against 65%
+        // ducking, which is the washy sound this control exists to make impossible: the user asked
+        // for a bigger space, not for their words to be buried in one. A test caught it. The
+        // ceiling is what makes turning this control all the way up a safe thing to do, which is
+        // not true of the equivalent control in any mobile recorder I know of.
+        val mix = (settings.wetDryMix * (0.45 + position * 1.55))
+            .coerceIn(0.0, SignatureSound.MAX_WET_DRY)
         return settings.copy(
-            wetDryMix = (settings.wetDryMix * (0.45 + position * 1.55)).coerceIn(0.0, 1.0),
+            wetDryMix = mix,
             roomSize = (settings.roomSize + position * 0.12).coerceIn(0.0, 1.0),
             decaySeconds = (settings.decaySeconds * (1.0 + position * 0.35)).coerceIn(0.05, 20.0),
-            speechPriority = maxOf(settings.speechPriority, 0.30 + position * 0.35).coerceIn(0.0, 1.0),
+            speechPriority = maxOf(
+                settings.speechPriority,
+                0.30 + position * 0.35,
+                SignatureSound.requiredProtection(mix),
+            ).coerceIn(0.0, 1.0),
         )
     }
 
