@@ -8,7 +8,9 @@ import ai.sautiy.core.codec.ExportJob
 import ai.sautiy.core.codec.WavStreamReader
 import ai.sautiy.core.dsp.AmbienceMode
 import ai.sautiy.core.dsp.AmbienceSettings
+import ai.sautiy.core.dsp.ListenerNote
 import ai.sautiy.core.dsp.OneTap
+import ai.sautiy.core.dsp.VoiceOutcome
 import ai.sautiy.core.dsp.VoiceRefinement
 import ai.sautiy.core.dsp.VoiceSpacePreset
 import ai.sautiy.core.dsp.VoiceStudio
@@ -113,6 +115,8 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         onAmbienceChanged = ::changeAmbience,
         onAmbienceModeChanged = ::changeAmbienceMode,
         onAuditionSpaces = ::auditionSpaces,
+        onApplyOutcome = ::applyOutcome,
+        onListenerNote = ::applyListenerNote,
         onStopAudition = ::stopAudition,
         onRefinementChanged = ::changeRefinement,
         onChooseExportFormat = { format -> _state.update { it.copy(exportFormat = format) } },
@@ -439,23 +443,59 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
             player.setVoice(null)
             delay(AUDITION_SECONDS * 1_000L)
 
-            for (preset in VoiceSpacePreset.cardOrder) {
-                val settings = preset.settings.copy(ambienceMode = mode)
+            for (outcome in VoiceOutcome.cardOrder) {
+                val settings = outcome.settings.copy(ambienceMode = mode)
                 _state.update {
                     it.copy(
-                        auditioning = preset,
-                        appliedPreset = preset,
+                        auditioning = outcome,
+                        appliedOutcome = outcome,
                         voice = settings,
                         deferredStages = VoiceStudio(settings).deferredStages,
                     )
                 }
                 player.setVoice(settings)
                 delay(AUDITION_SECONDS * 1_000L)
+
+                // Back to the original between every one. A listener should never have to
+                // remember how the previous version sounded — the comparison is put in front of
+                // them instead of being left to their memory, which is the whole difference
+                // between an A/B and a slideshow.
+                _state.update { it.copy(comparingOriginal = true) }
+                player.setVoice(null)
+                delay(ORIGINAL_SECONDS * 1_000L)
+                _state.update { it.copy(comparingOriginal = false) }
+                player.setVoice(settings)
             }
             // Ends on whatever was last heard rather than reverting, so a space the listener
             // liked is already applied when the cycle stops.
             _state.update { it.copy(auditioning = null) }
         }
+    }
+
+    /** A preset named for the job it does. What the panel actually offers. */
+    private fun applyOutcome(outcome: VoiceOutcome) {
+        val mode = _state.value.voice?.ambienceMode ?: outcome.mode
+        applyVoice(outcome.settings.copy(ambienceMode = mode), preset = null)
+        _state.update { it.copy(appliedOutcome = outcome) }
+    }
+
+    /**
+     * A listener said something about what they are hearing.
+     *
+     * The note is applied immediately and heard on the next block, so the loop is listen, say a
+     * word, listen again. Nothing here needs the listener to know what a parameter is, and
+     * nothing needs an engineer to interpret them — the mapping lives in `ListenerNote`.
+     */
+    private fun applyListenerNote(note: ListenerNote) {
+        if (note == ListenerNote.EXCELLENT) {
+            stopAudition()
+            return
+        }
+        val base = _state.value.voice ?: VoiceStudioSettings()
+        val adjusted = note.applyTo(base)
+        // Hand-adjusted, so it is no longer the named preset it started as.
+        _state.update { it.copy(appliedOutcome = null) }
+        applyVoice(adjusted, preset = null)
     }
 
     /** Stops the cycle and keeps whatever was playing when it stopped. */
@@ -894,5 +934,13 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
          * above about six the comparison stops being a comparison.
          */
         const val AUDITION_SECONDS = 5L
+
+        /**
+         * Seconds of the original between presets.
+         *
+         * Shorter than the preset itself: it is a reference point, not a candidate, and the
+         * listener already knows what it sounds like — they need reminding, not convincing.
+         */
+        const val ORIGINAL_SECONDS = 2L
     }
 }

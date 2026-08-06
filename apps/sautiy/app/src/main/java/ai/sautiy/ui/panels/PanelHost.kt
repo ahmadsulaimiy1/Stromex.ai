@@ -3,9 +3,10 @@ package ai.sautiy.ui.workspace
 import ai.sautiy.core.analysis.Loudness
 import ai.sautiy.core.codec.Encoders
 import ai.sautiy.core.dsp.AmbienceMode
+import ai.sautiy.core.dsp.ListenerNote
+import ai.sautiy.core.dsp.VoiceOutcome
 import ai.sautiy.core.dsp.AmbienceSettings
 import ai.sautiy.core.dsp.VoiceRefinement
-import ai.sautiy.core.dsp.VoiceSpacePreset
 import ai.sautiy.core.play.PlaybackSpeed
 import ai.sautiy.core.workspace.Panel
 import ai.sautiy.ui.components.QualityGauge
@@ -193,6 +194,28 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                         style = SautiyTheme.type.bodyMedium,
                         color = colours.textTertiary,
                     )
+                    if (state.comparingOriginal) {
+                        Spacer(modifier = Modifier.height(SautiySpace.xxs))
+                        Text(
+                            text = "Original",
+                            style = SautiyTheme.type.labelLarge,
+                            color = colours.textSecondary,
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(SautiySpace.m))
+                    Text(
+                        text = "How does it sound?",
+                        style = SautiyTheme.type.bodyMedium,
+                        color = colours.textSecondary,
+                    )
+                    Spacer(modifier = Modifier.height(SautiySpace.xs))
+
+                    // Seven words, each with a defined adjustment behind it. A listener says what
+                    // they hear and the voice moves; nobody has to translate it into parameters,
+                    // which is the step where tuning cycles normally stop happening.
+                    ListenerNoteChips(onNote = actions.onListenerNote)
+
                     Spacer(modifier = Modifier.height(SautiySpace.m))
                     PrimaryAction(
                         label = "Keep this one",
@@ -273,8 +296,8 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
             }
         }
 
-        items(VoiceSpacePreset.cardOrder) { preset ->
-            val applied = state.appliedPreset == preset
+        items(VoiceOutcome.cardOrder) { outcome ->
+            val applied = state.appliedOutcome == outcome
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -285,14 +308,14 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                         color = if (applied) colours.signal else colours.surfaceRaised,
                         shape = SautiyShapes.medium,
                     )
-                    .clickable(onClickLabel = preset.displayName, role = Role.Button) {
-                        actions.onApplyPreset(preset)
+                    .clickable(onClickLabel = outcome.displayName, role = Role.Button) {
+                        actions.onApplyOutcome(outcome)
                     }
                     .padding(SautiySpace.l),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = preset.displayName,
+                        text = outcome.displayName,
                         style = SautiyTheme.type.titleMedium,
                         color = colours.textPrimary,
                         modifier = Modifier.weight(1f),
@@ -303,7 +326,7 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                 }
                 Spacer(modifier = Modifier.height(SautiySpace.xxs))
                 Text(
-                    text = preset.summary,
+                    text = outcome.purpose,
                     style = SautiyTheme.type.bodyMedium,
                     color = colours.textTertiary,
                 )
@@ -312,13 +335,10 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                 // applied one. A professional is never limited; a beginner never has to look.
                 if (applied) {
                     Spacer(modifier = Modifier.height(SautiySpace.m))
-                    val settings = preset.settings
+                    val settings = outcome.settings
                     settings.cleanup.highPassHz?.let { ParameterRow("High-pass", "${it.toInt()} Hz") }
                     settings.dynamics.compressor?.let {
                         ParameterRow("Compression", "${it.ratio}:1 at ${it.thresholdDb.toInt()} dB")
-                    }
-                    settings.dynamics.deEsser?.let {
-                        ParameterRow("De-esser", "${(it.frequencyHz / 1000).toInt()} kHz")
                     }
                     val space = settings.effectiveAmbience
                     if (!space.isBypassed) {
@@ -331,7 +351,6 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                     settings.loudness.target?.let {
                         ParameterRow("Loudness", "${Loudness.Target.valueOf(it).lufs} LUFS")
                     }
-                    settings.loudness.limiterCeilingDb?.let { ParameterRow("Ceiling", "$it dBTP") }
 
                     Spacer(modifier = Modifier.height(SautiySpace.s))
                     Text(
@@ -347,6 +366,50 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                             ),
                     )
                 }
+            }
+        }
+    }
+}
+
+/**
+ * The seven words a listener can say, as chips.
+ *
+ * Kept to seven on purpose. A free-text box collects sentences nobody can act on; a list of
+ * thirty adjectives is a vocabulary test. These are the descriptions that map onto a defined
+ * change, and there is nothing here a listener has to learn.
+ */
+@Composable
+private fun ListenerNoteChips(onNote: (ListenerNote) -> Unit) {
+    val colours = SautiyTheme.colours
+    Column(verticalArrangement = Arrangement.spacedBy(SautiySpace.xs)) {
+        for (row in ListenerNote.order.chunked(2)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(SautiySpace.xs)) {
+                for (note in row) {
+                    val isAcceptance = note == ListenerNote.EXCELLENT
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .sizeIn(minHeight = SautiySpace.minTouchTarget)
+                            .clip(SautiyShapes.pill)
+                            .background(if (isAcceptance) colours.commit else colours.surface)
+                            .clickable(onClickLabel = note.displayName, role = Role.Button) {
+                                onNote(note)
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = note.displayName,
+                            style = SautiyTheme.type.labelLarge,
+                            color = if (isAcceptance) colours.onCommit else colours.textPrimary,
+                            modifier = Modifier.padding(
+                                horizontal = SautiySpace.s,
+                                vertical = SautiySpace.s,
+                            ),
+                            maxLines = 1,
+                        )
+                    }
+                }
+                if (row.size == 1) Spacer(modifier = Modifier.weight(1f))
             }
         }
     }

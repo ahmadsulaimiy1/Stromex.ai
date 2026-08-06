@@ -4,6 +4,8 @@ import ai.sautiy.core.analysis.WaveformColumns
 import ai.sautiy.core.audio.CaptureQuality
 import ai.sautiy.core.codec.ExportFormat
 import ai.sautiy.core.dsp.AmbienceMode
+import ai.sautiy.core.dsp.ListenerNote
+import ai.sautiy.core.dsp.VoiceOutcome
 import ai.sautiy.core.dsp.AmbienceSettings
 import ai.sautiy.core.dsp.VoiceRefinement
 import ai.sautiy.core.dsp.VoiceSpacePreset
@@ -96,8 +98,10 @@ data class WorkspaceUiState(
 
     /** The space currently selected, or `null` when the recording is heard as captured. */
     val appliedPreset: VoiceSpacePreset? = null,
-    /** The space currently being auditioned, when the listening cycle is running. */
-    val auditioning: VoiceSpacePreset? = null,
+    /** The preset currently being auditioned, when the listening cycle is running. */
+    val auditioning: VoiceOutcome? = null,
+    /** The preset in force, named for the job it does. Null once controls have been hand-moved. */
+    val appliedOutcome: VoiceOutcome? = null,
     /** The live voice, including any hand edits made after a space was chosen. */
     val voice: VoiceStudioSettings? = null,
     /**
@@ -167,6 +171,9 @@ data class WorkspaceActions(
     /** Play one passage through every space in turn — the only honest way to choose one. */
     val onAuditionSpaces: () -> Unit = {},
     val onStopAudition: () -> Unit = {},
+    val onApplyOutcome: (VoiceOutcome) -> Unit = {},
+    /** What a listener said about what they are hearing. Seven words, each a defined change. */
+    val onListenerNote: (ListenerNote) -> Unit = {},
     val onRefinementChanged: (VoiceRefinement) -> Unit = {},
     val onChooseExportFormat: (ExportFormat) -> Unit = {},
     val onExport: () -> Unit = {},
