@@ -91,7 +91,13 @@ echo "=== device audio tests ==="
 adb uninstall "$PACKAGE" || true
 
 cd apps/sautiy
-./gradlew --no-daemon :app:connectedDebugAndroidTest
+# Not allowed to abort the script. Under `set -e` a Gradle failure killed this run before either
+# summary was printed, so run 31116068441 reported "There were failing tests" and a `file://` URL to
+# a machine that no longer exists — and named no test. The gate is deferred to the end, exactly as
+# the screenshot gate is, for exactly the same reason.
+TESTS_OK=0
+./gradlew --no-daemon :app:connectedDebugAndroidTest || TESTS_OK=1
+cd "$GITHUB_WORKSPACE"
 
 # The gate, after the evidence. A red build either way, but never a red build with nothing to read.
 #
@@ -113,6 +119,18 @@ if [ ! -s "$GITHUB_WORKSPACE/screenshots/summary.txt" ]; then
   echo "=========================="
 else
   cat "$GITHUB_WORKSPACE/screenshots/summary.txt"
+fi
+
+# The device-test summary is printed *after* the screenshot one, so the higher blocker sits closest
+# to the exit. Blocker order is 1. device tests, 2. screenshots, and the log tail should read in the
+# same order of importance rather than the order the steps happened to run in.
+python3 "$GITHUB_WORKSPACE/.github/scripts/sautiy-test-summary.py" \
+  "$GITHUB_WORKSPACE/apps/sautiy/app/build/outputs/androidTest-results/connected" \
+  "$GITHUB_WORKSPACE/apps/sautiy/app/build/outputs/androidTest-results" || true
+
+if [ "$TESTS_OK" -ne 0 ]; then
+  echo "::error::device tests failed. The failing test is named in the summary above."
+  exit 1
 fi
 
 if [ "$SCREENSHOTS_OK" -ne 0 ]; then
