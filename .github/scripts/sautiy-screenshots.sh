@@ -33,6 +33,7 @@
 set -euo pipefail
 
 PACKAGE="ai.sautiy.debug"
+ACTIVITY="ai.sautiy.SautiyActivity"
 SHOTS="${1:-screenshots}"
 mkdir -p "$SHOTS"
 
@@ -44,14 +45,22 @@ mkdir -p "$SHOTS"
 # 05 and 06 name "Studio" because they are gated behind that same tap: when the Studio lookup fails
 # it costs three screens, not one, and a summary that blamed a swipe would send the fix to the wrong
 # place.
+#
+# Every selector below is the string the control actually carries, read out of the Compose sources
+# rather than guessed. The first version of this table guessed, and the guesses were wrong in a way
+# that was worse than a failure: "Record" matched the *hint copy* "Press record to begin. Everything
+# is saved from the first moment." before it reached the button, so recording never started and two
+# screenshots of the idle workspace were filed under Recording and Playback for three runs. A
+# screenshot of the wrong screen is indistinguishable from a screenshot of the right one, which is
+# why matching a caption is a more serious defect than matching nothing.
 SCREENS="01-workspace-empty|Home|-
-02-recording-live-studio|Recording|Record
-03-after-recording|Playback|Stop
+02-recording-live-studio|Recording|Start recording
+03-after-recording|Playback|Stop recording
 04-studio-panel|Studio|Studio
 05-studio-scrolled|Studio, scrolled|Studio
 06-studio-layer-two|Studio, second layer|Studio
-07-export-panel|Export|Export
-08-analysis-gauges|Analysis|Analysis"
+07-export-panel|Export|Export this recording
+08-analysis-gauges|Analysis|Quality"
 
 # Every lookup this run attempted, `needle|found` or `needle|missing`.
 LOOKUPS="$SHOTS/lookups.txt"
@@ -121,6 +130,26 @@ tap_by_description() {
   fi
   printf '%s|found\n' "$needle" >> "$LOOKUPS"
   return 0
+}
+
+# Dismisses whatever is open and guarantees SAUTIY is still the screen being photographed.
+#
+# BACK alone was not enough and the summary proved it: run 31112969584 recorded "Apps list",
+# "Chrome", "Messages", "Search", "Voice search" and "Thursday, Aug 6" among the visible selectors,
+# which is the Android launcher. BACK had left the application, and Export and Analysis were then
+# looked for on the home screen. Reported as a missing selector, it was nothing of the kind — the app
+# was not on screen at all.
+#
+# So the state is checked rather than assumed. This is the whole discipline in one function: a script
+# that navigates by sending keys and hoping is a script whose failures are unattributable.
+return_to_workspace() {
+  adb shell input keyevent KEYCODE_BACK || true
+  sleep 2
+  if ! adb shell dumpsys activity activities 2>/dev/null | grep -q "topResumedActivity.*$PACKAGE"; then
+    echo "BACK left the application — bringing SAUTIY back to the front"
+    adb shell am start -n "$PACKAGE/$ACTIVITY" > /dev/null 2>&1 || true
+    sleep 4
+  fi
 }
 
 # --- The Release Summary --------------------------------------------------------------------------
@@ -236,11 +265,12 @@ echo "=== 1. the workspace as it opens ==="
 shot "01-workspace-empty"
 
 echo "=== 2. recording — Live Studio, with everything else gone ==="
-if tap_by_description "Record"; then
+if tap_by_description "Start recording"; then
   sleep 4
   shot "02-recording-live-studio"
-  # Stop, so the rest of the screenshots have real audio behind them.
-  tap_by_description "Stop" || tap_by_description "Record" || true
+  # Stop, so the rest of the screenshots have real audio behind them. The transport is one control
+  # that renames itself, so the idle name is the fallback rather than a second button.
+  tap_by_description "Stop recording" || tap_by_description "Start recording" || true
   sleep 3
 fi
 shot "03-after-recording"
@@ -257,16 +287,17 @@ if tap_by_description "Studio"; then
 fi
 
 echo "=== 7. the Export panel ==="
-adb shell input keyevent KEYCODE_BACK || true
-sleep 1
-if tap_by_description "Export"; then
+return_to_workspace
+if tap_by_description "Export this recording"; then
   shot "07-export-panel"
 fi
 
 echo "=== 8. the Analysis panel — the gauges ==="
-adb shell input keyevent KEYCODE_BACK || true
-sleep 1
-if tap_by_description "Analysis"; then
+# "Quality" rather than "Analysis": the panel is titled Analysis, but the control that opens it is
+# the Tier-2 context action `ctx.analysis`, and its label is the word the user reads. The script taps
+# what a thumb taps, not what the panel calls itself.
+return_to_workspace
+if tap_by_description "Quality"; then
   shot "08-analysis-gauges"
 fi
 
