@@ -199,6 +199,45 @@ it loops one five-second passage, starts on the original, and changes the room u
 same phrase every five seconds, so the whole roster is one tap and seventy-five seconds instead
 of fifteen separate manual comparisons.
 
+## One naming system, and the tuning loop
+
+**What the user sees are outcomes.** Ten, in four groups: Speech (Clear Speech, Warm Voice, Rich
+Narration), Professional (Studio, Broadcast, Podcast), Recitation (Prestige, Majestic), Space
+(Grand Space, Immersive). Group headings rather than a second level of choice.
+
+**What the engine has are rooms.** The fifteen acoustic spaces remain as the implementation and
+appear to the user only as an Advanced disclosure — "Based on: Grand Hall" — inside an applied
+card. A person who sees both "Prestige Recitation" and "Large Mosque" has to work out which to
+choose, and the honest answer is not something they should have to learn. **Room names belong in
+this document, not in the interface.**
+
+**Character is one control with five stops** — Natural, Refined, Rich, Grand, Immersive — and a
+listener may stop anywhere between them. Four things move together, because more character is not
+one parameter: the room grows, lasts longer and gets louder, and the speech protection rises with
+all three. A raised mix on an unchanged room sounds like the volume of an effect rather than a
+larger place. Above Rich it also adds richness, air and depth to the voice, so the word means what
+it says. Moving Character keeps the preset name; moving a detailed control clears it.
+
+**The tuning loop.** Seven words — too bright, too dark, too harsh, too muddy, too much room, too
+little room, excellent — each mapping to a defined adjustment, tested for direction and for the
+two brightness notes undoing each other. A listener taps a word, the voice moves, they listen
+again. `ListeningPanel` applies only what a majority of listeners agreed, once, so a preset moves
+by the amount the panel agreed rather than by how many people were in the room.
+
+**Enhance Voice decides.** `VoiceAnalysis` measures level, true peak, loudness range, noise floor
+and three tonal tilts; every rule in `VoiceAdvisor` has a stated threshold and reason. Noise
+reduction only where there is noise. Presence only on a dull recording. A de-esser only on
+sibilant material. No room, because a room nobody asked for is the change most likely to be wrong.
+
+**Voice Match** closes half the gap to a reference in level, tonal balance and dynamics, and says
+outright that it cannot reproduce someone else's sound — the reference was a different voice in a
+different room with a different microphone, and none of those is recoverable from a mix. Level is
+the one characteristic that can be matched exactly, so it is.
+
+**Not verified by listening.** None of the above has been heard by anyone. The four acceptance
+questions — more natural, spacious without artifice, less fatiguing, audibly better blind — cannot
+be answered from code and are not claimed.
+
 ## The Voice Studio
 
 The signal chain is fixed: `Input → Cleanup → Dynamics → Tone → Ambience → Loudness → Output`.
