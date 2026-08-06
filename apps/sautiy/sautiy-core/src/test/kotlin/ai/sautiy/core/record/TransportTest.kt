@@ -12,6 +12,7 @@ import ai.sautiy.core.workspace.Interruption
 import ai.sautiy.core.workspace.TransportState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -91,11 +92,37 @@ class RecordingMachineTest {
         val voice = RecordingState(quality = CaptureQuality.VOICE, freeBytes = oneGigabyte)
         val stereo = RecordingState(quality = CaptureQuality.STEREO, freeBytes = oneGigabyte)
 
+        val voiceSeconds = requireNotNull(voice.secondsRemaining)
+        val stereoSeconds = requireNotNull(stereo.secondsRemaining)
         assertTrue(
             "Voice must offer more time than Stereo on the same volume",
-            voice.secondsRemaining > stereo.secondsRemaining * 3,
+            voiceSeconds > stereoSeconds * 3,
         )
         assertFalse(voice.storageIsCritical)
+    }
+
+    @Test
+    fun `unmeasured storage states nothing rather than everything`() {
+        // The regression this locks down was visible on the first screen of the app: `freeBytes`
+        // defaulted to Long.MAX_VALUE, and the workspace rendered it as "26687997791 h left" —
+        // three million years of headroom, from a measurement that had never been taken.
+        val unmeasured = RecordingState(quality = CaptureQuality.STUDIO)
+
+        assertNull(
+            "Storage that has not been measured must have no remaining time, so nothing can print one",
+            unmeasured.secondsRemaining,
+        )
+        assertFalse(
+            "Not knowing is not an emergency: an unmeasured volume must not interrupt a recording",
+            unmeasured.storageIsCritical,
+        )
+
+        // And once it *is* measured, the answer appears.
+        val measured = RecordingState(
+            quality = CaptureQuality.STUDIO,
+            freeBytes = 1024L * 1024 * 1024,
+        )
+        assertNotNull(measured.secondsRemaining)
     }
 
     @Test

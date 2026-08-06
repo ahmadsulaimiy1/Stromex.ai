@@ -53,7 +53,20 @@ public data class RecordingState(
     val peakLinear: Float = 0f,
     val rmsLinear: Double = 0.0,
     val clippedSampleCount: Int = 0,
-    val freeBytes: Long = Long.MAX_VALUE,
+    /**
+     * Free storage, or null when it has not been measured yet.
+     *
+     * Null rather than [Long.MAX_VALUE], which is what this used to default to. That default was not
+     * harmless stand-in text: `Long.MAX_VALUE` divided by the studio byte rate is 26,687,997,791
+     * hours, and the workspace rendered it literally as **"26687997791 h left"** on the first screen
+     * anybody sees. Three million years of headroom, asserted before a single byte had been counted.
+     *
+     * Caught in a screenshot diagnostic, and it is the same defect as the hard-coded −62 dB noise
+     * floor: a number the app had not measured, stated as though it had. The Trust Principle does not
+     * distinguish between exaggerating quality and exaggerating capacity. An unmeasured quantity has
+     * to be absent, so that whatever renders it has no choice but to say nothing.
+     */
+    val freeBytes: Long? = null,
     val error: SautiyError? = null,
     val pendingInterruption: Interruption? = null,
 ) {
@@ -61,14 +74,21 @@ public data class RecordingState(
 
     public val isCapturing: Boolean get() = transport.isCapturing
 
-    /** Seconds of recording the remaining storage can hold, at the quality actually in use. */
-    public val secondsRemaining: Long get() = quality.secondsAvailable(freeBytes)
+    /**
+     * Seconds of recording the remaining storage can hold, at the quality actually in use — or null
+     * while [freeBytes] is unmeasured, so nothing downstream can print a figure nobody counted.
+     */
+    public val secondsRemaining: Long? get() = freeBytes?.let { quality.secondsAvailable(it) }
 
     /**
      * Chapter 3.2.7 permits an interruption when storage will run out within two minutes.
      * Anything earlier is nagging; anything later is too late to act on.
+     *
+     * False while storage is unmeasured. Not knowing is not the same as being fine, but interrupting
+     * a recording on the strength of a number we never took would be worse than staying quiet.
      */
-    public val storageIsCritical: Boolean get() = secondsRemaining <= STORAGE_WARNING_SECONDS
+    public val storageIsCritical: Boolean
+        get() = secondsRemaining?.let { it <= STORAGE_WARNING_SECONDS } ?: false
 
     /** True once the input has clipped. Shown, never hidden (chapter 1.4 principle 5). */
     public val hasClipped: Boolean get() = clippedSampleCount > 0

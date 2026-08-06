@@ -319,10 +319,15 @@ private fun StatusRail(
                     style = SautiyTheme.type.labelSmall,
                     color = colours.textTertiary,
                 )
-                StorageIndicator(
-                    secondsRemaining = state.secondsRemaining,
-                    critical = state.storageCritical,
-                )
+                // Absent until measured. An unmeasured figure printed anyway is what produced
+                // "26687997791 h left" on this exact row.
+                val remaining = state.secondsRemaining
+                if (remaining != null) {
+                    StorageIndicator(
+                        secondsRemaining = remaining,
+                        critical = state.storageCritical,
+                    )
+                }
                 if (state.hasClipped) {
                     // Clipping is shown as clipping (chapter 1.4 principle 5) and carries a word
                     // as well as a colour, so it survives colour blindness.

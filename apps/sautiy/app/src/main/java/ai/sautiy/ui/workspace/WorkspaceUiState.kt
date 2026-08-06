@@ -84,7 +84,8 @@ data class WorkspaceUiState(
     val qualityReason: String = "",
     val noiseFloorDb: Double = -120.0,
 
-    val secondsRemaining: Long = 0,
+    /** Null until storage has actually been measured, so the readout can be absent rather than wrong. */
+    val secondsRemaining: Long? = null,
     val storageCritical: Boolean = false,
     val monitoring: Boolean = false,
 

@@ -51,8 +51,12 @@ class SautiyFiles(private val context: Context) {
      *
      * Measured on the actual volume rather than assumed, because on a device with adopted
      * storage the answer differs from the one `Environment` would give.
+     *
+     * Null when the volume cannot be interrogated. Deliberately not `0`, which this returned before:
+     * zero free bytes is a *measurement*, and it reads as "the disk is full" — enough to make
+     * `storageIsCritical` true and interrupt a recording over a number nobody obtained.
      */
-    fun freeBytes(): Long = runCatching { takes.usableSpace }.getOrDefault(0L)
+    fun freeBytes(): Long? = runCatching { takes.usableSpace }.getOrNull()
 
     /**
      * Takes on disk that no project claims — chapter 1.3.5's crash recovery.

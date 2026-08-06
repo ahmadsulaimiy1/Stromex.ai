@@ -165,6 +165,12 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         soundLibrary = sounds.load()
         listeningDatabase = listening.load()
         _state.update { it.copy(savedSounds = soundLibrary.ordered) }
+        // Storage is measured here rather than only once recording starts.
+        //
+        // "Will this last the lecture?" is a question asked *before* pressing record, and until now
+        // the answer only arrived after — so the idle screen showed the unmeasured default. One stat
+        // call, and the readout means something at the moment somebody needs it.
+        recording = recording.copy(freeBytes = files.freeBytes())
         publish()
     }
 
