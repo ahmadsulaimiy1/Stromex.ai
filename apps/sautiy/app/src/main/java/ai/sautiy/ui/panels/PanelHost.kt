@@ -1015,11 +1015,44 @@ private fun ExportPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
         // message that sends people hunting through a file manager.
         state.savedTo?.let { destination ->
             Spacer(modifier = Modifier.height(SautiySpace.m))
-            Text(
-                text = "Saved as $destination",
-                style = SautiyTheme.type.bodyMedium,
-                color = colours.safe,
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(SautiyShapes.medium)
+                    .background(colours.surfaceRaised)
+                    .padding(SautiySpace.l),
+            ) {
+                Text(
+                    text = "Saved as $destination",
+                    style = SautiyTheme.type.titleMedium,
+                    color = colours.safe,
+                )
+                // The two things a person actually wants next, where the confirmation is.
+                //
+                // "Did it work?" is answered by hearing it, and closing the panel to find the
+                // transport in order to check is a trip the app can spare them. Share is here for
+                // the same reason: sending it is the reason most exports happen.
+                //
+                // "Open location" is deliberately not offered. The destination came from the
+                // system picker, so the user chose the folder and already saw it — and adding an
+                // intent for it would be new, unverified plumbing to solve a problem the picker
+                // has already solved.
+                Spacer(modifier = Modifier.height(SautiySpace.m))
+                Row(horizontalArrangement = Arrangement.spacedBy(SautiySpace.m)) {
+                    PrimaryAction(
+                        label = "Play it",
+                        onClick = actions.onPlayOrPause,
+                        modifier = Modifier.weight(1f),
+                        filled = false,
+                    )
+                    PrimaryAction(
+                        label = "Share",
+                        onClick = actions.onShare,
+                        modifier = Modifier.weight(1f),
+                        filled = false,
+                    )
+                }
+            }
         }
         if (state.exportClipped) {
             Spacer(modifier = Modifier.height(SautiySpace.xs))

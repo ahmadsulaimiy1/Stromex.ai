@@ -42,10 +42,16 @@ tap_by_description() {
   local needle="$1"
   adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1 || return 1
   local bounds
-  bounds=$(adb shell cat /sdcard/ui.xml | tr '>' '\n' \
+  # The `|| true` is not decoration and its absence cost a whole run's evidence.
+  #
+  # Under `set -euo pipefail`, a command substitution whose pipeline ends in a `grep` that matches
+  # nothing exits non-zero, and `set -e` then kills the entire script — so the *first* control this
+  # could not find silently destroyed every screenshot after it. The intent was always to fall
+  # through to the emptiness check below, which is unreachable if the shell has already exited.
+  bounds=$( { adb shell cat /sdcard/ui.xml | tr '>' '\n' \
     | grep -iF "$needle" | head -1 \
     | grep -oE 'bounds="\[[0-9]+,[0-9]+\]\[[0-9]+,[0-9]+\]"' | head -1 \
-    | grep -oE '[0-9]+' | tr '\n' ' ')
+    | grep -oE '[0-9]+' | tr '\n' ' '; } || true )
   if [ -z "$bounds" ]; then
     echo "::warning::no control matching '$needle' in the view hierarchy"
     return 1
@@ -55,7 +61,7 @@ tap_by_description() {
   local x=$(( ($1 + $3) / 2 ))
   local y=$(( ($2 + $4) / 2 ))
   echo "tapping '$needle' at $x,$y"
-  adb shell input tap "$x" "$y"
+  adb shell input tap "$x" "$y" || return 1
   return 0
 }
 
@@ -77,21 +83,21 @@ if tap_by_description "Studio"; then
   shot "04-studio-panel"
   # Scrolled, because the two layers and the Recitation Studio are below the fold by design and
   # a screenshot of only the top would misrepresent the panel.
-  adb shell input swipe 540 1500 540 600 400
+  adb shell input swipe 540 1500 540 600 400 || true
   shot "05-studio-scrolled"
-  adb shell input swipe 540 1500 540 600 400
+  adb shell input swipe 540 1500 540 600 400 || true
   shot "06-studio-layer-two"
 fi
 
 echo "=== 7. the Export panel ==="
-adb shell input keyevent KEYCODE_BACK
+adb shell input keyevent KEYCODE_BACK || true
 sleep 1
 if tap_by_description "Export"; then
   shot "07-export-panel"
 fi
 
 echo "=== 8. the Analysis panel — the gauges ==="
-adb shell input keyevent KEYCODE_BACK
+adb shell input keyevent KEYCODE_BACK || true
 sleep 1
 if tap_by_description "Analysis"; then
   shot "08-analysis-gauges"

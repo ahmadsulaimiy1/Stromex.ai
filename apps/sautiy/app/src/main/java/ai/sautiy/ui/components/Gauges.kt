@@ -10,10 +10,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,8 +26,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
-import kotlin.math.roundToInt
 
 /**
  * The visual vocabulary — arcs, rings and bars instead of sentences.
@@ -179,92 +175,12 @@ fun ConditionDot(
     }
 }
 
-/**
- * How much of the range a recording uses, drawn as the span it occupies.
- *
- * Dynamic range is the one measurement people consistently misread as "bigger is better". Drawn as
- * a span between the quietest and loudest parts, with the comfortable width marked, it stops being
- * a number to maximise and becomes a shape to recognise: too narrow is lifeless, too wide is a
- * recording whose quiet parts will vanish on a phone speaker.
- */
-@Composable
-fun RangeBar(
-    label: String,
-    rangeLu: Double,
-    modifier: Modifier = Modifier,
-    comfortableLu: ClosedFloatingPointRange<Double> = 4.0..11.0,
-) {
-    val colours = SautiyTheme.colours
-    val full = 20.0
-    val fraction = (rangeLu / full).coerceIn(0.0, 1.0).toFloat()
-    val verdict = when {
-        rangeLu < comfortableLu.start -> "flat"
-        rangeLu > comfortableLu.endInclusive -> "uneven"
-        else -> "even"
-    }
-
-    Column(modifier = modifier.semantics {
-        contentDescription = "$label, ${rangeLu.roundToInt()} LU, $verdict"
-    }) {
-        Row {
-            Text(
-                text = label,
-                style = SautiyTheme.type.labelSmall,
-                color = colours.textTertiary,
-                modifier = Modifier.weight(1f),
-            )
-            Text(
-                text = "${rangeLu.roundToInt()} LU · $verdict",
-                style = SautiyTheme.type.numeric,
-                color = colours.textSecondary,
-            )
-        }
-        Spacer(modifier = Modifier.height(SautiySpace.xxs))
-        Canvas(modifier = Modifier.fillMaxWidth().height(SautiySize.meterHeight)) {
-            val radius = size.height / 2
-            drawRoundRect(
-                color = colours.surfaceRaised,
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius),
-            )
-            // The comfortable window, so the bar is a target rather than a score.
-            val from = (comfortableLu.start / full).toFloat() * size.width
-            val to = (comfortableLu.endInclusive / full).toFloat() * size.width
-            drawRoundRect(
-                color = colours.signal.copy(alpha = 0.22f),
-                topLeft = Offset(from, 0f),
-                size = Size(to - from, size.height),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius),
-            )
-            drawRoundRect(
-                color = if (verdict == "even") colours.commit else colours.signal,
-                size = Size(size.width * fraction, size.height),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius),
-            )
-        }
-    }
-}
-
-/**
- * A row of arcs, evenly spaced, so the recording view is a panel of instruments.
- *
- * Exists so the spacing and alignment cannot drift between the two places that show gauges.
- */
-@Composable
-fun GaugeRow(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.Top,
-    ) {
-        content()
-    }
-}
-
-/** Kept beside [GaugeRow] so a caller does not have to import a layout primitive for one gap. */
-@Composable
-fun GaugeGap() {
-    Spacer(modifier = Modifier.width(SautiySpace.m))
-}
+// `RangeBar` and `GaugeGap` were here, and nothing ever called them.
+//
+// I wrote both two cycles ago while building the visual vocabulary, on the assumption that dynamic
+// range wanted its own indicator and that a row of arcs would need a spacer. Neither turned out to
+// be true: the range reads perfectly well as one of the arcs, and `GaugeRow` spaces itself.
+//
+// Sixty lines of composable that has never been drawn on a screen is not a component, it is a
+// liability — it compiles, it looks finished, and the first person to use it will find out whether
+// it works. Work already invested is not a reason to keep something.

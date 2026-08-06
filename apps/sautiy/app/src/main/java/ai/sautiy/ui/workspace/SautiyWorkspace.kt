@@ -135,8 +135,23 @@ fun SautiyWorkspace(
                             .padding(horizontal = SautiySpace.l, vertical = SautiySpace.s),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
+                        // Never a claim the app cannot support.
+                        //
+                        // This said "Cleaned up" unconditionally, including on a recording that
+                        // `Restraint` had correctly decided needed almost nothing — so the app was
+                        // taking credit for work it had not done. That is the exact opposite of
+                        // what builds trust in an automatic decision: a user who compares against
+                        // Original, hears no difference, and has been told something was cleaned
+                        // will stop believing the next thing the app says.
+                        //
+                        // So when the honest answer is "your recording was already clean", it says
+                        // that instead.
                         Text(
-                            text = if (state.comparingOriginal) "Original" else "Cleaned up",
+                            text = when {
+                                state.comparingOriginal -> "Original"
+                                state.restraint?.isTransparent == true -> "Already clean"
+                                else -> "Cleaned up"
+                            },
                             style = SautiyTheme.type.labelLarge,
                             color = colours.signal,
                         )
