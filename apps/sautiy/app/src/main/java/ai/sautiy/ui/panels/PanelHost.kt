@@ -190,7 +190,7 @@ private fun StudioPanel(state: WorkspaceUiState, actions: WorkspaceActions) {
                     )
                     Spacer(modifier = Modifier.height(SautiySpace.xxs))
                     Text(
-                        text = auditioning.summary,
+                        text = auditioning.purpose,
                         style = SautiyTheme.type.bodyMedium,
                         color = colours.textTertiary,
                     )
