@@ -89,6 +89,24 @@ Templates, not fixed law. Every one is clonable and editable by a school; a scho
 | `support_staff` | configurable | Narrow, school-defined |
 | `platform_operator` | cross-tenant metadata | Platform console; **no tenant content without break-glass** |
 
+### 4.1 Tertiary and research roles
+
+The templates above are school-shaped because most institutions are. They are
+**templates, not the role set.** A university clones and renames them, or
+creates its own: Chancellor, Vice-Chancellor, Rector, Provost, Registrar,
+Deputy Registrar, Dean, Head of Department, Programme Coordinator, Lecturer,
+Professor, Research Supervisor, Examiner, External Examiner, Academic Adviser,
+Postgraduate Student, Research Student, Alumni.
+
+None of these is hard-coded, and none needs to be: a role is a row with a name,
+a permission set, and a scope. The scope kinds already cover the tertiary cases
+— `department` reaches an academic unit and its descendants, and supervision is
+expressed as a scope over the students a membership supervises.
+
+The only platform-stable keys are the system templates' own, which exist so the
+platform can reason about "the teacher role" without assuming what a given
+institution put in it.
+
 ---
 
 ## 5. Evaluation order

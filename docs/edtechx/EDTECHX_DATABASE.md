@@ -97,15 +97,27 @@ Partitioned monthly; the AI metering hot path.
 **staff_profiles** — `id, tenant_id, membership_id, staff_number, title, employment_type, joined_on, left_on, custom jsonb`
 
 **academic_years** — `id, tenant_id, name, starts_on, ends_on, is_current`
-**terms** — `id, tenant_id, academic_year_id, name, sequence, starts_on, ends_on, is_current`
-**levels** — `id, tenant_id, name, short_name, sequence, stage_id` — "Year 7", "Grade 5", "JSS 1"; **data, not code**
+**academic_periods** — `id, tenant_id, academic_year_id, name, kind_label, sequence, starts_on, ends_on, is_current, weight` — term, semester, trimester, quarter, block or session; one row per period, whatever the institution calls them
+**levels** — `id, tenant_id, name, short_name, code, sequence, stage_id (nullable), programme_id (nullable), next_level_id, is_terminal` — a level belongs to a stage, a programme, or both; a check constraint requires one. `next_level_id` is explicit rather than `sequence + 1`, because the next level may be in another stage or absent because this one graduates. **There is deliberately no `grade_level` integer.**
 **stages** — `id, tenant_id, name, sequence` — "Primary", "Secondary", "Foundation"
 **class_groups** — `id, tenant_id, level_id, academic_year_id, name, campus_id, form_tutor_membership_id, capacity`
-**subjects** — `id, tenant_id, name, code, department_id, is_examinable`
+**courses** — `id, tenant_id, name, code, is_core, is_elective, credits, credit_system_id, contact_hours, academic_unit_id, programme_id, level_id, grading_scale_id, custom` — named `Course` rather than `Subject` because "subject" is a school word that reads oddly for a university module; the terminology layer renders whatever the institution says
 **class_subjects** — `id, tenant_id, class_group_id, subject_id, teacher_membership_id, periods_per_week`
 
 **grading_scales** — `id, tenant_id, name, kind(letter|percentage|gpa|descriptor|points), is_default`
 **grading_bands** — `id, tenant_id, scale_id, label, min_value, max_value, points, descriptor, is_pass, sequence`
+
+**academic_units** — `id, tenant_id, name, code, kind_label, parent_id, sequence, head_membership_id, custom` — self-referencing; `kind_label` is the institution's word for the tier ("Faculty", "Department", "Campus", "Institute") and is never read to make a decision.
+
+**qualifications** — `id, tenant_id, name, short_name, code, category_label, framework_level, awarding_body, typical_duration_periods, required_credits, credit_system_id, completion_rules jsonb, is_active` — the institution's own framework. `framework_level` orders qualifications *within this institution* and carries no external meaning. **No enum, ever.**
+
+**credit_systems** — `id, tenant_id, name, code, unit_label, unit_label_plural, hours_per_unit, is_default` — because a credit, a credit hour, a unit and an ECTS credit are not interchangeable, and an institution that counts nothing must not be forced to pretend.
+
+**programmes** — `id, tenant_id, name, code, academic_unit_id, qualification_id, stage_id, kind_label, duration_periods, required_credits, credit_system_id, is_research, is_active, custom` — every quantity nullable, because variable-duration and open-ended programmes are ordinary.
+
+**cohorts** — `id, tenant_id, name, code, programme_id, academic_year_id` — a group progressing together.
+
+**milestone_definitions / supervision_roles** — research education's checkpoints and its supervision vocabulary, defined per programme by the institution.
 
 **term_structures / promotion_rules / attendance_policies** — configuration rows holding rule definitions as validated JSONB, evaluated by the application's rule engine. This is what makes the Bible's "Four Schools test" satisfiable without code changes.
 

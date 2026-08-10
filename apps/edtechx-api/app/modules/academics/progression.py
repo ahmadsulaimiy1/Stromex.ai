@@ -35,14 +35,28 @@ METRICS: frozenset[str] = frozenset(
         "average_percentage",   # mean mark across assessed subjects
         "gpa",                  # mean grade points
         "credits_earned",       # sum of credits for passed subjects
-        "subjects_passed",      # count of subjects whose band passes
-        "subjects_failed",
-        "core_subjects_passed", # count restricted to subjects the school marks core
-        "core_subjects_failed",
+        "courses_passed",       # count of courses whose band passes
+        "courses_failed",
+        "core_courses_passed",  # count restricted to courses the institution marks core
+        "core_courses_failed",
         "attendance_rate",      # 0..1
         "position_in_class",    # 1 = top
         "class_size",
-        "terms_completed",
+        "periods_completed",
+        # Tertiary and research. Present for every institution and simply
+        # unreferenced by rules that do not need them — computing a metric only
+        # when some rule asks for it would make the engine's behaviour depend
+        # on the rule, which is how special cases begin.
+        "cumulative_gpa",           # CGPA across the programme so far
+        "credits_attempted",
+        "credits_required_met",     # 1 when the programme's credit bar is cleared
+        "milestones_completed",
+        "milestones_required",
+        "supervisor_approved",      # 1 or 0
+        "board_approved",           # 1 or 0
+        "placement_completed",      # 1 or 0
+        "competencies_met",         # competency-based institutions
+        "competencies_required",
     }
 )
 
@@ -180,10 +194,10 @@ def evaluate(
 
 
 @dataclass(frozen=True, slots=True)
-class SubjectResult:
-    """One subject's outcome for one student, already banded."""
+class CourseResult:
+    """One course's outcome for one student, already banded."""
 
-    subject_code: str
+    course_code: str
     is_core: bool
     credits: float | None
     score: float | None
@@ -192,12 +206,21 @@ class SubjectResult:
 
 
 def compute_metrics(
-    results: list[SubjectResult],
+    results: list[CourseResult],
     *,
     attendance_rate: float | None = None,
     position_in_class: int | None = None,
     class_size: int | None = None,
-    terms_completed: int | None = None,
+    periods_completed: int | None = None,
+    cumulative_gpa: float | None = None,
+    credits_required: float | None = None,
+    milestones_completed: int | None = None,
+    milestones_required: int | None = None,
+    supervisor_approved: bool | None = None,
+    board_approved: bool | None = None,
+    placement_completed: bool | None = None,
+    competencies_met: int | None = None,
+    competencies_required: int | None = None,
 ) -> dict[str, float | None]:
     """Derive the metric set from a student's results.
 
@@ -217,16 +240,52 @@ def compute_metrics(
             float(r.credits or 0) for r in results if r.passed and r.credits
         )
         or (0.0 if results else None),
-        "subjects_passed": float(sum(1 for r in results if r.passed)),
-        "subjects_failed": float(sum(1 for r in results if not r.passed)),
-        "core_subjects_passed": float(
-            sum(1 for r in results if r.is_core and r.passed)
-        ),
-        "core_subjects_failed": float(
+        "courses_passed": float(sum(1 for r in results if r.passed)),
+        "courses_failed": float(sum(1 for r in results if not r.passed)),
+                # "Core" here is the model's `is_core` flag. A university that says
+        # "compulsory" and a school that says "core" mean the same thing, and
+        # the terminology layer renders whichever word the institution uses —
+        # two metrics for one idea would be two things to keep in step.
+        "core_courses_passed": float(sum(1 for r in results if r.is_core and r.passed)),
+        "core_courses_failed": float(
             sum(1 for r in results if r.is_core and not r.passed)
+        ),
+        "credits_attempted": sum(float(r.credits or 0) for r in results) or (
+            0.0 if results else None
+        ),
+        "credits_required_met": _flag(
+            None
+            if credits_required is None
+            else sum(float(r.credits or 0) for r in results if r.passed) >= credits_required
         ),
         "attendance_rate": attendance_rate,
         "position_in_class": float(position_in_class) if position_in_class else None,
         "class_size": float(class_size) if class_size else None,
-        "terms_completed": float(terms_completed) if terms_completed else None,
+        "periods_completed": float(periods_completed) if periods_completed else None,
+        "cumulative_gpa": cumulative_gpa,
+        "milestones_completed": (
+            float(milestones_completed) if milestones_completed is not None else None
+        ),
+        "milestones_required": (
+            float(milestones_required) if milestones_required is not None else None
+        ),
+        "supervisor_approved": _flag(supervisor_approved),
+        "board_approved": _flag(board_approved),
+        "placement_completed": _flag(placement_completed),
+        "competencies_met": (
+            float(competencies_met) if competencies_met is not None else None
+        ),
+        "competencies_required": (
+            float(competencies_required) if competencies_required is not None else None
+        ),
     }
+
+
+def _flag(value: bool | None) -> float | None:
+    """Booleans become 1/0 so one comparison operator set serves every metric.
+
+    `None` stays `None` rather than becoming 0: "not yet approved" and
+    "explicitly refused" are different, and only the second should read as a
+    definite zero to a rule.
+    """
+    return None if value is None else (1.0 if value else 0.0)

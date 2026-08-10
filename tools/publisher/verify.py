@@ -33,10 +33,14 @@ def normalise(text: str) -> str:
     # hyphen in "school-management" are the same character, so any rule that
     # removes one corrupts the other. Comparing hyphen-insensitively is exact
     # for this purpose and cannot produce a false pass.
-    text = text.replace("-", "")
+    # The whole Unicode dash family, not only ASCII hyphen-minus. WeasyPrint
+    # hyphenates line breaks with U+2010 HYPHEN, which looks identical and is a
+    # different character — so a check that strips only "-" reports a false
+    # miss on text that is plainly on the page.
+    for dash in "-\u2010\u2011\u2012\u2013\u2014\u2015\u2212\u00ad":
+        text = text.replace(dash, "")
     text = text.replace("’", "'").replace("‘", "'")
     text = text.replace("“", '"').replace("”", '"')
-    text = text.replace("\u2014", "").replace("\u2013", "").replace("\u2212", "")
     # Whitespace goes too, not merely collapses. A justified line break inside
     # a hyphenated word extracts as "school man agement" — hyphen *and* space —
     # so any comparison that preserves spacing reports a false miss on text that

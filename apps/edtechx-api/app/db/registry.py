@@ -15,8 +15,6 @@ from app.modules.academics.models import (
     GradingScale,
     Level,
     ProgressionRule,
-    Subject,
-    Term,
 )
 from app.modules.audit.models import AuditEvent, SecurityEvent
 from app.modules.authz.models import (
@@ -48,10 +46,8 @@ __all__ = [
     "Role",
     "RolePermission",
     "SecurityEvent",
-    "Subject",
     "Tenant",
     "TenantDomain",
-    "Term",
     "TerminologySet",
     "User",
     "UserSession",

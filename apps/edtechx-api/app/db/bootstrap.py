@@ -28,7 +28,16 @@ def build_schema(app_role: str = "edtechx_app", drop_first: bool = False) -> lis
             connection.execute(text("CREATE EXTENSION IF NOT EXISTS pgcrypto"))
             connection.execute(text("CREATE EXTENSION IF NOT EXISTS citext"))
             if drop_first:
-                Base.metadata.drop_all(connection)
+                # The whole schema, not `metadata.drop_all`. Dropping only the
+                # tables the current models know about leaves orphans behind
+                # after a rename, and the next build then fails trying to drop
+                # a table the orphan still references. "Drop first" should mean
+                # a clean slate or it means nothing.
+                connection.execute(text("DROP SCHEMA IF EXISTS public CASCADE"))
+                connection.execute(text("CREATE SCHEMA public"))
+                connection.execute(text(f"GRANT USAGE ON SCHEMA public TO {app_role}"))
+                connection.execute(text("CREATE EXTENSION IF NOT EXISTS pgcrypto"))
+                connection.execute(text("CREATE EXTENSION IF NOT EXISTS citext"))
             Base.metadata.create_all(connection)
             protected = apply_rls(connection)
             grant_app_role(connection, app_role)

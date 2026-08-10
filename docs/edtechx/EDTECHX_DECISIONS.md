@@ -322,3 +322,56 @@ The vocabulary check parses the AST and examines string literals, identifiers, a
 **Why this does not weaken anything.** `build_schema` (tests and development) now raises on a *missing* table as well as an unprotected one, since a freshly built schema has no excuse. The migration drift test asserts every model has a table. So "every tenant-owned model has a table, and every such table is protected" remains guaranteed — by two checks in the places each can be true.
 
 **Cost.** The isolation check alone no longer proves completeness. Recorded here so the pair is understood as a pair.
+
+---
+
+## ADR-024 — EdirasX is a universal education operating system, not a school system
+
+**Status:** Accepted · **Constitutional** · Supersedes the scope, though not the substance, of ADR-022
+
+**Context.** ADR-022 made a school's structure configurable and proved it with four institutions. That was correct and insufficient. The Four Schools test is the *minimum* flexibility standard, and reading it as the maximum would have produced exactly the failure it was written to prevent — a generic-looking model that quietly assumes school-shaped education, discovered when the first university could not be represented.
+
+**Decision.** One academic engine spanning early years to doctoral research. The layers are separated because collapsing any two is what makes a system serve one kind of institution and no other:
+
+| Layer | Answers |
+|---|---|
+| Academic unit | Where in the organisation? (self-referencing: campus → faculty → department) |
+| Academic stage *(optional)* | Which broad phase? |
+| Programme | What is the student admitted to? |
+| Qualification | What does completion award? |
+| Level | How far within it? |
+| Cohort | Progressing with whom? |
+| Course | What is studied? |
+| Class group | Sitting with whom? |
+| Academic period | When? |
+| Credit system | Counted how, if at all? |
+| Supervision · milestone | For research education |
+
+**No institution uses every layer, and the unused ones are absent rather than empty.** A university has no stage; a school has no programme; a taught programme has no supervision rows. A model that required every layer would make every institution perform ceremony for the benefit of institutions unlike it.
+
+**Four specific prohibitions**, each closing a route by which an assumption returns:
+
+1. **No qualification enum.** Qualifications are rows in the institution's own framework, ordered by a `framework_level` meaningful only inside it. `BACHELORS`, `PRIMARY`, `PHD` appear nowhere.
+2. **No assumed duration.** `duration_periods` and `required_credits` are nullable throughout. "A bachelor's is three years" is a statement about one country.
+3. **No universal credit system.** Credit, credit hour, unit and ECTS are not interchangeable, and an institution counting nothing is not misconfigured.
+4. **No `kind` enums.** Every `kind_label` is free text the institution chose. The platform stores it and never reads it to make a decision.
+
+**Renames.** `Subject` → `Course` and `Term` → `AcademicPeriod`. "Subject" is a school word that reads oddly for a university module and absurdly for a doctoral research unit; "course" is the neutral term every sector recognises. The terminology layer renders whatever the institution actually says, and `course` defaults to "subject" so a school still sees its own word.
+
+**Enforcement.** `test_universal_education.py` configures nine institutions — the original four schools plus a qualification ladder, a credit-based university with faculties and departments, a non-credit institution, a research programme with supervision and milestones, and a competency-based vocational institution — through one code path. Two static checks accompany it: no product module may name an educational system or qualification in executable code (AST-based, word-boundary matched, docstrings excluded), and no comparison in the academic engine may test an academic quantity against a hard-coded number. Both were verified by introducing the defects they exist to catch.
+
+**Cost.** More tables, more joins, more configuration to seed before an institution is usable — and a seeding experience that must therefore be excellent, which is now a product requirement rather than an afterthought. Accepted: the alternative is discovering the assumption when a university asks for a demonstration.
+
+---
+
+## ADR-025 — The pre-release migration chain was squashed to one baseline
+
+**Status:** Accepted
+
+**Decision.** The three pre-release revisions were replaced with a single baseline reflecting the universal academic model.
+
+**Why.** Generalising the model turned two renames into drop-and-create pairs whose ordering failed on foreign-key dependencies. Repairing that chain would have produced migrations no deployment will ever execute, whose correctness could only be asserted rather than observed. There is no production data behind this branch, so one honest baseline is both simpler and more truthful.
+
+**What this is not.** A precedent. Once a school holds real data, the expand → migrate → contract discipline in `EDTECHX_DATABASE.md` §12 applies without exception, and a squash becomes impossible rather than merely inadvisable.
+
+**A defect it exposed.** `build_schema(drop_first=True)` used `metadata.drop_all`, which drops only the tables the current models know about — so a rename left orphans behind, and the next build failed trying to drop a table an orphan still referenced. "Drop first" now drops the schema. A clean slate that is only mostly clean is worse than none, because it fails later and elsewhere.

@@ -5,7 +5,7 @@ continue without re-deriving anything. Consolidated from the nine state files
 the brief specified — see `EDTECHX_DECISIONS.md` ADR-015 for why three files
 beat nine.
 
-**Last updated:** session 3
+**Last updated:** session 4
 **Current phase:** Phase 1 complete · Phase 2 in progress
 
 ---
@@ -74,7 +74,7 @@ enrolment) is next.
 | `test_rate_limit.py` | 22 | Atomicity under concurrency, tenant scoping, oracle resistance, fail-closed — on both backends |
 | `test_migrations.py` | 5 | Upgrade, RLS gate, model drift, full downgrade → upgrade cycle |
 | `test_mfa.py` | 20 | RFC 6238 vectors, drift window, replay rejection, encryption at rest, challenge scoping, recovery-code spending |
-| `test_four_schools.py` | 29 | **The flexibility promise.** Four institutions configured through one code path; structure, grading, vocabulary and progression all from rows; two static checks proving no special-case code |
+| `test_universal_education.py` | 45 | **The flexibility promise, widened to the whole continuum.** Nine institutions from nursery to doctoral research through one code path; two static checks proving no special-case code |
 
 **Session liveness.** Every authenticated request now checks that its session
 is live, so sign-out takes effect immediately rather than at token expiry, and
@@ -157,10 +157,11 @@ ADR-019 so it is not later mistaken for carelessness.
 In priority order. Each carries the Bible's Definition of Done.
 
 1. ~~**Academic structure**~~ — **done**. Stages, levels, years, terms, subjects, class groups, grading scales and bands, progression rule engine, terminology. The Four Schools acceptance test passes (ADR-022).
-2. **People** — students, enrolments, guardians, student–guardian links, custom fields.
-3. **Bulk import** with dry-run and a per-row error report.
-4. **Scope predicate compilation** — `taught_by_self`, `own_children`, `department` as SQL predicates applied to list queries, with leak-by-row-count tests.
-5. **Entitlement engine** with plan seeding.
+2. **People** — identity, person, guardian/staff/student relationships and enrolment kept properly separate; one person may hold several relationships without a duplicated identity.
+3. **Enrolment as history** — admission, enrolment, transfer, withdrawal, re-enrolment, year change, placement, progression, completion. Never a `student.class_id`; records are added, never overwritten.
+4. **Bulk import** — preview, column mapping, validation, duplicate detection, dry run, transactional safety, rollback, history, audit.
+5. **Scope predicate compilation** — `taught_by_self`, `own_children`, `department` as SQL predicates applied to list queries, with leak-by-row-count tests.
+6. **Entitlement engine** — kept distinct from permission, role, plan, feature availability, usage limit and institution configuration. Being authorized to act is not the same as the institution having purchased the capability.
 
 ---
 

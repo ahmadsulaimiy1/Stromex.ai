@@ -1,25 +1,26 @@
-"""Academic structure — the shape of a school, held as data.
+"""The academic core — the shape of an institution, held as data.
 
 The trap this module exists to avoid is a generic-looking schema that quietly
-assumes one country's school system. Three specific decisions keep it out:
+assumes one country's school system. See `structure.py` for the layers that
+make a university and a research institute expressible in the same engine:
+academic unit, programme, qualification, credit system, cohort, milestone.
 
-**Stages are a tree, not an enum.** A school may have one tier, two, or three,
-under any names: Primary/Secondary, Elementary/Middle/High,
-Nursery/Primary/College, Foundation/Undergraduate/Postgraduate. `parent_id`
-makes depth the school's choice rather than ours.
+**Stages are optional and form a tree.** A school groups levels into Primary
+and Secondary; a university does not group this way at all.
 
 **Levels carry no number that means anything to us.** There is a `sequence` for
-ordering and a name the school chose. There is deliberately no `grade_level`
-integer, because the moment one exists, code starts doing arithmetic on it and
-"Year 7" is silently assumed to be one more than "Year 6" in a way that is
-false for a school running Foundation → Undergraduate.
+ordering within one institution and a name that institution chose. There is
+deliberately no `grade_level` integer: the moment one exists, code does
+arithmetic on it and "Year 7" becomes one more than "Year 6" — false for an
+institution running Foundation to Level 7.
 
-**Terms are counted, not named by us.** Two semesters, three terms, four
-quarters, or one continuous year are the same structure with a different number
-of rows.
+**Academic periods are counted, not named by us.** Two semesters, three terms,
+four quarters, one continuous session: the same structure with a different
+number of rows and a different `kind_label`.
 
-The acceptance test for all of this is `test_four_schools.py`, which configures
-four genuinely different institutions and asserts that no product code changed.
+The acceptance test is `test_universal_education.py`, which configures eight
+institutions spanning early years to doctoral research and asserts that no
+product code names any of them.
 """
 
 from __future__ import annotations
@@ -30,6 +31,7 @@ from datetime import date
 
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     Date,
     Enum,
     ForeignKey,
@@ -70,7 +72,12 @@ class ProgressionOutcome(str, enum.Enum):
 
 
 class AcademicStage(UUIDPrimaryKey, Timestamped, TenantOwned, Base):
-    """A tier of the institution, at whatever depth the school uses."""
+    """A broad phase of education, where the institution uses one.
+
+    Optional. A school groups its levels into Primary and Secondary; a
+    university groups nothing this way and organises by academic unit and
+    programme instead. An institution using neither is not misconfigured.
+    """
 
     __tablename__ = "academic_stages"
     __table_args__ = (
@@ -104,10 +111,20 @@ class Level(UUIDPrimaryKey, Timestamped, TenantOwned, Base):
     __tablename__ = "levels"
     __table_args__ = (
         UniqueConstraint("tenant_id", "code", name="uq_levels_tenant_code"),
+        CheckConstraint(
+            "stage_id IS NOT NULL OR programme_id IS NOT NULL",
+            name="ck_levels_belongs_to_something",
+        ),
     )
 
-    stage_id: Mapped[uuid.UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("academic_stages.id", ondelete="RESTRICT"), nullable=False
+    # A level belongs to a stage (Year 3 within Primary), a programme (Level
+    # 200 of a bachelor's), or both. A level belonging to neither has no
+    # meaning, so the constraint requires one.
+    stage_id: Mapped[uuid.UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("academic_stages.id", ondelete="RESTRICT")
+    )
+    programme_id: Mapped[uuid.UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("programmes.id", ondelete="CASCADE")
     )
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     short_name: Mapped[str | None] = mapped_column(String(40))
@@ -122,7 +139,7 @@ class Level(UUIDPrimaryKey, Timestamped, TenantOwned, Base):
     is_terminal: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     custom: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
 
-    stage: Mapped[AcademicStage] = relationship(back_populates="levels")
+    stage: Mapped[AcademicStage | None] = relationship(back_populates="levels")
 
 
 class AcademicYear(UUIDPrimaryKey, Timestamped, TenantOwned, Base):
@@ -138,18 +155,27 @@ class AcademicYear(UUIDPrimaryKey, Timestamped, TenantOwned, Base):
     is_current: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
 
-class Term(UUIDPrimaryKey, Timestamped, TenantOwned, Base):
-    """A division of the academic year: term, semester, quarter, or the year itself."""
+class AcademicPeriod(UUIDPrimaryKey, Timestamped, TenantOwned, Base):
+    """A division of the academic year.
 
-    __tablename__ = "terms"
+    Term, semester, trimester, quarter, block, session — or one period covering
+    the whole year for an institution that does not divide it. `kind_label` is
+    what this institution calls them; nothing in the platform reads it.
+    """
+
+    __tablename__ = "academic_periods"
     __table_args__ = (
-        UniqueConstraint("tenant_id", "academic_year_id", "sequence", name="uq_terms_year_seq"),
+        UniqueConstraint(
+            "tenant_id", "academic_year_id", "sequence",
+            name="uq_academic_periods_year_seq",
+        ),
     )
 
     academic_year_id: Mapped[uuid.UUID] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("academic_years.id", ondelete="CASCADE"), nullable=False
     )
     name: Mapped[str] = mapped_column(String(120), nullable=False)
+    kind_label: Mapped[str] = mapped_column(String(60), nullable=False, default="Term")
     sequence: Mapped[int] = mapped_column(Integer, nullable=False)
     starts_on: Mapped[date] = mapped_column(Date, nullable=False)
     ends_on: Mapped[date] = mapped_column(Date, nullable=False)
@@ -158,10 +184,18 @@ class Term(UUIDPrimaryKey, Timestamped, TenantOwned, Base):
     weight: Mapped[float] = mapped_column(Numeric(6, 3), nullable=False, default=1)
 
 
-class Subject(UUIDPrimaryKey, Timestamped, SoftDeletable, TenantOwned, Base):
-    __tablename__ = "subjects"
+class Course(UUIDPrimaryKey, Timestamped, SoftDeletable, TenantOwned, Base):
+    """What is studied: subject, module, unit, paper, or the institution's word.
+
+    Named `Course` rather than `Subject` deliberately. "Subject" is a school
+    word that reads oddly for a university module and absurdly for a doctoral
+    research unit; "course" is the neutral term every sector recognises, and
+    the terminology layer renders whatever this institution actually says.
+    """
+
+    __tablename__ = "courses"
     __table_args__ = (
-        UniqueConstraint("tenant_id", "code", name="uq_subjects_tenant_code"),
+        UniqueConstraint("tenant_id", "code", name="uq_courses_tenant_code"),
     )
 
     name: Mapped[str] = mapped_column(String(160), nullable=False)
@@ -170,8 +204,24 @@ class Subject(UUIDPrimaryKey, Timestamped, SoftDeletable, TenantOwned, Base):
     # rules can require core subjects to be passed without the platform having
     # any opinion about which they are.
     is_core: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    # Credit-bearing institutions set this; term-and-grade schools leave it null.
+    # Credit-bearing institutions set these; term-and-grade schools leave them
+    # null. The credit *system* is a row too, because a credit, a credit hour,
+    # a unit and an ECTS credit are not interchangeable quantities.
     credits: Mapped[float | None] = mapped_column(Numeric(6, 2))
+    credit_system_id: Mapped[uuid.UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("credit_systems.id", ondelete="SET NULL")
+    )
+    contact_hours: Mapped[float | None] = mapped_column(Numeric(8, 2))
+    academic_unit_id: Mapped[uuid.UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("academic_units.id", ondelete="SET NULL")
+    )
+    programme_id: Mapped[uuid.UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("programmes.id", ondelete="SET NULL")
+    )
+    level_id: Mapped[uuid.UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("levels.id", ondelete="SET NULL")
+    )
+    is_elective: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     grading_scale_id: Mapped[uuid.UUID | None] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("grading_scales.id", ondelete="SET NULL")
     )
@@ -194,6 +244,11 @@ class ClassGroup(UUIDPrimaryKey, Timestamped, SoftDeletable, TenantOwned, Base):
     academic_year_id: Mapped[uuid.UUID] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("academic_years.id", ondelete="RESTRICT"), nullable=False
     )
+    cohort_id: Mapped[uuid.UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("cohorts.id", ondelete="SET NULL")
+    )
+    # "Class", "Form", "Section", "Seminar group", "Arm", "Set"
+    kind_label: Mapped[str] = mapped_column(String(60), nullable=False, default="Class")
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     code: Mapped[str] = mapped_column(String(40), nullable=False)
     capacity: Mapped[int | None] = mapped_column(Integer)

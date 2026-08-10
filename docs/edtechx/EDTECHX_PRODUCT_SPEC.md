@@ -39,7 +39,7 @@ Seventeen modules in four groups. Each is a bounded context with an owning schem
 | Module | Responsibility |
 |---|---|
 | `institution` | Campuses, departments, houses, staff, org structure |
-| `academics` | Academic years, terms, levels, classes/sections, subjects, curriculum |
+| `academics` | Academic units, stages, programmes, qualifications, levels, cohorts, courses, class groups, academic periods, credit systems, grading, progression, supervision and milestones |
 | `people` | Students, guardians, enrolment, relationships |
 | `customization` | Themes, terminology, navigation, dashboards, documents, forms |
 
@@ -69,6 +69,44 @@ Seventeen modules in four groups. Each is a bounded context with an owning schem
 | Module | Responsibility |
 |---|---|
 | `intelligence` | AI gateway, assistants, design studio, metering, safety rails |
+
+---
+
+## 2A. The universal academic engine
+
+EdirasX is not a school system that also serves universities. It is one
+academic engine spanning early years to doctoral research, and the layers below
+are what make that true. **No institution uses all of them**; the ones it does
+not use are absent rather than empty.
+
+| Layer | What it answers | Examples |
+|---|---|---|
+| **Academic unit** | Where in the organisation? | Campus · Faculty · School · Department · Institute |
+| **Academic stage** *(optional)* | Which broad phase? | Early Years · Primary · Secondary |
+| **Programme** | What is the student admitted to? | BSc Computer Science · Adult Literacy · Electrical Installation |
+| **Qualification** | What does completion award? | Diploma · HND · Bachelor's · Master's · Doctorate |
+| **Level** | How far within it? | Year 3 · Level 200 · Intermediate · Confirmed |
+| **Cohort** | Progressing with whom? | 2026 Intake · Evening Group |
+| **Course** | What is studied? | Subject · Module · Unit · Paper |
+| **Class group** | Sitting with whom? | Form · Section · Seminar group · Arm |
+| **Academic period** | When? | Term · Semester · Trimester · Quarter · Block · Session |
+| **Credit system** | Counted how, if at all? | Credit · Credit hour · Unit · ECTS · none |
+| **Supervision / milestone** | For research education | Principal supervisor · Proposal · Upgrade · Viva |
+
+**Never collapsed.** A programme is what a student is admitted to; a level is
+where they have reached; a course is what they study; a class group is who they
+sit with; a qualification is what they leave with. Collapsing any two is what
+makes a system serve one kind of institution and no other.
+
+**Never an enum.** Qualifications are rows in the institution's own framework,
+ordered by a `framework_level` that means nothing outside it. There is no
+`BACHELORS`, no `PRIMARY`, no `PHD` anywhere in the product.
+
+**Never assumed.** No duration ("a bachelor's is three years"), no credit
+value, no number of periods, no pass mark, no progression condition. The system
+asks the configured model what applies.
+
+Acceptance: `test_universal_education.py` — see `EDTECHX_TESTS.md`.
 
 ---
 

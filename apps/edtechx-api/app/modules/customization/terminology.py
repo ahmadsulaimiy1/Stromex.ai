@@ -23,8 +23,18 @@ DEFAULT_TERMS: dict[str, dict[str, str]] = {
     "class_group": {"singular": "class", "plural": "classes"},
     "level": {"singular": "year group", "plural": "year groups"},
     "stage": {"singular": "stage", "plural": "stages"},
-    "subject": {"singular": "subject", "plural": "subjects"},
-    "term": {"singular": "term", "plural": "terms"},
+    # Canonical key is `course` — the neutral term across sectors. Its default
+    # is "subject", which is what a school expects to see; a university
+    # overrides it to "module" and a research institute to "unit".
+    "course": {"singular": "subject", "plural": "subjects"},
+    "programme": {"singular": "programme", "plural": "programmes"},
+    "qualification": {"singular": "qualification", "plural": "qualifications"},
+    "academic_unit": {"singular": "department", "plural": "departments"},
+    "cohort": {"singular": "cohort", "plural": "cohorts"},
+    "academic_period": {"singular": "term", "plural": "terms"},
+    "credit": {"singular": "credit", "plural": "credits"},
+    "supervisor": {"singular": "supervisor", "plural": "supervisors"},
+    "milestone": {"singular": "milestone", "plural": "milestones"},
     "academic_year": {"singular": "academic year", "plural": "academic years"},
     "assessment": {"singular": "assessment", "plural": "assessments"},
     "grade": {"singular": "grade", "plural": "grades"},

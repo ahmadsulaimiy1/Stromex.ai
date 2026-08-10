@@ -309,22 +309,109 @@ AI in EdirasX is bound by five rules. These are enforced in code (`EDTECHX_AI_AR
 
 ## 8. Flexibility constitution
 
-EdirasX must not encode assumptions about how a school works. The following are **data**, never code:
+EdirasX must not encode assumptions about how an institution works. The
+following are **data**, never code:
 
-grades · terms · semesters · houses · departments · campuses · grading scales · attendance methods · examination structures · promotion rules · academic calendars · terminology · curriculum · organizational hierarchy · report-card format · roles and permissions
+grades · terms · semesters · houses · departments · faculties · campuses ·
+programmes · qualifications · credit systems · grading scales · attendance
+methods · examination structures · progression rules · academic calendars ·
+terminology · curriculum · organizational hierarchy · report-card format ·
+roles and permissions
 
-**The Four Schools test.** Any change to academic structure must be checked against four real shapes:
+### 8.1 EdirasX is a universal education operating system
 
-| School | Structure |
+Not a school system that also serves universities. One academic engine,
+spanning the whole continuum:
+
+**Early childhood** — pre-nursery, nursery, kindergarten, preschool, reception,
+early years, foundation.
+**Primary / elementary** — any numbering, any span, any key-stage grouping.
+**Secondary** — junior and senior secondary, middle and high school, GCSE and
+A-Level shapes, IB, JSS/SSS, and national models we have not met.
+**Vocational, technical and professional** — certificates, diplomas, advanced
+and higher national diplomas, apprenticeships, competency-based programmes.
+**Undergraduate** — associate, foundation, higher national, bachelor's,
+honours, professional degrees.
+**Postgraduate** — postgraduate certificates and diplomas, taught and research
+master's, MPhil.
+**Doctoral and research** — PhD, professional doctorates, supervision,
+milestones, thesis, viva, completion.
+
+None of these appears in executable code. Every one is a configuration an
+institution creates, names, and orders for itself.
+
+### 8.2 The layers, and why they are separate
+
+```
+Institution (the tenant)
+  └── Academic unit ......... campus · faculty · school · department · division
+        └── Programme ....... a named course of study, usually leading to a qualification
+              └── Level ..... a stage within it: Year 3 · Level 200 · Intermediate
+                    └── Class group ... form · section · seminar group · arm
+Academic stage .............. a broad phase, where the institution uses one
+Qualification ............... what completion awards, in the institution's own framework
+Course ...................... subject · module · unit · paper
+Academic period ............. term · semester · trimester · quarter · block · session
+```
+
+**No institution is required to use every layer.** A primary school uses stage,
+level, class group and course. A university uses unit, programme, level,
+cohort, course and section. A research institute uses unit, programme,
+supervision and milestone. The layers a school does not use are simply absent,
+not empty ceremony it must fill in.
+
+**These are genuinely different things and must never be collapsed:**
+
+- A **programme** is what a student is admitted to. A **level** is where they
+  have reached within it. A **course** is what they study. A **class group** is
+  who they sit with. A **qualification** is what they leave with.
+- Bachelor of Computer Science may run Level 100–400, or Year 1–3, or
+  Foundation/Intermediate/Advanced. The same programme structure, three
+  institutional vocabularies.
+
+### 8.3 What must never be hard-coded
+
+No enum, constant, branch, or column may encode:
+
+- a national qualification framework, or any qualification as a fixed concept
+  (`BACHELORS`, `MASTERS`, `PHD`, `PRIMARY`, `SECONDARY`);
+- a duration ("a bachelor's is three years", "a term is one third of a year");
+- a credit system, credit value, or contact-hour rule;
+- a level's position in a national system, or arithmetic over level numbers;
+- a grading scale, threshold, pass mark, or classification;
+- a progression or completion condition;
+- the number or names of academic periods.
+
+The system asks the configured academic model what applies. It never assumes.
+
+### 8.4 The Universal Education Test
+
+The acceptance suite proves the same engine represents at least these eight,
+through configuration alone:
+
+| # | Institution |
 |---|---|
-| A | Primary / Secondary; three terms; A–F grades; house system |
-| B | Elementary / Middle / High; two semesters; 4.0 GPA; no houses |
-| C | Nursery / Primary / College; three terms; percentage + position in class |
-| D | Foundation / Undergraduate / Postgraduate; modular credits; continuous assessment |
+| 1 | Nursery → Primary → Secondary |
+| 2 | Elementary → Middle → High School |
+| 3 | Foundation → Undergraduate → Postgraduate |
+| 4 | Diploma → HND → Bachelor's → Master's → PhD |
+| 5 | A credit-based university with faculties and departments |
+| 6 | A non-credit institution |
+| 7 | A research-oriented postgraduate programme with supervision |
+| 8 | A vocational / competency-based institution |
 
-If a proposed feature requires a code change to support any of these four, the design is wrong.
+This is the **minimum** flexibility standard, not the maximum. A proposed
+feature that requires a code change to serve any of the eight — or a ninth we
+have not imagined — is wrongly designed.
 
----
+Static checks accompany the suite: no product module may name a specific
+educational system in executable code, and no comparison in the academic engine
+may test an academic quantity against a hard-coded number.
+
+### 8.5 The principle
+
+> The institution defines its academic world. EdirasX provides the technology
+> to represent it.
 
 ## 9. Cultural constitution
 

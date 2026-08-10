@@ -1,6 +1,6 @@
 # EdirasX Test Strategy and Status
 
-**Version:** 1.1 · **Status as of:** session 2 — **152 passing, 0 failing**
+**Version:** 1.2 · **Status as of:** session 4 — **293 passing, 0 failing**
 
 ---
 
@@ -150,6 +150,62 @@ revokes every session; sign-out requires authentication.
 
 Audit: a successful sign-in leaves an audit entry scoped to the school; a
 failed one leaves a security event.
+
+### `test_universal_education.py` — 45 tests
+
+**The most important suite in the product**, because it tests the claim that is
+easiest to make and hardest to keep.
+
+Nine institutions configured through one code path: four schools (British,
+American, Nigerian, a foundation-to-postgraduate university) plus a
+qualification ladder running Diploma → HND → Bachelor's → Master's → PhD, a
+credit-based university with faculties and departments, a non-credit adult
+literacy institution, a doctoral research programme with supervision and
+milestones, and a competency-based vocational institution.
+
+*Structure.* Stage depth is the institution's choice — two flat tiers, three,
+or nested. A university has **no stages at all**: its levels hang off a
+programme, and a model requiring a stage would force every university to invent
+one. Academic units nest to the institution's own depth: Faculty → Department,
+School → Institute, or a single flat board.
+
+*Qualifications.* Five in one institution's own framework, ordered by numbers
+meaningful only inside it, grouped by category labels it chose.
+
+*Credits.* Ten contact hours per credit in one institution, twenty-five in
+another. Three institutions count nothing at all and are not forced to pretend.
+No programme in any of the nine has an assumed duration.
+
+*Periods.* Semester, Block, Session, Term — one to four per year, with the
+institution's own word on every row.
+
+*Grading.* The same mark of 85 bands as A, B, A and Distinction. 45 passes in
+three institutions and fails in the fourth.
+
+*Progression.* One engine, fifteen scenarios: core subjects plus attendance,
+GPA, aggregate plus class position, credits accumulated, milestones plus two
+human approvals, competencies plus a workplace placement. Two of these involve
+no marks of any kind. Missing data never promotes; a pending approval is not a
+refusal.
+
+*Isolation.* Nine configured institutions in one database, each seeing exactly
+what was configured for it. Codes are unique per tenant, so two institutions
+both calling their first year "y1" is correct rather than a leak — the
+assertion checks identity, not global uniqueness.
+
+*And no special-case code.* Two static checks: no product module may name an
+educational system or qualification in executable code, and no comparison in
+the academic engine may test an academic quantity against a hard-coded number.
+The first parses the AST and inspects string literals, identifiers, definitions
+and attributes — never docstrings, because a docstring naming nine systems
+explains the flexibility while a literal naming one assumes it. Matching is
+word-boundary, because "ects" occurs inside "subjects" and a check that cries
+wolf gets deleted rather than obeyed.
+
+Both were verified by introducing exactly the defects they exist to catch: a
+`_jss_promotion_override` with `average >= 50`, and later an `_is_doctorate`
+returning `("phd", "dphil")` alongside a `_standard_bachelor_duration` of 3.
+All fired.
 
 ### `test_api.py` — 16 tests
 

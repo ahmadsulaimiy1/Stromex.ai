@@ -77,7 +77,7 @@ Legend: ✅ done · 🔨 in progress · ⬜ not started
 - ✅ Core-layering test
 - ✅ Provider-SDK confinement test
 - ✅ Route coverage test — **proven load-bearing**
-- ✅ 262 tests passing; ruff clean
+- ✅ 293 tests passing; ruff clean
 - ✅ Alembic baseline migration with an RLS gate · ⬜ CI pipeline
 
 ## Phase 2 — Institution 🔨
@@ -85,7 +85,9 @@ Legend: ✅ done · 🔨 in progress · ⬜ not started
 ✅ Alembic baseline · ✅ provisioning service · ✅ auth endpoints · ✅ rate
 limiting · ✅ TOTP MFA · ✅ stages, levels, years, terms · ✅ class groups and
 subjects · ✅ grading scales and bands · ✅ progression rule engine · ✅
-terminology configuration · ✅ **the Four Schools acceptance fixture**
+terminology configuration · ✅ **the Universal Education acceptance suite** ·
+✅ academic units · ✅ programmes · ✅ qualifications · ✅ credit systems ·
+✅ cohorts · ✅ supervision roles and milestone definitions
 
 ⬜ students, enrolments, guardians · ⬜ custom fields · ⬜ bulk import with
 dry-run · ⬜ entitlement engine · ⬜ scope predicates · ⬜ journeys 9 and 11.

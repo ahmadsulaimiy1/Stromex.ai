@@ -45,7 +45,7 @@ The school's own shape, so that nothing downstream needs to assume one.
 - Terminology configuration and resolution
 - Entitlement engine and plan seeding
 
-**Exit criterion:** all four schools in the Bible's Four Schools test can be configured with zero code changes.
+**Exit criterion:** every institution in the Bible's Universal Education Test — early years through doctoral research — can be configured with zero code changes.
 
 ---
 
