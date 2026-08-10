@@ -156,17 +156,11 @@ ADR-019 so it is not later mistaken for carelessness.
 
 In priority order. Each carries the Bible's Definition of Done.
 
-1. ~~**Academic structure**~~ — **done**, with the Four Schools acceptance test passing (ADR-022)
-2. **People** — students, enrolments, guardians, student–guardian links, custom fields
-3. **Bulk import** with dry-run and per-row error reporting
-4. **Scope predicate compilation** — `taught_by_self`, `own_children`, `department` as SQL predicates
-5. **Entitlement engine** with plan seeding
-6. **Original item — academic structure detail retained for reference** — stages, levels, academic years, terms, class groups, subjects, class-subject allocation, grading scales and bands.
-5. **People** — students, enrolments, guardians, student–guardian links, custom fields.
-6. **The Four Schools fixture** — configure all four Bible §8 shapes in tests and assert zero code changes were needed. This is the acceptance criterion for Phase 2.
-7. **Scope predicate compilation** — `taught_by_self`, `own_children`, `department` as SQL predicates applied to list queries, with the leak-by-row-count tests.
-8. **Bulk import** with dry-run and per-row error reporting.
-9. **Entitlement engine** with plan seeding.
+1. ~~**Academic structure**~~ — **done**. Stages, levels, years, terms, subjects, class groups, grading scales and bands, progression rule engine, terminology. The Four Schools acceptance test passes (ADR-022).
+2. **People** — students, enrolments, guardians, student–guardian links, custom fields.
+3. **Bulk import** with dry-run and a per-row error report.
+4. **Scope predicate compilation** — `taught_by_self`, `own_children`, `department` as SQL predicates applied to list queries, with leak-by-row-count tests.
+5. **Entitlement engine** with plan seeding.
 
 ---
 
