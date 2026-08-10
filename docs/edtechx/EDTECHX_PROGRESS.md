@@ -74,6 +74,14 @@ enrolment) is next.
 | `test_rate_limit.py` | 22 | Atomicity under concurrency, tenant scoping, oracle resistance, fail-closed — on both backends |
 | `test_migrations.py` | 5 | Upgrade, RLS gate, model drift, full downgrade → upgrade cycle |
 
+**Session liveness.** Every authenticated request now checks that its session
+is live, so sign-out takes effect immediately rather than at token expiry, and
+a correctly-signed token naming a session the product has no record of is
+refused. Done as a database check rather than a Redis denylist: the state
+already exists and is already authoritative, so a second source of truth could
+only disagree with it. The API tests were tightened as a result — they now sign
+in for real instead of hand-minting tokens.
+
 ---
 
 ## Phase 2 — completed so far
@@ -147,8 +155,7 @@ ADR-019 so it is not later mistaken for carelessness.
 In priority order. Each carries the Bible's Definition of Done.
 
 1. **TOTP MFA** enrolment and challenge, required for `owner`, `admin`, `bursar`, `principal`.
-2. **Access-token denylist** in Redis, so sign-out revokes the access token immediately rather than at its 15-minute expiry.
-3. **Academic structure** — stages, levels, academic years, terms, class groups, subjects, class-subject allocation, grading scales and bands.
+2. **Academic structure** — stages, levels, academic years, terms, class groups, subjects, class-subject allocation, grading scales and bands.
 5. **People** — students, enrolments, guardians, student–guardian links, custom fields.
 6. **The Four Schools fixture** — configure all four Bible §8 shapes in tests and assert zero code changes were needed. This is the acceptance criterion for Phase 2.
 7. **Scope predicate compilation** — `taught_by_self`, `own_children`, `department` as SQL predicates applied to list queries, with the leak-by-row-count tests.
@@ -176,7 +183,7 @@ Nothing is blocked. Items awaiting external input, none of which stop Phase 2:
 | # | Issue | Severity | Plan |
 |---|---|---|---|
 | 1 | ~~Schema created by `build_schema()`, not by a migration~~ | — | **Resolved** — Alembic baseline with an RLS gate (ADR-020) |
-| 2 | Sign-out revokes the refresh family but the access token stays valid until it expires (≤15 min) | Medium | Redis denylist keyed on `jti`, next after MFA |
+| 2 | ~~Sign-out left the access token valid until expiry~~ | — | **Resolved** — every request checks that its session is live. A token naming a session that does not exist, or one that was revoked or rotated away, is refused |
 | 3 | Scopes are parsed and unioned but not yet compiled to SQL predicates | Medium | Phase 2 item 7. No route currently returns scoped lists, so nothing is under-enforced today |
 | 4 | `starlette.testclient` deprecation warning from FastAPI 0.141 | Trivial | Upstream; revisit on the next FastAPI bump |
 | 5 | `_IncludedRouter` traversal in `test_boundaries.py` reaches into a FastAPI internal | Low | Written to accept both routing shapes so it degrades to the public shape rather than silently checking nothing |

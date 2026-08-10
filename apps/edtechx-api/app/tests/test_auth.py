@@ -420,3 +420,71 @@ def test_a_failed_sign_in_is_recorded_as_a_security_event(
         assert events
     finally:
         session.close()
+
+
+# --- session liveness -----------------------------------------------------
+
+
+def test_sign_out_invalidates_the_access_token_immediately(
+    client: TestClient, school_a: TenantFixture
+) -> None:
+    """Signing out must sign you out *now*, not when the token expires.
+
+    A revoked refresh family with a still-valid access token means "sign out"
+    is a promise kept up to fifteen minutes late — which on a shared classroom
+    machine is exactly the window that matters.
+    """
+    tokens = _sign_in(client, school_a, OWNER_PASSWORD).json()
+    headers = {
+        "Host": school_a.hostname,
+        "Authorization": f"Bearer {tokens['access_token']}",
+    }
+    assert client.get("/api/v1/me", headers=headers).status_code == 200
+    assert client.post("/api/v1/auth/sign-out", headers=headers, json={}).status_code == 204
+    assert client.get("/api/v1/me", headers=headers).status_code == 401
+
+
+def test_sign_out_everywhere_invalidates_every_access_token(
+    client: TestClient, school_a: TenantFixture
+) -> None:
+    first = _sign_in(client, school_a, OWNER_PASSWORD).json()
+    second = _sign_in(client, school_a, OWNER_PASSWORD).json()
+
+    def me(tokens: dict) -> int:
+        return client.get(
+            "/api/v1/me",
+            headers={
+                "Host": school_a.hostname,
+                "Authorization": f"Bearer {tokens['access_token']}",
+            },
+        ).status_code
+
+    assert me(first) == me(second) == 200
+    client.post(
+        "/api/v1/auth/sign-out",
+        headers={
+            "Host": school_a.hostname,
+            "Authorization": f"Bearer {second['access_token']}",
+        },
+        json={"everywhere": True},
+    )
+    assert me(first) == 401, "another device kept a working access token"
+    assert me(second) == 401
+
+
+def test_a_rotated_session_invalidates_its_predecessors_access_token(
+    client: TestClient, school_a: TenantFixture
+) -> None:
+    """Rotation marks the old session revoked, so its access token must die too."""
+    first = _sign_in(client, school_a, OWNER_PASSWORD).json()
+    old_headers = {
+        "Host": school_a.hostname,
+        "Authorization": f"Bearer {first['access_token']}",
+    }
+    assert client.get("/api/v1/me", headers=old_headers).status_code == 200
+    client.post(
+        "/api/v1/auth/refresh",
+        headers={"Host": school_a.hostname},
+        json={"refresh_token": first["refresh_token"]},
+    )
+    assert client.get("/api/v1/me", headers=old_headers).status_code == 401

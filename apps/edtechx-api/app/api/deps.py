@@ -28,6 +28,7 @@ from app.modules.audit.models import SecurityEvent, SecurityEventKind, Severity
 from app.modules.authz import permissions as perms
 from app.modules.authz.models import MembershipRole
 from app.modules.authz.scopes import ScopeSet, parse_scopes
+from app.modules.identity import service as identity_service
 from app.modules.identity.models import Membership, MembershipStatus, User, UserStatus
 from app.modules.tenancy.resolver import (
     ResolvedTenant,
@@ -165,6 +166,15 @@ def get_optional_principal(
             token_tenant=exc.token_tenant,
         )
         raise errors.TenantContextMismatch() from exc
+
+    # The session must still be live. Without this, signing out revokes the
+    # refresh family but leaves the access token usable until it expires — up
+    # to fifteen minutes during which "sign out everywhere" has not actually
+    # signed anyone out. Deliberately a database check rather than a Redis
+    # denylist: the state already exists and is already authoritative, so a
+    # second source of truth could only disagree with it.
+    if not identity_service.session_is_live(db, claims.session_id):
+        raise errors.NotAuthenticated()
 
     membership = db.get(Membership, claims.membership_id)
     if membership is None or membership.status is not MembershipStatus.active:

@@ -25,12 +25,21 @@ def client() -> TestClient:
 
 
 def _auth(school: TenantFixture) -> dict[str, str]:
-    token, _ = issue_access_token(
-        user_id=school.user_id,
-        membership_id=school.membership_id,
-        tenant_id=school.tenant_id,
-        session_id=uuid.uuid4(),
-    )
+    """Sign in for real rather than hand-minting a token.
+
+    A fabricated session id no longer authenticates — the session must exist
+    and be live — so these tests now exercise the same path a client does.
+    """
+    from app.tests.conftest import OWNER_PASSWORD
+
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/auth/sign-in",
+            headers={"Host": school.hostname},
+            json={"email": school.user.email, "password": OWNER_PASSWORD},
+        )
+    assert response.status_code == 200, response.text
+    token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}", "Host": school.hostname}
 
 
@@ -223,3 +232,28 @@ def test_oversized_body_is_rejected_at_the_edge(
         content=b"x" * 1024,
     )
     assert response.status_code == 413
+
+
+# --- forged session ids ---------------------------------------------------
+
+
+def test_a_token_naming_a_session_that_does_not_exist_is_refused(
+    client: TestClient, school_a: TenantFixture
+) -> None:
+    """A correctly-signed token is not enough; its session must exist.
+
+    Without this, anyone able to mint a token — a leaked signing key, a
+    developer script — could authenticate indefinitely against a session the
+    product has no record of, and no sign-out could reach it.
+    """
+    token, _ = issue_access_token(
+        user_id=school_a.user_id,
+        membership_id=school_a.membership_id,
+        tenant_id=school_a.tenant_id,
+        session_id=uuid.uuid4(),
+    )
+    response = client.get(
+        "/api/v1/me",
+        headers={"Host": school_a.hostname, "Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 401
