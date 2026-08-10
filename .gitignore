@@ -43,3 +43,7 @@ apps/web/android/local.properties
 *.swp
 tsconfig.tsbuildinfo
 dump.rdb
+
+# EdTechX
+apps/edtechx-api/.venv/
+apps/edtechx-api/.pytest_cache/
