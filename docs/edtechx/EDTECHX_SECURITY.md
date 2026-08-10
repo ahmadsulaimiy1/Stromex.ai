@@ -13,7 +13,9 @@
 | Cross-tenant *reference* | Tenant-scoped foreign keys — `(tenant_id, id)`, because RLS does not govern referential integrity (ADR-026) |
 | Privilege escalation | Additive permissions, delegation ceiling, elevation for high-risk actions |
 | Account takeover | Argon2id hashing, MFA, session revocation, breach-aware lockout, device visibility |
-| IDOR | UUID keys + scope predicates in queries + 404-on-out-of-scope |
+| IDOR | UUID keys + **scopes compiled to SQL predicates** (ADR-029) + 404-on-out-of-scope, byte-identical to a never-issued id |
+| Inference through counts, totals, search, aggregates | The same predicate constrains `scoped_count`, page totals, search and aggregates — a caller cannot learn how many records they may not see |
+| A background job reading everything | Scopeless reads return nothing unless inside `system_access(reason=…)`, which is tenant-bound and writes a security event |
 | Injection | Parameterized queries only; no dynamic SQL from user input |
 | XSS | No `dangerouslySetInnerHTML` on user content; sanitize rich text server-side against an allow-list; strict CSP |
 | CSRF | Bearer tokens (no ambient cookie auth for the API); `SameSite=Strict` on any cookie; explicit origin check on state-changing routes |
@@ -136,6 +138,8 @@ Always audited: authentication events; authorization denials; every academic rec
 |---|---|
 | Tenant isolation suite (generated over every tenant-owned model) | Every commit |
 | Tenant-scoped foreign keys — structural check and a live cross-tenant reference attempt | Every commit |
+| Scope predicate suite — every scope kind, composition, leakage, elevation | Every commit |
+| Structural check: no route queries a scoped table without a predicate | Every commit |
 | Enrolment history immutability — `UPDATE`/`DELETE` refused at the database | Every commit |
 | Authorization matrix | Every commit |
 | Escalation and IDOR suite | Every commit |

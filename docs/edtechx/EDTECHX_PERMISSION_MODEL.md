@@ -58,16 +58,21 @@ An admissions clerk who may create a person is not thereby entitled to read ever
 
 A role grant carries a scope narrowing *which* resources it applies to.
 
+**A scope belongs to a grant, not to a person.** `scopes_for(principal, permission)` returns only the scopes attached to grants that actually confer that permission. Somebody who is a teacher (students, scoped to what they teach) and a communications officer (announcements, school-wide) holds a `tenant` scope — for announcements. Reading it as "this person is unrestricted" would hand them every student record in the institution. See ADR-029.
+
+**A scope is a `WHERE` clause, compiled by `authz.predicates`.** Never a frontend filter, never a post-query check, never a convenience condition. Rows the caller may not see do not enter the result set, so they cannot be counted, paginated, searched or aggregated into an answer. Every path that cannot produce a predicate produces `false`.
+
 | Scope | Meaning |
 |---|---|
-| `tenant` | All resources in the school |
-| `campus:{ids}` | Limited to campuses |
-| `department:{ids}` | Limited to departments |
-| `level:{ids}` | Limited to year groups |
-| `class:{ids}` | Limited to specific classes |
-| `subject:{ids}` | Limited to subjects |
-| `taught_by_self` | Resources attached to classes/subjects this membership teaches |
-| `own_children` | Students linked to this membership as guardian |
+| `tenant` | All resources in the institution |
+| `campus:{ids}` · `department:{ids}` · `academic_unit:{ids}` | A position in the academic-unit tree, **and everything below it** — three words for the same tree, since ADR-024 made campus, faculty, school and department one table |
+| `programme:{ids}` | Limited to programmes |
+| `cohort:{ids}` | Limited to intakes |
+| `level:{ids}` | Limited to year groups / study levels |
+| `class:{ids}` | Limited to specific class groups |
+| `subject:{ids}` | Limited to courses — **deliberately does not reach student records** |
+| `taught_by_self` | Records attached to the class groups this membership currently teaches |
+| `own_children` | Students this membership's person is guardian of, *at this institution* |
 | `self` | Records about this membership's own person |
 
 Scopes are stored on `membership_roles.scope` as validated JSONB. A membership may hold the same role with different scopes (head of two departments), and scopes **union**.
@@ -75,11 +80,20 @@ Scopes are stored on `membership_roles.scope` as validated JSONB. A membership m
 Every scope compiles to a SQL predicate. This is deliberate: authorization must be expressible as a filter, not only as a yes/no on an already-loaded row, otherwise list endpoints leak by row count, and pagination becomes an oracle.
 
 ```python
-Permission("attendance.mark.write") + Scope("taught_by_self")
-→ EXISTS (SELECT 1 FROM class_subjects cs
-          WHERE cs.class_group_id = attendance_sessions.class_group_id
-            AND cs.teacher_membership_id = :membership_id)
+Permission("people.student.read") + Scope("taught_by_self")
+→ student_relationships.id IN (
+      SELECT e.student_relationship_id FROM enrolments e
+      WHERE e.ended_on IS NULL
+        AND e.class_group_id IN (
+            SELECT ta.class_group_id FROM teaching_allocations ta
+            WHERE ta.membership_id = :membership_id AND ta.ends_on IS NULL))
 ```
+
+The plan for each resource lives with the module that owns it (`people.scopes`),
+because only that module knows a student is in a class through an open enrolment
+rather than through a column. A scope kind a resource has no clause for reaches
+**none** of it — the fail-closed default, and the reason a new scope kind cannot
+silently widen an existing resource.
 
 ---
 

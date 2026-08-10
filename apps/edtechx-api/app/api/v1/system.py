@@ -7,19 +7,15 @@ the school's identity rather than ours from the very first paint.
 
 from __future__ import annotations
 
-from typing import Annotated
-
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from pydantic import BaseModel
 
 from app.api.deps import (
     CurrentPrincipal,
     OptionalPrincipal,
-    RequirePermission,
     TenantContext,
 )
 from app.core.config import get_settings
-from app.core.context import Principal
 
 router = APIRouter(tags=["system"])
 
@@ -80,21 +76,10 @@ def me(principal: CurrentPrincipal) -> MeResponse:
         membership_id=str(principal.membership_id),
         tenant_id=str(principal.tenant_id),
         permissions=sorted(principal.permissions),
-        scopes=list(principal.scopes),
+        scopes=list(principal.scope_kinds),
     )
 
-
-@router.get(
-    "/students",
-    summary="Placeholder guarded route used to prove enforcement end to end",
-)
-def list_students(
-    principal: Annotated[Principal, Depends(RequirePermission("people.student.read"))],
-) -> dict[str, list[str]]:
-    """A real students endpoint arrives in Phase 2.
-
-    This route exists now so that the authorization and tenant-isolation tests
-    exercise the whole stack — router, dependency, session, policy — rather
-    than only the units beneath it.
-    """
-    return {"students": []}
+# The placeholder `/students` route that used to live here has been replaced by
+# the real one in `app/api/v1/people.py`, which is scoped. The authorization
+# tests in `test_api.py` still point at that path and now exercise the whole
+# stack against a route that means something.

@@ -1,6 +1,6 @@
 # EdirasX Test Strategy and Status
 
-**Version:** 1.4 · **Status as of:** session 5 — **387 passing, 0 failing**
+**Version:** 1.5 · **Status as of:** session 5 — **458 passing, 0 failing**
 
 ---
 
@@ -48,6 +48,7 @@ A release does not go out with any of these red. They are not "known failures".
 | `test_tenant_isolation.py` | No tenant reaches another's data — or *references* it — by any path |
 | `test_people_enrolment.py` | A person's record and history cannot be rewritten, lost, or seen by another institution |
 | `test_bulk_import.py` | No import can leave a school's records half-changed |
+| `test_scope_predicates.py` | Nobody learns anything they were not granted — by any route, count, total, search or aggregate |
 | `test_boundaries.py` | Boundaries hold; no route is unguarded |
 | `test_authz.py` | Permissions cannot leak across resources |
 | `test_security.py` | Credentials, tokens, and production configuration |
@@ -300,6 +301,50 @@ at all, and import a contact list as people with no student relationship.
 Three sabotages, all caught: committing each row as it goes, applying past
 known-invalid rows, and reversing an import that has been built upon.
 
+### `test_scope_predicates.py` — 36 tests
+
+A university with two faculties, three departments, three programmes, four class
+groups, a teacher allocated to one of them, a guardian with one child, a student
+who is their own subject, and an applicant with no placement at all. Every
+assertion is about one of them reaching — or failing to reach — the others.
+
+*Fail closed.* No principal sees nothing. A principal holding a permission for
+something else sees nothing. A scope kind the resource was never taught about
+reaches nothing. An empty scope set compiles to `false`.
+
+*Every kind.* Class, level, programme, cohort, department, nested faculty
+(recursively, stopping at the other faculty's boundary), `taught_by_self`,
+`own_children`, `self`, institution-wide. A scope naming a class that does not
+exist reaches nothing rather than everything. A student with no placement is
+reached by no structural scope and by the institution-wide one — correct in both
+directions, and easy to get wrong in either.
+
+*Composition.* Two departments union. A caller's own filter can only narrow. A
+plan that returns an unrestricted clause raises. And the one that matters most:
+**a school-wide grant for announcements does not widen the student scope** —
+the defect that existed before scopes were resolved per permission.
+
+*Leakage.* The scoped count is 2 where the table holds more. An aggregate over
+the scoped statement returns the caller's minimum, and `None` for a caller with
+no reach. Fetching an out-of-scope id and an invented id both return `None`, and
+over HTTP both return byte-identical 404s. Paging one row at a time never walks
+past the scope. Searching for a name outside the scope returns exactly what
+searching for nonsense returns.
+
+*Tenant boundaries, again.* A scope naming another school's class reaches
+nothing — and the same principal with its own school's class id does, so the
+refusal is about the tenant rather than about a broken query. A guardian at one
+school reaches no children at another, which is ADR-027's separation doing
+authorization work.
+
+*Elevation.* Scopeless reads succeed only inside `system_access`, which refuses
+without a tenant, refuses without a reason, writes a security event, and ends
+with the block.
+
+Five sabotages caught: a fail-open default, scopes unioned across permissions, a
+count over the table, a 403 distinguishing out-of-scope from non-existent, and
+elevation with no audit record. **A sixth was not** — see the load-bearing table.
+
 ### `test_api.py` — 16 tests
 
 Health is public; security headers present; unknown host refused; `/context`
@@ -332,6 +377,12 @@ driver names; oversized bodies rejected at the edge.
 | An import lands entirely or not at all | Each row committed as it went | Both the dry-run and the forced-failure tests failed — the dry run created records, and the failure left three students behind |
 | Invalid rows cannot be applied | The refusal removed and bad rows skipped instead | Flagged: the good rows landed from a file the preview had refused |
 | A reversal refuses when work has been built on it | `blockers()` short-circuited | Flagged: a reversal was offered over a pupil who had since been transferred |
+| Scopes fail closed | Empty scope set made to compile to `true` | Two tests failed immediately |
+| Scopes are per-permission | The permission filter removed from `scopes_for` | The widening test failed — the same defect that existed before this phase |
+| A page total is scoped | The endpoint made to count the table | Flagged: the total exceeded what the caller could read |
+| Out-of-scope and non-existent are the same answer | A 403 introduced for records that exist | Flagged on the byte-comparison of the two responses |
+| Elevation is audited | The security event removed | Flagged |
+| **Routes cannot query a scoped table directly** | `from sqlalchemy import select as _select` in a handler | **Not caught.** The check listed unsafe call *names*, and a rename walked past it. Now inverted: every call taking a scoped model is suspect unless it is one of the four helpers that carry a predicate by construction. Re-sabotaged; caught |
 
 ---
 

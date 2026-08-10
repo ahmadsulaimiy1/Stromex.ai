@@ -22,9 +22,10 @@ templates, append-only audit, Argon2id credentials, and a FastAPI request
 lifecycle that enforces all of it. Phase 2 has since added the universal
 academic engine (ADR-024) and the people-and-enrolment model (ADR-027), and a
 cross-tenant *reference* hole in the isolation spine has been found and closed
-(ADR-026), and bulk import lands whole or not at all (ADR-028). 387 tests pass;
-ruff is clean. Nothing is stubbed or faked. Scope predicate compilation and the
-entitlement engine remain in Phase 2.
+(ADR-026), bulk import lands whole or not at all (ADR-028), and scopes now
+compile to SQL predicates resolved per permission and failing closed (ADR-029).
+458 tests pass; ruff is clean. Nothing is stubbed or faked. The entitlement
+engine is the remaining Phase 2 item.
 
 ---
 
@@ -218,6 +219,36 @@ Thirty-four tests, built from the files schools actually send — a byte-order
 mark, semicolons, a title row, a repeated heading, `4512.0` where an admission
 number should be, a phone number starting `+`. Three sabotages caught.
 
+**Scope predicate compilation** (`modules/authz/predicates.py`,
+`modules/people/scopes.py`). Scopes are compiled into `WHERE` clauses, so rows a
+caller may not see never enter the result set — and therefore cannot be counted,
+paged, searched or aggregated into an answer.
+
+A defect was found before a line was written: `_load_grants` merged every grant's
+scope into one set and threw the ids away, so a teacher who also held a
+school-wide role for announcements read as *unrestricted*. The principal now
+carries its grants unmerged and `scopes_for(principal, permission)` returns only
+the scopes attached to grants that actually confer it (ADR-029).
+
+Everything fails closed: no principal, no scopes, an unknown kind, or a resource
+with no clause for the kind held all yield `false`. A scopeless read succeeds
+only inside `system_access(reason=…)`, which is tenant-bound and writes a
+security event — so a background job that forgets it reads nothing, visibly, on
+its first run.
+
+Thirty-six tests across every scope kind, composition, leakage through counts,
+totals, search, aggregates and error shape, and cross-tenant attempts with a
+genuinely valid token. The first real scoped endpoints (`/api/v1/students`)
+replace the placeholder route, so the whole chain — token, grants, per-permission
+scopes, predicate, SQL — is exercised over HTTP.
+
+**A lesson about checks, not about code.** Five sabotages were caught. The sixth
+was not: a route made to query the table directly with
+`from sqlalchemy import select as _select` walked past a structural check that
+listed the *unsafe* call names. The check now inverts — every call taking a
+scoped model is suspect unless it is one of the four helpers that carry a
+predicate by construction. A check a rename defeats measures nothing.
+
 ---
 
 ## Next — Phase 2 remainder
@@ -228,7 +259,7 @@ In priority order. Each carries the Bible's Definition of Done.
 2. ~~**People**~~ — **done**. Identity, person, and student/staff/guardian relationships kept properly separate; one person holds several relationships without a duplicated identity (ADR-027).
 3. ~~**Enrolment as history**~~ — **done**. Admission, enrolment, transfer, suspension, withdrawal, readmission, progression, completion, awarding. No `student.class_id`; records are added, never overwritten, and two structural tests fail the commit that reintroduces one.
 4. ~~**Bulk import**~~ — **done**. Preview, column mapping, validation, duplicate detection, dry run, single-transaction apply, refusing reversal, history, audit (ADR-028).
-5. **Scope predicate compilation** — `taught_by_self`, `own_children`, `department` as SQL predicates applied to list queries, with leak-by-row-count tests.
+5. ~~**Scope predicate compilation**~~ — **done**. Every scope kind compiled to SQL, resolved per permission, failing closed, with leak-by-row-count tests and an audited elevation path (ADR-029).
 6. **Entitlement engine** — kept distinct from permission, role, plan, feature availability, usage limit and institution configuration. Being authorized to act is not the same as the institution having purchased the capability.
 
 ---
@@ -253,7 +284,7 @@ Nothing is blocked. Items awaiting external input, none of which stop Phase 2:
 |---|---|---|---|
 | 1 | ~~Schema created by `build_schema()`, not by a migration~~ | — | **Resolved** — Alembic baseline with an RLS gate (ADR-020) |
 | 2 | ~~Sign-out left the access token valid until expiry~~ | — | **Resolved** — every request checks that its session is live. A token naming a session that does not exist, or one that was revoked or rotated away, is refused |
-| 3 | Scopes are parsed and unioned but not yet compiled to SQL predicates | Medium | Next Phase 2 item. No route currently returns scoped lists, so nothing is under-enforced today |
+| 3 | ~~Scopes are parsed and unioned but not compiled~~ | — | **Resolved** — ADR-029. The union was itself a widening defect and is gone |
 | 4 | `starlette.testclient` deprecation warning from FastAPI 0.141 | Trivial | Upstream; revisit on the next FastAPI bump |
 | 5 | `_IncludedRouter` traversal in `test_boundaries.py` reaches into a FastAPI internal | Low | Written to accept both routing shapes so it degrades to the public shape rather than silently checking nothing |
 | 6 | No frontend yet | Expected | Phase 4 |
@@ -267,6 +298,8 @@ Nothing is blocked. Items awaiting external input, none of which stop Phase 2:
 - **Before writing any model:** if it belongs to a school, it inherits `TenantOwned`. That single decision gets it a policy and an isolation test automatically. If it does *not*, write down why, as `Tenant`, `TenantDomain`, `User`, and `SecurityEvent` each do in their docstrings.
 - **Before adding a route:** give it a `RequirePermission` dependency, or add it to `PUBLIC_ROUTES` in `test_boundaries.py`. There is no third option.
 - **Before adding a foreign key between two tenant-owned tables:** nothing. It is rewritten to `(tenant_id, id)` automatically by `app.db.tenant_fk`, and a test fails if any key escapes. Do not add a plain single-column key back "because the composite one is awkward to query" — that is the defect ADR-026 records.
+- **Before reading a scoped table:** use `authz.predicates.scoped_select` / `scoped_count` / `scoped_get` / `scoped_exists`. They are the only calls that cannot produce a statement without a predicate, and `test_boundaries.py` fails any route that reaches for `select(Person)` instead — under any alias.
+- **Before writing a background job:** it has no principal, so it reads nothing. Enter `system_access(reason=…)` deliberately. That is the design, not an obstacle.
 - **Before recording where somebody is:** it is an `Enrolment` row with a start and an end, never a column on a person or a relationship. If a screen needs "the current class", ask for the open enrolment. Two tests exist specifically to fail the shortcut.
 - **Before adding a permission:** add it to `CATALOGUE` first. Roles referencing unknown permissions fail the boot.
 - **Never** connect the request path as `edtechx_migrator`. It owns the tables, and `FORCE RLS` is bypassed for owners. The production guard refuses this; development would not notice.

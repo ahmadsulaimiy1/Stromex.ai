@@ -25,17 +25,50 @@ class TenantContextMissing(RuntimeError):
 
 
 @dataclass(frozen=True, slots=True)
+class Grant:
+    """One role grant: what it lets the holder do, and over which records.
+
+    The pairing is the point. A principal's scopes are meaningless as a flat
+    list, because the scope that came with "read announcements across the
+    school" must not widen "read student records". Keeping the permissions and
+    the scope together, per grant, is what makes `scopes_for(permission)`
+    answerable — and a lossy union is what made it unanswerable before.
+
+    Held in `core` as a plain record rather than in `authz`, for the same reason
+    `permissions` is: `core` may not import a module, and the request context
+    has to carry this from the edge to the query.
+    """
+
+    permissions: frozenset[str]
+    scope_kind: str
+    scope_ids: tuple[UUID, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
 class Principal:
     """The authenticated actor, already bound to one tenant."""
 
     user_id: UUID
     membership_id: UUID
     tenant_id: UUID
+    # The union of every grant's permissions, expanded. Correct for the yes/no
+    # question "may this person do X at all" and for nothing else.
     permissions: frozenset[str]
-    scopes: tuple[str, ...]
+    # The grants themselves, unmerged. Which records X applies to is answered
+    # from here, per permission, never from the union above.
+    grants: tuple[Grant, ...]
     session_id: UUID
     authenticated_at: float
     is_platform_operator: bool = False
+
+    @property
+    def scope_kinds(self) -> tuple[str, ...]:
+        """The distinct scope kinds held, for display. Never for enforcement."""
+        seen: list[str] = []
+        for grant in self.grants:
+            if grant.scope_kind not in seen:
+                seen.append(grant.scope_kind)
+        return tuple(seen)
 
 
 _tenant_id: ContextVar[UUID | None] = ContextVar("edtechx_tenant_id", default=None)

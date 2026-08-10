@@ -466,3 +466,41 @@ The failure to design against is not a bad file. It is a *half-applied* one. Fou
 *There is no "update on duplicate" option yet.* Merging two records is a decision with consequences — whose date of birth wins, what happens to the absorbed record's enrolment history — and offering it as a checkbox before that workflow exists would quietly overwrite correct data with a spreadsheet's. Duplicates are skipped or refused; merging gets its own design.
 
 **Enforcement.** `test_bulk_import.py` — 34 tests, built from the files schools actually send: a byte-order mark, semicolons, a title row above the header, a repeated heading, an admission number Excel turned into a float, a phone number beginning with `+`, a class code the school does not have, the same child twice. Three sabotages confirm the safety properties are load-bearing: committing each row as it goes, applying past known-invalid rows, and reversing without checking what has been built on top. All three were caught.
+
+---
+
+## ADR-029 — Scopes compile to SQL, resolved per permission, failing closed
+
+**Status:** Accepted · **Constitutional** · Completes ADR-005 and ADR-004
+
+**Context.** A permission answers *may this person do it*. A scope answers *to which records*. Until this decision the second was parsed and unioned but never enforced, and the way it was carried made enforcement impossible: `_load_grants` merged every grant's scope into one set and discarded the ids.
+
+That was not merely incomplete. It was a live widening defect. A teacher who also held a school-wide role — for announcements, say — read as **unrestricted**, because the union contained a `tenant` scope. Had a scoped list endpoint existed, it would have handed them every student record in the institution on the strength of a permission to write notices.
+
+**Decision.**
+
+1. **Scope is a property of a grant, never of a person.** The principal carries its grants unmerged (`core.context.Grant`), and `authz.scopes.scopes_for(principal, permission)` returns only the scopes attached to grants that actually confer that permission — expansion included, so `people.student.manage` carries its scope to a read. A broad scope on one permission cannot widen another.
+
+2. **A scope becomes a `WHERE` clause.** `authz.predicates` compiles a `ScopeSet` into SQL. Rows the caller may not see never enter the result set, so they are not in the process, the log line, the page total, or whatever the next handler does with the list.
+
+3. **Fail closed on every path.** No principal, no scopes, an unknown scope kind, a resource with no clause for the kind held — every one yields `false`. `true` is reachable only from an explicit `tenant` scope on a plan that permits it, or from an audited `system_access` block. A clause builder that returns `true` raises rather than widening.
+
+4. **The plan belongs to the module that owns the table.** `authz` owns the vocabulary and the composition; `people.scopes` owns the joins. Anything crossing into academics comes from `academics.service` as a `Select`, so the boundary composes into one statement without a module importing tables it does not own.
+
+5. **Composition: union within a permission, intersection between concerns.** Two department scopes reach both departments. Everything else `AND`s and cannot be loosened by a scope — the tenant predicate (RLS, in the database), the permission check (before the query), and any filter the caller adds. A scope only ever narrows.
+
+6. **Elevation is explicit, tenant-bound and audited.** `system_access(reason=...)` is the only way a scopeless read succeeds. It refuses without a tenant — it widens reach within one school, never across two — refuses without a reason, and writes a `system_access` security event. A background job that forgets it reads *nothing*, which fails visibly on the first run instead of invisibly forever.
+
+**Two judgements recorded, because neither is recoverable from the SQL.**
+
+*Scope follows the open placement.* A teacher allocated to 7B reaches the children in 7B now, not a child who left in October. A scope that quietly accumulated everyone who ever sat in the room would grow for years without anybody deciding it should. Historical reach is a separate permission. The one exception is the enrolment plan's unit clause, which reads the placement directly — a head of department asks "which placements were in my department", and the answer must include the ones that ended.
+
+*`subject` is deliberately absent from the student plan.* A subject scope says which courses somebody may configure. Letting it through would turn "may edit the Chemistry syllabus" into "may read every chemistry student's record".
+
+**This complements row-level security; it does not replace it.** RLS is the tenant boundary, enforced by PostgreSQL on every path including raw SQL, and remains load-bearing. Scope is the boundary *within* a tenant, enforced in the query the application builds — which is why `scoped_select`, `scoped_count`, `scoped_get` and `scoped_exists` are the sanctioned path and why `test_boundaries.py` fails any route that queries a scoped table directly.
+
+**Enforcement, and one lesson about enforcement.** `test_scope_predicates.py` — 36 tests across every scope kind, composition, leakage through counts, aggregates, pagination, search and error shape, cross-tenant attempts with a genuinely valid token, and the elevated context. Five sabotages were caught: a fail-open default, scopes unioned across permissions, a count over the table, a 403 that distinguished "out of scope" from "does not exist", and elevation without an audit record.
+
+The sixth was not. A route was made to query the table directly with `from sqlalchemy import select as _select`, and the structural check — which listed the *unsafe* call names — walked straight past it. The check now inverts: every call taking a scoped model is suspect unless it is one of the four helpers that carry a predicate by construction. A check a rename defeats is a check that measures nothing, and that is worth more than the defect it missed.
+
+**Cost.** Every scoped read goes through a helper, and every new scoped resource needs a plan. Both are the point: the helper is the thing that cannot be used without producing a predicate, and a resource with no plan is unreadable rather than unprotected.

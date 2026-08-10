@@ -52,6 +52,11 @@ class SecurityEventKind(str, enum.Enum):
     rate_limited = "rate_limited"
     cross_tenant_write_attempt = "cross_tenant_write_attempt"
     break_glass = "break_glass"
+    # A background job or system operation reading without a scope, inside one
+    # tenant and with a stated reason (`authz.predicates.system_access`).
+    # Recorded at `info`: it is legitimate, and it is exactly the thing somebody
+    # will need to reconstruct when asking why a job read every student record.
+    system_access = "system_access"
 
 
 class Severity(str, enum.Enum):

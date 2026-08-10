@@ -68,7 +68,7 @@ Legend: ✅ done · 🔨 in progress · ⬜ not started
 - ✅ Nine scope kinds with union semantics
 - ✅ Eleven system role templates
 - ✅ `RequirePermission` dependency
-- ⬜ Scope → SQL predicate compilation — Phase 2
+- ✅ Scope → SQL predicate compilation, per permission, failing closed (ADR-029)
 - ⬜ Delegation ceiling · ⬜ Dual control · ⬜ Sensitive-field redaction
 
 **Audit**
@@ -82,7 +82,7 @@ Legend: ✅ done · 🔨 in progress · ⬜ not started
 - ✅ Core-layering test
 - ✅ Provider-SDK confinement test
 - ✅ Route coverage test — **proven load-bearing**
-- ✅ 387 tests passing; ruff clean
+- ✅ 458 tests passing; ruff clean
 - ✅ Alembic baseline migration with an RLS gate · ⬜ CI pipeline
 
 ## Phase 2 — Institution 🔨
@@ -102,7 +102,11 @@ institution's own vocabulary, per-row validation, duplicate detection, dry run,
 single-transaction apply, refusing reversal, import history and audit ·
 ✅ journey 11
 
-⬜ custom fields · ⬜ entitlement engine · ⬜ scope predicates · ⬜ journey 9.
+✅ **scope predicate compilation** — every scope kind compiled to SQL, resolved
+per permission, leak-tested through counts, totals, search, aggregates and error
+shape · ✅ teaching allocations · ✅ the first scoped endpoints
+
+⬜ custom fields · ⬜ entitlement engine · ⬜ journey 9.
 
 ## Phase 3 — Operations ⬜
 

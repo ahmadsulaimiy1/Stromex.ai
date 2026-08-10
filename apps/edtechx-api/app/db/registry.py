@@ -21,6 +21,7 @@ from app.modules.academics.models import (
     GradingScale,
     Level,
     ProgressionRule,
+    TeachingAllocation,
 )
 from app.modules.audit.models import AuditEvent, SecurityEvent
 from app.modules.authz.models import (
@@ -73,6 +74,7 @@ __all__ = [
     "SecurityEvent",
     "StaffRelationship",
     "StudentRelationship",
+    "TeachingAllocation",
     "Tenant",
     "TenantDomain",
     "TerminologySet",

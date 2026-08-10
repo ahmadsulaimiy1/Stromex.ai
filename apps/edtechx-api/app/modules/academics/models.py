@@ -35,6 +35,7 @@ from sqlalchemy import (
     Date,
     Enum,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
@@ -333,3 +334,55 @@ class ProgressionRule(UUIDPrimaryKey, Timestamped, TenantOwned, Base):
         default=ProgressionOutcome.repeat,
     )
     sequence: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
+class TeachingAllocation(UUIDPrimaryKey, Timestamped, TenantOwned, Base):
+    """Who teaches what, to whom.
+
+    Keyed on `membership_id` rather than on a staff record, because this table
+    exists to answer an *authorization* question — "which class groups does the
+    person making this request teach?" — and authorization is built on the
+    membership throughout. A teacher with no login teaches nobody as far as the
+    product is concerned, because nobody is making requests as them.
+
+    `course_id` is nullable: a form tutor is allocated to a group and to no
+    particular subject, and a lecturer is allocated to a module and a seminar
+    group. Both are this table with a different column filled.
+    """
+
+    __tablename__ = "teaching_allocations"
+    __table_args__ = (
+        Index(
+            "ix_teaching_allocations_tenant_membership",
+            "tenant_id",
+            "membership_id",
+        ),
+        Index(
+            "ix_teaching_allocations_tenant_class",
+            "tenant_id",
+            "class_group_id",
+        ),
+    )
+
+    membership_id: Mapped[uuid.UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("memberships.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    class_group_id: Mapped[uuid.UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("class_groups.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    course_id: Mapped[uuid.UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("courses.id", ondelete="CASCADE")
+    )
+    academic_year_id: Mapped[uuid.UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("academic_years.id", ondelete="RESTRICT")
+    )
+    # The person a parent is told to contact, where the institution names one.
+    is_primary: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    starts_on: Mapped[date | None] = mapped_column(Date)
+    ends_on: Mapped[date | None] = mapped_column(Date)
+
+    @property
+    def is_current(self) -> bool:
+        return self.ends_on is None

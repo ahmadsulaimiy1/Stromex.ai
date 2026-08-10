@@ -21,13 +21,13 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core import errors, rate_limit
-from app.core.context import Principal, set_principal, set_tenant
+from app.core.context import Grant, Principal, set_principal, set_tenant
 from app.core.security import InvalidToken, decode_access_token, is_elevated
 from app.db.session import bind_tenant, get_session_factory
 from app.modules.audit.models import SecurityEvent, SecurityEventKind, Severity
 from app.modules.authz import permissions as perms
 from app.modules.authz.models import MembershipRole
-from app.modules.authz.scopes import ScopeSet, parse_scopes
+from app.modules.authz.scopes import InvalidScope, Scope
 from app.modules.identity import service as identity_service
 from app.modules.identity.models import Membership, MembershipStatus, User, UserStatus
 from app.modules.tenancy.resolver import (
@@ -195,13 +195,13 @@ def get_optional_principal(
     if user is None or user.status is not UserStatus.active:
         raise errors.NotAuthenticated()
 
-    granted, scopes = _load_grants(db, membership.id)
+    granted, grants = _load_grants(db, membership.id)
     principal = Principal(
         user_id=user.id,
         membership_id=membership.id,
         tenant_id=claims.tenant_id,
         permissions=granted,
-        scopes=tuple(s.kind.value for s in scopes.scopes),
+        grants=grants,
         session_id=claims.session_id,
         authenticated_at=claims.authenticated_at.timestamp(),
         is_platform_operator=user.is_platform_operator,
@@ -211,18 +211,47 @@ def get_optional_principal(
     return principal
 
 
-def _load_grants(db: Session, membership_id: uuid.UUID) -> tuple[frozenset[str], ScopeSet]:
+def _load_grants(
+    db: Session, membership_id: uuid.UUID
+) -> tuple[frozenset[str], tuple[Grant, ...]]:
+    """Load the grants, keeping each one's permissions attached to its scope.
+
+    The pairing is load-bearing and its absence was a defect. Unioning every
+    grant's scope into one set — as this did — meant a teacher who also held a
+    school-wide role for announcements read as unrestricted *everywhere*, and
+    the ids were discarded so no predicate could have been built from the result
+    anyway. Scope is a property of a grant, never of a person.
+    """
     now = datetime.now(UTC)
-    grants = (
+    rows = (
         db.execute(select(MembershipRole).where(MembershipRole.membership_id == membership_id))
         .scalars()
         .all()
     )
-    effective = [g for g in grants if g.is_effective(now)]
+    effective = [g for g in rows if g.is_effective(now)]
+
     granted: set[str] = set()
+    carried: list[Grant] = []
     for grant in effective:
-        granted |= grant.role.permission_keys
-    return perms.expand(granted), parse_scopes([g.scope for g in effective])
+        permissions = frozenset(grant.role.permission_keys)
+        granted |= permissions
+        try:
+            scope = Scope.from_json(grant.scope)
+        except InvalidScope:
+            # A grant whose scope cannot be parsed confers no reach. Its
+            # permissions are still counted for the yes/no check, so the person
+            # is told "not these records" rather than "not at all" — and every
+            # scoped query returns nothing until somebody fixes the row.
+            logger.warning("unparseable_scope", membership_id=str(membership_id))
+            continue
+        carried.append(
+            Grant(
+                permissions=permissions,
+                scope_kind=scope.kind.value,
+                scope_ids=tuple(sorted(scope.ids)),
+            )
+        )
+    return perms.expand(granted), tuple(carried)
 
 
 OptionalPrincipal = Annotated[Principal | None, Depends(get_optional_principal)]

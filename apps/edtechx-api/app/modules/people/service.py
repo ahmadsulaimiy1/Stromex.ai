@@ -968,3 +968,19 @@ def _now() -> datetime:
     from datetime import UTC
 
     return datetime.now(UTC)
+
+
+def people_by_ids(db: Session, ids) -> dict[uuid.UUID, Person]:
+    """Load people by id, for callers holding ids from rows they may already see.
+
+    Exists so a route never writes `db.get(Person, …)` itself. The distinction
+    is real: fetching a person whose id came out of an already-scoped query is
+    implied by that query, and fetching one whose id came out of a URL is an
+    IDOR. Only the first is what this function is for, and keeping it in the
+    owning module is what lets `test_boundaries.py` forbid the second outright.
+    """
+    wanted = [i for i in ids if i is not None]
+    if not wanted:
+        return {}
+    rows = db.execute(select(Person).where(Person.id.in_(wanted))).scalars().all()
+    return {person.id: person for person in rows}

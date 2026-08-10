@@ -18,8 +18,15 @@ from typing import Any
 
 class ScopeKind(str, enum.Enum):
     tenant = "tenant"
+    # Three words for a position in the same tree. ADR-024 made campus, faculty,
+    # school and department one `academic_units` table, so all three resolve
+    # through it — including descendants, because a head of faculty who could
+    # not see the departments inside it would hold a scope that means nothing.
     campus = "campus"
     department = "department"
+    academic_unit = "academic_unit"
+    programme = "programme"
+    cohort = "cohort"
     level = "level"
     klass = "class"
     subject = "subject"
@@ -28,11 +35,21 @@ class ScopeKind(str, enum.Enum):
     self_only = "self"
 
 
+# The kinds that name a position in the academic-unit tree. Kept as one set so
+# a resource's plan writes the subtree clause once rather than three times.
+UNIT_KINDS: frozenset[ScopeKind] = frozenset(
+    {ScopeKind.campus, ScopeKind.department, ScopeKind.academic_unit}
+)
+
+
 # Scopes that name a set of resource ids.
 ID_BEARING: frozenset[ScopeKind] = frozenset(
     {
         ScopeKind.campus,
         ScopeKind.department,
+        ScopeKind.academic_unit,
+        ScopeKind.programme,
+        ScopeKind.cohort,
         ScopeKind.level,
         ScopeKind.klass,
         ScopeKind.subject,
@@ -119,3 +136,40 @@ class ScopeSet:
 
 def parse_scopes(payloads: Iterable[dict[str, Any] | None]) -> ScopeSet:
     return ScopeSet.of(Scope.from_json(p) for p in payloads)
+
+
+def scopes_for(principal: object, permission: str) -> ScopeSet:
+    """The scopes a principal holds **for one permission**.
+
+    The single most important function in this module, and the one whose
+    absence was a defect. A principal's scopes are not a property of the
+    principal; they are a property of each grant. Somebody who is a teacher
+    (students, scoped to what they teach) and also a communications officer
+    (announcements, school-wide) holds a `tenant` scope — and reading it as
+    "this person is unrestricted" would hand them every student record in the
+    school on the strength of a permission to write notices.
+
+    So only the grants that actually confer `permission` contribute, and their
+    scopes are unioned. A principal holding nothing relevant gets an empty set,
+    which every predicate reads as *no rows* rather than as *all rows*.
+
+    Expansion matters here: a grant of `people.student.manage` confers
+    `people.student.read`, so its scope must apply to a read.
+    """
+    from app.modules.authz import permissions as perms
+
+    grants = getattr(principal, "grants", ()) if principal is not None else ()
+    relevant: list[Scope] = []
+    for grant in grants:
+        if not perms.has(perms.expand(set(grant.permissions)), permission):
+            continue
+        try:
+            relevant.append(
+                Scope(ScopeKind(grant.scope_kind), frozenset(grant.scope_ids))
+            )
+        except (ValueError, InvalidScope):
+            # A grant whose scope cannot be understood confers nothing. Failing
+            # closed here is the difference between a corrupted row costing a
+            # person some access and it costing a school its confidentiality.
+            continue
+    return ScopeSet.of(relevant)

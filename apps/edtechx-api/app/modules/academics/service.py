@@ -30,6 +30,9 @@ from app.modules.academics.structure import Cohort, Programme, Qualification
 
 __all__ = [
     "ResolvedPlacement",
+    "academic_unit_subtree",
+    "class_group_ids_taught_by",
+    "class_group_ids_under",
     "current_year",
     "find_class_group",
     "find_cohort",
@@ -37,6 +40,7 @@ __all__ = [
     "find_level",
     "find_programme",
     "find_qualification",
+    "programme_ids_under",
     "resolve_placement",
 ]
 
@@ -193,4 +197,73 @@ def resolve_placement(
         class_group_id=group.id if group else None,
         cohort_id=cohort.id if cohort else None,
         problems=tuple(problems),
+    )
+
+
+# --- selectables for the authorization layer ------------------------------
+#
+# Returned as SQLAlchemy `Select` objects rather than as lists of ids, and that
+# is the whole point. An authorization boundary composed into one statement is
+# enforced by the database; the same boundary fetched into Python and expanded
+# is one refactor away from being applied after the rows have arrived.
+#
+# They live here rather than in the modules that use them because a module owns
+# its tables (EDTECHX_ARCHITECTURE.md §3). `people` needs to know which
+# programmes sit under a faculty; it does not need to import `programmes`.
+
+
+def academic_unit_subtree(unit_ids):
+    """A recursive walk down the unit tree, as a CTE.
+
+    A head of faculty who could not see the departments inside it holds a scope
+    that means nothing, so the walk is downwards and recursive — to whatever
+    depth this institution happens to nest (ADR-024).
+
+    The name carries a digest of the ids because two of these can appear in one
+    statement: a head of two departments holds two scopes, both of which compile
+    to a subtree walk, and SQLAlchemy refuses two unrelated CTEs sharing a name.
+    Deriving the name from the ids also makes the *same* subtree deduplicate
+    rather than being emitted twice.
+    """
+    import hashlib
+
+    from app.modules.academics.structure import AcademicUnit
+
+    digest = hashlib.sha1(
+        ",".join(sorted(str(i) for i in unit_ids)).encode(), usedforsecurity=False
+    ).hexdigest()[:12]
+    roots = select(AcademicUnit.id.label("id")).where(AcademicUnit.id.in_(unit_ids))
+    tree = roots.cte(f"unit_subtree_{digest}", recursive=True)
+    return tree.union_all(select(AcademicUnit.id).where(AcademicUnit.parent_id == tree.c.id))
+
+
+def programme_ids_under(unit_ids):
+    """Programmes belonging to any of these academic units, or to units below them."""
+    subtree = academic_unit_subtree(unit_ids)
+    return select(Programme.id).where(
+        Programme.academic_unit_id.in_(select(subtree.c.id))
+    )
+
+
+def class_group_ids_taught_by(membership_id):
+    """The class groups this membership currently teaches.
+
+    Current, not ever. A teacher's reach follows their present allocation; a
+    scope that quietly accumulated every group they had ever taught would grow
+    for years without anybody deciding it should.
+    """
+    from app.modules.academics.models import TeachingAllocation
+
+    return select(TeachingAllocation.class_group_id).where(
+        TeachingAllocation.membership_id == membership_id,
+        TeachingAllocation.ends_on.is_(None),
+    )
+
+
+def class_group_ids_under(unit_ids):
+    """Class groups whose level belongs to a programme under one of these units."""
+    return select(ClassGroup.id).where(
+        ClassGroup.level_id.in_(
+            select(Level.id).where(Level.programme_id.in_(programme_ids_under(unit_ids)))
+        )
     )
