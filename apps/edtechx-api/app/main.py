@@ -78,7 +78,15 @@ def create_app() -> FastAPI:
             path=request.url.path,
             **{k: str(v) for k, v in exc.context.items()},
         )
-        return JSONResponse(status_code=exc.status_code, content=exc.to_body())
+        headers: dict[str, str] = {}
+        retry_after = getattr(exc, "retry_after", None)
+        if retry_after is not None:
+            # Without this a well-behaved client has no way to back off
+            # correctly, and retries in a tight loop against the limiter.
+            headers["Retry-After"] = str(retry_after)
+        return JSONResponse(
+            status_code=exc.status_code, content=exc.to_body(), headers=headers
+        )
 
     @app.exception_handler(Exception)
     async def handle_unexpected(request: Request, exc: Exception) -> JSONResponse:

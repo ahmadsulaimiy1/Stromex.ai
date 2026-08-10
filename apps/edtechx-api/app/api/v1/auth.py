@@ -7,11 +7,17 @@ the host, and deliberately uniform in what it reveals.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Request, Response, status
+from fastapi import APIRouter, Depends, Request, Response, status
 from pydantic import BaseModel, Field
 
-from app.api.deps import CurrentPrincipal, DbSession, TenantContext
-from app.core import errors
+from app.api.deps import (
+    CurrentPrincipal,
+    DbSession,
+    RateLimit,
+    TenantContext,
+    limit_by_account,
+)
+from app.core import errors, rate_limit
 from app.modules.identity import service as identity_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -57,12 +63,22 @@ def _client_ip(request: Request) -> str | None:
     "/sign-in",
     response_model=TokenResponse,
     summary="Sign in at this school",
-    responses={401: {"description": "Credentials not recognised"}},
+    responses={
+        401: {"description": "Credentials not recognised"},
+        429: {"description": "Too many attempts"},
+    },
+    dependencies=[
+        Depends(RateLimit(rate_limit.SIGN_IN_PER_IP, by="ip")),
+        Depends(RateLimit(rate_limit.SIGN_IN_PER_TENANT, by="tenant")),
+    ],
 )
 def sign_in(
     payload: SignInRequest, request: Request, tenant: TenantContext, db: DbSession
 ) -> TokenResponse:
     school = _require_tenant(tenant)
+    # Keyed on the submitted address, whether or not it names a real account:
+    # limiting only real accounts would turn the 429 into an existence oracle.
+    limit_by_account(request, tenant, payload.email)
     tokens = identity_service.authenticate(
         db,
         tenant_id=school.id,
@@ -82,6 +98,8 @@ def sign_in(
     "/refresh",
     response_model=TokenResponse,
     summary="Exchange a refresh token for a new pair",
+    responses={429: {"description": "Too many attempts"}},
+    dependencies=[Depends(RateLimit(rate_limit.REFRESH_PER_IP, by="ip"))],
 )
 def refresh(
     payload: RefreshRequest, request: Request, tenant: TenantContext, db: DbSession

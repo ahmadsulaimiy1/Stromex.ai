@@ -62,6 +62,20 @@ def _schema() -> Iterator[None]:
     yield
 
 
+@pytest.fixture(autouse=True)
+def _fresh_rate_limiter() -> Iterator[None]:
+    """Start every test with empty buckets.
+
+    Without this, whichever test ran first would decide whether the next one
+    was rate limited — and the suite would pass or fail on ordering.
+    """
+    from app.core import rate_limit
+
+    rate_limit.clear_all()
+    yield
+    rate_limit.clear_all()
+
+
 @pytest.fixture
 def db() -> Iterator[Session]:
     """A session with no tenant bound — used for platform-level fixtures."""

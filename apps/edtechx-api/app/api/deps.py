@@ -9,6 +9,7 @@ through.
 
 from __future__ import annotations
 
+import hashlib
 import uuid
 from collections.abc import Iterator
 from datetime import UTC, datetime
@@ -19,7 +20,7 @@ from fastapi import Depends, Request
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core import errors
+from app.core import errors, rate_limit
 from app.core.context import Principal, set_principal, set_tenant
 from app.core.security import InvalidToken, decode_access_token, is_elevated
 from app.db.session import bind_tenant, get_session_factory
@@ -254,3 +255,78 @@ class RequirePermission:
         ):
             raise errors.ElevationRequired()
         return principal
+
+
+# --- step 3: rate limiting -------------------------------------------------
+
+
+class RateLimit:
+    """Route dependency applying one or more rate-limit policies.
+
+    Ordered deliberately *after* tenant resolution and *before* authentication:
+    every key is tenant-scoped, and an unauthenticated attacker must be limited
+    without first being identified.
+
+    Fails closed. A limiter that cannot decide must not wave traffic through —
+    these are the most exposed routes in the product.
+    """
+
+    def __init__(self, *policies: rate_limit.Policy, by: str = "ip") -> None:
+        self.policies = policies
+        self.by = by
+
+    def __call__(self, request: Request, tenant: TenantContext) -> None:
+        tenant_id = tenant.id if tenant else None
+        identity = self._identity(request)
+        for policy in self.policies:
+            try:
+                decision = rate_limit.consume(policy, identity, tenant_id)
+            except rate_limit.RateLimiterUnavailable as exc:
+                logger.error("rate_limiter_unavailable", policy=policy.name, error=str(exc))
+                raise errors.RateLimited(retry_after=5, policy=policy.name) from exc
+            if not decision:
+                _record_security_event(
+                    SecurityEventKind.rate_limited,
+                    request=request,
+                    tenant_id=tenant_id,
+                    severity=Severity.info,
+                    policy=policy.name,
+                )
+                raise errors.RateLimited(
+                    retry_after=decision.retry_after, policy=policy.name
+                )
+
+    def _identity(self, request: Request) -> str:
+        if self.by == "ip":
+            return request.client.host if request.client else "unknown"
+        if self.by == "tenant":
+            return "all"
+        raise ValueError(f"unknown rate-limit identity {self.by!r}")
+
+
+def limit_by_account(request: Request, tenant: TenantContext, identifier: str) -> None:
+    """Apply the per-account sign-in policy to a submitted identifier.
+
+    Keyed on what was *submitted*, not on an account that exists. Limiting only
+    real accounts would make the 429 an existence oracle — precisely the leak
+    the uniform 401 exists to close.
+    """
+    tenant_id = tenant.id if tenant else None
+    identity = hashlib.sha256(identifier.strip().lower().encode()).hexdigest()[:32]
+    try:
+        decision = rate_limit.consume(
+            rate_limit.SIGN_IN_PER_ACCOUNT, identity, tenant_id
+        )
+    except rate_limit.RateLimiterUnavailable as exc:
+        raise errors.RateLimited(retry_after=5, policy="sign_in.account") from exc
+    if not decision:
+        _record_security_event(
+            SecurityEventKind.rate_limited,
+            request=request,
+            tenant_id=tenant_id,
+            severity=Severity.warning,
+            policy="sign_in.account",
+        )
+        raise errors.RateLimited(
+            retry_after=decision.retry_after, policy="sign_in.account"
+        )

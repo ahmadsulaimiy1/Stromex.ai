@@ -77,6 +77,19 @@ class EntitlementRequired(EdTechXError):
         return body
 
 
+class RateLimited(EdTechXError):
+    """Too many requests. Carries Retry-After so a client can behave well."""
+
+    status_code = 429
+    code = "rate_limited"
+    detail = "Too many attempts. Please wait a moment and try again."
+
+    def __init__(self, retry_after: int, policy: str = "") -> None:
+        super().__init__(None, retry_after=retry_after, policy=policy)
+        self.retry_after = retry_after
+        self.policy = policy
+
+
 class QuotaExceeded(EdTechXError):
     status_code = 429
     code = "quota_exceeded"

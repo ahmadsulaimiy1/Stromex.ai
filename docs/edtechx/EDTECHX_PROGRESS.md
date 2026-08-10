@@ -5,7 +5,7 @@ continue without re-deriving anything. Consolidated from the nine state files
 the brief specified — see `EDTECHX_DECISIONS.md` ADR-015 for why three files
 beat nine.
 
-**Last updated:** session 2
+**Last updated:** session 3
 **Current phase:** Phase 1 complete · Phase 2 in progress
 
 ---
@@ -71,6 +71,8 @@ enrolment) is next.
 | `test_boundaries.py` | 16 | Module imports, core layering, provider-SDK confinement, route coverage |
 | `test_api.py` | 16 | Full lifecycle: host → auth → tenant agreement → permission → response |
 | `test_auth.py` | 24 | Provisioning, sign-in uniformity, lockout, rotation, reuse detection, sign-out, audit |
+| `test_rate_limit.py` | 22 | Atomicity under concurrency, tenant scoping, oracle resistance, fail-closed — on both backends |
+| `test_migrations.py` | 5 | Upgrade, RLS gate, model drift, full downgrade → upgrade cycle |
 
 ---
 
@@ -108,14 +110,45 @@ weakened. Its exception list is still empty.
 
 ---
 
+### Session 3 — migrations and rate limiting
+
+**Alembic baseline** (ADR-020). Migrations connect as `edtechx_migrator`, with
+the URL read from settings so a config edit cannot point one at the
+request-path role. The baseline applies RLS, grants the app role, then
+**verifies** and raises if any tenant-owned table is unprotected. Five tests
+cover it, including a full downgrade → upgrade cycle and an autogenerate drift
+check that fails if a model changes without a migration.
+
+Found immediately: autogenerate creates enum types with their tables and never
+drops them, so downgrade-then-upgrade failed on "type already exists" — exactly
+what an incident rollback does. The down path now drops them explicitly.
+
+**Rate limiting** (ADR-019). Token bucket, atomic, tenant-scoped, failing
+closed. Redis via a Lua script that reads its own clock; an in-process backend
+for development that is refused in production. Applied to sign-in (per IP, per
+submitted account, per tenant) and refresh (per IP), after tenant resolution and
+before authentication.
+
+Verified adversarially: 60 concurrent requests for 10 tokens admit exactly 10 on
+both backends, while a deliberately racy backend admits all 60 — so the test is
+load-bearing. Tenant scoping proven both at the key level and end to end through
+HTTP. The per-account limit is keyed on the *submitted* address, so a 429 cannot
+distinguish a real account from an invented one; the test compares both
+responses byte for byte.
+
+The per-IP limits are deliberately generous because a school is one NATed
+address with several hundred sign-ins before first lesson. The reasoning is in
+ADR-019 so it is not later mistaken for carelessness.
+
+---
+
 ## Next — Phase 2 remainder
 
 In priority order. Each carries the Bible's Definition of Done.
 
-1. **Alembic baseline migration** for the schema, with the RLS gate wired in (the schema is currently built by `app.db.bootstrap`, which is right for tests and development but is not a migration path).
-2. **Rate limiting** on the auth routes — they are the most exposed surface in the product and are currently protected only by lockout.
-3. **TOTP MFA** enrolment and challenge, required for `owner`, `admin`, `bursar`, `principal`.
-4. **Academic structure** — stages, levels, academic years, terms, class groups, subjects, class-subject allocation, grading scales and bands.
+1. **TOTP MFA** enrolment and challenge, required for `owner`, `admin`, `bursar`, `principal`.
+2. **Access-token denylist** in Redis, so sign-out revokes the access token immediately rather than at its 15-minute expiry.
+3. **Academic structure** — stages, levels, academic years, terms, class groups, subjects, class-subject allocation, grading scales and bands.
 5. **People** — students, enrolments, guardians, student–guardian links, custom fields.
 6. **The Four Schools fixture** — configure all four Bible §8 shapes in tests and assert zero code changes were needed. This is the acceptance criterion for Phase 2.
 7. **Scope predicate compilation** — `taught_by_self`, `own_children`, `department` as SQL predicates applied to list queries, with the leak-by-row-count tests.
@@ -142,8 +175,8 @@ Nothing is blocked. Items awaiting external input, none of which stop Phase 2:
 
 | # | Issue | Severity | Plan |
 |---|---|---|---|
-| 1 | Schema is created by `build_schema()`, not by a migration | Medium | Phase 2 item 1. Blocks nothing yet; would block a second deployment |
-| 2 | Redis is configured but unused — no rate limiting or token denylist yet | **High** | The auth routes are live and public. Next item after the migration baseline |
+| 1 | ~~Schema created by `build_schema()`, not by a migration~~ | — | **Resolved** — Alembic baseline with an RLS gate (ADR-020) |
+| 2 | Sign-out revokes the refresh family but the access token stays valid until it expires (≤15 min) | Medium | Redis denylist keyed on `jti`, next after MFA |
 | 3 | Scopes are parsed and unioned but not yet compiled to SQL predicates | Medium | Phase 2 item 7. No route currently returns scoped lists, so nothing is under-enforced today |
 | 4 | `starlette.testclient` deprecation warning from FastAPI 0.141 | Trivial | Upstream; revisit on the next FastAPI bump |
 | 5 | `_IncludedRouter` traversal in `test_boundaries.py` reaches into a FastAPI internal | Low | Written to accept both routing shapes so it degrades to the public shape rather than silently checking nothing |

@@ -24,7 +24,8 @@ Legend: ✅ done · 🔨 in progress · ⬜ not started
 - ✅ Structured logging with request correlation
 - ✅ Error taxonomy (403 permission / 404 scope / 402 entitlement)
 - ✅ Security headers, strict CSP, body-size limit
-- ⬜ Redis wiring (rate limits, token denylist) — **next**, the auth routes are live
+- ✅ Redis-backed rate limiting, atomic and tenant-scoped
+- ⬜ Redis token denylist (sign-out currently leaves the access token valid until expiry)
 
 **Tenancy**
 - ✅ `tenants`, `tenant_domains`
@@ -76,8 +77,8 @@ Legend: ✅ done · 🔨 in progress · ⬜ not started
 - ✅ Core-layering test
 - ✅ Provider-SDK confinement test
 - ✅ Route coverage test — **proven load-bearing**
-- ✅ 152 tests passing; ruff clean
-- ⬜ CI pipeline · ⬜ Alembic baseline migration
+- ✅ 179 tests passing; ruff clean
+- ✅ Alembic baseline migration with an RLS gate · ⬜ CI pipeline
 
 ## Phase 2 — Institution ⬜
 

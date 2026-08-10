@@ -43,9 +43,13 @@ CREATE ROLE edtechx_migrator LOGIN PASSWORD 'edtechx_migrator' NOBYPASSRLS;
 CREATE ROLE edtechx_app      LOGIN PASSWORD 'edtechx_app'      NOBYPASSRLS;
 CREATE DATABASE edtechx      OWNER edtechx_migrator;
 CREATE DATABASE edtechx_test OWNER edtechx_migrator;
+-- Scratch database for the migration tests. The migrator role deliberately
+-- lacks CREATEDB, so this is created once, here.
+CREATE DATABASE edtechx_mig  OWNER edtechx_migrator;
 SQL
 sudo -u postgres psql -d edtechx      -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto' -c 'CREATE EXTENSION IF NOT EXISTS citext'
 sudo -u postgres psql -d edtechx_test -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto' -c 'CREATE EXTENSION IF NOT EXISTS citext'
+sudo -u postgres psql -d edtechx_mig  -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto' -c 'CREATE EXTENSION IF NOT EXISTS citext'
 
 # 2. Dependencies
 python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
@@ -53,8 +57,10 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
 # 3. Configuration
 cp .env.example .env
 
-# 4. Schema, with row-level security applied and verified
-.venv/bin/python -c "from app.db.bootstrap import build_schema; print(build_schema())"
+# 4. Schema. In production this is `alembic upgrade head`, which applies row-
+#    level security and refuses to complete if any tenant-owned table is left
+#    unprotected. `build_schema()` is the equivalent for tests and development.
+.venv/bin/alembic upgrade head
 
 # 5. Run
 .venv/bin/uvicorn app.main:app --reload
@@ -86,6 +92,8 @@ These gate a release. A red run is not a "known failure":
 | `test_authz.py` | Permission expansion cannot leak across resources |
 | `test_security.py` | Tokens, hashing, and the production config guard |
 | `test_api.py` | The request lifecycle enforces all of the above end to end |
+| `test_rate_limit.py` | The limiter is atomic, tenant-scoped, and not an existence oracle |
+| `test_migrations.py` | The migration path produces the protected schema the models describe |
 
 ## Trying tenant isolation by hand
 
@@ -120,3 +128,16 @@ app/
 A module owns its tables and is read through its service layer, never by
 importing its models. `test_boundaries.py` enforces this, and its exception list
 is empty.
+
+
+## Redis
+
+Required in production for rate limiting. A per-process limiter multiplies every
+limit by the worker count while appearing to work, so `get_backend()` refuses
+one outside development.
+
+```bash
+redis-server --daemonize yes
+```
+
+Without it, development falls back to the in-process backend with a warning.
