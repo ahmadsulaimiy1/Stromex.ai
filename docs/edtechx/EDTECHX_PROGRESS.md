@@ -24,8 +24,10 @@ academic engine (ADR-024) and the people-and-enrolment model (ADR-027), and a
 cross-tenant *reference* hole in the isolation spine has been found and closed
 (ADR-026), bulk import lands whole or not at all (ADR-028), and scopes now
 compile to SQL predicates resolved per permission and failing closed (ADR-029).
-458 tests pass; ruff is clean. Nothing is stubbed or faked. The entitlement
-engine is the remaining Phase 2 item.
+Entitlement is separated from authorization in both directions (ADR-030). 503
+tests pass; ruff is clean. Nothing is stubbed or faked. **Phase 2 is
+substantially complete**; custom fields remain, and Phase 3 (daily operations)
+is next.
 
 ---
 
@@ -249,6 +251,27 @@ listed the *unsafe* call names. The check now inverts — every call taking a
 scoped model is suspect unless it is one of the four helpers that carry a
 predicate by construction. A check a rename defeats measures nothing.
 
+**Entitlement engine** (`modules/billing/`). Seven concepts kept apart, and two
+one-way rules: a person may be entitled to do what the institution has not
+bought (402 and an upgrade path), and buying a feature never grants anybody a
+permission (the engine has no opinion about who may act).
+
+Four negative answers rather than one, asked in an order that never tells a
+school it disabled something it could not have had — no subscription, not in
+plan, switched off by the institution, allowance spent. They map to three HTTP
+answers because the reader is three different people: upgrade the plan, ask your
+administrator, wait for the period to roll.
+
+A limit (students on the roll) and a meter (tokens this month) are different
+things. A school over its student limit must still be able to take a register.
+`past_due` still entitles, for the same reason. A limit the plan never mentions
+is zero, not unlimited.
+
+Twenty-nine tests; four sabotages caught. A fifth finding came from a test
+rather than a sabotage: the "no plan name outside billing" check flagged the
+`institution.*` permission module, so plan keys are now prefixed `plan.` and the
+check is exact rather than approximate.
+
 ---
 
 ## Next — Phase 2 remainder
@@ -260,7 +283,8 @@ In priority order. Each carries the Bible's Definition of Done.
 3. ~~**Enrolment as history**~~ — **done**. Admission, enrolment, transfer, suspension, withdrawal, readmission, progression, completion, awarding. No `student.class_id`; records are added, never overwritten, and two structural tests fail the commit that reintroduces one.
 4. ~~**Bulk import**~~ — **done**. Preview, column mapping, validation, duplicate detection, dry run, single-transaction apply, refusing reversal, history, audit (ADR-028).
 5. ~~**Scope predicate compilation**~~ — **done**. Every scope kind compiled to SQL, resolved per permission, failing closed, with leak-by-row-count tests and an audited elevation path (ADR-029).
-6. **Entitlement engine** — kept distinct from permission, role, plan, feature availability, usage limit and institution configuration. Being authorized to act is not the same as the institution having purchased the capability.
+6. ~~**Entitlement engine**~~ — **done**. Distinct from permission, role, scope, plan, feature availability, usage limit and institution configuration, in both directions (ADR-030).
+7. **Custom fields** on core entities — the remaining Phase 2 item.
 
 ---
 
@@ -300,6 +324,7 @@ Nothing is blocked. Items awaiting external input, none of which stop Phase 2:
 - **Before adding a foreign key between two tenant-owned tables:** nothing. It is rewritten to `(tenant_id, id)` automatically by `app.db.tenant_fk`, and a test fails if any key escapes. Do not add a plain single-column key back "because the composite one is awkward to query" — that is the defect ADR-026 records.
 - **Before reading a scoped table:** use `authz.predicates.scoped_select` / `scoped_count` / `scoped_get` / `scoped_exists`. They are the only calls that cannot produce a statement without a predicate, and `test_boundaries.py` fails any route that reaches for `select(Person)` instead — under any alias.
 - **Before writing a background job:** it has no principal, so it reads nothing. Enter `system_access(reason=…)` deliberately. That is the design, not an obstacle.
+- **Before gating a capability:** ask which question you mean. `RequirePermission` is what this person may do; `RequireEntitlement` is what this institution has bought; `billing.require_meter` is how much is left this period. They are three calls because they are three questions, and a route needing two declares both.
 - **Before recording where somebody is:** it is an `Enrolment` row with a start and an end, never a column on a person or a relationship. If a screen needs "the current class", ask for the open enrolment. Two tests exist specifically to fail the shortcut.
 - **Before adding a permission:** add it to `CATALOGUE` first. Roles referencing unknown permissions fail the boot.
 - **Never** connect the request path as `edtechx_migrator`. It owns the tables, and `FORCE RLS` is bypassed for owners. The production guard refuses this; development would not notice.

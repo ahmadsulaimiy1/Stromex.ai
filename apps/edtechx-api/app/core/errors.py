@@ -60,6 +60,23 @@ class ResourceNotFound(EdTechXError):
     detail = "That item could not be found."
 
 
+class FeatureDisabled(EdTechXError):
+    """The plan includes this; the institution has switched it off.
+
+    Deliberately *not* a 402. Telling a teacher to upgrade a plan their school
+    already pays for sends them to the wrong person and implies a cost that does
+    not exist. The right answer names the administrator, not the invoice.
+    """
+
+    status_code = 403
+    code = "feature_disabled"
+    detail = "An administrator has switched this off for your institution."
+
+    def __init__(self, feature: str, detail: str | None = None) -> None:
+        super().__init__(detail or self.detail)
+        self.feature = feature
+
+
 class EntitlementRequired(EdTechXError):
     """The plan does not include this capability — an upgrade path, not a wall."""
 
@@ -91,9 +108,20 @@ class RateLimited(EdTechXError):
 
 
 class QuotaExceeded(EdTechXError):
+    """The allowance for this billing period is spent.
+
+    A 429 rather than a 402, because it is a rate over time that resolves on its
+    own when the period rolls. A 402 would suggest the school has bought the
+    wrong thing, when in fact it has used the right thing thoroughly.
+    """
+
     status_code = 429
     code = "quota_exceeded"
     detail = "You have reached your allowance for this period."
+
+    def __init__(self, meter: str = "", detail: str | None = None) -> None:
+        super().__init__(detail, meter=meter)
+        self.meter = meter
 
 
 class ValidationFailed(EdTechXError):

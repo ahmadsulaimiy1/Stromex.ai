@@ -396,3 +396,36 @@ class RequireElevation:
                 f"{self.action} needs you to confirm your password again."
             )
         return principal
+
+
+# --- step 4: entitlement, after permission --------------------------------
+
+
+class RequireEntitlement:
+    """Route dependency asserting the *institution* has a capability.
+
+    Deliberately separate from `RequirePermission`, and deliberately used
+    *after* it. The two answer different questions and neither implies the
+    other: a registrar may be entirely entitled to publish AI-drafted comments
+    while the school has not bought the assistants (402), and a school that buys
+    the Design Studio has not thereby made its teachers able to rebrand it (403).
+
+    The ordering is a departure from the sequence originally written in
+    `EDTECHX_PERMISSION_MODEL.md` §5, for two reasons that agree: a permission
+    check is a set-membership test and an entitlement check is a database read,
+    so permission first is cheaper; and answering 402 to somebody who could
+    never use the feature anyway tells them what their school has and has not
+    paid for.
+    """
+
+    def __init__(self, feature: str) -> None:
+        from app.modules.billing import catalogue
+
+        # Validated at import time, so a typo fails the boot, not a request.
+        catalogue.validate_feature(feature)
+        self.feature = feature
+
+    def __call__(self, db: Annotated[Session, Depends(get_db)]) -> None:
+        from app.modules.billing import service as billing
+
+        billing.require(db, self.feature)

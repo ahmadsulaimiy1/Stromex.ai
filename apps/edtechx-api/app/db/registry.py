@@ -29,6 +29,15 @@ from app.modules.authz.models import (
     Role,
     RolePermission,
 )
+from app.modules.billing.models import (
+    FeatureSetting,
+    Plan,
+    PlanFeature,
+    PlanLimit,
+    Subscription,
+    SubscriptionOverride,
+    UsageRecord,
+)
 from app.modules.customization.models import TerminologySet
 from app.modules.identity.models import (
     Membership,
@@ -58,6 +67,7 @@ __all__ = [
     "ClassGroup",
     "Enrolment",
     "EnrolmentEvent",
+    "FeatureSetting",
     "GradingBand",
     "GradingScale",
     "GuardianRelationship",
@@ -67,6 +77,9 @@ __all__ = [
     "Membership",
     "MembershipRole",
     "Person",
+    "Plan",
+    "PlanFeature",
+    "PlanLimit",
     "ProgressionRule",
     "QualificationAward",
     "Role",
@@ -74,10 +87,13 @@ __all__ = [
     "SecurityEvent",
     "StaffRelationship",
     "StudentRelationship",
+    "Subscription",
+    "SubscriptionOverride",
     "TeachingAllocation",
     "Tenant",
     "TenantDomain",
     "TerminologySet",
+    "UsageRecord",
     "User",
     "UserSession",
 ]

@@ -1,6 +1,6 @@
 # EdirasX Test Strategy and Status
 
-**Version:** 1.5 · **Status as of:** session 5 — **458 passing, 0 failing**
+**Version:** 1.6 · **Status as of:** session 5 — **503 passing, 0 failing**
 
 ---
 
@@ -49,6 +49,7 @@ A release does not go out with any of these red. They are not "known failures".
 | `test_people_enrolment.py` | A person's record and history cannot be rewritten, lost, or seen by another institution |
 | `test_bulk_import.py` | No import can leave a school's records half-changed |
 | `test_scope_predicates.py` | Nobody learns anything they were not granted — by any route, count, total, search or aggregate |
+| `test_entitlements.py` | What a person may do and what the institution has bought stay separate in both directions |
 | `test_boundaries.py` | Boundaries hold; no route is unguarded |
 | `test_authz.py` | Permissions cannot leak across resources |
 | `test_security.py` | Credentials, tokens, and production configuration |
@@ -382,6 +383,10 @@ driver names; oversized bodies rejected at the edge.
 | A page total is scoped | The endpoint made to count the table | Flagged: the total exceeded what the caller could read |
 | Out-of-scope and non-existent are the same answer | A 403 introduced for records that exist | Flagged on the byte-comparison of the two responses |
 | Elevation is audited | The security event removed | Flagged |
+| An unlisted limit is zero | Made to default to unlimited | Flagged — the failure mode of every entitlement system that defaults to allow |
+| An institution cannot enable what it never bought | The setting made to override the plan | Flagged |
+| Disabled and not-in-plan are different answers | Collapsed into one 402 | Two tests failed |
+| `past_due` keeps the register | Made to stop entitling | Flagged |
 | **Routes cannot query a scoped table directly** | `from sqlalchemy import select as _select` in a handler | **Not caught.** The check listed unsafe call *names*, and a rename walked past it. Now inverted: every call taking a scoped model is suspect unless it is one of the four helpers that carry a predicate by construction. Re-sabotaged; caught |
 
 ---

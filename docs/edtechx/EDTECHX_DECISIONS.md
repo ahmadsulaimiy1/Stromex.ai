@@ -504,3 +504,51 @@ That was not merely incomplete. It was a live widening defect. A teacher who als
 The sixth was not. A route was made to query the table directly with `from sqlalchemy import select as _select`, and the structural check — which listed the *unsafe* call names — walked straight past it. The check now inverts: every call taking a scoped model is suspect unless it is one of the four helpers that carry a predicate by construction. A check a rename defeats is a check that measures nothing, and that is worth more than the defect it missed.
 
 **Cost.** Every scoped read goes through a helper, and every new scoped resource needs a plan. Both are the point: the helper is the thing that cannot be used without producing a predicate, and a resource with no plan is unreadable rather than unprotected.
+
+---
+
+## ADR-030 — Entitlement is not authorization, and neither implies the other
+
+**Status:** Accepted · **Constitutional**
+
+**Context.** Seven things are routinely collapsed into one boolean, and each collapse breaks something specific:
+
+| Concept | Question | Where it lives |
+|---|---|---|
+| Identity | Who is signing in? | `identity.User` |
+| Role | Who is this person here? | `authz` role grants |
+| Permission | May they perform this action at all? | `authz.permissions` |
+| Scope | Over which records? | `authz.predicates` (ADR-029) |
+| Entitlement | Has the institution bought this? | `billing` |
+| Feature availability | Has the institution switched it on? | `billing`, and **not** the same question |
+| Usage limit | How much may be consumed? | `billing`, and not that question either |
+
+**Decision.** Two one-way rules, both enforced by keeping the checks separate.
+
+*A permission is not an entitlement.* A registrar may be entirely entitled to publish AI-drafted comments while the school has not bought the assistants. The answer is **402** with an upgrade path, not 403.
+
+*An entitlement is not a permission.* Buying the Design Studio must never make a teacher able to rebrand the platform. The entitlement engine has no opinion about who may act, which is exactly right.
+
+**Permission is checked before entitlement**, a deliberate departure from the order in `EDTECHX_PERMISSION_MODEL.md` §5. Two reasons agree: a permission check is a set-membership test and an entitlement check is a database read, so permission first is cheaper; and answering 402 to somebody who could never use the feature anyway tells them what their school has and has not paid for.
+
+**Four negative answers, not one.** `no_subscription`, `not_in_plan`, `disabled_by_institution`, `limit_reached` — asked in that order, so a school is never told it disabled something it could not have had. They map to three HTTP answers because the reader is three different people:
+
+- **402** — upgrade the plan. Said to the person who signs cheques.
+- **403** — an administrator switched this off. Said to the person down the corridor. Telling a teacher to upgrade a plan their school already pays for sends them to the wrong person and implies a cost that does not exist.
+- **429** — this period's allowance is spent. Said to nobody; it resolves when the period rolls.
+
+**Feature availability is a fourth table, and the asymmetry is the point.** `feature_settings` can only ever *disable*. An institution enabling something its plan does not include would put the entitlement boundary inside the tenant, and plans are the one thing a school must not be able to write to — which is why `plans`, `plan_features` and `plan_limits` are the only non-tenant-owned tables in the module.
+
+**A limit and a meter look alike and behave differently.** A limit is a ceiling on a standing quantity (students on the roll); a meter is a rate over a billing period (AI tokens). A school with 400 students on a 150 plan is over its limit and **must still be able to take a register** — that is a commercial workflow, not an authorization decision. A school that has spent its tokens simply cannot spend more until the period rolls. Modelling them as one forces the same answer to both, and one of those answers is always wrong.
+
+**Three further choices worth recording.**
+
+*`past_due` still entitles.* A card that expired must not lose a school the register on Monday. Dunning is a workflow; withholding a child's attendance record to collect a debt would be indefensible.
+
+*A limit the plan never mentions is zero, not unlimited.* Silence is not generosity. Defaulting to "allow" when no row is found is the failure mode of every entitlement system that has one.
+
+*Recording usage does not check the ceiling.* A caller asks before doing the expensive thing and records after it succeeded. Merging the two would either bill for work that failed or refuse work already done.
+
+**Enforcement.** `test_entitlements.py` — 29 tests over both one-way rules, all four negative answers, the limit/meter distinction, overrides and their expiry, subscription states, and cross-institution isolation. Four sabotages caught: an unlisted limit defaulting to unlimited, an institution enabling what it never bought, the disabled/not-in-plan answers collapsed into one, and `past_due` withholding the register.
+
+A fifth finding came from the tests rather than from a sabotage: the check forbidding plan names outside the billing module flagged the `institution.*` **permission** module. Rather than loosen it, plan keys are now prefixed `plan.` so a plan key reads as one everywhere it appears and the check can be exact. A check that cries wolf gets deleted rather than obeyed.

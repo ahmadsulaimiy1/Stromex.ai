@@ -82,7 +82,7 @@ Legend: ✅ done · 🔨 in progress · ⬜ not started
 - ✅ Core-layering test
 - ✅ Provider-SDK confinement test
 - ✅ Route coverage test — **proven load-bearing**
-- ✅ 458 tests passing; ruff clean
+- ✅ 503 tests passing; ruff clean
 - ✅ Alembic baseline migration with an RLS gate · ⬜ CI pipeline
 
 ## Phase 2 — Institution 🔨
@@ -106,7 +106,11 @@ single-transaction apply, refusing reversal, import history and audit ·
 per permission, leak-tested through counts, totals, search, aggregates and error
 shape · ✅ teaching allocations · ✅ the first scoped endpoints
 
-⬜ custom fields · ⬜ entitlement engine · ⬜ journey 9.
+✅ **entitlement engine** — plans, subscriptions, overrides, institution
+settings, limits, meters and usage, with permission and entitlement kept
+strictly apart (ADR-030)
+
+⬜ custom fields · ⬜ journey 9.
 
 ## Phase 3 — Operations ⬜
 

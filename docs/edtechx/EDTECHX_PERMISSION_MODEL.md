@@ -145,12 +145,21 @@ Ordered so that the cheapest and most decisive checks run first, and so that err
 1  Authenticated?              → 401
 2  Membership active in tenant?→ 403
 3  Token tenant == host tenant?→ 403 + security event
-4  Feature entitled by plan?   → 402 (with upgrade path)
-5  Permission granted?         → 403
+4  Permission granted?         → 403
+5  Institution entitled?       → 402 (plan) · 403 (switched off) · 429 (allowance spent)
 6  Scope predicate satisfied?  → 404   ← not 403
 7  Resource state permits?     → 409
-8  Rate limit / quota?         → 429
+8  Rate limit?                 → 429
 ```
+
+**Permission now precedes entitlement** (ADR-030, revising the original order).
+Two reasons agree: a permission check is a set-membership test and an
+entitlement check is a database read, so permission first is cheaper; and
+answering 402 to somebody who could never use the feature anyway tells them what
+their school has and has not paid for.
+
+Step 5 has three answers because the reader is three different people — the
+person who signs cheques, the administrator down the corridor, and nobody.
 
 **Step 6 returns 404 on purpose.** If a teacher may not see class 9B, telling them "forbidden" confirms 9B exists. Absence of authority is presented as absence of resource. Step 5 may return 403 because the *capability* is not secret; step 6 concerns a specific resource, whose existence is.
 
