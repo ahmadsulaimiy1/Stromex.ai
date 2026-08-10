@@ -22,8 +22,9 @@ templates, append-only audit, Argon2id credentials, and a FastAPI request
 lifecycle that enforces all of it. Phase 2 has since added the universal
 academic engine (ADR-024) and the people-and-enrolment model (ADR-027), and a
 cross-tenant *reference* hole in the isolation spine has been found and closed
-(ADR-026). 344 tests pass; ruff is clean. Nothing is stubbed or faked. Bulk
-import, scope predicate compilation and the entitlement engine remain.
+(ADR-026), and bulk import lands whole or not at all (ADR-028). 387 tests pass;
+ruff is clean. Nothing is stubbed or faked. Scope predicate compilation and the
+entitlement engine remain in Phase 2.
 
 ---
 
@@ -199,6 +200,24 @@ broken once to confirm the tests notice. One finding worth keeping: the
 is generated from, which is why `enrolment_events` is also named explicitly in a
 second test.
 
+**Bulk import** (`modules/imports/`). CSV and XLSX, read without interpreting:
+every value comes back as text, because a leading zero on an admission number is
+data and not a formatting accident. Column mapping is *proposed* from the
+institution's own configured vocabulary and corrected by the person — so a
+school that calls a class an "arm" gets a column headed "Arm" recognised, while
+no country's vocabulary appears anywhere in the product. Validation reports
+every problem in the file at once, per row, with the file's own line numbers.
+
+Applying is one transaction: an import with any invalid row is refused outright,
+and an unexpected failure part way through rolls the whole thing back. The dry
+run is the same code path inside a savepoint. Reversal exists and *refuses* when
+work has been built on the import, rather than choosing between two kinds of
+damage on its own.
+
+Thirty-four tests, built from the files schools actually send — a byte-order
+mark, semicolons, a title row, a repeated heading, `4512.0` where an admission
+number should be, a phone number starting `+`. Three sabotages caught.
+
 ---
 
 ## Next — Phase 2 remainder
@@ -208,7 +227,7 @@ In priority order. Each carries the Bible's Definition of Done.
 1. ~~**Academic structure**~~ — **done**. Stages, levels, years, terms, subjects, class groups, grading scales and bands, progression rule engine, terminology. The Four Schools acceptance test passes (ADR-022).
 2. ~~**People**~~ — **done**. Identity, person, and student/staff/guardian relationships kept properly separate; one person holds several relationships without a duplicated identity (ADR-027).
 3. ~~**Enrolment as history**~~ — **done**. Admission, enrolment, transfer, suspension, withdrawal, readmission, progression, completion, awarding. No `student.class_id`; records are added, never overwritten, and two structural tests fail the commit that reintroduces one.
-4. **Bulk import** — preview, column mapping, validation, duplicate detection, dry run, transactional safety, rollback, history, audit.
+4. ~~**Bulk import**~~ — **done**. Preview, column mapping, validation, duplicate detection, dry run, single-transaction apply, refusing reversal, history, audit (ADR-028).
 5. **Scope predicate compilation** — `taught_by_self`, `own_children`, `department` as SQL predicates applied to list queries, with leak-by-row-count tests.
 6. **Entitlement engine** — kept distinct from permission, role, plan, feature availability, usage limit and institution configuration. Being authorized to act is not the same as the institution having purchased the capability.
 

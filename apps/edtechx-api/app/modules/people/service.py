@@ -24,9 +24,9 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.modules.academics.progression import Evaluation, ProgressionOutcome
@@ -858,3 +858,113 @@ def relationships_of(db: Session, person: Person) -> dict[str, list[object]]:
         "guardian_of": list(guardian_of),
         "guardians": list(guardians),
     }
+
+
+# --- finding somebody who may already be here -----------------------------
+
+
+def find_student_by_reference(
+    db: Session, reference: str
+) -> StudentRelationship | None:
+    """The institution's own identifier is the strongest match there is."""
+    if not reference:
+        return None
+    return db.execute(
+        select(StudentRelationship).where(
+            StudentRelationship.reference == reference.strip()
+        )
+    ).scalars().first()
+
+
+def find_person_by_email(db: Session, email: str) -> Person | None:
+    if not email:
+        return None
+    return db.execute(
+        select(Person).where(
+            Person.email == email.strip().lower(), Person.deleted_at.is_(None)
+        )
+    ).scalars().first()
+
+
+def find_person_by_name_and_birth(
+    db: Session, full_name: str, date_of_birth: date | None
+) -> Person | None:
+    """The weakest match, and deliberately requiring both halves.
+
+    Name alone is not identity: two children called Muhammad Ibrahim in a school
+    of nine hundred is ordinary, not a coincidence, and merging them would be a
+    far worse outcome than creating a second record. With a date of birth the
+    match is good enough to *flag*, which is all this is used for.
+    """
+    if not full_name or date_of_birth is None:
+        return None
+    return db.execute(
+        select(Person).where(
+            func.lower(Person.full_name) == full_name.strip().lower(),
+            Person.date_of_birth == date_of_birth,
+            Person.deleted_at.is_(None),
+        )
+    ).scalars().first()
+
+
+# --- primitives other modules need, so nobody imports these tables ---------
+#
+# The module-boundary rule (EDTECHX_ARCHITECTURE.md §3) says a module owns its
+# tables and everyone else reads them through its service. These exist so that
+# rule needs no exception for the importer, which legitimately has to undo what
+# it created.
+
+
+def person(db: Session, person_id: uuid.UUID) -> Person | None:
+    return db.get(Person, person_id)
+
+
+def student(db: Session, student_id: uuid.UUID) -> StudentRelationship | None:
+    return db.get(StudentRelationship, student_id)
+
+
+def enrolment(db: Session, enrolment_id: uuid.UUID) -> Enrolment | None:
+    return db.get(Enrolment, enrolment_id)
+
+
+def events_for(db: Session, enrolment_id: uuid.UUID) -> list[EnrolmentEvent]:
+    return list(
+        db.execute(
+            select(EnrolmentEvent)
+            .where(EnrolmentEvent.enrolment_id == enrolment_id)
+            .order_by(EnrolmentEvent.occurred_on, EnrolmentEvent.created_at)
+        )
+        .scalars()
+        .all()
+    )
+
+
+def forget_person(db: Session, subject: Person) -> None:
+    """Soft-delete. The row stays so an auditor can see it existed."""
+    subject.deleted_at = _now()
+    db.flush()
+
+
+def end_student(db: Session, relationship: StudentRelationship, *, on: date) -> None:
+    relationship.status = RelationshipStatus.ended
+    relationship.ended_on = on
+    db.flush()
+
+
+def unlink_guardian(db: Session, link_id: uuid.UUID) -> None:
+    """Guardianships are the one relationship that is genuinely deletable.
+
+    A guardianship recorded in error is not a historical fact about a child's
+    education; it is a mistake about who to telephone. Nothing hangs off it, and
+    the audit entry records that it was removed.
+    """
+    link = db.get(GuardianRelationship, link_id)
+    if link is not None:
+        db.delete(link)
+        db.flush()
+
+
+def _now() -> datetime:
+    from datetime import UTC
+
+    return datetime.now(UTC)

@@ -182,6 +182,17 @@ Publishing is an explicit, audited event; parents never see a mark that has not 
 
 **conduct_types / conduct_records** — configurable behaviour taxonomy and the records against it.
 
+### 6.1 Bulk import
+
+**import_batches** — `id, tenant_id, kind, filename, content_hash, status(draft|validated|failed|applied|reversed), columns jsonb, mapping jsonb, options jsonb, notes jsonb, row_count, valid_count, invalid_count, duplicate_count, created_count, uploaded_by_membership_id, applied_by_membership_id, applied_at, reversed_at, failure_reason, summary jsonb`
+**import_rows** — `id, tenant_id, batch_id, line_number, raw jsonb, values jsonb, status(pending|valid|invalid|duplicate|skipped|applied|reversed), errors jsonb, matched_by, created jsonb`
+
+`raw` is the evidence — the line exactly as read — and `line_number` is the
+file's own, so an error report matches what the person sees in their
+spreadsheet. `content_hash` recognises the same file being uploaded twice, which
+is the most common way a school ends up with every student recorded twice.
+Applying is a single transaction; see ADR-028.
+
 ---
 
 ## 7. Schema — finance (the school's own money)

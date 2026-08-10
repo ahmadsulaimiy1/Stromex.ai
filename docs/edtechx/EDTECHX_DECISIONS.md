@@ -439,3 +439,30 @@ Three consequences, in ascending order of seriousness:
 **Enforcement.** `test_people_enrolment.py` runs the same three calls against all nine institutions of the Universal Education Test, and asserts that the layers each institution did not configure stay null. Two structural tests guard the central rule: no relationship table may carry a placement column, and no function in the people module outside `_open` may assign one. Both were verified by introducing the defects they exist to catch — a `class_group_id` "just for the list screen", and a `transfer` that moved the student in place.
 
 **Cost.** Four tables where a naïve design has one, and a join to answer "which class is she in?". Accepted without hesitation: the naïve design cannot answer "which class was she in *in March*" at all, and that is the question a registrar is actually asked.
+
+---
+
+## ADR-028 — An import lands entirely or not at all
+
+**Status:** Accepted
+
+**Context.** A school's data arrives in bulk exactly once — at the start — and that is the moment its records are most fragile and least reviewed. The brief's requirement is one sentence: *never allow a malformed import to partially corrupt a school's records without an explicit, well-designed workflow.*
+
+The failure to design against is not a bad file. It is a *half-applied* one. Four hundred students exist and the rest do not; nobody who was not watching can tell which; re-running the file creates four hundred duplicates; and the school discovers this in week three when a register is short.
+
+**Decision.**
+
+1. **Reading is not deciding.** A file is read, mapped and validated without touching anything. The result is a preview with every problem in it — all of them, per row, with the file's own line numbers.
+2. **Applying is one transaction.** Every row lands or none does. An import with any invalid row is refused outright rather than applied in part, and an unexpected failure part way through rolls the whole thing back and records why.
+3. **A dry run is the same code as the real run.** It performs the identical writes inside a savepoint and rolls back. A dry run down a different path is a rehearsal in a different building.
+4. **A reversal is explicit, and refuses when it cannot be honest.** An import that has been built upon — a child moved, a placement progressed — cannot be undone by deletion without destroying records that are not the import's to destroy. `blockers()` says what stands in the way; `reverse()` refuses rather than choosing between two kinds of damage. Where it does proceed, people are soft-deleted and enrolments are *withdrawn*, because `enrolments` holds no `DELETE` grant (ADR-027) and an import's mistake does not change that.
+
+**Three judgements worth recording.**
+
+*Formula detection is narrower than the usual advice.* The standard rule rejects any cell beginning `=`, `+`, `-` or `@`. A great many real telephone numbers begin with `+` and a great many real figures begin with `-`, so a leading `+`/`-` counts only when what follows could start a function name. Rejecting every Nigerian mobile number to mitigate a risk that lives at *export* time would be a security control that breaks the product.
+
+*Column-heading aliases are sector-neutral, and the institution's own words come from its terminology.* Writing "homeroom" and "arm" into an alias list would have put one country's vocabulary back into executable code, and the static check in `test_universal_education.py` would have been right to fail it. Instead `propose_mapping` consults the configured vocabulary: a school that calls a class an "arm" gets a column headed "Arm" recognised *because it said so*. This is better than the hard-coded list in every respect — it covers institutions we never thought of.
+
+*There is no "update on duplicate" option yet.* Merging two records is a decision with consequences — whose date of birth wins, what happens to the absorbed record's enrolment history — and offering it as a checkbox before that workflow exists would quietly overwrite correct data with a spreadsheet's. Duplicates are skipped or refused; merging gets its own design.
+
+**Enforcement.** `test_bulk_import.py` — 34 tests, built from the files schools actually send: a byte-order mark, semicolons, a title row above the header, a repeated heading, an admission number Excel turned into a float, a phone number beginning with `+`, a class code the school does not have, the same child twice. Three sabotages confirm the safety properties are load-bearing: committing each row as it goes, applying past known-invalid rows, and reversing without checking what has been built on top. All three were caught.

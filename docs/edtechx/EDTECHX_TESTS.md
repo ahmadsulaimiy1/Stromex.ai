@@ -1,6 +1,6 @@
 # EdirasX Test Strategy and Status
 
-**Version:** 1.3 · **Status as of:** session 5 — **344 passing, 0 failing**
+**Version:** 1.4 · **Status as of:** session 5 — **387 passing, 0 failing**
 
 ---
 
@@ -47,6 +47,7 @@ A release does not go out with any of these red. They are not "known failures".
 |---|---|
 | `test_tenant_isolation.py` | No tenant reaches another's data — or *references* it — by any path |
 | `test_people_enrolment.py` | A person's record and history cannot be rewritten, lost, or seen by another institution |
+| `test_bulk_import.py` | No import can leave a school's records half-changed |
 | `test_boundaries.py` | Boundaries hold; no route is unguarded |
 | `test_authz.py` | Permissions cannot leak across resources |
 | `test_security.py` | Credentials, tokens, and production configuration |
@@ -267,6 +268,38 @@ placement column (`class_group_id`, `level_id`, `programme_id`, …), and no
 function in the people module outside `_open` may assign one. Together they fail
 the commit that reintroduces `student.class_id` "just for the list screen".
 
+### `test_bulk_import.py` — 34 tests
+
+Built from the files schools actually send, not from clean ones: a byte-order
+mark, semicolons from a European locale, a title row above the header, a
+repeated column heading, an admission number Excel turned into `4512.0`, a
+phone number beginning with `+`, a class code the school does not have, and the
+same child twice.
+
+*Safety.* One bad row prevents the whole import — the four good rows around it
+do not land either. A failure forced part way through `apply` (a monkeypatched
+explosion on row three) leaves nothing behind and marks the batch `failed` with
+the reason. A dry run performs the identical writes and rolls back, and the
+count it reports is the count the real run would create.
+
+*Judgement.* `=1+1`, `@SUM(A1)`, `+SUM(A1)` and `-cmd|…` are flagged;
+`+2348012345678` and `-12.50` are not — the standard advice, narrowed so it does
+not reject every Nigerian mobile number. `03/04/2015` is read as two different
+dates under two different options, because the file cannot say which and
+guessing produces records wrong by months.
+
+*Vocabulary.* A column headed "Form" is recognised for a school that configured
+that word, though "form" appears in no alias list in the product. That is the
+design: the static aliases are sector-neutral and the institution's own words
+come from its terminology, so the importer covers institutions nobody thought of.
+
+*And it is not school-shaped.* The same importer, the same file format and the
+same code path enrol matriculating students on a programme with no class group
+at all, and import a contact list as people with no student relationship.
+
+Three sabotages, all caught: committing each row as it goes, applying past
+known-invalid rows, and reversing an import that has been built upon.
+
 ### `test_api.py` — 16 tests
 
 Health is public; security headers present; unknown host refused; `/context`
@@ -296,6 +329,9 @@ driver names; oversized bodies rejected at the edge.
 | Enrolment history is append-only | `enrolment_events` removed from `APPEND_ONLY_TABLES` | The named test failed. The *generated* test passed, which is the known limit of generating a check from the list it checks — hence both |
 | No relationship carries a placement | `class_group_id` added to `StudentRelationship` | Flagged, naming the column and the reason |
 | A transfer does not overwrite | `transfer` made to move the student in place | Two tests failed: the behavioural one on the closed row's class group, and the AST one on the assignment itself |
+| An import lands entirely or not at all | Each row committed as it went | Both the dry-run and the forced-failure tests failed — the dry run created records, and the failure left three students behind |
+| Invalid rows cannot be applied | The refusal removed and bad rows skipped instead | Flagged: the good rows landed from a file the preview had refused |
+| A reversal refuses when work has been built on it | `blockers()` short-circuited | Flagged: a reversal was offered over a pupil who had since been transferred |
 
 ---
 
@@ -313,7 +349,7 @@ driver names; oversized bodies rejected at the edge.
 | 8 | School publishes a theme | Phase 7 |
 | 9 | School renames a term; it propagates | Phase 2 |
 | 10 | AI proposes a design; admin approves | Phase 7 |
-| 11 | Admin bulk-imports students | Phase 2 |
+| 11 | Admin bulk-imports students | ✅ **Covered — with the half-applied case attacked directly** |
 | 12 | **Tenant A attempts to access Tenant B → fails** | ✅ **Covered, at both the database and HTTP boundaries** |
 
 ---

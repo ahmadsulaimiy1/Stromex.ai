@@ -34,6 +34,7 @@ from app.modules.identity.models import (
     User,
     UserSession,
 )
+from app.modules.imports.models import ImportBatch, ImportRow
 from app.modules.people.enrolment import (
     Enrolment,
     EnrolmentEvent,
@@ -59,6 +60,8 @@ __all__ = [
     "GradingBand",
     "GradingScale",
     "GuardianRelationship",
+    "ImportBatch",
+    "ImportRow",
     "Level",
     "Membership",
     "MembershipRole",

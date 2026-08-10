@@ -82,7 +82,7 @@ Legend: ✅ done · 🔨 in progress · ⬜ not started
 - ✅ Core-layering test
 - ✅ Provider-SDK confinement test
 - ✅ Route coverage test — **proven load-bearing**
-- ✅ 344 tests passing; ruff clean
+- ✅ 387 tests passing; ruff clean
 - ✅ Alembic baseline migration with an RLS gate · ⬜ CI pipeline
 
 ## Phase 2 — Institution 🔨
@@ -97,8 +97,12 @@ relationships, and enrolment history** · ✅ guardianships · ✅ staff
 relationships · ✅ qualification awards · ✅ the people-and-enrolment
 acceptance suite across all nine institutions
 
-⬜ custom fields · ⬜ bulk import with dry-run · ⬜ entitlement engine ·
-⬜ scope predicates · ⬜ journeys 9 and 11.
+✅ **bulk import** — CSV and XLSX, column mapping proposed from the
+institution's own vocabulary, per-row validation, duplicate detection, dry run,
+single-transaction apply, refusing reversal, import history and audit ·
+✅ journey 11
+
+⬜ custom fields · ⬜ entitlement engine · ⬜ scope predicates · ⬜ journey 9.
 
 ## Phase 3 — Operations ⬜
 
