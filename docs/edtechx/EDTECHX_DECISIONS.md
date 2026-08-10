@@ -283,3 +283,42 @@ The **technical namespace stays `edtechx`** for now — `docs/edtechx/`, `apps/e
 **Why purpose-bound encryption keys.** HKDF derives a distinct key per purpose from the root secret, so a ciphertext lifted from the MFA column into the AI-credential column fails to decrypt rather than quietly working. Both properties are tested.
 
 **Cost.** An implementation to maintain, against a well-known specification with published test vectors — which the suite asserts against.
+
+---
+
+## ADR-022 — Academic structure is a tree of rows, and progression is a rule engine
+
+**Status:** Accepted · Phase 2 · **The Editorial Bible §8 promise, made testable**
+
+**Context.** The most likely way to fail the flexibility promise is not to refuse it — it is to build a plausible-looking generic schema that quietly assumes one country's school system, then discover three years later that it cannot serve a university.
+
+**Decision.** Four specific choices, each closing one route to that failure:
+
+1. **Stages are a self-referencing tree, not an enum.** Depth is the school's choice: two flat tiers, three flat tiers, or a nested hierarchy where Postgraduate sits under an Undergraduate faculty.
+2. **Levels carry no number that means anything to the platform.** There is a `sequence` for ordering within one school and a name the school chose. There is deliberately no `grade_level` integer, because the moment one exists, code does arithmetic on it and "Year 7" becomes one more than "Year 6" — false for an institution running Foundation → Level 4 → Level 7.
+3. **`next_level_id` is explicit, not `sequence + 1`.** The next level may live in another stage, or there may be none because this level graduates.
+4. **Progression is a rule engine over a closed metric vocabulary.** A school's definition of "ready to move up" is a JSON condition tree; the engine combines conditions and reads named metrics, and knows nothing about what a passing student looks like.
+
+**Why a closed metric set rather than an expression language.** An open language would be a scripting engine inside the product, with the security and support burden that implies. Adding a metric is a small, visible change in one file; a school writing code is not.
+
+**Two behaviours worth stating.** Missing data never passes a condition — a student with no recorded attendance has not met an attendance requirement, and treating absent evidence as evidence would promote on incomplete records. And every evaluation returns its full reasoning, with *all* failed conditions rather than the first: "the system decided" is not an answer a registrar can give a parent.
+
+**How the promise is enforced rather than asserted.** `test_four_schools.py` configures four institutions through one code path and adds two static checks: no product module may contain any of these schools' vocabulary in executable code, and no comparison in the academics module may test a grading or progression quantity against a hard-coded number. Both were verified by introducing exactly the defect they exist to catch.
+
+The vocabulary check parses the AST and examines string literals, identifiers, and attributes — not docstrings. A docstring naming four school systems is explaining the flexibility; a string literal naming one is assuming it. A check that could not tell them apart would push the examples out of the documentation in the name of a rule about the code.
+
+**Cost.** More joins, more configuration to seed, and a rule engine to maintain. That is the price of the promise, and it is lower than the price of discovering the assumption later.
+
+---
+
+## ADR-023 — Row-level security is applied to tables that exist, not to the model registry
+
+**Status:** Accepted · Corrects ADR-020's implementation
+
+**Context.** The baseline migration applied RLS to every tenant-owned model in the registry. That worked exactly once. The moment a later migration added a model, the baseline tried to protect a table that revision had not created, and every fresh `upgrade head` failed at the first migration.
+
+**Decision.** `apply_rls` and `verify_rls` operate on the intersection of the registry and the tables that actually exist. A missing table is a schema-drift question, answered separately by `missing_tables` and by the migration drift test — not by the isolation check, which would otherwise fail every migration before the last.
+
+**Why this does not weaken anything.** `build_schema` (tests and development) now raises on a *missing* table as well as an unprotected one, since a freshly built schema has no excuse. The migration drift test asserts every model has a table. So "every tenant-owned model has a table, and every such table is protected" remains guaranteed — by two checks in the places each can be true.
+
+**Cost.** The isolation check alone no longer proves completeness. Recorded here so the pair is understood as a pair.

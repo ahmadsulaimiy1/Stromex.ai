@@ -11,7 +11,7 @@ from sqlalchemy import create_engine, text
 
 from app.core.config import get_settings
 from app.db.registry import Base
-from app.db.rls import apply_rls, grant_app_role, verify_rls
+from app.db.rls import apply_rls, grant_app_role, missing_tables, verify_rls
 
 
 def build_schema(app_role: str = "edtechx_app", drop_first: bool = False) -> list[str]:
@@ -35,10 +35,18 @@ def build_schema(app_role: str = "edtechx_app", drop_first: bool = False) -> lis
 
         with engine.connect() as connection:
             unprotected = verify_rls(connection)
+            absent = missing_tables(connection)
         if unprotected:
             raise RuntimeError(
                 "Tenant-owned tables without row-level security: "
                 + ", ".join(sorted(unprotected))
+            )
+        if absent:
+            # `verify_rls` tolerates a missing table because a migration mid-
+            # chain legitimately has not created it yet. A freshly built schema
+            # has no such excuse.
+            raise RuntimeError(
+                "Tenant-owned models with no table: " + ", ".join(sorted(absent))
             )
         return protected
     finally:

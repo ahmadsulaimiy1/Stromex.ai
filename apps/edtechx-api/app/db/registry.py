@@ -7,12 +7,24 @@ gets a policy and a test by existing — not by anyone remembering.
 """
 
 from app.db.base import TENANT_OWNED_MODELS, Base
+from app.modules.academics.models import (
+    AcademicStage,
+    AcademicYear,
+    ClassGroup,
+    GradingBand,
+    GradingScale,
+    Level,
+    ProgressionRule,
+    Subject,
+    Term,
+)
 from app.modules.audit.models import AuditEvent, SecurityEvent
 from app.modules.authz.models import (
     MembershipRole,
     Role,
     RolePermission,
 )
+from app.modules.customization.models import TerminologySet
 from app.modules.identity.models import (
     Membership,
     User,
@@ -22,15 +34,25 @@ from app.modules.tenancy.models import Tenant, TenantDomain
 
 __all__ = [
     "TENANT_OWNED_MODELS",
+    "AcademicStage",
+    "AcademicYear",
     "AuditEvent",
     "Base",
+    "ClassGroup",
+    "GradingBand",
+    "GradingScale",
+    "Level",
     "Membership",
     "MembershipRole",
+    "ProgressionRule",
     "Role",
     "RolePermission",
     "SecurityEvent",
+    "Subject",
     "Tenant",
     "TenantDomain",
+    "Term",
+    "TerminologySet",
     "User",
     "UserSession",
 ]

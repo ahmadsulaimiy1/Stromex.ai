@@ -18,7 +18,9 @@ select = ["E", "F", "I", "N", "UP", "B", "S", "C4", "RUF"]
 # `NotAuthenticatedError`; they are named for the response, not the traceback.
 # UP042: `str, Enum` is required for SQLAlchemy Enum columns to round-trip
 # cleanly and for values to serialize without an explicit encoder.
-ignore = ["S101", "N818", "UP042"]
+# RUF002/RUF003: an en dash in prose is an en dash, not a typo. The rule
+# exists for identifiers, which this codebase does not write in prose.
+ignore = ["S101", "N818", "UP042", "RUF002", "RUF003"]
 
 [tool.ruff.lint.per-file-ignores]
 "app/tests/*" = ["S", "E402"]

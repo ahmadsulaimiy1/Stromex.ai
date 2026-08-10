@@ -49,13 +49,36 @@ def policy_statements(table: str) -> list[str]:
     ]
 
 
+def existing_tables(connection: Connection) -> set[str]:
+    return set(
+        connection.execute(
+            text("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
+        )
+        .scalars()
+        .all()
+    )
+
+
 def apply_rls(connection: Connection, tables: list[str] | None = None) -> list[str]:
     """Enable and (re)create the isolation policy on every tenant-owned table.
 
-    Idempotent: safe to run on every migration and on every test-database
-    build. Returns the tables it touched.
+    Scoped to tables that *exist*, not to every model in the registry. A
+    migration runs against the schema as it stands at that revision: the
+    baseline cannot protect a table a later migration has not created yet.
+    Ignoring that produced a baseline that failed the moment a new model was
+    added — which is the right failure, caught in the wrong place.
+
+    Tables that exist but are unprotected are still the caller's problem, and
+    `verify_rls` reports them.
+
+    Idempotent: safe to run on every migration and every test-database build.
     """
-    targets = tables if tables is not None else tenant_owned_table_names()
+    present = existing_tables(connection)
+    targets = [
+        table
+        for table in (tables if tables is not None else tenant_owned_table_names())
+        if table in present
+    ]
     for table in targets:
         for statement in policy_statements(table):
             connection.execute(text(statement))
@@ -101,7 +124,20 @@ def verify_rls(connection: Connection) -> list[str]:
 
     unprotected: list[str] = []
     for table in tenant_owned_table_names():
-        enabled, forced, policies = state.get(table, (False, False, 0))
+        if table not in state:
+            # Not yet created at this revision. Whether a model's table is
+            # missing entirely is a schema-drift question, answered by
+            # `missing_tables` and by the migration drift test — not by the
+            # isolation check, which would otherwise fail every migration that
+            # runs before the last one.
+            continue
+        enabled, forced, policies = state[table]
         if not (enabled and forced and policies > 0):
             unprotected.append(table)
     return unprotected
+
+
+def missing_tables(connection: Connection) -> list[str]:
+    """Tenant-owned models with no table. Used by the production readiness check."""
+    present = existing_tables(connection)
+    return [t for t in tenant_owned_table_names() if t not in present]
