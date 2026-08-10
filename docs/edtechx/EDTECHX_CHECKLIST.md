@@ -24,7 +24,7 @@ Legend: ✅ done · 🔨 in progress · ⬜ not started
 - ✅ Structured logging with request correlation
 - ✅ Error taxonomy (403 permission / 404 scope / 402 entitlement)
 - ✅ Security headers, strict CSP, body-size limit
-- ⬜ Redis wiring (rate limits, token denylist) — Phase 2, with the endpoints it protects
+- ⬜ Redis wiring (rate limits, token denylist) — **next**, the auth routes are live
 
 **Tenancy**
 - ✅ `tenants`, `tenant_domains`
@@ -32,7 +32,7 @@ Legend: ✅ done · 🔨 in progress · ⬜ not started
 - ✅ Custom-domain verification gate
 - ✅ Suspended/archived schools fail closed
 - ✅ Token/host agreement check with security event
-- ⬜ Provisioning service (logic exists in the test fixture; must become real)
+- ✅ Provisioning service — real, audited, and now driving the test fixtures
 
 **Isolation**
 - ✅ `TenantOwned` marker driving column, policy, and test generation
@@ -51,9 +51,9 @@ Legend: ✅ done · 🔨 in progress · ⬜ not started
 - ✅ Argon2id, bcrypt import path, timing-equalized verification
 - ✅ Access tokens with `tid`/`mid`; keyed-hash refresh tokens
 - ✅ Elevation window for high-risk actions
-- ⬜ Login / refresh / logout endpoints — Phase 2
-- ⬜ Refresh rotation with reuse detection (modelled; endpoint pending)
-- ⬜ Lockout enforcement (fields and config exist; enforcement pending)
+- ✅ Sign-in / refresh / sign-out / sign-out-everywhere endpoints
+- ✅ Refresh rotation with reuse detection, revoking the whole family
+- ✅ Lockout enforcement
 - ⬜ TOTP MFA · ⬜ SSO
 
 **Authorization**
@@ -69,14 +69,14 @@ Legend: ✅ done · 🔨 in progress · ⬜ not started
 - ✅ `audit_events` (append-only; `UPDATE`/`DELETE` revoked from the app role)
 - ✅ `security_events` (platform-level, so pre-auth events are recordable)
 - ✅ Denials recorded
-- ⬜ Audit-write helper on every mutation path — with the first mutations
+- ✅ Audit service (`audit.service.record`) — every module writes through it, no model imports cross boundaries
 
 **Quality gates**
 - ✅ Module boundary test — **exception list empty**
 - ✅ Core-layering test
 - ✅ Provider-SDK confinement test
 - ✅ Route coverage test — **proven load-bearing**
-- ✅ 121 tests passing; ruff clean
+- ✅ 152 tests passing; ruff clean
 - ⬜ CI pipeline · ⬜ Alembic baseline migration
 
 ## Phase 2 — Institution ⬜

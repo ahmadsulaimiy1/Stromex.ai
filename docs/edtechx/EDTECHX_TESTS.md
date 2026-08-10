@@ -1,6 +1,6 @@
 # EdirasX Test Strategy and Status
 
-**Version:** 1.0 · **Status as of:** end of session 1 — **121 passing, 0 failing**
+**Version:** 1.1 · **Status as of:** session 2 — **152 passing, 0 failing**
 
 ---
 
@@ -126,6 +126,31 @@ their adapters**, enforced before the first adapter exists so the gateway
 abstraction cannot rot; every route declares a permission or appears in
 `PUBLIC_ROUTES`.
 
+### `test_auth.py` — 24 tests
+
+Provisioning: a complete school with system roles; active and resolvable; slug
+validation and the reserved list; duplicate addresses refused; an existing
+account reused across schools **without its password being touched**; a failed
+provisioning leaves nothing resolvable.
+
+Sign-in: correct credentials work and the issued token works. **Wrong password
+and unknown account return byte-identical responses.** A member of one school
+signing in at another is refused, and indistinguishably so — School B cannot
+discover that the person exists at School A. Suspended schools refuse sign-in.
+Repeated failures lock the account, after which even the correct password is
+refused.
+
+Rotation: refresh returns a new pair; a refresh token works exactly once;
+**reuse of a rotated token burns the whole family**, including the legitimate
+holder's newer token; a refresh token is not usable at another school; tokens
+are stored only as hashes.
+
+Sign-out: revokes the session and its refresh token; sign-out-everywhere
+revokes every session; sign-out requires authentication.
+
+Audit: a successful sign-in leaves an audit entry scoped to the school; a
+failed one leaves a security event.
+
 ### `test_api.py` — 16 tests
 
 Health is public; security headers present; unknown host refused; `/context`
@@ -147,6 +172,7 @@ driver names; oversized bodies rejected at the edge.
 
 | Guarantee | Sabotage | Result |
 |---|---|---|
+| Reuse detection actually revokes | Written first as a same-session revoke | The test failed: the 401's rollback undid the revocation. Fixed by committing the revocation on its own session |
 | RLS enforces isolation | Disabled the policy on `roles`, queried from a stranger's context | **32 rows leaked**; restored → **0**. The ORM guard did not catch the raw-SQL path — which is why layer 2 exists |
 | Route coverage is checked | Added an unguarded `GET /api/v1/leaky` | Flagged, and nothing else |
 | Boundaries are enforced | A reverse dependency (identity → authz) introduced mid-session | Caught by the suite; fixed by removing the back-reference rather than by widening the exception list |

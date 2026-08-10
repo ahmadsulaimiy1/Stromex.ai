@@ -99,13 +99,23 @@ def test_ai_provider_sdks_are_confined_to_their_adapters() -> None:
 
 # --- route coverage -------------------------------------------------------
 
-# Routes that are intentionally reachable without a permission. Adding to this
-# set must be a deliberate act, reviewed like any other security decision.
-PUBLIC_ROUTES: set[tuple[str, str]] = {
+# Routes that intentionally require no *permission*. Two different things are
+# listed here and the distinction matters: some are reachable with no principal
+# at all (health, context, sign-in, refresh), and some require authentication
+# but grant nothing beyond the caller's own identity (/me, sign-out). Adding to
+# this set is a security decision and is reviewed as one.
+ROUTES_WITHOUT_PERMISSION: set[tuple[str, str]] = {
     ("GET", "/api/v1/health"),
     ("GET", "/api/v1/context"),
     # /me is authenticated but grants nothing beyond the caller's own identity.
     ("GET", "/api/v1/me"),
+    # Authentication must be reachable before a principal exists. These are the
+    # most exposed routes in the product and are guarded by rate limiting and
+    # uniform responses rather than by permission.
+    ("POST", "/api/v1/auth/sign-in"),
+    ("POST", "/api/v1/auth/refresh"),
+    # Authenticated, but signs out only the caller's own session.
+    ("POST", "/api/v1/auth/sign-out"),
 }
 
 DOC_PREFIXES = ("/docs", "/redoc", "/openapi.json")
@@ -166,9 +176,9 @@ def test_there_are_routes_to_check() -> None:
 )
 def test_every_route_is_guarded_or_explicitly_public(route: APIRoute) -> None:
     method = sorted(route.methods)[0]
-    if (method, route.path) in PUBLIC_ROUTES:
+    if (method, route.path) in ROUTES_WITHOUT_PERMISSION:
         return
     assert _guards_a_permission(route), (
         f"{method} {route.path} declares no permission and is not listed in "
-        "PUBLIC_ROUTES. Every route must do one or the other."
+        "ROUTES_WITHOUT_PERMISSION. Every route must do one or the other."
     )

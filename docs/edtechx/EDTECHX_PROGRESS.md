@@ -5,8 +5,8 @@ continue without re-deriving anything. Consolidated from the nine state files
 the brief specified — see `EDTECHX_DECISIONS.md` ADR-015 for why three files
 beat nine.
 
-**Last updated:** end of session 1
-**Current phase:** Phase 1 complete → Phase 2 next
+**Last updated:** session 2
+**Current phase:** Phase 1 complete · Phase 2 in progress
 
 ---
 
@@ -60,7 +60,7 @@ enrolment) is next.
 | Module boundaries hold | Boundary test caught a real reverse dependency (identity → authz) introduced mid-session; fixed by removing the back-reference. **Exception list is now empty** |
 | Production guard works | Five separate misconfigurations each refuse to construct `Settings` |
 
-### Test suite — 121 passing, 0 failing, 0 skipped (with PostgreSQL available)
+### Test suite — 152 passing, 0 failing, 0 skipped (with PostgreSQL available)
 
 | Suite | Tests | Covers |
 |---|---|---|
@@ -70,16 +70,51 @@ enrolment) is next.
 | `test_tenant_resolution.py` | 21 | Host normalization, subdomain rules, custom-domain verification, suspension |
 | `test_boundaries.py` | 16 | Module imports, core layering, provider-SDK confinement, route coverage |
 | `test_api.py` | 16 | Full lifecycle: host → auth → tenant agreement → permission → response |
+| `test_auth.py` | 24 | Provisioning, sign-in uniformity, lockout, rotation, reuse detection, sign-out, audit |
 
 ---
 
-## Next — Phase 2: the institution
+## Phase 2 — completed so far
+
+**Tenant provisioning** (`modules/tenancy/service.py`). Creates tenant, domain,
+system roles, owner account and membership, with an audit entry. Slug
+validation with a reserved list. A school is created `provisioning` and only
+flipped to `active` once complete, so a half-built school never resolves for
+traffic; a failure leaves it suspended rather than reachable. An existing
+account is reused across schools and its password is never touched. The test
+fixtures now provision through this service, so they exercise the same path
+production does.
+
+**Authentication** (`modules/identity/service.py`, `api/v1/auth.py`).
+Sign-in, refresh, sign-out, sign-out-everywhere. Every failure path returns an
+identical 401 and performs a password verification even when no password could
+match, so neither response nor timing distinguishes unknown account from wrong
+password from *not a member of this school*. Failure counting and lockout on
+the user row. Refresh tokens rotate on every use with reuse detection that
+revokes the whole family.
+
+**Service layers** for `audit` and `authz`, so provisioning orchestrates
+through services rather than reaching into other modules' models — the module
+boundary test caught this and the architecture was fixed rather than the test
+weakened. Its exception list is still empty.
+
+### Bugs found and fixed this session
+
+| Bug | Why it mattered |
+|---|---|
+| Reuse detection revoked the token family on the request's session, then the 401 rolled it back | Detection would have fired, logged, and changed nothing in production |
+| `EmailStr` on sign-in returned 422 for a malformed address | Distinguished "malformed" from "wrong" — the enumeration leak the uniform 401 exists to close. Sign-in now takes a bounded string; strict validation belongs on registration |
+| Slug pattern admitted a single character despite promising 2–63 | Minor, but the docstring and the code disagreed |
+
+---
+
+## Next — Phase 2 remainder
 
 In priority order. Each carries the Bible's Definition of Done.
 
-1. **Alembic baseline migration** for the Phase 1 schema, with the RLS-gate check wired in (currently the schema is built by `app.db.bootstrap`, which is correct for tests and development but is not a migration path).
-2. **Tenant provisioning service** — create tenant + domain + system roles + owner membership as one audited transaction. The logic currently lives in the test fixture and must become real.
-3. **Authentication endpoints** — login (with lockout), refresh (with rotation and reuse detection), logout, sign-out-everywhere, TOTP enrolment and challenge.
+1. **Alembic baseline migration** for the schema, with the RLS gate wired in (the schema is currently built by `app.db.bootstrap`, which is right for tests and development but is not a migration path).
+2. **Rate limiting** on the auth routes — they are the most exposed surface in the product and are currently protected only by lockout.
+3. **TOTP MFA** enrolment and challenge, required for `owner`, `admin`, `bursar`, `principal`.
 4. **Academic structure** — stages, levels, academic years, terms, class groups, subjects, class-subject allocation, grading scales and bands.
 5. **People** — students, enrolments, guardians, student–guardian links, custom fields.
 6. **The Four Schools fixture** — configure all four Bible §8 shapes in tests and assert zero code changes were needed. This is the acceptance criterion for Phase 2.
@@ -108,7 +143,7 @@ Nothing is blocked. Items awaiting external input, none of which stop Phase 2:
 | # | Issue | Severity | Plan |
 |---|---|---|---|
 | 1 | Schema is created by `build_schema()`, not by a migration | Medium | Phase 2 item 1. Blocks nothing yet; would block a second deployment |
-| 2 | Redis is configured but unused — no rate limiting or token denylist yet | Medium | Phase 2 item 3, alongside the auth endpoints they protect |
+| 2 | Redis is configured but unused — no rate limiting or token denylist yet | **High** | The auth routes are live and public. Next item after the migration baseline |
 | 3 | Scopes are parsed and unioned but not yet compiled to SQL predicates | Medium | Phase 2 item 7. No route currently returns scoped lists, so nothing is under-enforced today |
 | 4 | `starlette.testclient` deprecation warning from FastAPI 0.141 | Trivial | Upstream; revisit on the next FastAPI bump |
 | 5 | `_IncludedRouter` traversal in `test_boundaries.py` reaches into a FastAPI internal | Low | Written to accept both routing shapes so it degrades to the public shape rather than silently checking nothing |

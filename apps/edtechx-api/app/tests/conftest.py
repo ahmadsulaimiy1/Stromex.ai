@@ -25,26 +25,17 @@ os.environ.setdefault(
 )
 os.environ.setdefault("EDTECHX_SECRET_KEY", "test-secret-key-that-is-long-enough-32")
 
-from sqlalchemy import text
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from app.db.bootstrap import build_schema
 from app.db.registry import (
     Membership,
-    MembershipRole,
     Role,
-    RolePermission,
     Tenant,
-    TenantDomain,
     User,
 )
 from app.db.session import bind_tenant, get_engine, get_session_factory
-from app.modules.authz.system_roles import SYSTEM_ROLES_BY_KEY
-from app.modules.identity.models import (
-    MembershipStatus,
-    UserStatus,
-)
-from app.modules.tenancy.models import DomainKind, TenantStatus
 
 
 def _database_available() -> bool:
@@ -106,85 +97,36 @@ class TenantFixture:
         return session_for(self.tenant_id)
 
 
+OWNER_PASSWORD = "a-perfectly-fine-passphrase"
+
+
 def _provision(slug: str) -> TenantFixture:
-    """Create a school the way provisioning will: tenant, domain, roles, owner."""
-    factory = get_session_factory()
+    """Create a school through the real provisioning service.
 
-    # Tenant and domain are platform tables, created without a tenant context.
-    platform = factory()
-    bind_tenant(platform, None)
+    Deliberately not hand-rolled here any more: a fixture that builds tenants
+    differently from production is a fixture that tests something production
+    never does.
+    """
+    from app.modules.tenancy.service import provision_school
+
+    result = provision_school(
+        slug=slug,
+        name=slug.replace("-", " ").title(),
+        owner_email=f"owner@{slug}.test",
+        owner_name=f"{slug} Owner",
+        owner_password=OWNER_PASSWORD,
+        base_domain="edtechx.localhost",
+        currency="GBP",
+    )
+
+    scoped = session_for(result.tenant_id)
     try:
-        tenant = Tenant(
-            slug=slug,
-            name=slug.replace("-", " ").title(),
-            status=TenantStatus.active,
-            timezone="UTC",
-            locale="en",
-            currency="GBP",
-            activated_at=datetime.now(UTC),
-        )
-        platform.add(tenant)
-        platform.flush()
-        platform.add(
-            TenantDomain(
-                tenant_id=tenant.id,
-                hostname=f"{slug}.edtechx.localhost",
-                kind=DomainKind.subdomain,
-                is_primary=True,
-            )
-        )
-        user = User(
-            email=f"owner@{slug}.test",
-            full_name=f"{slug} Owner",
-            status=UserStatus.active,
-            email_verified_at=datetime.now(UTC),
-        )
-        platform.add(user)
-        platform.commit()
-        tenant_id = tenant.id
-        user_id = user.id
-    finally:
-        platform.close()
-
-    # Everything else is written inside the tenant's own context, exactly as
-    # application code will.
-    scoped = session_for(tenant_id)
-    try:
-        template = SYSTEM_ROLES_BY_KEY["owner"]
-        role = Role(
-            key=template.key,
-            name=template.name,
-            description=template.description,
-            is_system=True,
-        )
-        scoped.add(role)
-        scoped.flush()
-        for permission in sorted(template.permissions):
-            scoped.add(RolePermission(role_id=role.id, permission=permission))
-
-        membership = Membership(
-            user_id=user_id,
-            status=MembershipStatus.active,
-            display_name=f"{slug} Owner",
-            started_at=datetime.now(UTC),
-        )
-        scoped.add(membership)
-        scoped.flush()
-        scoped.add(
-            MembershipRole(
-                membership_id=membership.id,
-                role_id=role.id,
-                scope=template.default_scope.to_json(),
-                granted_at=datetime.now(UTC),
-            )
-        )
-        scoped.commit()
-        scoped.refresh(role)
-        scoped.refresh(membership)
-        tenant_obj = scoped.get(Tenant, tenant_id)
-        user_obj = scoped.get(User, user_id)
-        assert tenant_obj is not None and user_obj is not None
-        return TenantFixture(tenant_obj, user_obj, membership, role)
+        tenant = scoped.get(Tenant, result.tenant_id)
+        user = scoped.get(User, result.owner_user_id)
+        membership = scoped.get(Membership, result.owner_membership_id)
+        role = scoped.execute(select(Role).where(Role.key == "owner")).scalar_one()
+        assert tenant and user and membership
+        return TenantFixture(tenant, user, membership, role)
     finally:
         scoped.close()
 
