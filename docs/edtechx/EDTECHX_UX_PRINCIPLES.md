@@ -1,4 +1,4 @@
-# EdTechX UX Principles — Operational Rules
+# EdirasX UX Principles — Operational Rules
 
 **Derives from:** `EDTECHX_EDITORIAL_BIBLE.md` §3
 **Purpose:** the Bible states the philosophy; this document states the rules you can fail a review against.

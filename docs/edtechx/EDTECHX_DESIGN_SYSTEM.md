@@ -1,4 +1,4 @@
-# EdTechX Design System
+# EdirasX Design System
 
 **Derives from:** `EDTECHX_EDITORIAL_BIBLE.md` §4, `EDTECHX_UX_PRINCIPLES.md`
 **Version:** 1.0
@@ -7,13 +7,13 @@
 
 ## 1. The central constraint
 
-Every visual value in EdTechX is a **token**, and every token is **tenant-resolvable at runtime**. There is no hard-coded colour, font, radius, or spacing value anywhere in application code.
+Every visual value in EdirasX is a **token**, and every token is **tenant-resolvable at runtime**. There is no hard-coded colour, font, radius, or spacing value anywhere in application code.
 
 This is not a stylistic preference. It is what makes §6 of the Bible ("it should feel like our school") architecturally possible. A theme is data; the design system is the schema and the defaults.
 
 ```
 Design token (name + semantic role)
-  → EdTechX default value
+  → EdirasX default value
   → tenant theme override (optional)
   → resolved CSS custom property, served per tenant
 ```
@@ -62,7 +62,7 @@ Three layers. Components touch only layer 3.
 
 Five status families (accent, success, warning, danger, info), each with fill / subtle / text variants. Nothing more. A design that needs a sixth status colour has a hierarchy problem, not a palette problem.
 
-### 3.2 Default palette (EdTechX house theme)
+### 3.2 Default palette (EdirasX house theme)
 
 A restrained institutional palette. Deep navy carries authority without the corporate-blue cliché; the neutral ramp is warm-tinted so surfaces read as paper rather than screen.
 

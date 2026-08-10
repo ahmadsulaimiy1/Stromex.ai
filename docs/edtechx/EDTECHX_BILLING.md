@@ -1,4 +1,4 @@
-# EdTechX Billing and Commercial Architecture
+# EdirasX Billing and Commercial Architecture
 
 **Version:** 1.0
 
@@ -20,9 +20,9 @@ A grep for a plan name outside the `billing` module is a defect.
 
 ## 2. Freemium philosophy
 
-Free must be **genuinely useful**. A crippled free tier teaches a school that the product is poor; a generous one teaches them what it feels like to run on EdTechX, which is the only argument that converts.
+Free must be **genuinely useful**. A crippled free tier teaches a school that the product is poor; a generous one teaches them what it feels like to run on EdirasX, which is the only argument that converts.
 
-What Free is *not* allowed to do: lose the school's data, hide their data behind a paywall, degrade support to nothing, or display advertising. What Free *is* allowed to do: cap scale, cap AI, cap customization depth, and carry a discreet EdTechX mark in one place.
+What Free is *not* allowed to do: lose the school's data, hide their data behind a paywall, degrade support to nothing, or display advertising. What Free *is* allowed to do: cap scale, cap AI, cap customization depth, and carry a discreet EdirasX mark in one place.
 
 ---
 
@@ -31,7 +31,7 @@ What Free is *not* allowed to do: lose the school's data, hide their data behind
 Features and limits are illustrative defaults, seeded as data and tunable without a release.
 
 ### Free
-Core school management (students, staff, classes, subjects, attendance, basic assessment) · basic LMS (courses, assignments, submissions) · up to 100 active students · 2GB storage · limited AI (a small monthly allowance across drafting assistants) · logo and primary colour customization · community support · discreet EdTechX attribution.
+Core school management (students, staff, classes, subjects, attendance, basic assessment) · basic LMS (courses, assignments, submissions) · up to 100 active students · 2GB storage · limited AI (a small monthly allowance across drafting assistants) · logo and primary colour customization · community support · discreet EdirasX attribution.
 
 ### Starter
 Up to 500 active students · 20GB · parent portal · full attendance and assessment · report cards from templates · fee tracking · richer AI allowance · theme customization (full palette and typography) · email support.
@@ -128,7 +128,7 @@ Two distinct systems, deliberately separated:
 
 | | Platform billing | School finance |
 |---|---|---|
-| Who pays whom | School → EdTechX | Family → School |
+| Who pays whom | School → EdirasX | Family → School |
 | Tables | `platform_invoices`, `platform_payments`, `subscriptions` | `invoices`, `payments`, `receipts`, `fee_structures` |
 | Module | `billing` | `finance` |
 
@@ -157,7 +157,7 @@ Invariants: every charge carries an idempotency key; webhooks are idempotent and
 
 **Professional services:** branding, dashboard and portal design, migration, integrations, workflow configuration, custom reports, AI configuration, custom domains, training. Modelled as `service_engagements` with scope, quote, milestones, and delivery — because the ecosystem goal is self-service *plus* AI design *plus* human design in one platform.
 
-**Experience marketplace:** dashboard and portal themes, report-card and certificate designs, course and academic templates, workflow templates, AI assistants, communication templates. Flow: designer creates → EdTechX reviews → school selects or purchases → installed as a *draft* configuration version → school customizes → publishes.
+**Experience marketplace:** dashboard and portal themes, report-card and certificate designs, course and academic templates, workflow templates, AI assistants, communication templates. Flow: designer creates → EdirasX reviews → school selects or purchases → installed as a *draft* configuration version → school customizes → publishes.
 
 The architectural requirement today is only this: because every configuration object is already a versioned, portable, schema-validated document (`EDTECHX_CUSTOMIZATION_ENGINE.md`), an "experience" is just a bundle of those documents. The marketplace is therefore a distribution and commerce problem later, not an architecture problem now. See `EDTECHX_DECISIONS.md` ADR-009.
 

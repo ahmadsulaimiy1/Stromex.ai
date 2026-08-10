@@ -1,4 +1,4 @@
-# EdTechX Implementation Roadmap
+# EdirasX Implementation Roadmap
 
 **Version:** 1.0
 **Sequencing principle:** build the load-bearing walls first. Every phase ends with something a real school could use, and nothing in a later phase requires demolishing an earlier one.
@@ -7,7 +7,7 @@
 
 ## Phase 0 — Constitution *(complete)*
 
-Repository and environment inspected; EdTechX placed in its own namespace alongside StromeX; the eleven governing documents written; the progress system established.
+Repository and environment inspected; EdirasX placed in its own namespace alongside StromeX; the eleven governing documents written; the progress system established.
 
 **Exit criterion:** an engineer or agent joining cold can derive the right answer to a design question without asking. ✅
 
@@ -66,7 +66,7 @@ The reason a teacher opens the product.
 
 ## Phase 4 — The Experience
 
-Where EdTechX stops being a competent system and starts being a prestigious one.
+Where EdirasX stops being a competent system and starts being a prestigious one.
 
 - Design system implementation: tokens, primitives, form, data, layout, feedback, navigation components — every state, keyboard, RTL, light/dark
 - App shell and per-persona navigation resolved from configuration

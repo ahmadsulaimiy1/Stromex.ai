@@ -24,15 +24,15 @@ Quickest way to run it locally is `apps/api/README.md` and `apps/web/README.md`,
 
 ---
 
-## EdTechX
+## EdirasX
 
-This repository also carries **[EdTechX](docs/edtechx/)** — a separate product, in its own namespace, sharing conventions but no code with StromeX.
+This repository also carries **[EdirasX](docs/edtechx/)** — a separate product, in its own namespace, sharing conventions but no code with StromeX.
 
-> EdTechX: the education platform that becomes your school's own platform.
+> EdirasX: the education platform that becomes your school's own platform.
 
 A multi-tenant education operating system (school information system + LMS in one), deeply customizable per institution, with a provider-agnostic AI layer and a commercial platform underneath.
 
 - **[`docs/edtechx/`](docs/edtechx/)** — the governing documents. Start with the [Editorial Bible](docs/edtechx/EDTECHX_EDITORIAL_BIBLE.md), then [PROGRESS](docs/edtechx/EDTECHX_PROGRESS.md) to see current state.
 - **[`apps/edtechx-api`](apps/edtechx-api)** — FastAPI backend. Phase 1 (the tenant isolation spine) is built and tested against real PostgreSQL.
 
-EdTechX is deliberately extractable: moving `docs/edtechx/` and `apps/edtechx-*` to their own repository is the whole migration. See [ADR-001](docs/edtechx/EDTECHX_DECISIONS.md).
+EdirasX is deliberately extractable: moving `docs/edtechx/` and `apps/edtechx-*` to their own repository is the whole migration. See [ADR-001](docs/edtechx/EDTECHX_DECISIONS.md).

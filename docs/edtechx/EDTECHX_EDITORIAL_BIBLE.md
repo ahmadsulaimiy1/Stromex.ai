@@ -1,6 +1,7 @@
-# The EdTechX Editorial Bible
+# The EdirasX Editorial Bible
 
-**Status:** Living document — the constitution of EdTechX
+**Status:** Living document — the constitution of EdirasX
+**Custodian:** Imam Ahmad Sulaimiy, Senior Developer — the expert behind the development of EdirasX
 **Version:** 1.0
 **Supremacy clause:** Where any other document, design, or line of code conflicts with this Bible, the Bible wins until formally amended here.
 
@@ -18,9 +19,15 @@ Every section is written so that it can be applied as a test. If a principle can
 
 ### 1.1 Name
 
-**EdTechX.**
+**EdirasX.**
 
-Written as one word, capital E, capital T, capital X. Never "EdtechX", "EDTECHX" in running prose, "Ed-Tech-X", or "ETX". The uppercase logotype is a logo treatment, not a spelling.
+Written as one word: capital E, lowercase *diras*, capital X. Never "Edirasx", "Ediras X", "EDIRASX" in running prose, "Ediras-X", or "EX". The uppercase logotype `EDIRASX` is a logo treatment, not a spelling.
+
+The name derives from the Arabic root of study and learning — **الدراسة** (*al-dirāsa*, "study") and **ادرس** (*idrus*, "study!"). The X carries the same meaning it always did: the variable a school fills in with its own identity.
+
+Pronounced *ed-EE-ras-ex*.
+
+**Technical namespace.** The repository, package names, and documentation filenames presently use the earlier `edtechx` / `EDTECHX_` namespace. That is a deliberate, temporary divergence from the product name, recorded as ADR-017, and it is a migration to be scheduled rather than a naming inconsistency to be tolerated indefinitely. Product-facing text uses EdirasX without exception.
 
 ### 1.2 Positioning
 
@@ -28,8 +35,8 @@ Written as one word, capital E, capital T, capital X. Never "EdtechX", "EDTECHX"
 
 This is the single sentence from which the entire product derives. It contains a promise and a constraint:
 
-- **The promise:** a school does not adopt EdTechX; a school *becomes itself* on EdTechX.
-- **The constraint:** any feature that makes EdTechX more visible to the end user at the expense of the school's identity is, by definition, working against the positioning.
+- **The promise:** a school does not adopt EdirasX; a school *becomes itself* on EdirasX.
+- **The constraint:** any feature that makes EdirasX more visible to the end user at the expense of the school's identity is, by definition, working against the positioning.
 
 ### 1.3 Mission
 
@@ -82,7 +89,7 @@ Use educational terminology precisely. Avoid jargon where a plain word serves.
 | enrolled | onboarded, provisioned | Enrolment is the school's word |
 | record, register | log, entry | Academic records carry weight |
 
-**The Terminology Rule:** every noun in the list above is *also* configurable by the school (see `EDTECHX_CUSTOMIZATION_ENGINE.md`). The table defines EdTechX's *defaults*, not the platform's assumptions. A school that calls a class a "form" and a grade a "year" must never see our defaults leak through.
+**The Terminology Rule:** every noun in the list above is *also* configurable by the school (see `EDTECHX_CUSTOMIZATION_ENGINE.md`). The table defines EdirasX's *defaults*, not the platform's assumptions. A school that calls a class a "form" and a grade a "year" must never see our defaults leak through.
 
 ### 1.10 Messaging principles
 
@@ -92,11 +99,11 @@ Use educational terminology precisely. Avoid jargon where a plain word serves.
 4. Present intelligence as assistance, never as authority.
 5. Celebrate educational excellence; never imply we are the source of it.
 
-### 1.11 What EdTechX will never say
+### 1.11 What EdirasX will never say
 
 - That it improves learning outcomes. We enable the people who do.
 - That its AI knows a student. It observes records; educators know students.
-- That a school "runs on EdTechX." Schools run on teaching. EdTechX runs underneath.
+- That a school "runs on EdirasX." Schools run on teaching. EdirasX runs underneath.
 
 ---
 
@@ -190,7 +197,7 @@ Eleven beliefs. Each is stated as a claim, then as an engineering consequence, b
 - Trend-chasing
 - Hype aesthetics
 
-These are the visual language of products that need to *look* expensive. EdTechX serves institutions that already are.
+These are the visual language of products that need to *look* expensive. EdirasX serves institutions that already are.
 
 ### 4.2 Prestige is
 
@@ -228,7 +235,7 @@ Both halves must be true. Prestige without daily usability is a brochure; usabil
 
 ## 5. The six humans
 
-EdTechX does not have "users." It has six people with materially different jobs. Each gets its own information architecture. Full IA specifications live in `EDTECHX_PRODUCT_SPEC.md` §4; the essence is here because it is editorial, not merely functional.
+EdirasX does not have "users." It has six people with materially different jobs. Each gets its own information architecture. Full IA specifications live in `EDTECHX_PRODUCT_SPEC.md` §4; the essence is here because it is editorial, not merely functional.
 
 ### 5.1 School administrator / registrar
 **Job:** keep the institution running correctly.
@@ -260,7 +267,7 @@ EdTechX does not have "users." It has six people with materially different jobs.
 **Design posture:** high-level with drill-down, visual, trustworthy, comparative over time.
 **Failure mode to avoid:** vanity metrics; numbers with no decision attached.
 
-### 5.6 Platform operator (EdTechX staff)
+### 5.6 Platform operator (EdirasX staff)
 **Job:** keep every tenant healthy.
 **Emotional state:** operational, alert-driven.
 **Design posture:** system-wide perspective, actionable alerts, technical detail one click away.
@@ -272,17 +279,17 @@ EdTechX does not have "users." It has six people with materially different jobs.
 
 The most important UX principle in this document.
 
-**Not:** "We use EdTechX."
+**Not:** "We use EdirasX."
 **But:** "This is our school's digital environment."
 
-EdTechX is the engine underneath. The school owns the experience.
+EdirasX is the engine underneath. The school owns the experience.
 
 Operationally this means:
 - The school's name, mark, colours, and typography are what users see. Ours are not.
 - Every user-facing term is the school's term.
 - The URL can be the school's own.
 - Documents (report cards, certificates, transcripts, emails) carry the school's identity, not ours.
-- EdTechX attribution appears only where commercially required by plan (Free tier), and even then quietly, in one place.
+- EdirasX attribution appears only where commercially required by plan (Free tier), and even then quietly, in one place.
 
 **The test:** show a screenshot to a parent at that school. If their first reaction is anything other than recognizing their own school, we have failed.
 
@@ -290,7 +297,7 @@ Operationally this means:
 
 ## 7. AI constitution
 
-AI in EdTechX is bound by five rules. These are enforced in code (`EDTECHX_AI_ARCHITECTURE.md` §6), not merely stated.
+AI in EdirasX is bound by five rules. These are enforced in code (`EDTECHX_AI_ARCHITECTURE.md` §6), not merely stated.
 
 1. **No silent mutation of the record.** AI may draft, suggest, summarize, and analyse. It may never write to an academic record — a grade, an attendance mark, a promotion decision, a disciplinary entry — without an explicit human approval that is attributed and audited.
 2. **Provenance is mandatory.** Any AI-generated content shown to a user is labelled as such, and its origin (provider, model, prompt version, timestamp) is retrievable.
@@ -302,7 +309,7 @@ AI in EdTechX is bound by five rules. These are enforced in code (`EDTECHX_AI_AR
 
 ## 8. Flexibility constitution
 
-EdTechX must not encode assumptions about how a school works. The following are **data**, never code:
+EdirasX must not encode assumptions about how a school works. The following are **data**, never code:
 
 grades · terms · semesters · houses · departments · campuses · grading scales · attendance methods · examination structures · promotion rules · academic calendars · terminology · curriculum · organizational hierarchy · report-card format · roles and permissions
 
@@ -321,7 +328,7 @@ If a proposed feature requires a code change to support any of these four, the d
 
 ## 9. Cultural constitution
 
-EdTechX serves secular, Islamic, Christian, international, public, private, and boarding schools; universities, colleges, academies, and training institutions — across Nigeria, wider Africa, the GCC and Middle East, the UK, Europe, and the USA.
+EdirasX serves secular, Islamic, Christian, international, public, private, and boarding schools; universities, colleges, academies, and training institutions — across Nigeria, wider Africa, the GCC and Middle East, the UK, Europe, and the USA.
 
 Therefore:
 - No cultural or religious assumption ships as a default. Religious features exist as *installable configurations*, never as baked-in structure.

@@ -1,4 +1,4 @@
-# EdTechX Technical Architecture
+# EdirasX Technical Architecture
 
 **Version:** 1.0
 **Companion documents:** `EDTECHX_DATABASE.md`, `EDTECHX_SECURITY.md`, `EDTECHX_PERMISSION_MODEL.md`, `EDTECHX_AI_ARCHITECTURE.md`
@@ -167,7 +167,7 @@ Steps 2, 5, 6, 8, and 11 are the ones that must never be skippable per-route by 
 Configuration resolves through a deterministic cascade, computed once per request and cached:
 
 ```
-EdTechX default
+EdirasX default
   → tenant configuration
     → campus override        (optional)
       → role override        (optional)

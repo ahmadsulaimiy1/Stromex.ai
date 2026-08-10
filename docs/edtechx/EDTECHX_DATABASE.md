@@ -1,4 +1,4 @@
-# EdTechX Database Architecture
+# EdirasX Database Architecture
 
 **Version:** 1.0
 **Engine:** PostgreSQL 15+
@@ -85,7 +85,7 @@ Append-only: no `UPDATE`/`DELETE` grant for `edtechx_app`. Partitioned monthly b
 **subscription_overrides** — `id, tenant_id, feature_key|limit_key, value, reason, expires_at, granted_by`
 **usage_records** — `id, tenant_id, meter_key, quantity NUMERIC, period_start, period_end, membership_id, feature, provider, model, metadata jsonb, created_at`
 Partitioned monthly; the AI metering hot path.
-**platform_invoices / platform_payments** — EdTechX billing the school (distinct from the school's own fee invoices in §7).
+**platform_invoices / platform_payments** — EdirasX billing the school (distinct from the school's own fee invoices in §7).
 
 ---
 

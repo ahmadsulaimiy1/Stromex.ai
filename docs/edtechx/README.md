@@ -1,4 +1,4 @@
-# EdTechX
+# EdirasX
 
 > The education platform that becomes your school's own platform.
 
@@ -6,7 +6,7 @@ A multi-tenant education operating system — school information system and
 learning management system in one — deeply customizable per institution, with an
 AI assistance layer and a commercial platform underneath.
 
-EdTechX lives in this repository alongside StromeX, in its own namespace
+EdirasX lives in this repository alongside StromeX, in its own namespace
 (`docs/edtechx/`, `apps/edtechx-*`), and is extractable to its own repository by
 moving two directories. See `EDTECHX_DECISIONS.md` ADR-001.
 
@@ -31,7 +31,7 @@ moving two directories. See `EDTECHX_DECISIONS.md` ADR-001.
 | [`EDTECHX_SECURITY.md`](EDTECHX_SECURITY.md) | Threat model, authn/authz, SSRF guard, rate limits, audit, release gates |
 | [`EDTECHX_PERMISSION_MODEL.md`](EDTECHX_PERMISSION_MODEL.md) | RBAC permissions + ABAC scopes compiled to SQL predicates |
 
-**3. What makes it EdTechX**
+**3. What makes it EdirasX**
 
 | Document | What it settles |
 |---|---|
@@ -62,7 +62,7 @@ Its README covers local setup and the isolation model.
 
 ## The four ideas that explain the rest
 
-**1. It should feel like their school.** Not "we use EdTechX" but "this is our
+**1. It should feel like their school.** Not "we use EdirasX" but "this is our
 school's digital environment". Every visual value, every navigation label, and
 every domain noun is tenant-resolvable data. There is no per-tenant code.
 

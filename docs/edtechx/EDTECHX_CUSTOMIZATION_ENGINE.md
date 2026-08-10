@@ -1,4 +1,4 @@
-# EdTechX Customization Engine
+# EdirasX Customization Engine
 
 **Version:** 1.0
 **Governing principle:** `EDTECHX_EDITORIAL_BIBLE.md` §6 — "It should feel like our school."
@@ -42,7 +42,7 @@ Publishing never mutates a previous version. Rollback restores by reference. His
 ## 3. Resolution cascade
 
 ```
-EdTechX default → tenant → campus → role → user preference (where the school permits)
+EdirasX default → tenant → campus → role → user preference (where the school permits)
 ```
 
 Resolved once per request into an immutable configuration bundle, cached in Redis keyed by `(tenant_id, kind, version)`, invalidated on publish. Cache misses are cheap; publishes are rare.
@@ -183,7 +183,7 @@ Because every configuration is a versioned, schema-validated document, a complet
 - Export a school's configuration and import it into a sandbox or a sister campus.
 - Templates for onboarding ("British independent school", "Nigerian secondary school", "GCC international school") as starting bundles.
 - Professional-services delivery: a designer works in a sandbox tenant and delivers a bundle.
-- The future marketplace: an "experience" is a signed bundle, reviewed by EdTechX, installed as a draft the school then customizes.
+- The future marketplace: an "experience" is a signed bundle, reviewed by EdirasX, installed as a draft the school then customizes.
 
 ---
 
@@ -194,6 +194,6 @@ Because every configuration is a versioned, schema-validated document, a complet
 3. Configuration cannot break accessibility — validation refuses it.
 4. Configuration cannot inject executable content — values only, never raw CSS, HTML, or script.
 5. Every publish is audited and reversible.
-6. Missing configuration falls back cleanly to the EdTechX default; a partial theme never yields a broken interface.
+6. Missing configuration falls back cleanly to the EdirasX default; a partial theme never yields a broken interface.
 7. A tenant can always export its configuration.
 8. Publishing configuration never mutates or endangers institutional data.

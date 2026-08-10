@@ -1,20 +1,20 @@
-# EdTechX Architecture Decision Record
+# EdirasX Architecture Decision Record
 
 Every entry states the decision, why, what was rejected, and what it costs. A decision with no stated cost has not been thought through.
 
 ---
 
-## ADR-001 — EdTechX lives in its own namespace inside the StromeX repository
+## ADR-001 — EdirasX lives in its own namespace inside the StromeX repository
 
 **Status:** Accepted · Phase 0
 
-**Context.** The repository is `Stromex.ai` and contains a working StromeX product (AI operating system for knowledge work) with its own Editorial Bible, MVP backend, frontend, and Android client. The task is to build EdTechX, a different product for a different market. The working branch is named for EdTechX.
+**Context.** The repository is `Stromex.ai` and contains a working StromeX product (AI operating system for knowledge work) with its own Editorial Bible, MVP backend, frontend, and Android client. The task is to build EdirasX, a different product for a different market. The working branch is named for EdirasX.
 
-**Decision.** Build EdTechX under `docs/edtechx/` and `apps/edtechx-api/`, `apps/edtechx-web/`, leaving every existing StromeX file untouched.
+**Decision.** Build EdirasX under `docs/edtechx/` and `apps/edtechx-api/`, `apps/edtechx-web/`, leaving every existing StromeX file untouched.
 
 **Rejected.** (a) Repurposing the repository — destroys a working product and is irreversible in practice. (b) A separate repository — not available to create from this session, and would fragment the founder's work without instruction to do so.
 
-**Consequences.** EdTechX is fully extractable to its own repository later by moving two directories. The monorepo carries two products, which must not share code implicitly — no imports cross between `apps/api` and `apps/edtechx-api`. Conventions (FastAPI, SQLAlchemy, Alembic, Next.js) are deliberately shared because the team is the same.
+**Consequences.** EdirasX is fully extractable to its own repository later by moving two directories. The monorepo carries two products, which must not share code implicitly — no imports cross between `apps/api` and `apps/edtechx-api`. Conventions (FastAPI, SQLAlchemy, Alembic, Next.js) are deliberately shared because the team is the same.
 
 ---
 
@@ -195,3 +195,35 @@ Every entry states the decision, why, what was rejected, and what it costs. A de
 **Why.** The isolation guarantee is a PostgreSQL feature. A test suite that cannot exercise it would give false confidence about the one thing that must never be wrong.
 
 **Cost.** Tests need a database. Provided by docker compose locally and a service container in CI. Pure-logic unit tests remain database-free and fast.
+
+---
+
+## ADR-017 — The product is named EdirasX; the technical namespace remains `edtechx` for now
+
+**Status:** Accepted · Supersedes the provisional position recorded in the 1.0 publication of the Editorial Bible
+
+**Context.** The product launched under the working name EdTechX. The name was descriptive but generic: it names a category rather than a company, it is difficult to trademark, and it says nothing about the institutions the product is built for. The product owner has adopted **EdirasX**, from the Arabic root of study and learning — الدراسة (*al-dirāsa*, "study") and ادرس (*idrus*, "study!").
+
+**Decision.** EdirasX is the product name, effective immediately, in all product-facing text: the Editorial Bible and every governing document, the interface, documents the platform generates, and all publications.
+
+The **technical namespace stays `edtechx`** for now — `docs/edtechx/`, `apps/edtechx-api/`, `EDTECHX_*.md`, the `EDTECHX_` environment prefix, and the `edtechx_app` / `edtechx_migrator` database roles. Renaming those is a separate, scheduled migration, not a side effect of a branding decision.
+
+**Why separate the two.** A namespace rename touches database role names, connection strings, environment variables, and the row-level-security grants that tenant isolation depends on. Bundling that into a branding change would mean the most security-critical code in the product moves for a non-security reason, in a commit whose review attention is on wording. The rename is worth doing; it is worth doing on its own, with the isolation suite as the gate.
+
+**Consequences.** Product text and technical identifiers disagree until the migration runs. This is deliberate and is stated in Bible §1.1 so that nobody encountering it treats it as drift. When the migration is scheduled it must: rename directories and files, update the settings prefix with a deprecation period accepting both, rename the database roles in a maintenance window, re-run `apply_rls` and `verify_rls`, and confirm the tenant-isolation suite is green before and after.
+
+**Cost.** A period of visible inconsistency, and a migration still owed. Accepted in preference to moving the isolation-critical identifiers inside a branding commit.
+
+---
+
+## ADR-018 — Publication artefacts are generated, never hand-edited
+
+**Status:** Accepted
+
+**Decision.** The flagship PDF and DOCX are produced by `tools/publisher` from `EDTECHX_EDITORIAL_BIBLE.md`, through a single document model rendered twice. Neither output is ever edited directly.
+
+**Why.** Two hand-maintained formats of a living constitution diverge — not if, when. Rendering both from one model makes content parity a property of the build. `tools/publisher/verify.py` then re-extracts text from the finished files and checks every chapter, every substantial source line, and every document sentence against both, so the claim is tested rather than asserted.
+
+**Consequences.** Amending the Bible means amending the Markdown and rebuilding. Editing the PDF or the Word file amends nothing, and the next build discards it. The build fails rather than publishes if a chapter or a line of source prose fails to make it through.
+
+**Cost.** Typographic control is exercised through a stylesheet rather than by hand. Accepted: hand-tuning a document that is regenerated on every amendment is work that is thrown away by design.

@@ -1,17 +1,17 @@
-# EdTechX Product Specification
+# EdirasX Product Specification
 
 **Derives from:** `EDTECHX_EDITORIAL_BIBLE.md`
 **Version:** 1.0
 
 ---
 
-## 1. What EdTechX is
+## 1. What EdirasX is
 
-EdTechX is a multi-tenant **education operating system**: a school information system (SIS) and a learning management system (LMS) in one product, deeply customizable per institution, with an AI assistance layer and a commercial platform underneath.
+EdirasX is a multi-tenant **education operating system**: a school information system (SIS) and a learning management system (LMS) in one product, deeply customizable per institution, with an AI assistance layer and a commercial platform underneath.
 
-It is deliberately *both* SIS and LMS. The market's central failure is the seam between them: a school runs PowerSchool-shaped operations and Moodle-shaped learning, and reconciles by hand. In EdTechX, a class roster, a gradebook, an assignment, an attendance register, and a report card are all views over one coherent domain model.
+It is deliberately *both* SIS and LMS. The market's central failure is the seam between them: a school runs PowerSchool-shaped operations and Moodle-shaped learning, and reconciles by hand. In EdirasX, a class roster, a gradebook, an assignment, an attendance register, and a report card are all views over one coherent domain model.
 
-### 1.1 What EdTechX is not
+### 1.1 What EdirasX is not
 
 - Not a course marketplace.
 - Not a consumer study app.

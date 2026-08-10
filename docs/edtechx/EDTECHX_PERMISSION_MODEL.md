@@ -1,4 +1,4 @@
-# EdTechX Permission Model
+# EdirasX Permission Model
 
 **Version:** 1.0
 

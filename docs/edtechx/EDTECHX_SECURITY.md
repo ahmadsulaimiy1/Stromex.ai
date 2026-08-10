@@ -1,7 +1,7 @@
-# EdTechX Security Architecture
+# EdirasX Security Architecture
 
 **Version:** 1.0
-**Scope:** EdTechX holds children's personal data, academic records, safeguarding information, and money. The security posture is sized for that, not for a SaaS dashboard.
+**Scope:** EdirasX holds children's personal data, academic records, safeguarding information, and money. The security posture is sized for that, not for a SaaS dashboard.
 
 ---
 
@@ -82,7 +82,7 @@ Every outbound HTTP request from the server — AI providers, payment webhooks, 
 4. Enforces an allow-list of schemes and, for provider calls, an allow-list of hosts.
 5. Caps redirects, response size, and total time.
 
-*(The StromeX codebase in this repository had exactly this class of vulnerability found and fixed during its audit — see `docs/04-STROMEX-INDEPENDENT-AUDIT.md`. EdTechX starts with the control in place rather than discovering it later.)*
+*(The StromeX codebase in this repository had exactly this class of vulnerability found and fixed during its audit — see `docs/04-STROMEX-INDEPENDENT-AUDIT.md`. EdirasX starts with the control in place rather than discovering it later.)*
 
 ---
 

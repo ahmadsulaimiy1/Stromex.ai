@@ -1,0 +1,375 @@
+/* EdTechX flagship publication — print stylesheet.
+ *
+ * Follows EDTECHX_DESIGN_SYSTEM.md §10: for print, the serif carries the body
+ * because it is a reading context; the sans is reserved for apparatus —
+ * running heads, folios, table headers, labels, captions. No shadows, no
+ * accent fills that waste ink, no decoration that a reader would not miss.
+ */
+
+/* ---------- fonts ---------- */
+@font-face { font-family: "Source Serif 4"; src: url("fonts/SourceSerif4-400.ttf"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Source Serif 4"; src: url("fonts/SourceSerif4-400i.ttf"); font-weight: 400; font-style: italic; }
+@font-face { font-family: "Source Serif 4"; src: url("fonts/SourceSerif4-600.ttf"); font-weight: 600; font-style: normal; }
+@font-face { font-family: "Source Serif 4"; src: url("fonts/SourceSerif4-700.ttf"); font-weight: 700; font-style: normal; }
+@font-face { font-family: "Inter"; src: url("fonts/Inter-400.ttf"); font-weight: 400; }
+@font-face { font-family: "Inter"; src: url("fonts/Inter-500.ttf"); font-weight: 500; }
+@font-face { font-family: "Inter"; src: url("fonts/Inter-600.ttf"); font-weight: 600; }
+@font-face { font-family: "Inter"; src: url("fonts/Inter-700.ttf"); font-weight: 700; }
+@font-face { font-family: "IBM Plex Mono"; src: url("fonts/IBMPlexMono-400.ttf"); font-weight: 400; }
+/* Arabic in the note on the name. Without this the Arabic root falls back to a
+   system serif, which sets it badly — the one place the document quotes a
+   language it must not mistreat. */
+@font-face { font-family: "Amiri"; src: url("fonts/Amiri-400.ttf"); font-weight: 400; }
+
+/* ---------- tokens ---------- */
+:root {
+  --ink:        #16191c;
+  --ink-2:      #40474e;
+  --ink-3:      #6b7178;
+  --rule:       #d9d9d3;
+  --rule-soft:  #ececE6;
+  --paper:      #ffffff;
+  --sunken:     #f5f5f1;
+  --accent:     #16324f;
+  --accent-2:   #2e6ea8;
+  --brand-blue: #2e7fd1;
+  --brand-violet: #7a3fd6;
+  --brand-gold:   #d4a94e;
+  --night:      #0b0d0f;
+}
+
+/* ---------- page geometry ---------- */
+@page {
+  size: A4;
+  margin: 24mm 20mm 20mm 26mm;
+
+  @bottom-center {
+    content: counter(page);
+    font-family: "Inter"; font-size: 8pt; color: var(--ink-3);
+    padding-top: 5mm;
+  }
+  @top-left {
+    content: string(runninghead);
+    font-family: "Inter"; font-size: 7.5pt; font-weight: 500;
+    letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-3);
+    padding-bottom: 4mm;
+  }
+  @top-right {
+    content: "EdirasX Editorial Bible";
+    font-family: "Inter"; font-size: 7.5pt; color: var(--ink-3);
+    padding-bottom: 4mm;
+  }
+}
+
+/* Mirrored gutters so the binding edge always has the wider margin. */
+@page :left  { margin-left: 20mm; margin-right: 26mm; }
+@page :right { margin-left: 26mm; margin-right: 20mm; }
+
+/* The :left/:right mirroring further down also matches the cover and wins on
+   specificity, which left a pale band where the full-bleed ground stopped
+   short. Both sides of the named page are zeroed explicitly.
+   (`@page cover, @page cover:left` is invalid — each needs its own rule.) */
+@page cover {
+  size: A4;
+  margin: 0;
+  background: #0b0d0f;
+  @bottom-center { content: none; }
+  @top-left { content: none; }
+  @top-right { content: none; }
+}
+@page cover:left  { margin: 0; }
+@page cover:right { margin: 0; }
+
+@page part {
+  @bottom-center { content: none; }
+  @top-left { content: none; }
+  @top-right { content: none; }
+}
+
+@page frontmatter {
+  /* Deliberately shares the main arabic sequence: the table of contents cites
+     absolute page numbers, so a roman front-matter sequence would make every
+     front-matter reference point at the wrong page. */
+  @top-left { content: none; }
+  @top-right { content: none; }
+}
+
+/* ---------- base ---------- */
+html {
+  font-family: "Source Serif 4", "Amiri", serif;
+  font-size: 10.4pt;
+  line-height: 1.55;
+  color: var(--ink);
+  hyphens: auto;
+}
+body { margin: 0; }
+p { margin: 0 0 0.72em 0; text-align: justify; }
+p.lead {
+  font-size: 12pt; line-height: 1.5; color: var(--ink-2);
+  text-align: left; margin-bottom: 1.1em;
+}
+strong { font-weight: 700; }
+em { font-style: italic; }
+code, .mono {
+  font-family: "IBM Plex Mono", monospace; font-size: 0.86em;
+  /* An identifier broken across lines with a hyphen reads as a different
+     identifier. Wrap it whole or not at all. */
+  hyphens: none; overflow-wrap: anywhere;
+}
+table.data, h1, h2, h3, h4, h5, .toc-entry, .standfirst, .callout, blockquote,
+.contrast, figcaption, .cover, .meta-table { hyphens: none; }
+
+/* ---------- cover ---------- */
+/* Painted on the element rather than only on @page: an @page background left a
+   pale edge where the page box and the printable area disagreed. The element
+   fills the sheet, so the ground is unambiguous. */
+.cover {
+  page: cover;
+  background: var(--night);
+  color: #f4f5f3;
+  width: 210mm; height: 297mm;
+  padding: 30mm 26mm 20mm 26mm;
+  box-sizing: border-box;
+  display: flex; flex-direction: column;
+}
+.cover .mark { width: 74mm; }
+.cover .spacer { flex: 1 1 auto; min-height: 20mm; }
+/* Set in Amiri and rendered as HTML rather than inside the SVG wordmark:
+   WeasyPrint does not shape Arabic in SVG text, which produced isolated
+   glyphs in reverse order. */
+.cover-arabic {
+  font-family: "Amiri", serif; font-size: 13pt; color: #7c8792;
+  margin: 4mm 0 0 0; text-align: left; letter-spacing: 0;
+}
+.cover-rule {
+  height: 2pt; width: 52mm;
+  background: linear-gradient(90deg, var(--brand-blue), var(--brand-violet) 62%, var(--brand-gold));
+  margin-bottom: 11mm;
+}
+.cover h1 {
+  font-family: "Source Serif 4"; font-weight: 600;
+  font-size: 44pt; line-height: 1.06; letter-spacing: -0.02em;
+  margin: 0 0 9mm 0; color: #ffffff;
+}
+.cover .subtitle {
+  font-family: "Inter"; font-weight: 400; font-size: 11pt;
+  color: #97a2ac; max-width: 112mm; line-height: 1.6; margin: 0;
+  text-align: left; hyphens: none;
+}
+.cover .eyebrow {
+  font-family: "Inter"; font-weight: 600; font-size: 8.5pt;
+  letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--brand-blue); margin-bottom: 5mm;
+}
+/* In the flex flow, not absolutely positioned — the absolute version collided
+   with the subtitle as soon as the subtitle wrapped to a third line. */
+.cover .footer {
+  margin-top: 16mm;
+  border-top: 0.5pt solid #262c33; padding-top: 5mm;
+  font-family: "Inter"; font-size: 8pt; color: #6f7981;
+  display: flex; justify-content: space-between;
+}
+
+/* ---------- title verso (metadata) ---------- */
+.verso { page: frontmatter; page-break-before: always; }
+.verso h2 {
+  font-family: "Inter"; font-size: 8.5pt; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3);
+  margin: 0 0 6mm 0;
+}
+.meta-table { width: 100%; border-collapse: collapse; font-family: "Inter"; font-size: 9pt; }
+.meta-table td { padding: 2.6mm 0; border-bottom: 0.4pt solid var(--rule-soft); vertical-align: top; }
+.meta-table td:first-child { width: 42mm; color: var(--ink-3); }
+
+/* ---------- table of contents ---------- */
+.toc { page: frontmatter; page-break-before: always; }
+.toc h2, .front h2 {
+  font-family: "Source Serif 4"; font-weight: 600; font-size: 22pt;
+  margin: 0 0 10mm 0; letter-spacing: -0.01em;
+}
+.toc-part {
+  font-family: "Inter"; font-weight: 600; font-size: 8pt;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent-2);
+  margin: 8mm 0 3mm 0;
+}
+.toc-entry {
+  display: flex; align-items: baseline;
+  font-size: 10.5pt; margin-bottom: 2.4mm; text-decoration: none; color: var(--ink);
+}
+.toc-num {
+  font-family: "Inter"; font-size: 8.5pt; color: var(--ink-3);
+  width: 11mm; flex: none;
+}
+.toc-title { flex: none; padding-right: 2mm; }
+.toc-dots {
+  flex: 1; border-bottom: 0.4pt dotted var(--rule);
+  margin: 0 1mm 0.9mm 1mm; min-width: 6mm;
+}
+.toc-page { font-family: "Inter"; font-size: 9pt; color: var(--ink-2); flex: none; }
+.toc-entry::after { content: target-counter(attr(href), page); }
+.toc-entry .toc-page::after { content: ""; }
+
+/* ---------- part divider ---------- */
+.part {
+  page: part; page-break-before: right;
+  height: 210mm; display: flex; flex-direction: column; justify-content: center;
+}
+.part .num {
+  font-family: "Inter"; font-weight: 600; font-size: 9pt;
+  letter-spacing: 0.24em; text-transform: uppercase; color: var(--accent-2);
+  margin-bottom: 6mm;
+}
+.part h2 {
+  font-family: "Source Serif 4"; font-weight: 600; font-size: 34pt;
+  margin: 0 0 8mm 0; letter-spacing: -0.015em;
+}
+.part .bar {
+  height: 2pt; width: 34mm;
+  background: linear-gradient(90deg, var(--brand-blue), var(--brand-violet));
+  margin-bottom: 8mm;
+}
+.part .standfirst {
+  font-size: 12.5pt; line-height: 1.5; color: var(--ink-2);
+  max-width: 118mm; text-align: left; hyphens: none;
+}
+
+/* ---------- chapters ---------- */
+.chapter { page-break-before: always; }
+.chapter-head { margin-bottom: 9mm; }
+.chapter-eyebrow {
+  font-family: "Inter"; font-weight: 600; font-size: 8pt;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent-2);
+  margin-bottom: 3.5mm;
+}
+h1.chapter-title {
+  font-family: "Source Serif 4"; font-weight: 600; font-size: 25pt;
+  line-height: 1.15; letter-spacing: -0.015em; margin: 0 0 5mm 0;
+  string-set: runninghead content();
+}
+.chapter-rule {
+  height: 1.6pt; width: 26mm;
+  background: linear-gradient(90deg, var(--brand-blue), var(--brand-violet));
+}
+.front { page: frontmatter; page-break-before: always; }
+.front h2 { string-set: runninghead content(); }
+
+h2.section {
+  font-family: "Source Serif 4"; font-weight: 600; font-size: 14.5pt;
+  margin: 8mm 0 3mm 0; letter-spacing: -0.005em;
+  page-break-after: avoid;
+}
+h3.section {
+  font-family: "Inter"; font-weight: 600; font-size: 10pt;
+  margin: 6mm 0 2.4mm 0; color: var(--accent);
+  page-break-after: avoid;
+}
+h4.section {
+  font-family: "Inter"; font-weight: 600; font-size: 9pt;
+  letter-spacing: 0.05em; margin: 5mm 0 2mm 0; color: var(--ink-2);
+  page-break-after: avoid;
+}
+.section-num { color: var(--ink-3); font-weight: 400; padding-right: 2.5mm; }
+
+/* ---------- lists ---------- */
+ul, ol { margin: 0 0 0.8em 0; padding-left: 5.5mm; }
+li { margin-bottom: 1.6mm; text-align: left; }
+ul { list-style: none; padding-left: 5mm; }
+ul > li::before {
+  content: "—"; color: var(--accent-2);
+  display: inline-block; width: 4.5mm; margin-left: -4.5mm;
+}
+ol { list-style: none; counter-reset: item; padding-left: 8mm; }
+ol > li { counter-increment: item; }
+ol > li::before {
+  content: counter(item);
+  font-family: "Inter"; font-size: 8.5pt; font-weight: 600; color: var(--accent-2);
+  display: inline-block; width: 8mm; margin-left: -8mm;
+}
+ul.checklist { padding-left: 7mm; }
+ul.checklist > li::before {
+  content: ""; display: inline-block;
+  width: 3.1mm; height: 3.1mm; margin-left: -7mm; margin-right: 3.9mm;
+  border: 0.6pt solid var(--ink-3); border-radius: 0.6mm;
+  vertical-align: baseline;
+}
+
+/* ---------- tables ---------- */
+table.data {
+  width: 100%; border-collapse: collapse; margin: 4mm 0 6mm 0;
+  font-family: "Inter"; font-size: 8.8pt; line-height: 1.42;
+  page-break-inside: avoid;
+}
+table.data th {
+  text-align: left; font-weight: 600; font-size: 7.6pt;
+  letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-3);
+  padding: 0 3mm 2.2mm 0; border-bottom: 0.9pt solid var(--ink);
+}
+table.data td {
+  padding: 2.4mm 3mm 2.4mm 0; border-bottom: 0.4pt solid var(--rule-soft);
+  vertical-align: top; text-align: left; word-break: normal;
+}
+table.data tr:last-child td { border-bottom: 0.7pt solid var(--rule); }
+table.data th:last-child, table.data td:last-child { padding-right: 0; }
+
+/* ---------- callouts ---------- */
+.callout {
+  border-left: 2pt solid var(--accent-2);
+  background: var(--sunken);
+  padding: 4.5mm 5mm 3.5mm 5mm;
+  margin: 5mm 0 6mm 0;
+  page-break-inside: avoid;
+}
+.callout .label {
+  font-family: "Inter"; font-weight: 600; font-size: 7.6pt;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--accent-2); margin-bottom: 2.2mm;
+}
+.callout p { margin: 0; text-align: left; }
+.callout.constitutional { border-left-color: var(--brand-violet); }
+.callout.constitutional .label { color: var(--brand-violet); }
+.callout.test { border-left-color: var(--brand-blue); }
+.callout.test .label { color: var(--brand-blue); }
+
+blockquote {
+  margin: 6mm 0; padding: 0 0 0 6mm;
+  border-left: 2pt solid var(--brand-violet);
+  font-size: 13pt; line-height: 1.42; color: var(--accent);
+  font-weight: 600; font-style: normal;
+}
+blockquote p { text-align: left; margin: 0; }
+
+/* ---------- contrast panel ---------- */
+.contrast {
+  display: flex; gap: 6mm; margin: 5mm 0 6mm 0; page-break-inside: avoid;
+}
+.contrast .col { flex: 1; padding: 4mm 4.5mm; }
+.contrast .col.negative { background: var(--sunken); border-top: 2pt solid #9b2226; }
+.contrast .col.positive { background: var(--sunken); border-top: 2pt solid #1c6b4a; }
+.contrast .col h5 {
+  font-family: "Inter"; font-weight: 600; font-size: 7.8pt;
+  letter-spacing: 0.14em; text-transform: uppercase; margin: 0 0 3mm 0;
+}
+.contrast .col.negative h5 { color: #9b2226; }
+.contrast .col.positive h5 { color: #1c6b4a; }
+.contrast ul { margin: 0; padding-left: 4mm; font-size: 9.4pt; }
+.contrast ul > li::before { content: "·"; width: 3.5mm; margin-left: -3.5mm; }
+
+/* ---------- figures ---------- */
+figure { margin: 6mm 0 7mm 0; page-break-inside: avoid; }
+figure svg { width: 100%; height: auto; }
+figcaption {
+  font-family: "Inter"; font-size: 8pt; color: var(--ink-3);
+  margin-top: 3mm; line-height: 1.45;
+}
+
+hr {
+  border: none; border-top: 0.4pt solid var(--rule);
+  margin: 7mm 0; height: 0;
+}
+
+/* ---------- closing ---------- */
+.closing { page-break-before: right; }
+.colophon-end {
+  margin-top: 14mm; padding-top: 6mm; border-top: 0.5pt solid var(--rule);
+  font-family: "Inter"; font-size: 8pt; color: var(--ink-3); line-height: 1.6;
+}

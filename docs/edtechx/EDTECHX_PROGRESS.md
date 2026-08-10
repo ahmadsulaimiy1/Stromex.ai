@@ -1,4 +1,4 @@
-# EdTechX Progress
+# EdirasX Progress
 
 **The resumption document.** A session that picks this up cold should be able to
 continue without re-deriving anything. Consolidated from the nine state files
@@ -12,7 +12,7 @@ beat nine.
 
 ## Current state in one paragraph
 
-The eleven governing documents exist and are internally consistent. EdTechX is
+The eleven governing documents exist and are internally consistent. EdirasX is
 placed in its own namespace (`docs/edtechx/`, `apps/edtechx-api/`) leaving
 StromeX untouched. Phase 1 — the isolation spine — is built and tested against
 real PostgreSQL: three-layer tenant isolation with `FORCE ROW LEVEL SECURITY`
@@ -29,7 +29,7 @@ enrolment) is next.
 
 ### Phase 0 — Constitution ✅
 - Repository and environment inspected; PostgreSQL 16, Python 3.11, Node 22 confirmed available.
-- Placement decision made and recorded (ADR-001): EdTechX in its own namespace; StromeX untouched.
+- Placement decision made and recorded (ADR-001): EdirasX in its own namespace; StromeX untouched.
 - Eleven governing documents written: Editorial Bible, Product Spec, UX Principles, Design System, Architecture, Database, Security, Permission Model, AI Architecture, Billing, Customization Engine.
 - Roadmap, decision record, and this progress system established.
 

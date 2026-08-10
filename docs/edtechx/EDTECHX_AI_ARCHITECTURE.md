@@ -1,4 +1,4 @@
-# EdTechX AI Architecture
+# EdirasX AI Architecture
 
 **Version:** 1.0
 **Constitution:** `EDTECHX_EDITORIAL_BIBLE.md` §7 is binding on everything below.
@@ -7,7 +7,7 @@
 
 ## 1. Principle
 
-The application never talks to an AI provider. It talks to the **EdTechX AI Gateway**, which decides who serves the request.
+The application never talks to an AI provider. It talks to the **EdirasX AI Gateway**, which decides who serves the request.
 
 ```
 Feature (Teacher AI, Design AI, …)
@@ -88,13 +88,13 @@ Order of consideration:
 
 ## 5. School-owned keys (BYO AI)
 
-Optional, Premium and above. The default is EdTechX-managed AI, because a school should not need to understand APIs to benefit from them.
+Optional, Premium and above. The default is EdirasX-managed AI, because a school should not need to understand APIs to benefit from them.
 
 - Credentials encrypted with envelope encryption; stored in `ai_provider_configs`; **write-only through the API** — no endpoint ever returns a key, masked or otherwise.
 - Validation on save: a minimal live call confirms the key works before it is accepted.
 - Rotation and revocation are first-class; revocation takes effect immediately across all workers.
-- When a tenant's own key fails, the school is notified and the tenant chooses in advance whether to fall back to EdTechX-managed AI or to fail closed.
-- BYO usage is metered for the school's visibility but not billed by EdTechX.
+- When a tenant's own key fails, the school is notified and the tenant chooses in advance whether to fall back to EdirasX-managed AI or to fail closed.
+- BYO usage is metered for the school's visibility but not billed by EdirasX.
 
 ---
 

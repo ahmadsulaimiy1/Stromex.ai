@@ -1,4 +1,4 @@
-# EdTechX Runbook
+# EdirasX Runbook
 
 Operational procedures. Written to be followed at 03:00 by someone who did not
 write the code.

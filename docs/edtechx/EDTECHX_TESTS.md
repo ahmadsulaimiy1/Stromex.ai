@@ -1,4 +1,4 @@
-# EdTechX Test Strategy and Status
+# EdirasX Test Strategy and Status
 
 **Version:** 1.0 · **Status as of:** end of session 1 — **121 passing, 0 failing**
 

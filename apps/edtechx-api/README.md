@@ -1,6 +1,6 @@
-# EdTechX API
+# EdirasX API
 
-Backend for EdTechX — the education platform that becomes your school's own platform.
+Backend for EdirasX — the education platform that becomes your school's own platform.
 
 Governing documents live in [`docs/edtechx/`](../../docs/edtechx/). Read
 [`EDTECHX_EDITORIAL_BIBLE.md`](../../docs/edtechx/EDTECHX_EDITORIAL_BIBLE.md) first;

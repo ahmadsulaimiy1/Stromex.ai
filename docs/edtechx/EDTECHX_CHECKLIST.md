@@ -1,4 +1,4 @@
-# EdTechX Implementation Checklist
+# EdirasX Implementation Checklist
 
 Tracks *what exists*, phase by phase. `EDTECHX_PROGRESS.md` carries the
 narrative and the next actions; this is the inventory.
