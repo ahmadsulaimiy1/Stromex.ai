@@ -76,6 +76,8 @@ def decrypt(token: str, *, purpose: str) -> str:
         raise DecryptionFailed("ciphertext failed authentication") from exc
 
 
-MFA_SECRET = "mfa.totp.secret"
+# Purpose labels, not secrets: they are the HKDF `info` string and the AEAD
+# additional data, and are safe to read.
+MFA_SECRET = "mfa.totp.secret"  # noqa: S105
 AI_CREDENTIAL = "ai.provider.credential"
 SAFEGUARDING = "people.safeguarding"
