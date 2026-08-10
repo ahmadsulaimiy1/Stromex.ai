@@ -73,6 +73,7 @@ enrolment) is next.
 | `test_auth.py` | 24 | Provisioning, sign-in uniformity, lockout, rotation, reuse detection, sign-out, audit |
 | `test_rate_limit.py` | 22 | Atomicity under concurrency, tenant scoping, oracle resistance, fail-closed — on both backends |
 | `test_migrations.py` | 5 | Upgrade, RLS gate, model drift, full downgrade → upgrade cycle |
+| `test_mfa.py` | 20 | RFC 6238 vectors, drift window, replay rejection, encryption at rest, challenge scoping, recovery-code spending |
 
 **Session liveness.** Every authenticated request now checks that its session
 is live, so sign-out takes effect immediately rather than at token expiry, and
@@ -154,8 +155,7 @@ ADR-019 so it is not later mistaken for carelessness.
 
 In priority order. Each carries the Bible's Definition of Done.
 
-1. **TOTP MFA** enrolment and challenge, required for `owner`, `admin`, `bursar`, `principal`.
-2. **Academic structure** — stages, levels, academic years, terms, class groups, subjects, class-subject allocation, grading scales and bands.
+1. **Academic structure** — stages, levels, academic years, terms, class groups, subjects, class-subject allocation, grading scales and bands.
 5. **People** — students, enrolments, guardians, student–guardian links, custom fields.
 6. **The Four Schools fixture** — configure all four Bible §8 shapes in tests and assert zero code changes were needed. This is the acceptance criterion for Phase 2.
 7. **Scope predicate compilation** — `taught_by_self`, `own_children`, `department` as SQL predicates applied to list queries, with the leak-by-row-count tests.

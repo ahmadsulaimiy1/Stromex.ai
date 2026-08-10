@@ -24,10 +24,12 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.errors import AccountLocked, InvalidCredentials, NotAuthenticated
 from app.core.security import (
+    InvalidToken,
     generate_refresh_token,
     hash_password,
     hash_refresh_token,
     issue_access_token,
+    issue_mfa_challenge,
     needs_rehash,
     verify_password,
 )
@@ -48,6 +50,19 @@ from app.modules.identity.models import (
 )
 
 logger = structlog.get_logger(__name__)
+
+
+class MfaRequired(Exception):
+    """The password was correct; a second factor is still owed.
+
+    Raised rather than returned so that no caller can mistake a half-finished
+    authentication for a finished one — the type system makes the tokens
+    unavailable rather than merely absent.
+    """
+
+    def __init__(self, challenge: str) -> None:
+        super().__init__("Multi-factor authentication required")
+        self.challenge = challenge
 
 
 @dataclass(frozen=True, slots=True)
@@ -165,6 +180,7 @@ def authenticate(
 
         user_id = user.id
         rehash = password_ok and needs_rehash(user.password_hash or "")
+        mfa_enabled = user.mfa_enabled_at is not None
     finally:
         platform.close()
 
@@ -185,6 +201,16 @@ def authenticate(
         raise InvalidCredentials()
 
     _clear_failures(user_id, rehash_password=password if rehash else None)
+
+    if mfa_enabled:
+        # Stop here. No session row, no tokens — only a short-lived challenge
+        # that authorises the second factor and nothing else.
+        raise MfaRequired(
+            issue_mfa_challenge(
+                user_id=user_id, membership_id=membership.id, tenant_id=tenant_id
+            )
+        )
+
     tokens = _issue_session(
         db,
         tenant_id=tenant_id,
@@ -473,3 +499,61 @@ def create_membership(
     db.add(membership)
     db.flush()
     return membership
+
+
+def complete_mfa(
+    db: Session,
+    *,
+    tenant_id: uuid.UUID,
+    challenge: str,
+    code: str,
+    ip: str | None = None,
+    user_agent: str | None = None,
+) -> IssuedTokens:
+    """Finish a sign-in that was suspended pending a second factor."""
+    from app.core.security import decode_mfa_challenge
+    from app.modules.identity import mfa
+
+    try:
+        claims = decode_mfa_challenge(challenge)
+    except InvalidToken as exc:
+        raise NotAuthenticated() from exc
+
+    # A challenge minted for one school must not complete a sign-in at another.
+    if claims.tenant_id != tenant_id:
+        _record_security(
+            tenant_id,
+            SecurityEventKind.tenant_mismatch,
+            user_id=claims.user_id,
+            severity=Severity.critical,
+            ip=ip,
+            reason="mfa_challenge_wrong_tenant",
+        )
+        raise NotAuthenticated()
+
+    membership = db.get(Membership, claims.membership_id)
+    if membership is None or membership.status is not MembershipStatus.active:
+        raise NotAuthenticated()
+
+    mfa.verify_code(claims.user_id, code, tenant_id=tenant_id, ip=ip)
+
+    tokens = _issue_session(
+        db,
+        tenant_id=tenant_id,
+        user_id=claims.user_id,
+        membership_id=claims.membership_id,
+        ip=ip,
+        user_agent=user_agent,
+    )
+    audit_record(
+        db,
+        action=AuditAction.login,
+        resource_type="session",
+        resource_id=tokens.session_id,
+        actor_user_id=claims.user_id,
+        actor_membership_id=claims.membership_id,
+        reason="Completed with second factor",
+        ip=ip,
+        user_agent=user_agent,
+    )
+    return tokens

@@ -25,7 +25,7 @@ Legend: ✅ done · 🔨 in progress · ⬜ not started
 - ✅ Error taxonomy (403 permission / 404 scope / 402 entitlement)
 - ✅ Security headers, strict CSP, body-size limit
 - ✅ Redis-backed rate limiting, atomic and tenant-scoped
-- ⬜ Redis token denylist (sign-out currently leaves the access token valid until expiry)
+- ✅ Session liveness checked per request (sign-out is immediate)
 
 **Tenancy**
 - ✅ `tenants`, `tenant_domains`
@@ -55,7 +55,7 @@ Legend: ✅ done · 🔨 in progress · ⬜ not started
 - ✅ Sign-in / refresh / sign-out / sign-out-everywhere endpoints
 - ✅ Refresh rotation with reuse detection, revoking the whole family
 - ✅ Lockout enforcement
-- ⬜ TOTP MFA · ⬜ SSO
+- ✅ TOTP MFA (enrolment, activation, challenge, recovery codes, replay rejection) · ⬜ SSO
 
 **Authorization**
 - ✅ Permission catalogue validated at boot
@@ -77,7 +77,7 @@ Legend: ✅ done · 🔨 in progress · ⬜ not started
 - ✅ Core-layering test
 - ✅ Provider-SDK confinement test
 - ✅ Route coverage test — **proven load-bearing**
-- ✅ 179 tests passing; ruff clean
+- ✅ 209 tests passing; ruff clean
 - ✅ Alembic baseline migration with an RLS gate · ⬜ CI pipeline
 
 ## Phase 2 — Institution ⬜

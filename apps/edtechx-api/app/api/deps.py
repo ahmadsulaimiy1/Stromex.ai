@@ -340,3 +340,30 @@ def limit_by_account(request: Request, tenant: TenantContext, identifier: str) -
         raise errors.RateLimited(
             retry_after=decision.retry_after, policy="sign_in.account"
         )
+
+
+class RequireElevation:
+    """Route dependency demanding a recent re-authentication.
+
+    For actions a stolen unlocked session would take first: removing the second
+    factor, changing another person's role, publishing results. Ordinary
+    authentication is not enough, because it may be hours old.
+    """
+
+    def __init__(self, action: str) -> None:
+        self.action = action
+
+    # The dependency is written out rather than using the `CurrentPrincipal`
+    # alias: under `from __future__ import annotations` the alias resolves to
+    # a bare `Principal` for this callable, and FastAPI then treats it as a
+    # query parameter instead of a dependency.
+    def __call__(
+        self, principal: Annotated[Principal, Depends(get_principal)]
+    ) -> Principal:
+        if not is_elevated(
+            datetime.fromtimestamp(principal.authenticated_at, UTC)
+        ):
+            raise errors.ElevationRequired(
+                f"{self.action} needs you to confirm your password again."
+            )
+        return principal

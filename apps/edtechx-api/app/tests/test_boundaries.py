@@ -116,6 +116,14 @@ ROUTES_WITHOUT_PERMISSION: set[tuple[str, str]] = {
     ("POST", "/api/v1/auth/refresh"),
     # Authenticated, but signs out only the caller's own session.
     ("POST", "/api/v1/auth/sign-out"),
+    # Completes a sign-in that already passed the password step; the challenge
+    # token is the authority, and no principal exists yet.
+    ("POST", "/api/v1/auth/mfa/verify"),
+    # Authenticated, and act only on the caller's own second factor. Removal
+    # additionally requires elevation.
+    ("POST", "/api/v1/auth/mfa/enrol"),
+    ("POST", "/api/v1/auth/mfa/activate"),
+    ("DELETE", "/api/v1/auth/mfa"),
 }
 
 DOC_PREFIXES = ("/docs", "/redoc", "/openapi.json")

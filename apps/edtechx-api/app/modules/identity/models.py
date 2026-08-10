@@ -15,6 +15,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     DateTime,
     Enum,
@@ -24,7 +25,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import CITEXT
+from sqlalchemy.dialects.postgresql import CITEXT, JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -64,6 +65,13 @@ class User(UUIDPrimaryKey, Timestamped, Base):
     # every call site.
     mfa_secret_encrypted: Mapped[str | None] = mapped_column(Text)
     mfa_enabled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # The last TOTP counter accepted for this account. Without it a code is
+    # valid for its whole 30-second step and can be replayed by anyone who
+    # sees it once — which defeats the "one-time" in one-time password.
+    mfa_last_counter: Mapped[int | None] = mapped_column(BigInteger)
+    # Recovery codes, hashed. Stored like passwords because that is what they
+    # are: a credential that bypasses the second factor entirely.
+    mfa_recovery_hashes: Mapped[list | None] = mapped_column(JSONB)
 
     # Brute-force protection. Kept on the user, not only in Redis, so that a
     # cache flush cannot reset an attacker's budget.

@@ -212,3 +212,60 @@ def is_elevated(authenticated_at: datetime) -> bool:
     settings = get_settings()
     age = datetime.now(UTC) - authenticated_at
     return age <= timedelta(minutes=settings.elevation_ttl_minutes)
+
+
+# --- multi-factor challenge ----------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class MfaChallenge:
+    user_id: uuid.UUID
+    membership_id: uuid.UUID
+    tenant_id: uuid.UUID
+    expires_at: datetime
+
+
+def issue_mfa_challenge(
+    *, user_id: uuid.UUID, membership_id: uuid.UUID, tenant_id: uuid.UUID
+) -> str:
+    """A short-lived token proving the password step was passed.
+
+    Deliberately not an access token: it authorises exactly one thing, the
+    second factor. Five minutes is long enough to find a phone and short enough
+    that an intercepted challenge is worthless.
+    """
+    now = datetime.now(UTC)
+    expires = now + timedelta(minutes=5)
+    payload = {
+        "sub": str(user_id),
+        "mid": str(membership_id),
+        "tid": str(tenant_id),
+        "typ": "mfa_challenge",
+        "iat": int(now.timestamp()),
+        "exp": int(expires.timestamp()),
+    }
+    settings = get_settings()
+    return jwt.encode(payload, settings.secret_key, algorithm=settings.jwt_algorithm)
+
+
+def decode_mfa_challenge(token: str) -> MfaChallenge:
+    settings = get_settings()
+    try:
+        payload = jwt.decode(
+            token, settings.secret_key, algorithms=[settings.jwt_algorithm]
+        )
+    except jwt.InvalidTokenError as exc:
+        raise InvalidToken("Challenge is invalid or has expired.") from exc
+    if payload.get("typ") != "mfa_challenge":
+        # An access token must not be usable as a challenge, or the second
+        # factor could be satisfied by the first.
+        raise InvalidToken("Token is not an MFA challenge.")
+    try:
+        return MfaChallenge(
+            user_id=uuid.UUID(payload["sub"]),
+            membership_id=uuid.UUID(payload["mid"]),
+            tenant_id=uuid.UUID(payload["tid"]),
+            expires_at=datetime.fromtimestamp(payload["exp"], UTC),
+        )
+    except (KeyError, ValueError, TypeError) as exc:
+        raise InvalidToken("Challenge claims are malformed.") from exc
