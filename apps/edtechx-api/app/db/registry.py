@@ -39,6 +39,7 @@ from app.modules.billing.models import (
     UsageRecord,
 )
 from app.modules.customization.models import TerminologySet
+from app.modules.experience.models import InterfaceProfile, UserPreference
 from app.modules.identity.models import (
     Membership,
     User,
@@ -73,6 +74,7 @@ __all__ = [
     "GuardianRelationship",
     "ImportBatch",
     "ImportRow",
+    "InterfaceProfile",
     "Level",
     "Membership",
     "MembershipRole",
@@ -95,6 +97,7 @@ __all__ = [
     "TerminologySet",
     "UsageRecord",
     "User",
+    "UserPreference",
     "UserSession",
 ]
 

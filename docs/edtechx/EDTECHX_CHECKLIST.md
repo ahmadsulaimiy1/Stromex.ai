@@ -82,7 +82,7 @@ Legend: ✅ done · 🔨 in progress · ⬜ not started
 - ✅ Core-layering test
 - ✅ Provider-SDK confinement test
 - ✅ Route coverage test — **proven load-bearing**
-- ✅ 503 tests passing; ruff clean
+- ✅ 534 tests passing; ruff clean
 - ✅ Alembic baseline migration with an RLS gate · ⬜ CI pipeline
 
 ## Phase 2 — Institution 🔨
@@ -119,7 +119,18 @@ workflow) · assessment and results with an explicit publish step · report card
 announcements and the notification port · fees, invoices, payments, receipts,
 money invariants · payment port with sandbox adapter · journeys 1, 4, 5, 6, 7.
 
-## Phase 4 — Experience ⬜
+## Phase 4 — Experience 🔨
+
+✅ **Contextual complexity resolution** — one call returns this person's world:
+only what the institution uses, only what they may see, only what the plan
+includes, ordered by what they came to do (ADR-031) · ✅ capability catalogue ·
+✅ role shapes · ✅ interface profiles and user preferences · ✅ zero-state
+intelligence · ✅ **the UX acceptance test** — nursery ≠ secondary ≠ university
+≠ doctoral, four distinct experiences from one deployment
+
+⬜ design-system implementation · ⬜ app shell · ⬜ persona dashboards ·
+⬜ teacher attendance under 30 seconds · ⬜ theme resolution · ⬜ PWA and
+offline queue · ⬜ accessibility pass · ⬜ performance budgets.
 
 Design-system implementation · app shell · six persona dashboards · teacher
 attendance under 30 seconds · theme resolution and per-tenant stylesheet · PWA

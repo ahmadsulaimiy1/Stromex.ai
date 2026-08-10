@@ -552,3 +552,42 @@ The sixth was not. A route was made to query the table directly with `from sqlal
 **Enforcement.** `test_entitlements.py` — 29 tests over both one-way rules, all four negative answers, the limit/meter distinction, overrides and their expiry, subscription states, and cross-institution isolation. Four sabotages caught: an unlisted limit defaulting to unlimited, an institution enabling what it never bought, the disabled/not-in-plan answers collapsed into one, and `past_due` withholding the register.
 
 A fifth finding came from the tests rather than from a sabotage: the check forbidding plan names outside the billing module flagged the `institution.*` **permission** module. Rather than loosen it, plan keys are now prefixed `plan.` so a plan key reads as one everywhere it appears and the check can be exact. A check that cries wolf gets deleted rather than obeyed.
+
+---
+
+## ADR-031 — Complexity must be capability, never burden
+
+**Status:** Accepted · **Constitutional** · The interface counterpart to ADR-024
+
+**Context.** ADR-024 made EdirasX able to represent early years through doctoral research in one engine. That is worth nothing — worse than nothing — if a nursery administrator has to walk past *Programmes*, *Qualifications*, *Credit systems* and *Research milestones* to reach the register. Flexibility a person has to step around is not a feature they have; it is a tax they pay for other people's features.
+
+**Decision.** A capability appears only when four independent questions all say yes, and **what happens when one says no differs by question**:
+
+| Question | Answered from | When the answer is no |
+|---|---|---|
+| Does this institution's world contain the concept? | Its own configuration | **Absent.** Not empty, not disabled, not a padlock |
+| May this person see it? | Their permissions | **Absent.** Existence is sensitive (ADR-004) |
+| Has the institution bought it? | The plan (ADR-030) | Absent — *unless* the viewer could actually buy it, in which case it becomes an offer |
+| Is it what this person came here to do? | Their role | Present, lower down. Ordering, never access |
+
+Resolved once on the server, in `experience.service.resolve`. Not in the client: if the interface decides, then the web app, the phone, and every future consumer decide again, and they drift.
+
+**Configuration is derived, not declared as a type.** An institution's world contains programmes because it has programme rows — not because somebody chose `NURSERY | SECONDARY | UNIVERSITY` from a list. That enum is ADR-024's forbidden one arriving through the interface's back door, and it would be wrong for the first institution that is two things at once, which is most of them. A static test forbids `institution_type`, `school_type` and their variants anywhere in product code.
+
+Two cases derivation cannot cover, and one small table (`interface_profiles`) that covers them: a university on its first morning has no rows to infer from, so it may **declare** the layers it intends to use; and an institution may **suppress** a layer it has stopped using. The asymmetry is deliberate — declaration is additive, suppression cannot remove a layer that has rows. *An institution can always show a layer it does not yet use, and can never hide one it is actively using.* Data that exists stays reachable.
+
+**Zero states are the other half.** A capability that is present with no records gets a useful empty state — "Add your first child", in the institution's own word for a child. A capability that is *absent* gets no empty state, because it has no state: there is nothing to be empty.
+
+**Three judgements worth recording.**
+
+*An upgrade shown to somebody who cannot buy is an advertisement placed in their way.* A teacher who cannot authorise a purchase gains nothing from a padlocked *Design Studio* in their navigation, and loses a little attention every day. So an unentitled capability is an offer only to somebody holding `billing.subscription.write`, and absent for everybody else.
+
+*Absences carry reasons.* "This institution does not use programmes" and "you may not see programmes" are different facts, and a support conversation that cannot tell them apart goes nowhere. The reasons are returned only to somebody who could act on them.
+
+*Preferences are tenant-owned.* A teacher who works at two institutions has two working lives; the density they chose for a nursery register should not follow them into a university's results screen. The person is one human (ADR-027); their preferences are about a place.
+
+**Enforcement.** `test_experience.py` — 20 tests over four institutions on one deployment. A nursery administrator is shown none of programmes, qualifications, credits, faculties, cohorts, supervision, milestones or transcripts, and reads "Children" and "Rooms" because that is what the institution says. A university sees faculties, programmes, levels, credits, cohorts and semesters, reads "Faculties" and "Modules", and is shown no research concepts. A doctoral institute additionally sees supervision and milestones and, running no classes, is shown no classes or timetable. **All four produce four distinct sets** — asserted directly. Within one institution, a teacher, a parent and a bursar open three different products.
+
+Four sabotages caught: showing every concept the database supports, rendering unpermitted capabilities as disabled rows, advertising upgrades to everybody, and letting an institution hide a layer full of its own records.
+
+**A defect the suite found on its first run.** A registrar could not see academic units — the capability requires `institution.department.read` and the role template never had it, so a registrar who places students into departments could not find their own institution's structure. The role gained the permission; the test was not weakened. It is a small illustration of why the experience layer earns its acceptance suite: the backend was correct, every isolation test was green, and the product was unusable for one of its most important roles.

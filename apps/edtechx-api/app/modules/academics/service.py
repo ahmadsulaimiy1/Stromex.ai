@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.db.base import Base
 from app.modules.academics.models import (
     AcademicPeriod,
     AcademicYear,
@@ -40,6 +41,7 @@ __all__ = [
     "find_level",
     "find_programme",
     "find_qualification",
+    "populated_layers",
     "programme_ids_under",
     "resolve_placement",
 ]
@@ -267,3 +269,53 @@ def class_group_ids_under(unit_ids):
             select(Level.id).where(Level.programme_id.in_(programme_ids_under(unit_ids)))
         )
     )
+
+
+# --- which layers this institution actually uses --------------------------
+
+
+LAYER_TABLES: dict[str, str] = {
+    "academic_units": "academic_units",
+    "stages": "academic_stages",
+    "programmes": "programmes",
+    "qualifications": "qualifications",
+    "levels": "levels",
+    "cohorts": "cohorts",
+    "classes": "class_groups",
+    "courses": "courses",
+    "periods": "academic_periods",
+    "years": "academic_years",
+    "credits": "credit_systems",
+    "grading": "grading_scales",
+    "progression": "progression_rules",
+    "supervision": "supervision_roles",
+    "milestones": "milestone_definitions",
+}
+
+
+def populated_layers(db: Session) -> frozenset[str]:
+    """The academic layers this institution has actually put rows in.
+
+    The honest signal for what an institution's world contains. A nursery has no
+    programmes because it has no programme rows — not because somebody ticked a
+    box marked "nursery", which would be ADR-024's forbidden enum arriving
+    through the back door.
+
+    One query rather than fifteen, because this runs on the way to rendering a
+    navigation and a person waiting for a page should not pay for fifteen round
+    trips to learn what their own school is.
+    """
+    from sqlalchemy import literal, union_all
+    from sqlalchemy import select as _select
+
+    parts = [
+        _select(literal(layer).label("layer")).where(
+            _select(model_table.c.id).limit(1).exists()
+        )
+        for layer, table_name in LAYER_TABLES.items()
+        if (model_table := Base.metadata.tables.get(table_name)) is not None
+    ]
+    if not parts:
+        return frozenset()
+    rows = db.execute(union_all(*parts)).scalars().all()
+    return frozenset(rows)

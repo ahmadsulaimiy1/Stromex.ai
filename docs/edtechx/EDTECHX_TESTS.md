@@ -1,6 +1,6 @@
 # EdirasX Test Strategy and Status
 
-**Version:** 1.6 · **Status as of:** session 5 — **503 passing, 0 failing**
+**Version:** 1.7 · **Status as of:** session 5 — **534 passing, 0 failing**
 
 ---
 
@@ -50,6 +50,7 @@ A release does not go out with any of these red. They are not "known failures".
 | `test_bulk_import.py` | No import can leave a school's records half-changed |
 | `test_scope_predicates.py` | Nobody learns anything they were not granted — by any route, count, total, search or aggregate |
 | `test_entitlements.py` | What a person may do and what the institution has bought stay separate in both directions |
+| `test_experience.py` | No institution is shown complexity it does not use |
 | `test_boundaries.py` | Boundaries hold; no route is unguarded |
 | `test_authz.py` | Permissions cannot leak across resources |
 | `test_security.py` | Credentials, tokens, and production configuration |
@@ -346,6 +347,40 @@ Five sabotages caught: a fail-open default, scopes unioned across permissions, a
 count over the table, a 403 distinguishing out-of-scope from non-existent, and
 elevation with no audit record. **A sixth was not** — see the load-bearing table.
 
+### `test_experience.py` — 20 tests
+
+The Universal Education Test asked the other way round. Four institutions on one
+deployment — a nursery, a secondary school, a university, a doctoral institute —
+and mostly *negative* assertions, because the law is about what people are not
+shown.
+
+A nursery administrator meets none of programmes, qualifications, credits,
+faculties, cohorts, supervision, milestones or transcripts, and reads
+"Children", "Rooms" and "Parents". A university registrar finds faculties,
+programmes, levels, credits, cohorts and semesters, reads "Faculties" and
+"Modules", and is shown no research concepts. A doctoral institute additionally
+finds supervision and milestones and, running no classes, is shown no classes or
+timetable. **The four produce four distinct capability sets**, asserted directly.
+
+Within one institution a teacher, a parent and a bursar open three different
+products: the teacher's world leads with attendance, the parent's is smaller than
+the teacher's on purpose, and the bursar is not handed the academic engine.
+
+Zero states: a present capability with no records carries "Add your first child";
+an absent one carries nothing, because it has no state. Empty groups are dropped
+rather than rendered.
+
+Declaration: a university on its first morning declares its layers and sees them
+immediately; an institution cannot suppress a layer full of its own records.
+
+Structural: no `institution_type` anywhere in product code, every capability
+names a real permission, feature, group and layer, and every label resolves to a
+known terminology key.
+
+Four sabotages caught: showing every concept the database supports, rendering
+unpermitted capabilities as disabled rows, advertising upgrades to everybody, and
+hiding a layer that has rows.
+
 ### `test_api.py` — 16 tests
 
 Health is public; security headers present; unknown host refused; `/context`
@@ -387,6 +422,10 @@ driver names; oversized bodies rejected at the edge.
 | An institution cannot enable what it never bought | The setting made to override the plan | Flagged |
 | Disabled and not-in-plan are different answers | Collapsed into one 402 | Two tests failed |
 | `past_due` keeps the register | Made to stop entitling | Flagged |
+| Absent concepts stay absent | Every concept the database supports made visible | Eight tests failed |
+| Unpermitted capabilities are absent, not disabled | The permission gate removed | Two tests failed |
+| An upgrade is shown only to somebody who could buy | Offered to everybody | Flagged: a teacher was handed a padlock |
+| An institution cannot hide data it is using | Suppression made absolute | Flagged |
 | **Routes cannot query a scoped table directly** | `from sqlalchemy import select as _select` in a handler | **Not caught.** The check listed unsafe call *names*, and a rename walked past it. Now inverted: every call taking a scoped model is suspect unless it is one of the four helpers that carry a predicate by construction. Re-sabotaged; caught |
 
 ---

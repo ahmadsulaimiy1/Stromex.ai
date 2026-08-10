@@ -101,6 +101,12 @@ SYSTEM_ROLES: tuple[RoleTemplate, ...] = (
             "people.guardian.manage",
             "people.enrolment.manage",
             "people.award.manage",
+            # A registrar places students into faculties and departments, so
+            # they must be able to see them. Absent until the experience layer
+            # asked the question and found a registrar unable to find their own
+            # institution's structure.
+            "institution.department.read",
+            "institution.campus.read",
             "academics.year.manage",
             "academics.term.manage",
             "academics.level.manage",
@@ -148,6 +154,8 @@ SYSTEM_ROLES: tuple[RoleTemplate, ...] = (
             "finance.report.read",
             "finance.report.export",
             "institution.staff.read",
+            "institution.department.read",
+            "institution.campus.read",
             "communication.announcement.publish",
             "communication.announcement.create",
             "communication.announcement.read",

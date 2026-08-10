@@ -24,10 +24,11 @@ academic engine (ADR-024) and the people-and-enrolment model (ADR-027), and a
 cross-tenant *reference* hole in the isolation spine has been found and closed
 (ADR-026), bulk import lands whole or not at all (ADR-028), and scopes now
 compile to SQL predicates resolved per permission and failing closed (ADR-029).
-Entitlement is separated from authorization in both directions (ADR-030). 503
-tests pass; ruff is clean. Nothing is stubbed or faked. **Phase 2 is
-substantially complete**; custom fields remain, and Phase 3 (daily operations)
-is next.
+Entitlement is separated from authorization in both directions (ADR-030), and
+the experience layer now resolves each institution's world from its own
+configuration so a nursery never meets the academic engine (ADR-031). 534 tests
+pass; ruff is clean. Nothing is stubbed or faked. Phase 3 (daily operations) and
+the rest of Phase 4 are next.
 
 ---
 
@@ -271,6 +272,34 @@ Twenty-nine tests; four sabotages caught. A fifth finding came from a test
 rather than a sabotage: the "no plan name outside billing" check flagged the
 `institution.*` permission module, so plan keys are now prefixed `plan.` and the
 check is exact rather than approximate.
+
+**Contextual complexity** (`modules/experience/`). The UX law — *complexity must
+be capability, never burden* — made architecture rather than convention. One
+call returns a person's world: only the concepts their institution actually
+uses, only what they may see, only what the plan includes, in the institution's
+own words, ordered by what they came here to do.
+
+Four questions, and what happens when each says no differs. Not configured and
+not permitted are both *absent* — not empty, not disabled, not a padlock. Not
+entitled becomes an offer, but only to somebody who could actually buy it: a
+padlock a teacher cannot open is an advertisement placed in their way. Role
+affects order, never access.
+
+Configuration is derived from the rows an institution has, never from an
+institution *type* — a static check forbids `institution_type` and its variants
+anywhere in product code. `interface_profiles` covers the two cases derivation
+cannot: a university on its first morning declares what it intends to use, and
+an institution may suppress a layer it has stopped using — but never one that
+has rows, because data that exists stays reachable.
+
+Twenty tests across four institutions on one deployment, producing four distinct
+capability sets. Four sabotages caught.
+
+**A defect the suite found on its first run.** A registrar could not see academic
+units: the capability requires `institution.department.read` and the role
+template never had it. The backend was correct and every isolation test was
+green, and the product was unusable for one of its most important roles. That is
+what the experience acceptance suite is for.
 
 ---
 

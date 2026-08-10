@@ -109,6 +109,10 @@ ROUTES_WITHOUT_PERMISSION: set[tuple[str, str]] = {
     ("GET", "/api/v1/context"),
     # /me is authenticated but grants nothing beyond the caller's own identity.
     ("GET", "/api/v1/me"),
+    # Authenticated, and returns only what this person may already see: the
+    # navigation is itself computed from their permissions, so a permission
+    # guarding it would be checking the same thing twice.
+    ("GET", "/api/v1/experience"),
     # Authentication must be reachable before a principal exists. These are the
     # most exposed routes in the product and are guarded by rate limiting and
     # uniform responses rather than by permission.
