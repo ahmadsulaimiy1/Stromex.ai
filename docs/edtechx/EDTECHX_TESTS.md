@@ -1,6 +1,6 @@
 # EdirasX Test Strategy and Status
 
-**Version:** 1.2 · **Status as of:** session 4 — **293 passing, 0 failing**
+**Version:** 1.3 · **Status as of:** session 5 — **344 passing, 0 failing**
 
 ---
 
@@ -45,7 +45,8 @@ A release does not go out with any of these red. They are not "known failures".
 
 | Suite | Guarantee |
 |---|---|
-| `test_tenant_isolation.py` | No tenant reaches another's data by any path |
+| `test_tenant_isolation.py` | No tenant reaches another's data — or *references* it — by any path |
+| `test_people_enrolment.py` | A person's record and history cannot be rewritten, lost, or seen by another institution |
 | `test_boundaries.py` | Boundaries hold; no route is unguarded |
 | `test_authz.py` | Permissions cannot leak across resources |
 | `test_security.py` | Credentials, tokens, and production configuration |
@@ -58,7 +59,7 @@ Added as their phases land: SSRF egress suite (Phase 5), escalation/IDOR suite
 
 ## 4. Current status
 
-### `test_tenant_isolation.py` — 23 tests
+### `test_tenant_isolation.py` — 27 tests
 
 Structural: every tenant-owned table has `ENABLE` **and** `FORCE` RLS with a
 policy; the application role holds no `BYPASSRLS`, is not a superuser, and owns
@@ -73,6 +74,21 @@ Targeted: cross-tenant insert refused by `WITH CHECK`; ORM guard refuses a
 foreign `tenant_id` before the database does; cross-tenant `UPDATE` and `DELETE`
 affect zero rows and leave the victim intact; `session.get()` on a foreign id
 returns `None` (the IDOR case); each school sees exactly its own roles.
+
+**Referential integrity, added this session.** Two tests, because row-level
+security does not govern foreign-key checks. The structural one asserts that
+every foreign key between tenant-owned tables references `(tenant_id, id)`; the
+behavioural one has School B attempt to grant its own membership one of School
+A's roles, and asserts the database refuses — *and* that the refusal is
+identical to the refusal for a wholly invented id, so the attempt cannot be used
+to learn whether the id exists. Before ADR-026 the first of those two inserts
+succeeded.
+
+Append-only grants are checked over every table in `APPEND_ONLY_TABLES` and
+`UNDELETABLE_TABLES` rather than only `audit_events`. That generated check
+cannot notice a table being *removed* from the list, which is why
+`test_people_enrolment.py` also names `enrolment_events` explicitly — the two
+together are complete, and neither is alone.
 
 ### `test_authz.py` — 23 tests
 
@@ -207,6 +223,50 @@ Both were verified by introducing exactly the defects they exist to catch: a
 returning `("phd", "dphil")` alongside a `_standard_bachelor_duration` of 3.
 All fired.
 
+### `test_people_enrolment.py` — 51 tests
+
+The people model, run against the same nine institutions as the Universal
+Education Test, because a model validated only against a school is a
+school-shaped model with confidence.
+
+*The sweep.* One function — record a person, register a student relationship,
+admit, enrol — reaches an active enrolment in all nine, with the placement built
+from whatever layers each institution actually configured. The four schools come
+out with a class group and no programme; the five programme-based institutions
+with a programme and no class group; one has a cohort and another, whose cohort
+belongs to a different programme, correctly does not. No branch anywhere names
+an institution.
+
+*Identity is not a person.* A four-year-old is enrolled with no `user_id` and no
+email. One person holds a staff relationship, a guardianship and a student
+relationship at once, as **one** row. One global identity produces two entirely
+separate person records at two institutions, and neither can see the other's.
+Three guardians of one child carry the labels "Mother", "Uncle" and "Sponsor" —
+free text, with the payer and the first contact deliberately different people.
+
+*Enrolment is history.* A transfer leaves the closed row with the class group it
+always had; asking where the pupil was in October and in March returns different
+placements. A promotion decided by the institution's own configured rule opens
+the next placement and copies the rule's reasoning into the ledger, so the answer
+to "why was he held back?" survives the rule being rewritten. A withdrawal
+followed by a readmission leaves the months away visible rather than smoothed
+over. Two concurrent open enrolments are permitted, and leaving one of them does
+not end the student's relationship. A doctoral candidate completes on milestones
+and two human approvals, with no mark anywhere.
+
+*And none of it can be rewritten.* `UPDATE` and `DELETE` on `enrolment_events`
+are refused by the database for the application role, as is `DELETE` on
+`enrolments`. Closing a closed placement, ending one before it began, and a
+closed placement with no stated outcome are each refused — the last two by the
+service *and* independently by a check constraint. Another institution cannot
+read a person, a relationship, an enrolment or an event, including through raw
+SQL, and cannot create an enrolment referencing a foreign student.
+
+*Two structural tests carry the central rule.* No relationship table may carry a
+placement column (`class_group_id`, `level_id`, `programme_id`, …), and no
+function in the people module outside `_open` may assign one. Together they fail
+the commit that reintroduces `student.class_id` "just for the list screen".
+
 ### `test_api.py` — 16 tests
 
 Health is public; security headers present; unknown host refused; `/context`
@@ -232,6 +292,10 @@ driver names; oversized bodies rejected at the edge.
 | RLS enforces isolation | Disabled the policy on `roles`, queried from a stranger's context | **32 rows leaked**; restored → **0**. The ORM guard did not catch the raw-SQL path — which is why layer 2 exists |
 | Route coverage is checked | Added an unguarded `GET /api/v1/leaky` | Flagged, and nothing else |
 | Boundaries are enforced | A reverse dependency (identity → authz) introduced mid-session | Caught by the suite; fixed by removing the back-reference rather than by widening the exception list |
+| Foreign keys respect the tenant boundary | `bind_foreign_keys_to_tenant` made a no-op | Both the structural and the behavioural test failed. Before the fix, the behavioural one **succeeded in referencing another tenant's row** — the defect, observed rather than argued |
+| Enrolment history is append-only | `enrolment_events` removed from `APPEND_ONLY_TABLES` | The named test failed. The *generated* test passed, which is the known limit of generating a check from the list it checks — hence both |
+| No relationship carries a placement | `class_group_id` added to `StudentRelationship` | Flagged, naming the column and the reason |
+| A transfer does not overwrite | `transfer` made to move the student in place | Two tests failed: the behavioural one on the closed row's class group, and the AST one on the assignment itself |
 
 ---
 

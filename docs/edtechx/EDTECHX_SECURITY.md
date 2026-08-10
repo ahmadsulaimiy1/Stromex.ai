@@ -10,6 +10,7 @@
 | Threat | Primary control |
 |---|---|
 | Cross-tenant data access | PostgreSQL RLS + context binding + generated isolation tests (`ARCHITECTURE.md` §4) |
+| Cross-tenant *reference* | Tenant-scoped foreign keys — `(tenant_id, id)`, because RLS does not govern referential integrity (ADR-026) |
 | Privilege escalation | Additive permissions, delegation ceiling, elevation for high-risk actions |
 | Account takeover | Argon2id hashing, MFA, session revocation, breach-aware lockout, device visibility |
 | IDOR | UUID keys + scope predicates in queries + 404-on-out-of-scope |
@@ -134,6 +135,8 @@ Always audited: authentication events; authorization denials; every academic rec
 | Test | Cadence |
 |---|---|
 | Tenant isolation suite (generated over every tenant-owned model) | Every commit |
+| Tenant-scoped foreign keys — structural check and a live cross-tenant reference attempt | Every commit |
+| Enrolment history immutability — `UPDATE`/`DELETE` refused at the database | Every commit |
 | Authorization matrix | Every commit |
 | Escalation and IDOR suite | Every commit |
 | SSRF guard suite (redirect, IPv6, DNS-rebind cases) | Every commit |
@@ -144,6 +147,8 @@ Always audited: authentication events; authorization denials; every academic rec
 | Penetration test | Before pilot, then annually and after major change |
 
 **Release gate:** the isolation, authorization, escalation, and SSRF suites are blocking. A release does not go out with any of them red.
+
+**A note on where holes are found.** The tenant-scoped foreign key requirement (ADR-026) was not found by reading code or by any existing test. Every isolation test was green before and after, because every one of them tested reading and writing rows — and none tested *referring* to one. It was found by attacking a newly written model on the assumption that something in it was wrong. That is the cadence this table is meant to encode: a guarantee is only as good as the attack that failed against it, and a suite that has never been sabotaged is a suite that measures nothing.
 
 ---
 

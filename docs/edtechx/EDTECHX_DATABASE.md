@@ -44,6 +44,28 @@ Three roles:
 
 **Migration invariant:** a migration that creates a tenant-owned table without enabling RLS fails CI. The check enumerates tables with a `tenant_id` column and asserts policy presence.
 
+### 2.1 Foreign keys are tenant-scoped
+
+Row-level security governs reads and writes. It does **not** govern referential integrity: PostgreSQL performs a foreign-key check with the referenced table's privileges and without applying its policies. A plain `child.parent_id REFERENCES parent(id)` therefore lets one tenant insert a row pointing at another tenant's row — corrupting the record, enabling a cross-tenant denial of service through `ON DELETE RESTRICT`, and turning every foreign key into an existence oracle for ids the tenant may not read.
+
+So every foreign key between two tenant-owned tables references the pair:
+
+```sql
+ALTER TABLE parent ADD CONSTRAINT uq_parent_tenant_id_id UNIQUE (tenant_id, id);
+
+ALTER TABLE child ADD CONSTRAINT fk_child_parent_id_tenant
+  FOREIGN KEY (tenant_id, parent_id) REFERENCES parent (tenant_id, id)
+  ON DELETE RESTRICT;
+```
+
+`ON DELETE SET NULL` becomes `ON DELETE SET NULL (parent_id)` so the reference is cleared without nulling `tenant_id`. That form requires PostgreSQL 15 or later.
+
+Applied by `app.db.tenant_fk.bind_foreign_keys_to_tenant`, which rewrites the metadata once after every model is mapped — so a new tenant-owned model gets a tenant-scoped key by existing, on the same principle as the policy and the isolation test. See ADR-026.
+
+### 2.2 Append-only tables
+
+Three tables are append-only for the application role, which holds no `UPDATE` or `DELETE` on them: `audit_events`, `security_events`, and `enrolment_events`. `enrolments` additionally holds no `DELETE` — a placement may be corrected but never erased. The list lives in `app.db.rls.APPEND_ONLY_TABLES` and `UNDELETABLE_TABLES`, and the grants are re-issued by every migration, because `GRANT ... ON ALL TABLES` covers only the tables that existed when it ran.
+
 ---
 
 ## 3. Schema — platform
@@ -125,10 +147,26 @@ Partitioned monthly; the AI metering hot path.
 
 ## 6. Schema — people and operations
 
-**students** — `id, tenant_id, admission_number (uq per tenant), first_name, middle_name, last_name, preferred_name, date_of_birth, gender, photo_key, status(applicant|enrolled|graduated|withdrawn|suspended), custom jsonb, created_at, deleted_at`
-**enrolments** — `id, tenant_id, student_id, academic_year_id, class_group_id, level_id, house_id, roll_number, started_on, ended_on, status`
-**guardians** — `id, tenant_id, membership_id (nullable — not every guardian has a login), first_name, last_name, email, phone, relationship, is_primary, has_custody, receives_billing, receives_academic, custom jsonb`
-**student_guardians** — `student_id, guardian_id, relationship, priority`
+Four layers, kept apart because collapsing any two makes an ordinary institution unrepresentable (ADR-027). `users` is the global credential; `people` is what one institution knows about a human; the relationship tables say what that person *is* to the institution; `enrolments` says where they were placed and between which dates.
+
+**people** — `id, tenant_id, user_id (nullable, uq per tenant when set — most people never sign in), full_name, given_names, family_name, preferred_name, sort_name, gender_label, date_of_birth, email, phone, locale, address, custom jsonb, deleted_at`
+One required name field, written as the person writes it; the structured parts are optional and independent. `gender_label` is free text, not an enum.
+
+**student_relationships** — `id, tenant_id, person_id, reference (admission / matriculation / registration number, uq per tenant when set), kind_label, status(prospective|active|suspended|ended), started_on, ended_on, custom jsonb`
+**staff_relationships** — `id, tenant_id, person_id, reference, kind_label, academic_unit_id, is_teaching, status, started_on, ended_on, custom jsonb`
+**guardian_relationships** — `id, tenant_id, guardian_person_id, student_person_id, relationship_label, sequence, is_primary_contact, is_emergency_contact, receives_reports, may_collect, is_financially_responsible, status, custom jsonb` · `uq(tenant_id, guardian_person_id, student_person_id)` · `check(guardian ≠ student)`
+Person to person, not user to student. `kind_label` and `relationship_label` are the institution's own words; the platform stores them and never reads them to make a decision.
+
+**Note what is absent from all three:** no class, no level, no programme, no year. Placement is not an attribute of being a student.
+
+**enrolments** — `id, tenant_id, student_relationship_id, academic_year_id?, programme_id?, level_id?, class_group_id?, cohort_id?, status(prospective|active|suspended|ended), outcome?(progressed|repeated|transferred|withdrawn|completed|discontinued), started_on, ended_on?, previous_enrolment_id?, custom jsonb`
+Every structural column is nullable — a doctoral placement has a programme and no class group; a rolling-intake course has neither a class group nor a year. Two check constraints: an enrolment cannot end before it began, and `(ended_on IS NULL) = (outcome IS NULL)` so an open placement is unexplained and a closed one never is. There is deliberately **no** constraint forcing one open enrolment per student: concurrent enrolment is ordinary.
+
+**enrolment_events** — `id, tenant_id, enrolment_id, kind(admitted|enrolled|placed|transferred|suspended|resumed|withdrawn|readmitted|progressed|repeated|completed|awarded|corrected), occurred_on, reason, actor_membership_id, detail jsonb`
+Append-only (§2.2). Two dates: `occurred_on` is when it took effect, `created_at` is when it was recorded, and they are routinely weeks apart. A correction is a new event of kind `corrected`, never an edit.
+
+**qualification_awards** — `id, tenant_id, student_relationship_id, qualification_id, programme_id?, enrolment_id?, awarded_on, classification_label?, reference?, awarded_by_membership_id, custom jsonb`
+The qualification is a row the institution defined (ADR-024), so one table awards a certificate of attendance and a research doctorate. `classification_label` is free text: honours divisions, Latin honours, distinction/merit/pass and competency verdicts are each one institution's vocabulary.
 
 **attendance_sessions** — `id, tenant_id, date, class_group_id, class_subject_id (null for daily), period_id, taken_by_membership_id, taken_at, status(open|submitted|amended)`
 **attendance_marks** — `id, tenant_id, session_id, student_id, code_id, minutes_late, note, recorded_by, recorded_at` · `uq(session_id, student_id)`

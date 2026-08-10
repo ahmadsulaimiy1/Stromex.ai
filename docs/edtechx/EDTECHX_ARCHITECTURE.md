@@ -79,7 +79,7 @@ model   → persistence only.
 
 ### 4.1 Model
 
-Shared database, shared schema, `tenant_id UUID NOT NULL` on every tenant-owned table, enforced by **three independent layers**. Any one of them failing must not produce a leak.
+Shared database, shared schema, `tenant_id UUID NOT NULL` on every tenant-owned table, enforced by **three independent layers**, plus a fourth guarantee covering the one operation those layers do not see. Any one of them failing must not produce a leak.
 
 ### 4.2 Layer 1 — Request-scoped tenant context
 
@@ -117,6 +117,14 @@ Migrations and operator maintenance use a separate, privileged role over a separ
 A SQLAlchemy event hook stamps `tenant_id` on insert from the context, and a mixin-aware query filter applies the predicate. This layer exists to produce *fast, clear failures in development* — the database is the actual guarantee.
 
 **Enterprise option:** a dedicated database (same schema, same code path) per tenant, selected by the tenant record. This changes the connection string, not the application.
+
+### 4.4a Referential integrity — the operation RLS does not govern
+
+Row-level security applies to `SELECT`, `INSERT`, `UPDATE` and `DELETE`. It does **not** apply to a foreign-key check: PostgreSQL performs that with the referenced table's privileges and without its policies. All three layers above would therefore let one tenant create a row *referring* to another tenant's row — which corrupts the record, enables a cross-tenant denial of service through `ON DELETE RESTRICT`, and turns every foreign key into an existence oracle for ids the tenant cannot read.
+
+Every foreign key between two tenant-owned tables therefore references `(tenant_id, id)`, and every such table carries a matching `UNIQUE (tenant_id, id)`. The child's `tenant_id` comes from the request context, so a cross-tenant reference simply has no parent row.
+
+Applied to the whole metadata by `app.db.tenant_fk.bind_foreign_keys_to_tenant`, once, after every model is mapped — so a new tenant-owned model is covered by existing rather than by being remembered, exactly as the policy and the isolation test are. See ADR-026 and `EDTECHX_DATABASE.md` §2.1.
 
 ### 4.5 Everywhere else
 

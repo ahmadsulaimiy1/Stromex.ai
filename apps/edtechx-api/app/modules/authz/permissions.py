@@ -60,11 +60,19 @@ CATALOGUE: Final[frozenset[str]] = frozenset(
     | _perms("academics", "subject", READ, WRITE, MANAGE)
     | _perms("academics", "grading_scale", READ, WRITE, MANAGE)
     # people
+    # `person` is the human record; `student` is the relationship. Separate
+    # permissions because they are separately sensitive: an admissions clerk
+    # who may create a person is not thereby entitled to read every learner's
+    # enrolment history.
+    | _perms("people", "person", READ, CREATE, WRITE, DELETE, EXPORT, MANAGE)
     | _perms("people", "student", READ, CREATE, WRITE, DELETE, EXPORT, MANAGE)
     | _perms("people", "student_sensitive", READ)  # medical / SEN overlay
     | _perms("people", "safeguarding", READ, WRITE)  # named individuals only
     | _perms("people", "guardian", READ, CREATE, WRITE, DELETE, MANAGE)
     | _perms("people", "enrolment", READ, WRITE, MANAGE)
+    # Awarding a qualification is the most consequential record the institution
+    # writes about a person, and the last one anybody can correct informally.
+    | _perms("people", "award", READ, CREATE, APPROVE, EXPORT, MANAGE)
     # attendance
     | _perms("attendance", "session", READ, CREATE, WRITE)
     | _perms("attendance", "mark", READ, WRITE, EXPORT)

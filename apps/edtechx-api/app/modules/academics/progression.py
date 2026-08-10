@@ -21,6 +21,22 @@ from typing import Any
 
 from app.modules.academics.models import ProgressionOutcome
 
+# Re-exported deliberately, on the same principle as `audit.service`. Any module
+# recording a progression decision needs the outcome vocabulary in order to read
+# an `Evaluation`; that is not a licence to import the academics tables. Naming
+# it here keeps the boundary rule intact without an exception list.
+__all__ = [
+    "METRICS",
+    "Check",
+    "CourseResult",
+    "Evaluation",
+    "ProgressionOutcome",
+    "RuleError",
+    "compute_metrics",
+    "evaluate",
+    "validate",
+]
+
 
 class RuleError(ValueError):
     """A rule that cannot be evaluated. Raised at configuration time, not run time."""

@@ -20,6 +20,12 @@ DEFAULT_TERMS: dict[str, dict[str, str]] = {
     "student": {"singular": "student", "plural": "students"},
     "teacher": {"singular": "teacher", "plural": "teachers"},
     "guardian": {"singular": "parent", "plural": "parents"},
+    "staff": {"singular": "staff member", "plural": "staff"},
+    # The human record, as distinct from any relationship to the institution.
+    # An institution that speaks of "members" or "registrants" renames it here.
+    "person": {"singular": "person", "plural": "people"},
+    "admission": {"singular": "admission", "plural": "admissions"},
+    "award": {"singular": "award", "plural": "awards"},
     "class_group": {"singular": "class", "plural": "classes"},
     "level": {"singular": "year group", "plural": "year groups"},
     "stage": {"singular": "stage", "plural": "stages"},

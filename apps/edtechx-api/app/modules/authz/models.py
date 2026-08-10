@@ -98,8 +98,17 @@ class MembershipRole(UUIDPrimaryKey, Timestamped, TenantOwned, Base):
 
     # One-directional by design: authz depends on identity, never the reverse.
     # Referenced by name so this module does not import identity's models.
-    membership: Mapped[object] = relationship("Membership", lazy="selectin")
-    role: Mapped[Role] = relationship(lazy="selectin")
+    #
+    # `viewonly` because both foreign keys are tenant-scoped — they reference
+    # `(tenant_id, id)` so that one tenant cannot point at another's row — which
+    # means both relationships nominally write `tenant_id`. That column belongs
+    # to `TenantOwned` and is stamped from the request context; no relationship
+    # owns it. Declaring these read-only says so, rather than leaving two
+    # relationships quietly competing to set the same value.
+    membership: Mapped[object] = relationship(
+        "Membership", lazy="selectin", viewonly=True
+    )
+    role: Mapped[Role] = relationship(lazy="selectin", viewonly=True)
 
     def is_effective(self, now: datetime) -> bool:
         return self.expires_at is None or self.expires_at > now

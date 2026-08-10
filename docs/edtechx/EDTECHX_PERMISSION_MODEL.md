@@ -33,6 +33,20 @@ intelligence.design.approve  platform.tenant.suspend
 Actions: `read · write · create · delete · approve · publish · export · manage`.
 `manage` implies all actions on that resource and is used for administrative roles.
 
+**`people` is deliberately several resources, not one.** The human record and the institutional relationship are separately sensitive, and a grant over one must not silently confer the other:
+
+| Permission | Covers |
+|---|---|
+| `people.person.*` | The human record: names, contact, date of birth |
+| `people.student.*` | The learner relationship |
+| `people.student_sensitive.read` | Medical and SEN overlay — never inherited from a broad grant |
+| `people.safeguarding.*` | Named individuals only; carried by no role template |
+| `people.guardian.*` | Guardianships |
+| `people.enrolment.*` | Placement and its history |
+| `people.award.*` | Awarding a qualification — the most consequential record an institution writes about a person, and the last one anybody can correct informally |
+
+An admissions clerk who may create a person is not thereby entitled to read every learner's enrolment history; a teacher who may read a pupil's name is not thereby entitled to their medical notes. Both distinctions are asserted in `test_authz.py`.
+
 **Rules**
 - Permissions are additive; there are no negative permissions. Denial is the absence of a grant. Negative permissions make effective-permission reasoning intractable and produce bugs nobody can explain to an auditor.
 - Wildcards only at the trailing segment: `finance.invoice.*`, `finance.*`. Never `*.invoice.read`.

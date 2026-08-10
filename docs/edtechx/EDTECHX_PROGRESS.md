@@ -5,7 +5,7 @@ continue without re-deriving anything. Consolidated from the nine state files
 the brief specified — see `EDTECHX_DECISIONS.md` ADR-015 for why three files
 beat nine.
 
-**Last updated:** session 4
+**Last updated:** session 5
 **Current phase:** Phase 1 complete · Phase 2 in progress
 
 ---
@@ -19,9 +19,11 @@ real PostgreSQL: three-layer tenant isolation with `FORCE ROW LEVEL SECURITY`
 proven load-bearing, host-based tenant resolution with a token/host agreement
 check, an additive permission catalogue with ABAC scopes, eleven system role
 templates, append-only audit, Argon2id credentials, and a FastAPI request
-lifecycle that enforces all of it. 121 tests pass; ruff is clean. Nothing is
-stubbed or faked. Phase 2 (the institution: academic structure, people,
-enrolment) is next.
+lifecycle that enforces all of it. Phase 2 has since added the universal
+academic engine (ADR-024) and the people-and-enrolment model (ADR-027), and a
+cross-tenant *reference* hole in the isolation spine has been found and closed
+(ADR-026). 344 tests pass; ruff is clean. Nothing is stubbed or faked. Bulk
+import, scope predicate compilation and the entitlement engine remain.
 
 ---
 
@@ -152,13 +154,60 @@ ADR-019 so it is not later mistaken for carelessness.
 
 ---
 
+### Session 5 — people, enrolment, and a hole in the isolation spine
+
+**People** (`modules/people/`). Four layers kept apart (ADR-027): the global
+`User` credential, the tenant-owned `Person`, three relationship tables
+(student, staff, guardian), and `enrolments`. A person may have no identity at
+all — most do not — and one person may be a teacher, a parent and a learner at
+once as a single row. Guardianships are person to person, with a free-text
+`relationship_label`, because family structures are not a closed list.
+
+**Enrolment as history.** Placement is a row with a beginning and an end. The
+service has no function that moves a student: `transfer` and `progress` close
+one placement and open another, and the closed row keeps the class group it
+always had. `enrolment_events` is the append-only ledger of why each transition
+happened, protected by the same grant discipline as the audit log. Admission,
+enrolment, transfer, suspension, resumption, withdrawal, readmission,
+progression, completion and awarding are all implemented and all tested.
+
+Fifty-one tests run this against **all nine institutions** of the Universal
+Education Test through one code path, asserting that the layers each institution
+did not configure stay null.
+
+**A real defect, found by attacking rather than by reading.** Row-level security
+does not govern foreign-key checks — PostgreSQL performs them with the
+referenced table's privileges and without its policies. One tenant could
+therefore insert a row referencing another tenant's row. Demonstrated, then
+fixed structurally: every foreign key between tenant-owned tables now references
+`(tenant_id, id)`, applied to the whole metadata by
+`app.db.tenant_fk.bind_foreign_keys_to_tenant` so a new model gets it by
+existing (ADR-026). 46 constraints converted; the migration does it in place and
+round-trips.
+
+The serious part was not the corrupt row but the oracle: the insert succeeded
+only if the id existed *somewhere*, which made every foreign key a probe for
+other tenants' ids — the disclosure ADR-004 exists to prevent, arriving through
+the one door RLS does not watch. Every isolation test was green before and
+after, because all of them tested reading and writing rows and none tested
+referring to one.
+
+**Five sabotages, all caught.** The tenant-scoped foreign keys, the ledger's
+immutability, the no-placement-column rule, and the no-overwrite rule were each
+broken once to confirm the tests notice. One finding worth keeping: the
+*generated* append-only test cannot catch a table being removed from the list it
+is generated from, which is why `enrolment_events` is also named explicitly in a
+second test.
+
+---
+
 ## Next — Phase 2 remainder
 
 In priority order. Each carries the Bible's Definition of Done.
 
 1. ~~**Academic structure**~~ — **done**. Stages, levels, years, terms, subjects, class groups, grading scales and bands, progression rule engine, terminology. The Four Schools acceptance test passes (ADR-022).
-2. **People** — identity, person, guardian/staff/student relationships and enrolment kept properly separate; one person may hold several relationships without a duplicated identity.
-3. **Enrolment as history** — admission, enrolment, transfer, withdrawal, re-enrolment, year change, placement, progression, completion. Never a `student.class_id`; records are added, never overwritten.
+2. ~~**People**~~ — **done**. Identity, person, and student/staff/guardian relationships kept properly separate; one person holds several relationships without a duplicated identity (ADR-027).
+3. ~~**Enrolment as history**~~ — **done**. Admission, enrolment, transfer, suspension, withdrawal, readmission, progression, completion, awarding. No `student.class_id`; records are added, never overwritten, and two structural tests fail the commit that reintroduces one.
 4. **Bulk import** — preview, column mapping, validation, duplicate detection, dry run, transactional safety, rollback, history, audit.
 5. **Scope predicate compilation** — `taught_by_self`, `own_children`, `department` as SQL predicates applied to list queries, with leak-by-row-count tests.
 6. **Entitlement engine** — kept distinct from permission, role, plan, feature availability, usage limit and institution configuration. Being authorized to act is not the same as the institution having purchased the capability.
@@ -185,7 +234,7 @@ Nothing is blocked. Items awaiting external input, none of which stop Phase 2:
 |---|---|---|---|
 | 1 | ~~Schema created by `build_schema()`, not by a migration~~ | — | **Resolved** — Alembic baseline with an RLS gate (ADR-020) |
 | 2 | ~~Sign-out left the access token valid until expiry~~ | — | **Resolved** — every request checks that its session is live. A token naming a session that does not exist, or one that was revoked or rotated away, is refused |
-| 3 | Scopes are parsed and unioned but not yet compiled to SQL predicates | Medium | Phase 2 item 7. No route currently returns scoped lists, so nothing is under-enforced today |
+| 3 | Scopes are parsed and unioned but not yet compiled to SQL predicates | Medium | Next Phase 2 item. No route currently returns scoped lists, so nothing is under-enforced today |
 | 4 | `starlette.testclient` deprecation warning from FastAPI 0.141 | Trivial | Upstream; revisit on the next FastAPI bump |
 | 5 | `_IncludedRouter` traversal in `test_boundaries.py` reaches into a FastAPI internal | Low | Written to accept both routing shapes so it degrades to the public shape rather than silently checking nothing |
 | 6 | No frontend yet | Expected | Phase 4 |
@@ -198,5 +247,7 @@ Nothing is blocked. Items awaiting external input, none of which stop Phase 2:
 - **Environment:** PostgreSQL must be running (`service postgresql start`). Roles and databases are created by the block in the API README. Without them, integration tests skip — and a skipped isolation suite proves nothing.
 - **Before writing any model:** if it belongs to a school, it inherits `TenantOwned`. That single decision gets it a policy and an isolation test automatically. If it does *not*, write down why, as `Tenant`, `TenantDomain`, `User`, and `SecurityEvent` each do in their docstrings.
 - **Before adding a route:** give it a `RequirePermission` dependency, or add it to `PUBLIC_ROUTES` in `test_boundaries.py`. There is no third option.
+- **Before adding a foreign key between two tenant-owned tables:** nothing. It is rewritten to `(tenant_id, id)` automatically by `app.db.tenant_fk`, and a test fails if any key escapes. Do not add a plain single-column key back "because the composite one is awkward to query" — that is the defect ADR-026 records.
+- **Before recording where somebody is:** it is an `Enrolment` row with a start and an end, never a column on a person or a relationship. If a screen needs "the current class", ask for the open enrolment. Two tests exist specifically to fail the shortcut.
 - **Before adding a permission:** add it to `CATALOGUE` first. Roles referencing unknown permissions fail the boot.
 - **Never** connect the request path as `edtechx_migrator`. It owns the tables, and `FORCE RLS` is bypassed for owners. The production guard refuses this; development would not notice.

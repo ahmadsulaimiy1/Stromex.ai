@@ -43,7 +43,12 @@ Legend: ✅ done · 🔨 in progress · ⬜ not started
 - ✅ ORM insert stamping and select filtering
 - ✅ RLS verification helper, run at schema build
 - ✅ Generated isolation suite over the model registry
-- ✅ **Proven load-bearing by sabotage** (32 rows leaked with RLS off)
+- ✅ **Tenant-scoped foreign keys** — `(tenant_id, id)`, closing the hole RLS
+  does not cover (ADR-026)
+- ✅ Append-only grants over `audit_events`, `security_events`,
+  `enrolment_events`; no `DELETE` on `enrolments`
+- ✅ **Proven load-bearing by sabotage** (32 rows leaked with RLS off; a
+  cross-tenant reference succeeded before the foreign keys were scoped)
 - ⬜ Cache and storage key prefixing — with the first cache and first upload
 - ⬜ Background-job tenant envelope — with the first job
 
@@ -77,7 +82,7 @@ Legend: ✅ done · 🔨 in progress · ⬜ not started
 - ✅ Core-layering test
 - ✅ Provider-SDK confinement test
 - ✅ Route coverage test — **proven load-bearing**
-- ✅ 293 tests passing; ruff clean
+- ✅ 344 tests passing; ruff clean
 - ✅ Alembic baseline migration with an RLS gate · ⬜ CI pipeline
 
 ## Phase 2 — Institution 🔨
@@ -87,10 +92,13 @@ limiting · ✅ TOTP MFA · ✅ stages, levels, years, terms · ✅ class groups
 subjects · ✅ grading scales and bands · ✅ progression rule engine · ✅
 terminology configuration · ✅ **the Universal Education acceptance suite** ·
 ✅ academic units · ✅ programmes · ✅ qualifications · ✅ credit systems ·
-✅ cohorts · ✅ supervision roles and milestone definitions
+✅ cohorts · ✅ supervision roles and milestone definitions · ✅ **people,
+relationships, and enrolment history** · ✅ guardianships · ✅ staff
+relationships · ✅ qualification awards · ✅ the people-and-enrolment
+acceptance suite across all nine institutions
 
-⬜ students, enrolments, guardians · ⬜ custom fields · ⬜ bulk import with
-dry-run · ⬜ entitlement engine · ⬜ scope predicates · ⬜ journeys 9 and 11.
+⬜ custom fields · ⬜ bulk import with dry-run · ⬜ entitlement engine ·
+⬜ scope predicates · ⬜ journeys 9 and 11.
 
 ## Phase 3 — Operations ⬜
 

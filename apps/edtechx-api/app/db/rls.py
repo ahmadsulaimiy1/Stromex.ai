@@ -31,6 +31,18 @@ _TENANT_PREDICATE = (
     f"tenant_id = NULLIF(current_setting('{TENANT_SETTING}', true), '')::uuid"
 )
 
+# Written once, never rewritten. The application role gets INSERT and SELECT and
+# nothing else, so "append-only" is a property of the grant rather than of the
+# code that happens to be calling.
+APPEND_ONLY_TABLES: tuple[str, ...] = (
+    "audit_events",
+    "security_events",
+    "enrolment_events",
+)
+
+# Rows that may be corrected but never erased.
+UNDELETABLE_TABLES: tuple[str, ...] = ("enrolments",)
+
 
 def tenant_owned_table_names() -> list[str]:
     return [m.__tablename__ for m in TENANT_OWNED_MODELS]
@@ -91,6 +103,12 @@ def grant_app_role(connection: Connection, role: str) -> None:
     Notably absent: UPDATE and DELETE on `audit_events`. The audit log is an
     append-only compliance artefact (EDTECHX_SECURITY.md §9); the application
     must be structurally incapable of rewriting it.
+
+    `enrolment_events` is held to the same standard, for the same reason. A
+    student's academic history is the record an institution is asked to produce
+    years later, and a correction to it must be a new event rather than an
+    edit. `enrolments` keeps UPDATE — a placement has to be closable — but not
+    DELETE: a placement that happened cannot be made not to have happened.
     """
     connection.execute(text(f"GRANT USAGE ON SCHEMA public TO {role}"))
     connection.execute(
@@ -99,8 +117,16 @@ def grant_app_role(connection: Connection, role: str) -> None:
     connection.execute(
         text(f"GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO {role}")
     )
-    connection.execute(text(f"REVOKE UPDATE, DELETE ON audit_events FROM {role}"))
-    connection.execute(text(f"REVOKE UPDATE, DELETE ON security_events FROM {role}"))
+    # Existence-aware, because this runs inside migrations too: at the baseline
+    # revision the later tables do not exist yet, and a REVOKE on a missing
+    # table aborts the transaction.
+    present = existing_tables(connection)
+    for table in APPEND_ONLY_TABLES:
+        if table in present:
+            connection.execute(text(f"REVOKE UPDATE, DELETE ON {table} FROM {role}"))
+    for table in UNDELETABLE_TABLES:
+        if table in present:
+            connection.execute(text(f"REVOKE DELETE ON {table} FROM {role}"))
 
 
 def verify_rls(connection: Connection) -> list[str]:

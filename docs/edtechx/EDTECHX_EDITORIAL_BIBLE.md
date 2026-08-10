@@ -408,7 +408,37 @@ Static checks accompany the suite: no product module may name a specific
 educational system in executable code, and no comparison in the academic engine
 may test an academic quantity against a hard-coded number.
 
-### 8.5 The principle
+### 8.5 People are not accounts, and a placement is not a pointer
+
+The flexibility constitution governs the shape of an institution. Two further
+rules govern the people inside it, and they fail in the same way when broken —
+by making an ordinary institution unrepresentable.
+
+**Identity, person and relationship are three things.** An identity is a
+credential and exists only for people who sign in; a four-year-old has none, and
+neither does a grandmother who never opens the product. A person is what one
+institution knows about a human being. A relationship is what that person *is*
+to the institution — a learner, a member of staff, somebody's guardian — and one
+person may hold several at once, as one record. The teacher whose child attends
+is not two people who share a surname.
+
+**Enrolment is history, not a field.** Where somebody is placed is a record with
+a beginning and an end. A transfer closes one placement and opens another; a
+promotion closes one and opens another; a withdrawal closes one and opens
+nothing. Nothing is overwritten, because the moment a `class_id` is edited in
+place, every mark and every register entry taken under the old placement loses
+its context, and the institution can no longer answer the question it is
+actually asked: *which class was she in in March?*
+
+**A correction is an addition.** The record of a person's journey may be
+corrected but never rewritten, and the system is structurally incapable of
+rewriting it rather than merely disinclined.
+
+**And every academic layer remains optional.** A placement may name a class
+group and no programme, a programme and no class group, or neither. §8.3 applies
+unchanged to people: nothing about being a student may assume a school.
+
+### 8.6 The principle
 
 > The institution defines its academic world. EdirasX provides the technology
 > to represent it.
@@ -430,7 +460,9 @@ Therefore:
 
 The following are grounds to block a release, regardless of schedule:
 
-1. A cross-tenant data access path.
+1. A cross-tenant data access path — including a cross-tenant *reference*, since
+   a foreign key that reaches into another institution's records is a disclosure
+   as well as a corruption.
 2. A privilege-escalation path.
 3. AI writing to an academic record without human approval.
 4. A WCAG 2.2 AA failure on a critical journey.
@@ -438,6 +470,7 @@ The following are grounds to block a release, regardless of schedule:
 6. A destructive action without confirmation and an audit entry.
 7. Secrets reachable from a browser, or written to logs.
 8. A required flow that is unusable on a 360px viewport.
+9. A change that makes a student's academic history editable in place.
 
 ---
 

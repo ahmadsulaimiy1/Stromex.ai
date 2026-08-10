@@ -15,12 +15,13 @@ import uuid
 
 import pytest
 from sqlalchemy import func, select, text
-from sqlalchemy.exc import ProgrammingError
+from sqlalchemy.exc import IntegrityError, ProgrammingError
 
 from app.db.base import TENANT_OWNED_MODELS
-from app.db.registry import Membership, Role, Tenant
-from app.db.rls import verify_rls
+from app.db.registry import Base, Membership, Role, Tenant
+from app.db.rls import APPEND_ONLY_TABLES, UNDELETABLE_TABLES, verify_rls
 from app.db.session import bind_tenant, get_engine, get_session_factory
+from app.db.tenant_fk import unscoped_foreign_keys
 from app.tests.conftest import TenantFixture, requires_db, session_for
 
 pytestmark = requires_db
@@ -78,6 +79,107 @@ def test_audit_log_is_append_only_for_the_application_role() -> None:
         session.rollback()
         with pytest.raises(ProgrammingError):
             session.execute(text("DELETE FROM audit_events"))
+        session.rollback()
+    finally:
+        session.close()
+
+
+def test_append_only_tables_are_append_only_for_the_application_role() -> None:
+    """The same guarantee, over every table that claims it.
+
+    Generated from the list in `app.db.rls` rather than written out, so a table
+    added to that list without the grant being re-issued fails here instead of
+    quietly accepting an UPDATE two years later.
+    """
+    session = get_session_factory()()
+    bind_tenant(session, uuid.uuid4())
+    try:
+        for table in APPEND_ONLY_TABLES:
+            with pytest.raises(ProgrammingError):
+                session.execute(text(f"UPDATE {table} SET tenant_id = tenant_id"))
+            session.rollback()
+            with pytest.raises(ProgrammingError):
+                session.execute(text(f"DELETE FROM {table}"))
+            session.rollback()
+        for table in UNDELETABLE_TABLES:
+            with pytest.raises(ProgrammingError):
+                session.execute(text(f"DELETE FROM {table}"))
+            session.rollback()
+    finally:
+        session.close()
+
+
+# --- foreign keys respect the boundary too --------------------------------
+
+
+def test_every_tenant_owned_foreign_key_is_tenant_scoped() -> None:
+    """A foreign-key check is the one operation row-level security does not see.
+
+    PostgreSQL performs referential integrity with the referenced table's
+    privileges and without its policies, so a plain `... REFERENCES parent(id)`
+    lets one tenant point at another tenant's row. Every such key must reference
+    `(tenant_id, id)` instead — see `app.db.tenant_fk` and ADR-026.
+    """
+    unscoped = unscoped_foreign_keys(Base.metadata)
+    assert unscoped == [], (
+        "These foreign keys reference a tenant-owned table by id alone, which "
+        "lets one tenant create a row pointing into another's records — and "
+        "makes the key an existence oracle for ids it may not read:\n"
+        + "\n".join(unscoped)
+    )
+
+
+def test_a_tenant_cannot_reference_another_tenants_row(
+    school_a: TenantFixture, school_b: TenantFixture
+) -> None:
+    """The behavioural half, attacked through raw SQL.
+
+    School B tries to grant one of its own memberships a role belonging to
+    School A. Before foreign keys were tenant-scoped this succeeded: the check
+    found the row, because referential integrity ignores the policy that hides
+    it. Now there is no matching `(tenant_id, id)` pair and the insert fails —
+    which also means the attempt cannot be used to learn whether the id exists.
+    """
+    foreign_role_id = session_for(school_a.tenant_id).execute(
+        select(Role.id).where(Role.key == "owner")
+    ).scalar_one()
+
+    session = session_for(school_b.tenant_id)
+    try:
+        with pytest.raises(IntegrityError) as caught:
+            session.execute(
+                text(
+                    "INSERT INTO membership_roles "
+                    "(id, tenant_id, membership_id, role_id, scope, created_at, updated_at) "
+                    "VALUES (gen_random_uuid(), :tenant, :membership, :role, "
+                    "'{}', now(), now())"
+                ),
+                {
+                    "tenant": school_b.tenant_id,
+                    "membership": school_b.membership_id,
+                    "role": foreign_role_id,
+                },
+            )
+        assert "foreign key" in str(caught.value).lower()
+        session.rollback()
+
+        # And the same attempt against a wholly invented id fails identically,
+        # so nothing about the response distinguishes "exists elsewhere" from
+        # "does not exist".
+        with pytest.raises(IntegrityError):
+            session.execute(
+                text(
+                    "INSERT INTO membership_roles "
+                    "(id, tenant_id, membership_id, role_id, scope, created_at, updated_at) "
+                    "VALUES (gen_random_uuid(), :tenant, :membership, :role, "
+                    "'{}', now(), now())"
+                ),
+                {
+                    "tenant": school_b.tenant_id,
+                    "membership": school_b.membership_id,
+                    "role": uuid.uuid4(),
+                },
+            )
         session.rollback()
     finally:
         session.close()

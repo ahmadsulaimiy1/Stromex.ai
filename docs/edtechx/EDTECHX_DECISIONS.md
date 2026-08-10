@@ -375,3 +375,67 @@ The vocabulary check parses the AST and examines string literals, identifiers, a
 **What this is not.** A precedent. Once a school holds real data, the expand → migrate → contract discipline in `EDTECHX_DATABASE.md` §12 applies without exception, and a squash becomes impossible rather than merely inadvisable.
 
 **A defect it exposed.** `build_schema(drop_first=True)` used `metadata.drop_all`, which drops only the tables the current models know about — so a rename left orphans behind, and the next build failed trying to drop a table an orphan still referenced. "Drop first" now drops the schema. A clean slate that is only mostly clean is worse than none, because it fails later and elsewhere.
+
+---
+
+## ADR-026 — Foreign keys are tenant-scoped, because row-level security does not govern them
+
+**Status:** Accepted · **Constitutional** · Extends ADR-003 and ADR-004
+
+**Context.** Row-level security governs `SELECT`, `INSERT`, `UPDATE` and `DELETE`. It does **not** govern referential integrity: PostgreSQL performs a foreign-key check with the referenced table's privileges and without applying its policies. That is documented behaviour and the right default for a database where every row belongs to everybody. In a multi-tenant schema it is a hole, and it was found by attacking the new enrolment tables rather than by reading the code.
+
+Before this decision, a plain `enrolments.student_relationship_id REFERENCES student_relationships(id)` let one institution insert a row pointing at another institution's student. Demonstrated, not theorised: the insert succeeded, and the inserting tenant then held a row referring to a parent it could not read.
+
+Three consequences, in ascending order of seriousness:
+
+1. **Corruption.** The row names a parent its own tenant cannot see, so every join silently drops it and every report is quietly wrong.
+2. **Cross-tenant denial of service.** With `ON DELETE RESTRICT`, one tenant can permanently block another's deletion, with no visible cause on either side.
+3. **An existence oracle.** The insert succeeds only if the id exists *somewhere in the system*. That turns every foreign key into a probe for other tenants' ids — precisely the disclosure ADR-004 exists to prevent, arriving through the one door RLS does not watch.
+
+**Decision.** Every foreign key between two tenant-owned tables references `(tenant_id, id)` rather than `id`. Each tenant-owned table carries a `UNIQUE (tenant_id, id)` key to be referenced by. The child's `tenant_id` is stamped from the request context, so a reference into another tenant has no matching parent row and is refused by the database — on every path, including raw SQL, background jobs, and anything written years from now by someone who has not read this document.
+
+**Applied by mechanism, not by memory.** `app.db.tenant_fk.bind_foreign_keys_to_tenant` rewrites the whole metadata once, after every model is mapped, on the same principle as `TenantOwned`: a new tenant-owned model gets a tenant-scoped foreign key by existing. `test_every_tenant_owned_foreign_key_is_tenant_scoped` fails if any key is left referencing an id alone.
+
+**Consequences accepted.**
+
+- `ON DELETE SET NULL` becomes `SET NULL (column)`, naming only the nullable half so `tenant_id` is not nulled. This requires PostgreSQL 15 or later, which the architecture already assumes.
+- A table with two foreign keys to different tenant-owned parents has two relationships nominally writing `tenant_id`. That column belongs to `TenantOwned` and is stamped from the request context; no relationship owns it, so `MembershipRole.role` and `MembershipRole.membership` are declared `viewonly`.
+- Composite keys are marginally wider, and each requires the extra unique index. Both are negligible against a boundary that holds.
+
+**Why this was not obvious.** Every isolation test was green throughout, and remained green, because every one of them tested reading and writing rows. None tested *referring* to one. The hole was in the space between two correct mechanisms, which is where they usually are.
+
+---
+
+## ADR-027 — Identity, person, relationship and enrolment are four separate things
+
+**Status:** Accepted · **Constitutional**
+
+**Context.** The conventional student information system has a `students` table with a name, an email, a password, and a `class_id`. Each of those four choices fails a real institution:
+
+- **A credential on the student record** cannot represent a four-year-old, or a guardian who never signs in, or the teacher who is also a parent — they need one account or none, not one per role.
+- **A `role` column on the person** cannot represent somebody who is two things at once, which is ordinary in every institution and universal in small ones.
+- **A mutable `class_id`** destroys the record. Move a child from 3A to 3B and the fact that they spent two terms in 3A is gone, along with the context of every mark and every register entry taken while they were there.
+- **A required class** cannot represent a doctoral researcher, who has a programme and a supervisor and no class at all.
+
+**Decision.** Four layers, each with one job.
+
+| Layer | Scope | Answers |
+|---|---|---|
+| `User` (identity) | Global | Who is signing in? Exists only for people who do. |
+| `Person` | Tenant-owned | Who does this institution know? Names, contact, date of birth if recorded. `user_id` nullable, and usually null. |
+| Relationship — student · staff · guardian | Tenant-owned | What is this person *to* the institution? One person may hold several. |
+| `Enrolment` | Tenant-owned | Where were they placed, and between which dates? |
+
+**Enrolment is history.** Placement is a row with a beginning and an end. A transfer closes one and opens another; a promotion closes one and opens another; a withdrawal closes one and opens nothing; a readmission opens a new one with the gap visible between. Nothing is overwritten, and the sequence of rows *is* the student's academic history. Alongside it, `enrolment_events` records why each transition happened, on what date it took effect, and who decided — append-only at the database, so a correction is a new event rather than an edit.
+
+**Two dates on every event.** `occurred_on` is when the change took effect in the institution's world; `created_at` is when somebody typed it in. They are routinely weeks apart — a withdrawal backdated to the last day of term, a transfer recorded after the holidays — and a system with only one of them eventually produces a register nobody can reconcile.
+
+**Every academic layer on an enrolment is nullable**, including the academic year. A nursery placement has a level and a class group; a doctoral placement has a programme and a level; a rolling-intake literacy course has neither a class group nor a year. ADR-024's rule applies unchanged: the layers an institution does not use are absent, not invented.
+
+**Concurrent enrolment is permitted.** There is deliberately no constraint forcing one open placement per student: joint programmes, a course taken at a neighbouring institution, and an apprentice enrolled on both a qualification and a short unit are all ordinary. The service closes the previous placement when a transfer or promotion says to; it does not assume two open placements are a mistake.
+
+**Names are not two fields.** `full_name` is required and written as the person writes it; `given_names`, `family_name`, `preferred_name` and `sort_name` are optional and independent. Name order, the number of parts, and which part is the family name all vary, and a schema demanding "first" and "last" quietly tells a large part of the world it was not built for them. `gender_label` is free text and nullable for the same reason, and `relationship_label` on a guardianship — "Mother", "Uncle", "Sponsor", "Foster carer" — is free text because family structures are not a closed list.
+
+**Enforcement.** `test_people_enrolment.py` runs the same three calls against all nine institutions of the Universal Education Test, and asserts that the layers each institution did not configure stay null. Two structural tests guard the central rule: no relationship table may carry a placement column, and no function in the people module outside `_open` may assign one. Both were verified by introducing the defects they exist to catch — a `class_group_id` "just for the list screen", and a `transfer` that moved the student in place.
+
+**Cost.** Four tables where a naïve design has one, and a join to answer "which class is she in?". Accepted without hesitation: the naïve design cannot answer "which class was she in *in March*" at all, and that is the question a registrar is actually asked.

@@ -39,7 +39,8 @@ The school's own shape, so that nothing downstream needs to assume one.
 - Campuses, departments, houses, staff profiles
 - Academic years, terms, stages, levels, class groups, subjects, class-subject allocation
 - Grading scales and bands as data
-- Students, enrolments, guardians, student–guardian relationships
+- People, distinct from identities; student, staff and guardian relationships
+- Enrolment as history — admission, enrolment, transfer, suspension, withdrawal, readmission, progression, completion, awarding — never a mutable `student.class_id`
 - Custom fields on core entities
 - Bulk import with validation, dry-run, and a per-row error report
 - Terminology configuration and resolution
