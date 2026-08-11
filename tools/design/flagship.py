@@ -92,7 +92,17 @@ def flagship_f(
     seal: bool = True,
     sheet_key: str = "a4-landscape",
     label: str = "",
+    royal: bool = False,
 ) -> str:
+    """`royal` is not a colour switch.
+
+    It keeps F's architecture — the left axis, the margin, the institutional
+    rule, the right-hand counterweight — and spends the Level IV geometry
+    budget on it: the full frame registers, guilloche in the band, khatam
+    corners, a lattice field, gold engraved rules and a medallion seal.
+    Controlled, not restrained. The hierarchy is unchanged, which is what lets
+    the page be magnificent without anything shouting.
+    """
     sheet = SHEETS[sheet_key]
     # Level I's budget: F earns its authority without an enclosing frame, so the
     # plate contributes the substrate and nothing else. This is the composition
@@ -102,11 +112,17 @@ def flagship_f(
     # margin. The Level I plate draws one engraved register, and on the first
     # render it appeared as a gold rectangle sitting inside them — a frame F
     # had specifically been chosen for not having.
-    plate = build(sheet=sheet, budget=budget_for(1), ink=INK, gold=GOLD,
-                  serial=serial, institution=institution, frameless=True)
+    plate = build(sheet=sheet, budget=budget_for(4 if royal else 1),
+                  ink=INK, gold=GOLD, serial=serial, institution=institution,
+                  frameless=not royal)
     s = sheet
-    margin = s.width * 0.088          # the widest measure on the sheet
-    top, bottom = s.height * 0.093, s.height * 0.093
+    margin = s.width * (0.128 if royal else 0.088)
+    top = s.height * (0.140 if royal else 0.093)
+    # The royal frame's innermost register sits at 22mm; the field has to clear
+    # it *and* the footline that hangs below the bottom rule. The first royal
+    # render struck the serial and the verification code through with the
+    # frame's own rule.
+    bottom = s.height * (0.175 if royal else 0.093)
     w = s.width - margin * 2
     name_size = _fit(recipient, w * 0.94, cap=NAME_MAX, floor=NAME_MIN)
     paper = geo.tint("#FFFFFF", 0.30)
@@ -120,13 +136,23 @@ def flagship_f(
     )
     seal_svg = ""
     if seal:
-        r = 17.0
+        r = 21.0 if royal else 17.0
+        inner = ""
+        if royal:
+            # A medallion, not a stamp: lathe work behind the ring and a gold
+            # engraved outer circle. This is where gold is spent hardest on the
+            # sheet, and it is the only place on it that is.
+            inner += geo.rosette(r, r, r * 0.97, ink=GOLD, width=0.10,
+                                 strength=0.55, passes=3)
+            inner += (f'<circle cx="{r}" cy="{r}" r="{r * 0.99:.2f}" fill="none" '
+                      f'stroke="{geo.tint(GOLD, 0.95)}" stroke-width="0.55"/>'
+                      f'<circle cx="{r}" cy="{r}" r="{r * 0.93:.2f}" fill="none" '
+                      f'stroke="{geo.tint(GOLD, 0.62)}" stroke-width="0.18"/>')
+        inner += geo.seal_ring(r, r, r * 0.80, ink=INK,
+                               legend=_legend(institution), identifier=serial)
         seal_svg = (
             f'<div class="sealbox"><svg width="{_mm(r * 2)}" height="{_mm(r * 2)}" '
-            f'viewBox="0 0 {r * 2:.2f} {r * 2:.2f}">'
-            + geo.seal_ring(r, r, r * 0.80, ink=INK,
-                            legend=_legend(institution), identifier=serial)
-            + "</svg></div>"
+            f'viewBox="0 0 {r * 2:.2f} {r * 2:.2f}">' + inner + "</svg></div>"
         )
 
     css = f"""
@@ -160,8 +186,10 @@ html, body {{ margin: 0; padding: 0; background: #DED8CA;
 
 /* The two architectural rules. Full measure, and the only two on the sheet —
    which is what lets them carry the whole frame's job. */
-.rule-top {{ height: 0.65mm; background: {INK}; flex: none; }}
-.rule-foot {{ height: 0.65mm; background: {INK}; flex: none; }}
+.rule-top {{ height: 0.65mm; background: {INK}; flex: none;
+  {"border-bottom: 0.30mm solid " + geo.tint(GOLD, 0.95) + ";" if royal else ""} }}
+.rule-foot {{ height: 0.65mm; background: {INK}; flex: none;
+  {"border-top: 0.30mm solid " + geo.tint(GOLD, 0.95) + ";" if royal else ""} }}
 
 /* Masthead: mark, institution, Arabic. One row, baseline-aligned, on the same
    left axis as everything beneath it. */
@@ -184,11 +212,14 @@ html, body {{ margin: 0; padding: 0; background: #DED8CA;
 /* A short rule at the left axis: the hinge between identity and award. It is
    28% of the measure, which is the same proportion as the mark's offset — the
    alignment is the ornament. */
-.hinge {{ width: 28%; height: 0.32mm; background: {geo.tint(GOLD, 0.95)};
-  margin-top: 7.5mm; flex: none; }}
+.hinge {{ width: 28%; margin-top: 7.5mm; flex: none;
+  height: {"1.0mm" if royal else "0.32mm"};
+  background: {geo.tint(GOLD, 0.95)};
+  {"border-top: 0.20mm solid #F2E2A8; border-bottom: 0.20mm solid #6E5013;" if royal else ""} }}
 
 .degree {{ font-size: 7.6mm; letter-spacing: 0.135em; text-transform: uppercase;
-  margin-top: 5.0mm; line-height: 1.12; flex: none; }}
+  margin-top: 5.0mm; line-height: 1.12; flex: none;
+  {"color: #7A5A16;" if royal else ""} }}
 .study {{ font-size: 4.6mm; font-style: italic; margin-top: 2.2mm;
   color: {geo.tint(INK, 0.86)}; flex: none; max-width: 78%; line-height: 1.3; }}
 .degree-ar {{ font-size: 4.6mm; margin-top: 2.4mm; flex: none;
@@ -292,6 +323,10 @@ VARIANTS: dict[str, dict] = {
         signatures=(("Prof. Amina Yusuf", "Vice-Chancellor"),
                     ("Dr Tomas Reinholt", "Dean of the Graduate School"),
                     ("Mr K. Balogun", "Registrar")),
+    ),
+    "f5-royal-gold": dict(
+        label="F·R1 · royal gold — same architecture, the budget spent",
+        royal=True,
     ),
     "f4-minimal": dict(
         label="F · no Arabic, no distinction, no seal, one signatory",

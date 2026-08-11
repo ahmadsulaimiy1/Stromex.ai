@@ -604,6 +604,44 @@ started.
 
 ---
 
+## Art-direction correction: controlled, not restrained
+
+I had narrowed the target. "Restraint" was being read as minimalism — sparse
+pages, little gold, ornament kept at the edge — and that is not the brief. The
+brief is royal institutional luxury: magnificence that is *architecturally
+controlled*, which is a different constraint entirely and a harder one.
+
+The correction, stated so it governs everything that follows:
+
+> **Do not confuse complexity with clutter. Do not confuse minimalism with
+> luxury.** A magnificent document can carry a great deal of craftsmanship and
+> still have exceptional hierarchy. Suppressing the grandeur of a royal
+> institution's credential moves *away* from its identity.
+
+`flagship_f(royal=True)` is the first response. It is deliberately **not a
+colour switch**: F's architecture is unchanged — the exact left axis, the
+margin, the institutional rule, the right-hand counterweight, the subordinate
+verification — and the Level IV geometry budget is spent on it. Full frame
+registers, guilloché in the band, khatam corners, a lattice field, a
+three-tone engraved gold hinge, the degree set in engraved gold, and a
+medallion seal with lathe work behind its ring rather than a stamp.
+
+The hierarchy is identical to the restrained version. That is the point: the
+page is magnificent and nothing shouts.
+
+**Fixed on the first royal render:** the footline was struck through by the
+frame's own bottom rule — the field cleared the innermost register but not the
+band hanging beneath it.
+
+**Still open:** the seal's blind-emboss offset reads slightly doubled at
+medallion scale; the ceremonial levels' own descriptions in `ceremony.py` still
+carry the over-restrained wording and need rewriting to "elegant and premium →
+clearly luxurious → richly ornamented → exceptional royal craftsmanship"; and
+F·R2 Imperial Midnight, F·R3 Royal Heritage, F·R4 Grand Ceremonial, F·R5 Royal
+Islamic and F·R6 Future Royal are not yet built. C has not been started.
+
+---
+
 ## Working notes for the next session
 
 - **Start here:** `apps/edtechx-api/README.md`, then this file, then `EDTECHX_ROADMAP.md` Phase 2.

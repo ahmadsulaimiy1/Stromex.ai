@@ -39,8 +39,10 @@ html, body { margin: 0; padding: 0; background: #DED8CA;
 
 /* The two architectural rules. Full measure, and the only two on the sheet —
    which is what lets them carry the whole frame's job. */
-.rule-top { height: 0.65mm; background: #0A101C; flex: none; }
-.rule-foot { height: 0.65mm; background: #0A101C; flex: none; }
+.rule-top { height: 0.65mm; background: #0A101C; flex: none;
+   }
+.rule-foot { height: 0.65mm; background: #0A101C; flex: none;
+   }
 
 /* Masthead: mark, institution, Arabic. One row, baseline-aligned, on the same
    left axis as everything beneath it. */
@@ -63,11 +65,14 @@ html, body { margin: 0; padding: 0; background: #DED8CA;
 /* A short rule at the left axis: the hinge between identity and award. It is
    28% of the measure, which is the same proportion as the mark's offset — the
    alignment is the ornament. */
-.hinge { width: 28%; height: 0.32mm; background: #B4925E;
-  margin-top: 7.5mm; flex: none; }
+.hinge { width: 28%; margin-top: 7.5mm; flex: none;
+  height: 0.32mm;
+  background: #B4925E;
+   }
 
 .degree { font-size: 7.6mm; letter-spacing: 0.135em; text-transform: uppercase;
-  margin-top: 5.0mm; line-height: 1.12; flex: none; }
+  margin-top: 5.0mm; line-height: 1.12; flex: none;
+   }
 .study { font-size: 4.6mm; font-style: italic; margin-top: 2.2mm;
   color: #2B3038; flex: none; max-width: 78%; line-height: 1.3; }
 .degree-ar { font-size: 4.6mm; margin-top: 2.4mm; flex: none;
