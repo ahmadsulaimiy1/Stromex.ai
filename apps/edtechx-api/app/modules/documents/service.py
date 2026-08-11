@@ -87,7 +87,14 @@ class NotAuthorisedToIssue(DocumentError):
 # when somebody saves the template rather than at the moment a registrar tries
 # to print a leaving certificate for a student who is standing in front of them.
 NUMBER_FIELDS = frozenset({"prefix", "year", "sequence", "code"})
-NUMBER_SCOPES = frozenset({"template", "year", "institution"})
+
+# Two scopes, not three. An earlier version also had `template`, which gave each
+# template its own counter — and two templates numbering `RC/…` then both issued
+# `RC/2026/0001`, which the institution-wide uniqueness constraint refused at the
+# worst possible moment. A document number belongs to a *series*, and a series is
+# identified by its prefix rather than by which template happens to draw on it.
+# An institution wanting two separate series gives them two prefixes.
+NUMBER_SCOPES = frozenset({"year", "institution"})
 
 DEFAULT_NUMBERING = {
     "format": "{prefix}/{year}/{sequence:04d}",
@@ -118,6 +125,16 @@ def _validate_numbering(numbering: dict) -> dict:
         ) from exc
     if not rendered.strip():
         raise DocumentError("A document-number format that produces nothing is not one.")
+    if "{sequence" not in fmt:
+        raise DocumentError(
+            "A document-number format must contain {sequence}. Without it every "
+            "document in the series would be given the same number."
+        )
+    if not str(merged.get("prefix") or "").strip():
+        raise DocumentError(
+            "A document-number series needs a prefix. It is what distinguishes "
+            "one series from another, and two series sharing one would collide."
+        )
     return merged
 
 
@@ -195,6 +212,8 @@ def publish_template(
             "reviving an old one — a document has to be able to name the design "
             "that produced it."
         )
+    _refuse_conflicting_series(db, draft)
+
     previous = db.execute(
         select(DocumentTemplate).where(
             DocumentTemplate.code == draft.code,
@@ -216,6 +235,38 @@ def publish_template(
         actor_membership_id=membership_id,
     )
     return draft
+
+
+def _refuse_conflicting_series(db: Session, draft: DocumentTemplate) -> None:
+    """Two templates may share a number series, but not disagree about it.
+
+    Sharing is legitimate — a school with a long report card and a short one may
+    well want both numbered `RC/2026/…` in a single sequence. What is not
+    legitimate is two templates drawing on the same series with different
+    formats or different reset points, because then one counter produces two
+    shapes of number and the institution cannot say what `RC/2026/0007` is.
+
+    Checked at publication rather than at issue, so it fails while somebody is
+    configuring rather than while somebody is waiting for a certificate.
+    """
+    prefix = str(draft.numbering.get("prefix") or "")
+    others = db.execute(
+        select(DocumentTemplate).where(
+            DocumentTemplate.status == TemplateStatus.published,
+            DocumentTemplate.code != draft.code,
+        )
+    ).scalars().all()
+    for other in others:
+        if str(other.numbering.get("prefix") or "") != prefix:
+            continue
+        for field in ("format", "scope"):
+            if other.numbering.get(field) != draft.numbering.get(field):
+                raise DocumentError(
+                    f"The {prefix!r} number series is already used by the "
+                    f"{other.code!r} template with a different {field}. Two "
+                    "templates may share a series, but not disagree about it — "
+                    "give this one its own prefix, or match the series it joins."
+                )
 
 
 def published_template(db: Session, code: str) -> DocumentTemplate | None:
@@ -252,12 +303,17 @@ def permission_for(row, action: str) -> str:
 
 
 def _scope_key(row: DocumentTemplate, *, when: date) -> str:
-    scope = row.numbering.get("scope", "year")
-    if scope == "institution":
-        return "institution"
-    if scope == "year":
-        return f"{row.code}:{when.year}"
-    return row.code
+    """Which counter this document draws on.
+
+    The prefix, because that is what a series *is*. Two templates that both
+    number `RC/…` are deliberately sharing a series and must share a counter;
+    `publish_template` refuses to let them disagree about the format or the
+    scope, so a shared counter cannot produce two shapes of number.
+    """
+    prefix = str(row.numbering.get("prefix") or "DOC")
+    if str(row.numbering.get("scope", "year")) == "year":
+        return f"{prefix}:{when.year}"
+    return prefix
 
 
 def _next_number(db: Session, row: DocumentTemplate, *, when: date) -> tuple[str, int]:

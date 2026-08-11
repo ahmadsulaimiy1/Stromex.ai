@@ -689,7 +689,10 @@ def test_an_amendment_leaves_an_audit_event(world: World) -> None:
         entry = session.execute(select(PublishedResult)).scalars().first()
         assessment.amend(session, entry, membership_id=_uuid.uuid4(),
                          permissions=PRINCIPAL, reason="Clerical error", score=71)
-        session.commit()
+        # Flushed rather than committed: the audit event is written on this
+        # session, and committing a publication into a module-scoped world makes
+        # every later test in the file depend on this one having run.
+        session.flush()
 
         rows = session.execute(
             text(
@@ -701,6 +704,7 @@ def test_an_amendment_leaves_an_audit_event(world: World) -> None:
         assert rows, "a published result was corrected with no audit event"
         assert any("Clerical error" in (row[1] or "") for row in rows)
     finally:
+        session.rollback()
         session.close()
 
 
@@ -840,6 +844,93 @@ def test_the_stage_is_terminal_at_published(world: World) -> None:
         assert ResultStage.published.is_official
         with pytest.raises(assessment.AssessmentError):
             assessment.submit_for_review(session, result_set)
+    finally:
+        session.rollback()
+        session.close()
+
+
+def test_a_second_result_set_does_not_republish_what_is_already_official(
+    world: World,
+) -> None:
+    """Found by the document engine, which reads results as a list.
+
+    A result set covers a period and a class rather than a list of assessments,
+    which is right — a results day is a decision about a cohort. It also means a
+    second set over the same period and class sweeps up whatever the first one
+    published. Without a guard, a January resit republishes the whole autumn
+    term and every mark appears twice on the transcript.
+    """
+    session = world.session()
+    try:
+        first = _ready_set(session, world)
+        assessment.publish(session, first, membership_id=_uuid.uuid4(),
+                           permissions=PRINCIPAL)
+        published_first = session.execute(
+            select(PublishedResult).where(PublishedResult.result_set_id == first.id)
+        ).scalars().all()
+        assert published_first
+
+        second = _ready_set(session, world)
+        with pytest.raises(assessment.AssessmentError, match="already been published"):
+            assessment.publish(session, second, membership_id=_uuid.uuid4(),
+                               permissions=PRINCIPAL)
+
+        # And each mark still has exactly one official result.
+        ada = world.students["Ada Nwosu"]
+        assert len(
+            session.execute(
+                select(PublishedResult).where(
+                    PublishedResult.student_relationship_id == ada
+                )
+            ).scalars().all()
+        ) == 1
+    finally:
+        session.rollback()
+        session.close()
+
+
+def test_a_late_assessment_publishes_without_republishing_the_term(
+    world: World,
+) -> None:
+    """The legitimate second set: one new assessment, and only that one."""
+    session = world.session()
+    try:
+        first = _ready_set(session, world)
+        assessment.publish(session, first, membership_id=_uuid.uuid4(),
+                           permissions=PRINCIPAL)
+
+        resit = Assessment(
+            code=f"resit-{_uuid.uuid4().hex[:6]}", name="Chemistry Resit",
+            kind_label="Resit", course_id=world.course_id,
+            class_group_id=world.class_id, academic_period_id=world.period_id,
+            max_score=100, grading_scale_id=world.scale_id,
+            status=AssessmentStatus.open,
+        )
+        session.add(resit)
+        session.flush()
+        assessment.enter_scores(
+            session, resit, {world.students["Carla Mendes"]: 58}
+        )
+        resit.status = AssessmentStatus.closed
+
+        second = ResultSet(
+            code=f"late-{_uuid.uuid4().hex[:8]}", name="January resits",
+            academic_period_id=world.period_id, class_group_id=world.class_id,
+        )
+        session.add(second)
+        session.flush()
+        published = assessment.publish(
+            session, second, membership_id=_uuid.uuid4(), permissions=PRINCIPAL,
+            force=True, force_reason="Only the resit candidates were marked.",
+        )
+        assert published.published == 1
+
+        rows = session.execute(
+            select(PublishedResult).where(
+                PublishedResult.result_set_id == second.id
+            )
+        ).scalars().all()
+        assert {r.assessment_id for r in rows} == {resit.id}
     finally:
         session.rollback()
         session.close()

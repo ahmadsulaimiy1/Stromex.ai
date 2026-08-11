@@ -262,6 +262,32 @@ def _assessments_for(db: Session, result_set: ResultSet) -> list[Assessment]:
     return list(db.execute(statement).scalars().all())
 
 
+def _already_published(
+    db: Session, assessment_ids: Sequence[uuid.UUID]
+) -> set[tuple[uuid.UUID, uuid.UUID]]:
+    """The `(assessment, student)` pairs the institution has already published.
+
+    A result set covers a period and a class rather than a list of assessments,
+    which is right — a results day is a decision about a cohort. It also means a
+    *second* set over the same period and class sweeps up the assessments the
+    first one already published. Without this, a late resit published in January
+    would republish the whole autumn term, and every one of those marks would
+    appear twice on a transcript.
+
+    Found by the document engine, which is the first thing to read a student's
+    results as a list rather than one set at a time.
+    """
+    ids = [i for i in assessment_ids if i is not None]
+    if not ids:
+        return set()
+    rows = db.execute(
+        select(
+            PublishedResult.assessment_id, PublishedResult.student_relationship_id
+        ).where(PublishedResult.assessment_id.in_(ids))
+    ).all()
+    return {(row[0], row[1]) for row in rows}
+
+
 def _period_end(db: Session, result_set: ResultSet):
     """The last day of the period these results cover, where there is one."""
     from app.modules.academics import service as academics
@@ -543,7 +569,10 @@ def publish(
 
     from app.modules.academics import service as academics
 
-    for assessment in _assessments_for(db, result_set):
+    covered = _assessments_for(db, result_set)
+    already = _already_published(db, [a.id for a in covered])
+
+    for assessment in covered:
         scale = academics.grading_scale(db, assessment.grading_scale_id)
         # The course's credit value *as it stands at publication*, frozen onto
         # every row below. Reading it at transcript time instead would make a
@@ -559,6 +588,12 @@ def publish(
             select(AssessmentScore).where(AssessmentScore.assessment_id == assessment.id)
         ).scalars().all()
         for row in rows:
+            if (assessment.id, row.student_relationship_id) in already:
+                # Published once, in an earlier set. Publishing it again would
+                # give one mark two official results, and a transcript would
+                # count it twice. A correction to a published mark is an
+                # amendment, not a second publication.
+                continue
             value = row.effective_score
             band = scale.band_for(float(value)) if scale and value is not None else None
             entry = PublishedResult(
@@ -583,6 +618,14 @@ def publish(
             db.flush()
             published.entries.append(entry.id)
             published.published += 1
+
+    if published.published == 0 and already:
+        raise AssessmentError(
+            "Every mark this set covers has already been published. Correct a "
+            "published result with an amendment rather than by publishing it "
+            "again — two official results for one mark is a transcript that "
+            "counts it twice."
+        )
 
     result_set.stage = ResultStage.published
     result_set.published_at = now

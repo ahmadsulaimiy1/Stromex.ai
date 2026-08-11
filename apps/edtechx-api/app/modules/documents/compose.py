@@ -157,6 +157,33 @@ def _select_periods(
     )
 
 
+def _unit_labels(db: Session, results_by_period: dict) -> tuple[str, str]:
+    """What this institution calls one unit of credit, and several.
+
+    The singular is a historical fact and is on the published row. The plural is
+    not: only the singular was worth a column on `published_results`, so it is
+    read from the institution's live credit system — and only when the two
+    singulars still agree. An institution that has since renamed its unit gets
+    the historical singular in both positions rather than a plural we invented
+    by adding an "s" to a word we no longer recognise.
+    """
+    snapshot = next(
+        (
+            result.credit_unit_label
+            for rows in results_by_period.values()
+            for result in rows
+            if result.credit_unit_label
+        ),
+        "",
+    )
+    singular, plural = academics.credit_unit_label(db, None)
+    if not snapshot:
+        return (singular, plural)
+    if snapshot == singular:
+        return (singular, plural)
+    return (snapshot, snapshot)
+
+
 def _gather(
     db: Session,
     *,
@@ -213,14 +240,7 @@ def _gather(
         if code
     }
 
-    unit_labels = ("", "")
-    for rows in results_by_period.values():
-        for result in rows:
-            if result.credit_unit_label:
-                unit_labels = (result.credit_unit_label, result.credit_unit_label)
-                break
-    if unit_labels == ("", ""):
-        unit_labels = academics.credit_unit_label(db, None)
+    unit_labels = _unit_labels(db, results_by_period)
 
     return _Gathered(
         student=student,

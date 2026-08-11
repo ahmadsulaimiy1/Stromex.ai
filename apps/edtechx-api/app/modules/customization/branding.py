@@ -22,6 +22,15 @@ from app.modules.customization.models import BrandingProfile, ConfigStatus
 
 __all__ = ["Branding", "from_snapshot", "publish", "resolve"]
 
+# The palette an institution that has chosen nothing still gets. Named constants
+# rather than read back off the dataclass, because `Branding` uses `slots` and a
+# class attribute on a slotted dataclass is a descriptor rather than the default
+# value — which is exactly the sort of thing that reaches a printed transcript
+# looking like `<member 'primary_colour' of 'Branding' objects>`.
+DEFAULT_PRIMARY = "#1F3A5F"
+DEFAULT_ACCENT = "#B08D57"
+DEFAULT_INK = "#12161C"
+
 
 @dataclass(frozen=True, slots=True)
 class Branding:
@@ -44,9 +53,9 @@ class Branding:
     crest_url: str = ""
     signature_image_url: str = ""
     watermark_url: str = ""
-    primary_colour: str = "#1F3A5F"
-    accent_colour: str = "#B08D57"
-    ink_colour: str = "#12161C"
+    primary_colour: str = DEFAULT_PRIMARY
+    accent_colour: str = DEFAULT_ACCENT
+    ink_colour: str = DEFAULT_INK
     heading_font: str = ""
     body_font: str = ""
     letterhead_note: str = ""
@@ -107,9 +116,9 @@ def resolve(db: Session) -> Branding:
         crest_url=text(row.crest_url),
         signature_image_url=text(row.signature_image_url),
         watermark_url=text(row.watermark_url),
-        primary_colour=text(row.primary_colour, Branding.primary_colour),
-        accent_colour=text(row.accent_colour, Branding.accent_colour),
-        ink_colour=text(row.ink_colour, Branding.ink_colour),
+        primary_colour=text(row.primary_colour, DEFAULT_PRIMARY),
+        accent_colour=text(row.accent_colour, DEFAULT_ACCENT),
+        ink_colour=text(row.ink_colour, DEFAULT_INK),
         heading_font=text(row.heading_font),
         body_font=text(row.body_font),
         letterhead_note=text(row.letterhead_note),
