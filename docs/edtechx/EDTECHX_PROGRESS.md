@@ -642,6 +642,91 @@ Islamic and F·R6 Future Royal are not yet built. C has not been started.
 
 ---
 
+## Art direction reset: royal maximalism, and twelve luxury concepts
+
+The restraint reading was withdrawn. The previous flagship work had interpreted
+"restrained" as the primary principle and produced plates that were technically
+exact and visually inexpensive — the sparse F/C direction is archived, not
+polished further. The target is royal institutional luxury: richness and order
+together, ornament designed rather than applied, grandeur at a metre and
+craftsmanship at five centimetres.
+
+**Three new modules, because the old vocabulary could not express it.**
+
+`design/gilding.py` makes gold a material rather than a hex value. Eight metals,
+each four inks — a lit crest, a broad reflecting face, a body colour, a wall in
+shadow — because that banded ramp is what the eye reads as metal and a single
+value is what it reads as yellow. Each metal names the physical process it
+stands for and a foil reference a vendor can order against. The treatments
+(engraved rule, emboss, raised type, foil gradient) each carry a ledger entry in
+`SIMULATION` saying what they are and what they are not, and a test fails if a
+treatment exists without one.
+
+`design/architecture.py` makes the frame a built thing: corner blocks with a
+mitred elbow and an inset lathe medallion, register stacks where every band has
+a stated job, a real octagon-and-square tiling, strapwork drawn as ribbon rather
+than line, a two-centred arch that can be struck to a stated rise, cresting,
+spreaders, spines, mandalas, medallions, radiant fields.
+
+`design/ceremony.py` was rewritten. Levels I–IV now mean elegant → clearly
+luxurious → richly ornamented → exceptional, and what rises is architecture,
+ornament and material. `field_ink` became `content_ink` and is explicitly a
+*legibility* guarantee about the area behind the words, not an ornament ban —
+outside the content field a Level IV plate is routinely dense. **The whitespace
+floor was deleted**: encoding air as a fraction of the sheet produced empty
+documents that passed.
+
+**Twelve concepts, one hostile record, ranked.** `tools/design/concepts.py`
+builds twelve genuinely different design philosophies — not palette swaps: each
+owns its ground, frame architecture, central composition, typographic pairing,
+metal, and the job it gives Arabic. `tools/design/render.py` renders them at 300
+DPI and composes the contact sheet. The board and the ranking are in
+`docs/edtechx/design/EDTECHX_CONCEPT_BOARD.md`; the strongest three are **02
+Imperial Islamic**, **11 Crimson Imperial** and **01 Royal Palace**, with **12
+EdirasX Signature** fourth and strategically the most important because its
+dissolving lattice is the one construction that could become unmistakably the
+house's own — and it does not yet read.
+
+**A typographic defect that had been shipping silently.** The flagship
+stylesheet asked for `'EdirasX Display'`, a family `typeface.py` never declared,
+so every certificate was set in Georgia. `typeface.py` now declares the
+ceremonial faces (Fraunces 300/600/900, Archivo, Amiri 700, Cairo) and exposes a
+`ROLES` table with `stack()`, which raises on an unknown role rather than
+falling through to a system face.
+
+**Ten defects found by looking rather than by testing**, each invisible in the
+code: the recipient's name breaking at the hyphen on eleven of twelve plates;
+the verification line landing on a midnight border as dark ink on dark ground;
+the seal legend reading `INSMERIDIAN INSTITUTE` at the repeat seam; the corner
+bracket's double step reading as a mis-registered plate; a cartouche drawn into
+a viewBox twice its box and squashed across the qualification; a mihrab struck
+at its natural proportion coming out 131mm tall over a 237mm opening; a radiant
+field painted over by a 72% ground and vanishing; a crest that read as a circus
+tent; microtext sitting 2.6mm from the trim, inside the knife; and a ground
+mandala legible as a figure at arm's length. All fixed; the full table is in the
+concept board.
+
+`docs/edtechx/design/EDTECHX_PRODUCTION_SPEC.md` is new: dimensions and
+tolerances, substrate by edition, inks and metals with foil references,
+linework weights, finishing processes and dies, and the binding section
+separating what is cryptographically verifiable in every edition, what is a
+genuine production feature only in the editions that buy it, and what is visual
+simulation everywhere. Nothing may be described in stronger terms than that
+table allows.
+
+**Verified:** 27 new tests in `test_architecture.py` — the octagon lattice is a
+real tiling, a stated arch rise is the rise produced, all four corner brackets
+are one shape rotated, no metal treatment emits an opacity on a line, every
+metal ramp descends, the legend ring fills its circumference exactly, the levels
+increase in registers/permits/peak together, and there is deliberately no
+whitespace floor. Suite green, ruff clean.
+
+**Implemented but not verified:** nothing has been printed. Foil, emboss and
+raised type are simulations and are labelled as such. Microtext at 0.56–0.62mm
+has not been measured on any press. Greyscale, 200% inspection, and the
+portrait and Letter compositions have not been done for any of the twelve.
+
+
 ## Working notes for the next session
 
 - **Start here:** `apps/edtechx-api/README.md`, then this file, then `EDTECHX_ROADMAP.md` Phase 2.

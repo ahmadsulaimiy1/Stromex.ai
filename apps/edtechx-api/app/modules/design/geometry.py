@@ -63,6 +63,7 @@ __all__ = [
     "PAPER",
     "Rect",
     "arabesque_band",
+    "blend",
     "corner_frame",
     "engraved_rule",
     "epitrochoid",
@@ -153,6 +154,25 @@ def tint(hex_colour: str, strength: float) -> str:
         for i in range(3)
     )
     return "#" + "".join(f"{c:02X}" for c in mixed).upper()
+
+
+def blend(ink: str, ground: str, strength: float) -> str:
+    """Mix an ink towards an arbitrary ground and return a flat hex.
+
+    `tint()` mixes towards the paper, which is correct for every plate printed
+    on ivory and wrong for every plate printed on midnight, crimson or deep
+    green — there, a "pale" line mixed towards ivory gets *lighter* as it should
+    get *darker*, and a whole register comes out chalky. Same rule as `tint()`
+    about the result: a flat hex, never an opacity.
+    """
+    a = int(ground.lstrip("#"), 16)
+    b = int(ink.lstrip("#"), 16)
+    out = []
+    for shift in (16, 8, 0):
+        base = (a >> shift) & 255
+        target = (b >> shift) & 255
+        out.append(max(0, min(255, round(base + (target - base) * strength))))
+    return "#" + "".join(f"{c:02X}" for c in out)
 
 
 def _gcd(a: int, b: int) -> int:

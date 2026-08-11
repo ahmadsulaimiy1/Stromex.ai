@@ -1,39 +1,65 @@
-"""How much of the geometry a document may spend.
+"""How much of the vocabulary a document may spend, and on what.
 
-`geometry.py` is a vocabulary of fourteen constructions. This file is the rule
-that no document uses all of them — and it is a *constraint the code enforces*
-rather than a note in a style guide, because the failure mode it prevents is the
-one every certificate system falls into: having built an ornament library,
-putting the whole library on every page.
+`geometry.py` and `architecture.py` are the vocabulary. This file is the rule
+that a nursery completion certificate and a doctoral award are not the same
+object — and it is a *constraint the code enforces* rather than a note in a
+style guide.
 
-**Four levels, and the thing that increases is architecture, not decoration.**
+**What increases with level is richness, and richness is architecture plus
+ornament plus material.** An earlier draft of this file said the opposite: that
+Level IV was "more disciplined, not busier", and that ornament belonged only at
+the edge of the sheet. That was an overcorrection, and it produced flagship
+plates that were technically exact and visually inexpensive. The corrected
+reading, which this file now enforces:
 
-    I   Institutional  a report card, an enrolment letter, a statement of
-                       results. One engraved rule and air. Nothing else earns
-                       its place on a document somebody files.
-    II  Premium        a diploma, a professional certificate. A frame with two
-                       registers, corner geometry, a lattice at the threshold
-                       of visibility.
-    III Ceremonial     a graduation, a distinction, a major award. Lathe work
-                       enters — a guilloché band in the frame, a rosette behind
-                       the seal. The composition acquires a centre.
-    IV  Flagship       a doctorate, an honorary award. Everything III has, plus
-                       the sheet-scale field, the deterministic substrate, and
-                       microtext carrying the document's own serial.
+    I    Elegant        A statement of results, a report card, a letter.
+                        Genuinely well made — an engraved rule, a real metal,
+                        generous margins, a considered masthead. Not ornate,
+                        and not apologetic about it. A document at this level
+                        should still look like it came from an institution
+                        that knows what a document is.
 
-**Maximum sophistication is not maximum ornament.** A Level IV plate obeys the
-same two rules a Level I plate does — one visual peak, and ink coverage inside
-the content field below the ceiling — and it is *more* disciplined about them,
-not less, because it has more ways to break them. What Level IV buys is
-precision at the edge of the sheet and in the substrate: places the eye does not
-go first and a loupe goes immediately.
+    II   Premium        A diploma, a professional certificate. Clearly
+                        luxurious: a multi-register frame, corner geometry, a
+                        worked ground, metal rules that read as metal. Somebody
+                        holding it can tell it cost money to produce.
 
-**Ornament stays at the architectural edge.** Every level's budget names a
-`field_ink` ceiling, and the only constructions permitted inside the content
-field at any level are ones that stay under it. Guilloché behind a name, a
-lattice behind a table, a corner colliding with a signature: these are the
-specific failures the ceiling exists to make impossible rather than
-discouraged.
+    III  Ceremonial     A graduation, a distinction, a major award. Richly
+                        ornamented: guilloché registers, strapwork, medallions,
+                        an allover field, a cartouche or a crest architecture.
+                        The composition acquires a ceremonial centre and the
+                        metal becomes a major visual component.
+
+    IV   Flagship       A doctorate, an honorary award, a royal or national
+                        honour. Exceptional craftsmanship: the whole vocabulary
+                        is available — corner blocks with inset medallions,
+                        crested frames, multiple guilloché systems, dense
+                        geometric registers, radiant fields, microtext, a
+                        deterministic security substrate, two metals. It should
+                        be capable of looking extraordinary, because what it
+                        certifies is.
+
+**The two constraints that survive, and why they are not asceticism.**
+
+`content_ink` is the most ink any background construction may lay down *behind
+the words*. It is a legibility guarantee, not a decoration ceiling: outside the
+content field a Level IV plate may be as dense as the design calls for, and the
+frame registers routinely are. What it forbids is a guilloché running behind a
+recipient's name at a strength that fights it — which is a typography failure,
+not an ornament failure, and it is measured rather than asserted.
+
+`peak_ratio` is the rule that the composition has one dominant moment. That
+remains true at every level and gets *stronger* as levels rise, because a rich
+plate has more ways to lose its hierarchy. One peak does not mean one ornament;
+it means the eye lands in one place first, and everything else is discovered
+after.
+
+**There is deliberately no whitespace floor.** An earlier version carried one,
+expressed as a fraction of the sheet that had to be unmarked, and it was wrong
+in principle: a richly worked ground with excellent hierarchy has no less
+breathing space than a blank one, it simply spends it differently. Air is a
+compositional decision made by eye against a rendered plate, and encoding it as
+a number produced empty documents that passed.
 """
 
 from __future__ import annotations
@@ -55,17 +81,27 @@ class Budget:
     permits: frozenset[str]
     #: Sheet margins, outside→in. Each entry is an inset in mm from the trim.
     frame: tuple[float, ...]
+    #: The perimeter register stack, outside→in, as `(width_mm, kind)` pairs
+    #: understood by `architecture.register_stack`. This is what makes a frame
+    #: an architecture rather than a set of concentric rectangles: each band has
+    #: a stated job, and the sequence runs coarse to fine inwards.
+    registers: tuple[tuple[float, str], ...]
     #: How far the content field sits inside the innermost frame element.
     field_inset: float
-    #: The most ink, as a proportion of the content field's area, that any
-    #: background construction may lay down inside it. Measured, not asserted —
-    #: see `test_plates.py`.
-    field_ink: float
-    #: The floor for unmarked area across the whole sheet. Air is the most
-    #: expensive material on paper and the defining absence in cheap work.
-    whitespace_floor: float
+    #: The most ink, as a proportion of the content field's area, that a
+    #: background construction may lay down *behind the words*. A legibility
+    #: guarantee; see the module docstring. Measured, not asserted.
+    content_ink: float
     #: How much larger the single peak must be than the next-largest element.
     peak_ratio: float
+    #: The default metal for this level, by key into `gilding.METALS`. A
+    #: composition may choose another; what the level fixes is how *much* metal
+    #: is structurally available to it.
+    metal: str = "royal"
+    #: Whether this level may carry a second metal. Two metals is a real
+    #: production decision — a second foil is a second pass on press — so it is
+    #: granted at a level rather than taken by a template.
+    second_metal: bool = False
     description: str = ""
     notes: tuple[str, ...] = field(default_factory=tuple)
 
@@ -79,80 +115,99 @@ class Budget:
 LEVELS: Final[tuple[Budget, ...]] = (
     Budget(
         level=1,
-        name="Institutional",
-        permits=frozenset({"rule", "khatam"}),
-        # One inset. A document at this level is a sheet of paper with a rule
-        # on it, and the rule is there to say where the institution's page
-        # ends rather than to decorate it.
-        frame=(14.0,),
+        name="Elegant",
+        permits=frozenset({"rule", "khatam", "spreader"}),
+        frame=(13.0,),
+        registers=((0.5, "rule"),),
         field_inset=8.0,
-        field_ink=0.0,
-        whitespace_floor=0.55,
+        content_ink=0.0,
         peak_ratio=1.5,
+        metal="antique",
         description="Everyday academic documents: results, letters, statements.",
         notes=(
-            "No ornament at all inside the field, and none in the frame beyond "
-            "a single engraved rule. A statement of results that arrives "
-            "looking like a prize is a statement nobody trusts.",
+            "Elegant is not plain. The whole budget is spent on one engraved "
+            "metal rule, a real masthead and a generous margin, because at "
+            "this level those three are what separate an institution's "
+            "document from a printout — and a statement of results that "
+            "arrives looking like a prize is a statement nobody trusts.",
         ),
     ),
     Budget(
         level=2,
         name="Premium",
-        permits=frozenset({"rule", "khatam", "corner", "lattice", "arabesque"}),
-        frame=(9.0, 15.0),
+        permits=frozenset({
+            "rule", "khatam", "spreader", "corner", "lattice", "arabesque",
+            "tessellation", "cartouche",
+        }),
+        frame=(8.0, 14.0),
+        registers=((0.5, "rule"), (3.2, "micro"), (1.4, "void"), (0.4, "rule")),
         field_inset=9.0,
-        # A lattice may enter the field, and only just: this ceiling is the
-        # difference between a watermark milled into the sheet and a pattern
-        # printed over a certificate.
-        field_ink=0.030,
-        whitespace_floor=0.50,
+        content_ink=0.030,
         peak_ratio=1.7,
+        metal="antique",
         description="Diplomas, professional certificates, qualifications.",
+        notes=(
+            "Clearly luxurious. A worked register enters the frame and a "
+            "lattice enters the ground; the metal starts behaving like metal "
+            "rather than like a brown line.",
+        ),
     ),
     Budget(
         level=3,
         name="Ceremonial",
         permits=frozenset({
-            "rule", "khatam", "corner", "lattice", "arabesque",
-            "guilloche", "rosette", "seal",
+            "rule", "khatam", "spreader", "corner", "lattice", "arabesque",
+            "tessellation", "cartouche", "guilloche", "rosette", "seal",
+            "girih", "medallion", "mandala", "spine", "arch",
         }),
-        frame=(7.0, 12.0, 18.0),
+        frame=(6.5, 11.0, 17.0),
+        registers=(
+            (0.6, "rule"), (2.6, "lathe"), (1.0, "void"),
+            (5.0, "girih"), (1.0, "void"), (0.4, "rule"),
+        ),
         field_inset=10.0,
-        field_ink=0.045,
-        whitespace_floor=0.46,
+        content_ink=0.045,
         peak_ratio=1.9,
+        metal="royal",
+        second_metal=True,
         description="Graduation, distinction, major awards.",
         notes=(
-            "Lathe work enters here and stays in the frame and behind the "
-            "seal. A rosette behind a name is the single fastest way to make "
-            "an expensive document look like a printed novelty.",
+            "Richly ornamented. Lathe work and strapwork both enter the frame, "
+            "the ground carries an allover mandala, and the composition "
+            "acquires a ceremonial centre — a medallion, a cartouche or a "
+            "crest architecture. The content field's ink ceiling is what keeps "
+            "all of that behind the words rather than in front of them.",
         ),
     ),
     Budget(
         level=4,
         name="Flagship",
         permits=frozenset({
-            "rule", "khatam", "corner", "lattice", "arabesque",
-            "guilloche", "rosette", "seal", "microtext", "fibres",
-            "screen", "squares",
+            "rule", "khatam", "spreader", "corner", "lattice", "arabesque",
+            "tessellation", "cartouche", "guilloche", "rosette", "seal",
+            "girih", "medallion", "mandala", "spine", "arch",
+            "corner_block", "cresting", "radiant", "microtext", "fibres",
+            "screen", "squares", "emboss", "foil",
         }),
-        frame=(6.0, 10.5, 16.0, 22.0),
+        frame=(5.5, 9.5, 15.0, 21.0),
+        registers=(
+            (0.7, "rule"), (2.4, "lathe"), (0.8, "void"),
+            (6.5, "micro"), (0.8, "void"), (4.6, "girih"),
+            (1.2, "void"), (0.5, "rule"),
+        ),
         field_inset=11.0,
-        field_ink=0.050,
-        # Deliberately *not* lower than Level III's. What Level IV adds sits at
-        # the edge of the sheet and in the substrate, not in the field, so the
-        # field's discipline does not change — the whole point of the level is
-        # that it is more precise, not busier.
-        whitespace_floor=0.44,
+        content_ink=0.050,
         peak_ratio=2.1,
+        metal="royal",
+        second_metal=True,
         description="Doctorates, highest honours, honorary and royal awards.",
         notes=(
-            "Everything Level IV adds is at the edge or in the substrate: "
-            "microtext carrying the document's own serial, deterministic "
-            "fibres, an anti-copy screen, the interlocking-squares "
-            "construction shown rather than resolved. A person reads the same "
-            "page as at Level III and a loupe reads a different one.",
+            "Exceptional. Corner blocks with inset medallions, a crested "
+            "frame, two guilloché systems, a dense geometric register, "
+            "microtext carrying the document's own serial, a deterministic "
+            "substrate and a second metal. The question at this level is not "
+            "whether there is too much; it is whether every expensive-looking "
+            "element has been designed well enough to deserve its place.",
         ),
     ),
 )

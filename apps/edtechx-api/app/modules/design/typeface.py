@@ -58,6 +58,20 @@ def fonts_root() -> pathlib.Path:
 
 
 #: `(css family, file, weight, style)`.
+#:
+#: The four interface families come first; the four below them are the
+#: **ceremonial** faces, and they exist because a certificate is not a screen.
+#: A document family needs a display face with real stroke contrast — the thing
+#: that makes engraved type look engraved — and an Arabic face heavy enough to
+#: hold a title rather than a caption:
+#:
+#:   Fraunces 300/600/900   high-contrast display serif. The ceremonial name,
+#:                          the title moment, the qualification.
+#:   Archivo 400/700        a grotesque with enough width to be monumental at
+#:                          display size, for the contemporary directions.
+#:   Amiri 700              Naskh at title weight, so Arabic can be a principal
+#:                          element instead of a translation underneath.
+#:   Cairo 400/700          a modern Arabic sans, the counterpart to Archivo.
 FACES: tuple[tuple[str, str, str, str], ...] = (
     ("Source Serif 4", "SourceSerif4-400.ttf", "400", "normal"),
     ("Source Serif 4", "SourceSerif4-400i.ttf", "400", "italic"),
@@ -70,13 +84,43 @@ FACES: tuple[tuple[str, str, str, str], ...] = (
     ("IBM Plex Mono", "IBMPlexMono-400.ttf", "400", "normal"),
     ("IBM Plex Mono", "IBMPlexMono-600.ttf", "600", "normal"),
     ("Amiri", "Amiri-400.ttf", "400", "normal"),
+    ("Fraunces", "Fraunces-300.woff2", "300", "normal"),
+    ("Fraunces", "Fraunces-600.woff2", "600", "normal"),
+    ("Fraunces", "Fraunces-900.woff2", "900", "normal"),
+    ("Archivo", "Archivo-400.woff2", "400", "normal"),
+    ("Archivo", "Archivo-700.woff2", "700", "normal"),
+    ("Amiri", "Amiri-700.woff2", "700", "normal"),
+    ("Cairo", "Cairo-400.woff2", "400", "normal"),
+    ("Cairo", "Cairo-700.woff2", "700", "normal"),
 )
+
+#: The document roles, and which real family fills each. Named because the
+#: earlier flagship stylesheet asked for `'EdirasX Display'` — a family nothing
+#: in this file ever declared — and silently set the whole certificate in
+#: Georgia. A role table that resolves to declared families makes that class of
+#: mistake impossible to write.
+ROLES: dict[str, str] = {
+    "display": "Fraunces",
+    "display-alt": "Source Serif 4",
+    "display-modern": "Archivo",
+    "body": "Source Serif 4",
+    "ui": "Inter",
+    "arabic": "Amiri",
+    "arabic-modern": "Cairo",
+    "mono": "IBM Plex Mono",
+}
+
+_MIME = {"ttf": "font/ttf", "woff2": "font/woff2"}
+_FORMAT = {"ttf": "truetype", "woff2": "woff2"}
 
 
 @functools.cache
 def _data_uri(name: str) -> str:
     raw = (fonts_root() / name).read_bytes()
-    return "data:font/ttf;base64," + base64.b64encode(raw).decode("ascii")
+    kind = name.rsplit(".", 1)[-1]
+    return (
+        f"data:{_MIME[kind]};base64," + base64.b64encode(raw).decode("ascii")
+    )
 
 
 def font_face_css(*, embed: bool = False, base_url: str = "/static/fonts") -> str:
@@ -90,8 +134,25 @@ def font_face_css(*, embed: bool = False, base_url: str = "/static/fonts") -> st
     blocks: list[str] = []
     for family, filename, weight, style in FACES:
         source = _data_uri(filename) if embed else f"{base_url}/{filename}"
+        fmt = _FORMAT[filename.rsplit(".", 1)[-1]]
         blocks.append(
-            f"@font-face{{font-family:'{family}';src:url('{source}') format('truetype');"
+            f"@font-face{{font-family:'{family}';src:url('{source}') format('{fmt}');"
             f"font-weight:{weight};font-style:{style};font-display:swap;}}"
         )
     return "\n".join(blocks)
+
+
+def stack(role: str, *, fallback: str = "serif") -> str:
+    """A CSS font stack for a document role.
+
+    Always resolves to a family this module actually declares. Asking for a role
+    that does not exist raises rather than falling through to a system face,
+    because a certificate set in the wrong typeface is a defect nobody notices
+    until it is printed.
+    """
+    if role not in ROLES:
+        raise ValueError(
+            f"{role!r} is not a document type role. One of: "
+            + ", ".join(sorted(ROLES))
+        )
+    return f"'{ROLES[role]}', {fallback}"
