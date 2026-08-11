@@ -879,3 +879,33 @@ That is the shape almost every school system has, and it is security theatre: th
 **Enforcement.** 29 tests in `test_authority.py`, and the document suite's own fixture now appoints a class teacher and a head — so every report card it issues is one a real school could hand to a parent, and the whole file is evidence for the registry rather than for a path around it. The old template-typed signatory list is **refused** rather than ignored on validation: silently dropping it would print a document signed by somebody other than whom its author intended, which is worse than refusing.
 
 **What this does not claim.** It does not make a rendered page unforgeable — nothing does. It guarantees that a document EdirasX issued was certified by an officer the institution had authorised to certify it, on the day it was issued, and says so permanently.
+
+---
+
+## ADR-041 — The document geometry is a construction library, in millimetres
+
+**Status:** Accepted
+
+**Context.** Before building a certificate library, the question is what a certificate is *made of*. The wrong answer — the one that produces every generic certificate in the world — is a border image, a gold gradient and a centred stack of text. Studying the credential design system in `ahmadsulaimiy1/Sultan-` a second time, this time for its **design** rather than its authority model, made the alternative concrete: a certificate is an engraved plate, and a plate is generated from closed mathematical constructions.
+
+That reference is a benchmark for *quality*, not a template to copy. EdirasX's palette, its geometry and its restraint are its own. What transfers is the discipline, and five specific pieces of print engineering that reference had already learned the hard way.
+
+**Decision.** `app/modules/design/geometry.py`, whose user unit is the **millimetre**.
+
+**No opacity on a hairline, ever.** A 0.1mm stroke at 40% opacity becomes a *screen percentage* at separation, and a screened hairline is the first thing to drop off press — the line is simply not on the printed sheet. Every pale tone is pre-mixed against the paper by `tint()` and emitted as a flat hex: the ink is specified, not a tint of it. A parameterised test asserts the string `opacity` appears in none of the twelve constructions.
+
+**Guilloché is lathe work.** An epitrochoid with `R` and `r` coprime closes only after `r/gcd(R,r)` turns and has `R/gcd(R,r)` lobes. That regularity *is* the property worth having: a curve describable in three integers is one a forger must solve rather than trace. Coprimality is asserted for every row of the table.
+
+**The lathe specification is chosen by scale, not fixed.** A rose engine cuts at a roughly constant petal pitch; a fixed 61-lobe figure is right across a sheet field and collapses into a smudge on a 5mm medallion. Writing the test for that found the table topping out too low — at a 110mm field the largest spec gave a 7.8mm pitch against 2.8mm on the medallions beside it, which is two different visual grains on one sheet. A 127-lobe row was added.
+
+**An engraved line is three strokes.** A lit edge, the ink, a shadow wall. One stroke with a gradient is a screen effect that prints as a muddy band; three solid strokes is how an engraving actually reflects light and survives separation into one colour. An emboss is the same idea: a pale copy offset beneath the ink copy, never a drop shadow and never tinted — filling an emboss with colour turns a governance mark into a sticker.
+
+**Determinism, keyed to the document.** Paper fibres and ornament phase come from a seeded LCG keyed on the document's own serial, so two printings of one plate are one plate, and two documents are two plates.
+
+**And the honesty rule, asserted rather than commented.** The names describe constructions, not protections. `line_screen` is a ruling chosen to beat against a copier's own screen angles; it is **not** a latent image, which needs a coarse and a fine ruling at matched ink fraction with a shape defined between them — and a test fails if that distinction ever drifts out of the docstring. Microtext is real vector text on a path carrying the **live serial** rather than the institution's name, because a ring identical on every sheet distinguishes nothing; whether it survives a given printer is a question about that printer and is assessed separately, not claimed here. Paper fibres are named as cosmetic in their own docstring. None of this is cryptography — the cryptography is ADR-036 — and conflating the two is the theatre this codebase exists to refuse.
+
+**The vocabulary.** Epitrochoid, rosette, guilloché band, star polygon, khatam (EdirasX's own two-square eight-point construction, `INNER_RATIO = √(2−√2)`), interlocking squares, lattice field, arabesque band, engraved rule, corner frame, blind-embossed seal ring, deterministic fibres, line screen, microtext ring. Fourteen primitives, and the standing rule that no document uses all of them.
+
+**Enforcement.** 35 tests in `test_geometry.py`, every one a property a printer or a forger would care about rather than a rendering that happened.
+
+**What is not yet built**, named rather than implied: the ceremonial levels (I standard → IV flagship) that govern how much of this vocabulary a given document may spend; the family taxonomy; the plate compositions themselves; and the honest microprint assessment, which needs a real rasterisation at 300 DPI before anything is claimed.
