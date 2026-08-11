@@ -261,6 +261,16 @@ def _assessments_for(db: Session, result_set: ResultSet) -> list[Assessment]:
     return list(db.execute(statement).scalars().all())
 
 
+def _period_end(db: Session, result_set: ResultSet):
+    """The last day of the period these results cover, where there is one."""
+    if result_set.academic_period_id is None:
+        return None
+    from app.modules.academics.models import AcademicPeriod
+
+    period = db.get(AcademicPeriod, result_set.academic_period_id)
+    return period.ends_on if period else None
+
+
 def readiness(db: Session, result_set: ResultSet) -> Readiness:
     """Everything an institution would want checked before it commits.
 
@@ -276,11 +286,16 @@ def readiness(db: Session, result_set: ResultSet) -> Readiness:
 
     from app.modules.people import service as people
 
+    # As of the *period the results cover*, not as of the day somebody pressed
+    # the button. Publishing the autumn term in January would otherwise find
+    # nobody expected — every child having since moved on — and report a set
+    # with no marks in it as ready.
+    as_of = _period_end(db, result_set) or datetime.now(UTC).date()
     expected = (
         {
             student.id
             for student, _person in people.students_in_class(
-                db, result_set.class_group_id, on=datetime.now(UTC).date()
+                db, result_set.class_group_id, on=as_of
             )
         }
         if result_set.class_group_id
