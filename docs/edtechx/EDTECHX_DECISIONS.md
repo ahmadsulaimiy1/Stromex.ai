@@ -695,3 +695,47 @@ An institution that wants its identity frozen too — a certificate under the bo
 *Two presentation defects, found by looking at the rendered page rather than at the payload.* A certificate of enrolment issued in March carried a subtitle naming the autumn term, because the periods covered were derived from whatever the student had results for; they now follow what the document actually reports on, and a document containing no results section covers no period. And a university counting in ECTS credits was shown "Ects Credits Attempted", because a label was being title-cased — the unit is now named once, exactly as the institution writes it.
 
 *A redundant rule, removed.* Composition also suppressed any section whose academic layer the institution had no rows in. A sabotage showed it did nothing that `omit_when_empty` did not already do — a credit section can only have content where credits exist — and that it could actively harm: a university that deleted its credit systems would have started printing transcripts without the credits its graduates earned. "Complexity must be capability, never burden" (ADR-031) belongs where a template is *designed*, in `sections.available_to`, which never offers a nursery a grade-point average. It does not belong where an issued document is composed from history.
+
+---
+
+## ADR-035 — A royal institution, rendered by a precision instrument
+
+**Status:** Accepted · **Constitutional**
+
+**Context.** The first rendered artefacts were technically competent and looked like generic academic software: white page, thin grey rules, ordinary tables. The product owner's assessment — 0.3/10 against the visual objective — was correct, and the correction was not "polish this". *Minimal is not the same as prestigious.* A completely white page with a heading, hairlines and ordinary tables can be entirely minimal and still communicate nothing about the institution using it.
+
+EdirasX has to look like something a world-leading royal university, an elite international school or a prestigious academy would be proud to put in front of parents. And it has to do that without the cheap signals of luxury: gold everywhere, crowns, ornamental borders, gradients, glass, fake depth.
+
+**Decision.** The visual direction is *a royal institution rendered by a precision instrument*, and it is enforced at the token layer rather than asserted in a style guide.
+
+**Restraint is the mechanism, not the absence of one.** No gradient survives except the select chevron and the loading shimmer, which are mechanisms; a test parses the stylesheet and names the two blocks allowed to contain one. One shadow, for things that genuinely float. Radii of 2–4px, because a sharp edge reads as institutional. Depth comes from surface value and a hairline, the way it is made on paper. **Rules, not cards** — a row of metrics separated by hairlines rather than boxed in six rectangles is the single largest visible difference between this and an admin template.
+
+**Gold behaves like jewellery.** Champagne is never a background and never a large fill; it marks the origin of a rule, an active state, a key figure. At most one gold button on a screen, earned by consequence rather than prominence.
+
+**Two grounds.** Midnight carries the institution's chrome; ivory carries the work. The contrast between an authoritative dark frame and a warm editorial page is the half-second signature.
+
+**The Arabic DNA is structural.** EdirasX is named from الدراسة, so the identity derives from Islamic geometric construction rather than from calligraphy placed on a screen: two squares at 45° produce the eight-point seal, whose central negative space is a cross. **The X of EdirasX is the void at the centre of the star.** One construction generates the mark, the rule terminator, the node, the empty-state figure, the ceremonial lattice and the loading indicator. The inner radius is √(2−√2), derived from where the squares cross; it shipped once at 1/(1+√2) and rendered as a spiky asterisk, and a test now pins it.
+
+**Everything is a token, and a theme is a validated schema.** `PRIMITIVES` are ramps; `SEMANTICS` say what a thing is *for*; components reference only semantics. A test greps the entire foundation stylesheet for colour literals and fails on any. `ThemeShape` names exactly which ramps, roles and families an institution may change — which is what makes an AI Design Studio possible later: it will emit *validated token overrides*, never CSS.
+
+**Customization must not be allowed to destroy usability.** Every institutional colour choice passes through `contrast.py`, and the answer is never a silent yes or a flat no. It is a verdict with a remedy: *this pairing is at 2.4:1, the standard is 4.5:1, and #A3894F is the nearest tone of the colour you chose that meets it.* Resolution obeys the institution; review reports on it; nothing is silently corrected, because a school that finds its brand quietly changed will trust nothing else the product says. An institution's *ornament* gold is never used as its *text* gold — the text step is derived through the guardrail, because a school choosing a pale champagne has chosen an ornament colour and rendering it as body text would be obeying them into a failure.
+
+**Dense tables do not overflow onto phones.** A table declares what kind of data it holds and its small-screen composition follows from that: a `ledger` becomes labelled records with nothing hidden; a `matrix` becomes course-and-grade with the grade held large at the right, because a parent opening a report card on a phone came to see the grade; a `roster` becomes a people list; a `schedule` — genuinely two-dimensional — is the only shape that scrolls sideways, with its time column pinned. Column headings travel into the stacked layouts through `data-label`, so the phone view is generated from the same markup rather than from a second template that would drift.
+
+**The shell is a rendering of a resolved answer.** Navigation is not a list somebody maintains — it comes from `experience.resolve` (ADR-031). The only way to add an item to somebody's rail is to give them the capability.
+
+**Enforcement.** `test_design.py` — 31 tests. Geometry, token completeness, no colour literals, no decorative gradients, institutional radii, every semantic present in both modes, every variable the foundation reads actually emitted, the guardrails' verdicts and remedies, the theme schema's refusals, and the component markup contracts. Visual evidence at three widths lives in `docs/edtechx/design/shots`, produced by `tools/design`.
+
+**Six defects the design review found, none of which a test would have.**
+
+*The navigation showed the same word twice.* Five pairs of capabilities resolved to identical labels — grading scales and results, class groups and the timetable, curriculum subjects and course content, levels and progression rules, qualifications and transcripts. Every existing test inspected capability *keys*, so all five were invisible. Capabilities may now carry an explicit `name`, the catalogue refuses a collision at boot, and resolution drops a run-time collision produced by an institution's own vocabulary rather than rendering it.
+
+*A nursery was offered Grades, Assessments and Report cards.* Those three capabilities had no layer gate, so every institution in the product saw them whatever its world contained. They are now gated on the grading layer.
+
+*A hamburger was visible on a 1440px desktop.* A caller adding `class_="ed-mobile-only"` to a component produced two `class` attributes, of which the browser honours the first — so the class was silently dropped. Components now merge a caller's classes into their own.
+
+*A loading button showed its label beside the spinner*, because the attribute filter discarded `data-loading=""` as an empty value.
+
+*An institution that issues no admission numbers could register exactly one child.* The uniqueness index treats `""` as a value; blank references are now stored as absent. Found by building a nursery.
+
+*The system's own input borders were at 1.47:1.* A divider and a control's edge shared one token, so making the divider a whisper made the fields nearly invisible. They are now separate tokens, and the guardrail checks the one that carries information. The same pass found that checking *decorative* gold at 3:1 was miscalibrated — it would force a heavier gold and destroy the restraint — and replaced it with the rule that actually matters: gold may never be the only signal of a state, asserted structurally.

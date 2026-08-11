@@ -21,6 +21,9 @@ from app.modules.customization.branding import Branding
 __all__ = ["render_html", "render_text"]
 
 
+EN_DASH = "\u2013"
+
+
 def _e(value) -> str:
     return escape("" if value is None else str(value))
 
@@ -42,102 +45,72 @@ def _number(value) -> str:
 
 
 def _styles(branding: Branding, page: dict) -> str:
-    margin = page.get("margin_mm", 18)
+    """The document stylesheet, from the design system rather than from here.
+
+    This function used to hold ninety lines of CSS naming its own colours and
+    sizes. It named them slightly differently from the interface, which is how a
+    product ends up with a transcript set in a marginally different navy from
+    the screen that issued it. It now resolves a theme from the institution's
+    branding and asks the design system.
+    """
+    from app.modules.design.document_style import document_stylesheet
+    from app.modules.design.theme import resolve
+
+    overrides: dict = {"ornament": "ceremonial"}
+    primitives: dict[str, dict[str, str]] = {}
+    if branding.primary_colour:
+        primitives["royal"] = {"600": branding.primary_colour}
+    if branding.accent_colour:
+        primitives["gold"] = {"500": branding.accent_colour}
+    if primitives:
+        overrides["primitives"] = primitives
+    families: dict[str, str] = {}
+    if branding.heading_font:
+        families["display"] = branding.heading_font
+    if branding.body_font:
+        families["sans"] = branding.body_font
+    if families:
+        overrides["families"] = families
+
+    margin = page.get("margin_mm", 16)
     size = page.get("size", "A4")
     orientation = page.get("orientation", "portrait")
-    heading = branding.heading_font or "Georgia, 'Times New Roman', serif"
-    body = branding.body_font or "'Helvetica Neue', Arial, sans-serif"
-    return f"""
-@page {{ size: {_e(size)} {_e(orientation)}; margin: {_e(margin)}mm; }}
-:root {{
-  --ink: {_e(branding.ink_colour)};
-  --primary: {_e(branding.primary_colour)};
-  --accent: {_e(branding.accent_colour)};
-  --rule: color-mix(in srgb, var(--ink) 14%, transparent);
-}}
-* {{ box-sizing: border-box; }}
-body {{
-  margin: 0; padding: {_e(margin)}mm;
-  font-family: {_e(body)}; color: var(--ink); background: #fff;
-  font-size: 11pt; line-height: 1.45;
-}}
-h1, h2, h3, .masthead__name {{ font-family: {_e(heading)}; font-weight: 600; }}
-.masthead {{
-  display: flex; align-items: flex-start; gap: 16px;
-  padding-bottom: 12px; border-bottom: 2px solid var(--primary); margin-bottom: 20px;
-}}
-.masthead__crest {{ height: 64px; width: auto; }}
-.masthead__name {{ font-size: 18pt; color: var(--primary); margin: 0 0 2px; }}
-.masthead__motto {{ font-style: italic; opacity: .75; margin: 0 0 4px; }}
-.masthead__contact {{ font-size: 8.5pt; opacity: .7; margin: 0; }}
-.doc-title {{
-  font-size: 13pt; letter-spacing: .14em; text-transform: uppercase;
-  text-align: center; margin: 0 0 4px; color: var(--primary);
-}}
-.doc-context {{ text-align: center; font-size: 9.5pt; opacity: .75; margin: 0 0 22px; }}
-section {{ margin-bottom: 18px; break-inside: avoid; }}
-section > h2 {{
-  font-size: 9.5pt; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--accent); border-bottom: 1px solid var(--rule);
-  padding-bottom: 3px; margin: 0 0 8px;
-}}
-dl.fields {{ display: grid; grid-template-columns: auto 1fr; gap: 2px 14px; margin: 0; }}
-dl.fields dt {{ font-size: 9pt; opacity: .65; }}
-dl.fields dd {{ margin: 0; }}
-table {{ width: 100%; border-collapse: collapse; font-size: 10pt; }}
-th {{
-  text-align: left; font-size: 8.5pt; letter-spacing: .06em; text-transform: uppercase;
-  opacity: .6; border-bottom: 1px solid var(--rule); padding: 5px 6px;
-}}
-td {{ padding: 5px 6px; border-bottom: 1px solid var(--rule); vertical-align: top; }}
-td.num, th.num {{ text-align: right; font-variant-numeric: tabular-nums; }}
-.entries {{ font-size: 8.5pt; opacity: .7; }}
-.narrative {{ font-size: 12pt; line-height: 1.8; margin: 28px auto; max-width: 46em; }}
-.signatures {{ display: flex; gap: 32px; margin-top: 34px; }}
-.signature {{ flex: 1; }}
-.signature__line {{ border-top: 1px solid var(--ink); padding-top: 4px; font-size: 9pt; }}
-.signature__title {{ opacity: .6; font-size: 8.5pt; }}
-.verification {{
-  margin-top: 26px; padding-top: 8px; border-top: 1px solid var(--rule);
-  font-size: 8pt; opacity: .7; display: flex; justify-content: space-between; gap: 12px;
-}}
-.footer-note {{ margin-top: 6px; font-size: 8pt; opacity: .6; }}
-.void {{
-  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-  font-size: 72pt; color: rgba(180, 30, 30, .16); transform: rotate(-24deg);
-  letter-spacing: .2em; pointer-events: none;
-}}
-"""
+    return (
+        f"@page {{ size: {_e(size)} {_e(orientation)}; margin: {_e(margin)}mm; }}\n"
+        + document_stylesheet(resolve(overrides))
+    )
 
 
 def _masthead(branding: Branding) -> str:
+    """The letterhead: crest, name, motto, contact, then two rules.
+
+    A navy rule with a gold hairline under it is the whole device. It costs
+    three pixels and is most of why the page reads as issued by an institution
+    rather than generated by a system.
+    """
+    from app.modules.design import ornament
+
     crest = (
-        f'<img class="masthead__crest" src="{_e(branding.crest_url or branding.logo_url)}" alt="">'
+        f'<img class="ed-doc__crest" src="{_e(branding.crest_url or branding.logo_url)}" '
+        f'alt="">'
         if (branding.crest_url or branding.logo_url)
-        else ""
+        else f'<span class="ed-doc__crest">{ornament.monogram(64)}</span>'
     )
     contact = " · ".join(
-        part
-        for part in (
-            branding.address,
-            branding.contact_phone,
-            branding.contact_email,
-            branding.website,
-        )
-        if part
+        part for part in (branding.address, branding.contact_phone,
+                          branding.contact_email, branding.website) if part
     )
     motto = (
-        f'<p class="masthead__motto">{_e(branding.motto)}</p>' if branding.motto else ""
+        f'<p class="ed-doc__motto">{_e(branding.motto)}</p>' if branding.motto else ""
     )
     return (
-        '<header class="masthead">'
-        f"{crest}"
-        "<div>"
-        f'<p class="masthead__name">{_e(branding.formal_name)}</p>'
+        '<header class="ed-doc__masthead">'
+        f"{crest}<div>"
+        f'<h1 class="ed-doc__institution">{_e(branding.formal_name)}</h1>'
         f"{motto}"
-        f'<p class="masthead__contact">{_e(contact)}</p>'
-        "</div>"
-        "</header>"
+        + (f'<p class="ed-doc__contact">{_e(contact)}</p>' if contact else "")
+        + "</div></header>"
+        + '<div class="ed-doc__band"></div>'
     )
 
 
@@ -145,12 +118,18 @@ def _masthead(branding: Branding) -> str:
 
 
 def _fields(pairs) -> str:
-    rows = "".join(
-        f"<dt>{_e(label)}</dt><dd>{_e(value)}</dd>"
+    """A definition list where each pair is its own cell.
+
+    Grouped rather than a flat `dt`/`dd` run, so the grid can lay them out in
+    columns that reflow to two on a phone without a label ever separating from
+    its value — which is what a flat list does at the wrap point.
+    """
+    cells = "".join(
+        f"<div><dt>{_e(label)}</dt><dd>{_e(value)}</dd></div>"
         for label, value in pairs
         if value not in (None, "", [])
     )
-    return f'<dl class="fields">{rows}</dl>' if rows else ""
+    return f'<dl class="fields">{cells}</dl>' if cells else ""
 
 
 _COLUMN_LABELS = {
@@ -201,31 +180,88 @@ def _label_for(column: str, terms: dict) -> str:
 
 
 def _results_table(columns: list[str], rows: list[dict], terms: dict) -> str:
+    """Results, as a matrix that carries its own small-screen composition.
+
+    Three cells per row rather than one per column: what was studied, the
+    supporting detail, and the grade. On a wide screen that renders as an
+    ordinary table; on a phone the grade moves to the right at display size and
+    the detail wraps beneath the subject — because a parent opening a report
+    card on a phone came to see the grade, and everything else supports it.
+
+    The columns a template configured still decide *what appears*; they no
+    longer decide the geometry, because a geometry chosen per column cannot be
+    made to work at 390px.
+    """
     if not rows:
         return ""
-    columns = columns or ["course", "score", "band"]
-    # A column every row leaves empty is a column that makes the page look
-    # unfinished, so it is dropped rather than printed blank.
-    used = [
-        column
-        for column in columns
-        if column == "course"
-        or any(_cell(row, column, terms).strip() for row in rows)
-    ]
-    head = "".join(
-        f'<th class="{"num" if c in _NUMERIC_COLUMNS else ""}">{_e(_label_for(c, terms))}</th>'
-        for c in used
-    )
-    body = "".join(
-        "<tr>"
-        + "".join(
-            f'<td class="{"num" if c in _NUMERIC_COLUMNS else ""}">{_cell(row, c, terms)}</td>'
-            for c in used
+    wanted = set(columns or ("course", "score", "band"))
+    heading = _label_for("course", terms)
+    grade_heading = _label_for("band", terms) if "band" in wanted else "Result"
+
+    body = []
+    for row in rows:
+        detail: list[tuple[str, str]] = []
+        if "course_code" in wanted and row.get("course_code"):
+            detail.append(("Code", row["course_code"]))
+        if "credits" in wanted and row.get("credits") is not None:
+            detail.append((_label_for("credits", terms), _number(row["credits"])))
+        if "score" in wanted and row.get("score") is not None:
+            mark = _number(row["score"])
+            if row.get("max_score"):
+                mark += f" / {_number(row['max_score'])}"
+            detail.append(("Mark", mark))
+        if "percentage" in wanted and row.get("percentage") is not None:
+            detail.append(("Percentage", f"{_number(row['percentage'])}%"))
+        if "points" in wanted and row.get("points") is not None:
+            detail.append(("Points", _number(row["points"])))
+        entries = row.get("entries") or []
+        if "assessments" in wanted and not (len(entries) == 1 and "score" in wanted):
+            # A course with one assessment already showed its mark above; naming
+            # it twice reads as a rendering fault rather than as detail.
+            for entry in entries:
+                mark = _number(entry.get("score"))
+                if entry.get("max_score"):
+                    mark += f" / {_number(entry['max_score'])}"
+                detail.append((entry.get("assessment") or "Assessment", mark))
+        if "outcome" in wanted and row.get("is_pass") is not None:
+            detail.append(("Outcome", "Pass" if row["is_pass"] else "Not passed"))
+
+        grade = row.get("band") or (
+            _number(row.get("score")) if row.get("score") is not None else ""
         )
-        + "</tr>"
-        for row in rows
+        note = row.get("comment") if "comment" in wanted else ""
+        body.append(
+            "<tr>"
+            f'<td data-role="subject">{_e(row.get("course"))}</td>'
+            + '<td data-role="detail">'
+            + "".join(
+                f'<span data-label="{_e(label)}">{_e(value)}</span>'
+                for label, value in detail
+            )
+            + "</td>"
+            + f'<td data-role="grade" class="num">{_e(grade)}</td>'
+            + (f'<td data-role="note">{_e(note)}</td>' if note
+               else '<td data-role="note"></td>')
+            + "</tr>"
+        )
+    return (
+        '<table data-shape="matrix">'
+        f"<thead><tr><th>{_e(heading)}</th><th>Detail</th>"
+        f'<th class="num">{_e(grade_heading)}</th><th></th></tr></thead>'
+        f"<tbody>{''.join(body)}</tbody></table>"
     )
-    return f"<table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>"
+
+
+def _section(title: str, inner: str) -> str:
+    from app.modules.design import ornament
+
+    if not inner:
+        return ""
+    return (
+        "<section>"
+        f'<div class="ed-doc__head"><h2>{_e(title)}</h2>{ornament.rule()}</div>'
+        f"{inner}</section>"
+    )
 
 
 def _render_section(block: dict, terms: dict, branding: Branding) -> str:
@@ -235,45 +271,41 @@ def _render_section(block: dict, terms: dict, branding: Branding) -> str:
 
     if key == "identity":
         inner = _fields(
-            [
-                ("Name", content.get("full_name")),
-                ("Reference", content.get("reference")),
-                ("Date of birth", content.get("date_of_birth")),
-            ]
-            + [
-                (guardian["relationship"].title(), guardian["name"])
-                for guardian in content.get("guardians") or []
-            ]
+            [("Name", content.get("full_name")),
+             ("Reference", content.get("reference")),
+             ("Date of birth", content.get("date_of_birth"))]
+            + [(g["relationship"].title(), g["name"])
+               for g in content.get("guardians") or []]
         )
     elif key == "placement":
-        inner = _fields(
-            [
-                ((terms.get("programme") or {}).get("singular", "programme").title(),
-                 content.get("programme")),
-                ((terms.get("level") or {}).get("singular", "level").title(),
-                 content.get("level")),
-                (content.get("class_group_kind") or "Class", content.get("class_group")),
-                ((terms.get("cohort") or {}).get("singular", "cohort").title(),
-                 content.get("cohort")),
-                ("Academic year", content.get("academic_year")),
-            ]
-        )
+        inner = _fields([
+            ((terms.get("programme") or {}).get("singular", "programme").title(),
+             content.get("programme")),
+            ((terms.get("level") or {}).get("singular", "level").title(),
+             content.get("level")),
+            (content.get("class_group_kind") or "Class", content.get("class_group")),
+            ((terms.get("cohort") or {}).get("singular", "cohort").title(),
+             content.get("cohort")),
+            ("Academic year", content.get("academic_year")),
+        ])
     elif key == "enrolment_history":
         rows = content.get("rows") or []
         cells = "".join(
             "<tr>"
-            f"<td>{_e(row.get('academic_year'))}</td>"
-            f"<td>{_e(row.get('programme') or row.get('level'))}</td>"
-            f"<td>{_e(row.get('class_group'))}</td>"
-            f"<td>{_e(row.get('started_on'))}</td>"
-            f"<td>{_e(row.get('ended_on') or '—')}</td>"
-            f"<td>{_e(row.get('outcome') or row.get('status'))}</td>"
+            f'<td data-label="Programme">'
+            f'{_e(row.get("programme") or row.get("level") or "—")}</td>'
+            f'<td data-label="Year">{_e(row.get("academic_year"))}</td>'
+            f'<td data-label="Group">{_e(row.get("class_group") or "—")}</td>'
+            f'<td data-label="From">{_e(row.get("started_on"))}</td>'
+            f'<td data-label="To">{_e(row.get("ended_on") or "—")}</td>'
+            f'<td data-label="Outcome">'
+            f'{_e((row.get("outcome") or row.get("status") or "").title())}</td>'
             "</tr>"
             for row in rows
         )
         inner = (
-            "<table><thead><tr><th>Year</th><th>Programme</th><th>Group</th>"
-            "<th>From</th><th>To</th><th>Outcome</th></tr></thead>"
+            '<table data-shape="ledger"><thead><tr><th>Programme</th><th>Year</th>'
+            "<th>Group</th><th>From</th><th>To</th><th>Outcome</th></tr></thead>"
             f"<tbody>{cells}</tbody></table>"
         )
     elif key == "course_results":
@@ -282,91 +314,79 @@ def _render_section(block: dict, terms: dict, branding: Branding) -> str:
         parts = []
         for group in content.get("groups") or []:
             heading = " · ".join(
-                part for part in (group.get("academic_year"), group.get("period")) if part
+                p for p in (group.get("academic_year"), group.get("period")) if p
             )
-            totals = _fields(
-                [
-                    ("Credits earned", _number(group.get("credits_earned"))),
-                    ("Average", _number(group.get("grade_point_average"))),
-                ]
-            )
+            totals = []
+            if group.get("credits_earned") is not None:
+                totals.append(("Credits earned", _number(group["credits_earned"])))
+            if group.get("grade_point_average") is not None:
+                totals.append(("Average", _number(group["grade_point_average"])))
             parts.append(
-                f"<h3>{_e(heading)}</h3>"
+                f'<p class="ed-doc__period">{_e(heading)}</p>'
                 + _results_table(content.get("columns") or [], group.get("rows") or [], terms)
-                + totals
+                + (
+                    '<div class="ed-doc__totals">'
+                    + "".join(f"<span>{_e(k)}<b>{_e(v)}</b></span>" for k, v in totals)
+                    + "</div>"
+                    if totals else ""
+                )
             )
         inner = "".join(parts)
     elif key == "attainment_summary":
-        inner = _fields(
-            [
-                ("Courses", content.get("courses")),
-                ("Average", _number(content.get("average"))),
-                ("Passed", content.get("passed")),
-                ("Not passed", content.get("failed")),
-            ]
-        )
+        inner = _fields([
+            ("Courses", content.get("courses")),
+            ("Average", _number(content.get("average"))),
+            ("Passed", content.get("passed")),
+            ("Not passed", content.get("failed")),
+        ])
     elif key == "credit_summary":
-        # The unit is named once, in its own row, and never title-cased: an
-        # institution counting in ECTS credits should not be shown "Ects
-        # Credits Attempted" because a formatter thought it knew better.
         unit = content.get("unit_label_plural") or ""
-        inner = _fields(
-            [
-                ("Measured in", unit),
-                ("Attempted", _number(content.get("attempted"))),
-                ("Earned", _number(content.get("earned"))),
-                ("Cumulative", _number(content.get("cumulative_earned"))),
-            ]
-        )
+        inner = _fields([
+            ("Measured in", unit),
+            ("Attempted", _number(content.get("attempted"))),
+            ("Earned", _number(content.get("earned"))),
+            ("Cumulative", _number(content.get("cumulative_earned"))),
+        ])
     elif key == "grade_points":
-        inner = _fields(
-            [
-                ("Average", _number(content.get("average"))),
-                ("Cumulative", _number(content.get("cumulative"))),
-            ]
-        )
+        inner = _fields([
+            ("Average", _number(content.get("average"))),
+            ("Cumulative", _number(content.get("cumulative"))),
+        ])
     elif key == "attendance":
-        inner = _fields(
-            [
-                ("Sessions", content.get("sessions")),
-                ("Present", content.get("present")),
-                ("Absent", content.get("absent")),
-                ("Late", content.get("late")),
-                ("Excused", content.get("excused")),
-                (
-                    "Rate",
-                    f"{_number(content['rate'])}%"
-                    if content.get("rate") is not None
-                    else None,
-                ),
-            ]
-        )
+        rate = content.get("rate")
+        inner = _fields([
+            ("Sessions", content.get("sessions")),
+            ("Present", content.get("present")),
+            ("Absent", content.get("absent")),
+            ("Late", content.get("late")),
+            ("Excused", content.get("excused")),
+            ("Rate", f"{_number(rate)}%" if rate is not None else None),
+        ])
     elif key == "comments":
         inner = "".join(
-            f'<p><strong>{_e(entry["slot"].replace("_", " ").title())}</strong><br>'
+            f'<p class="ed-doc__comment"><b>{_e(entry["slot"].replace("_", " "))}</b>'
             f"{_e(entry['text'])}</p>"
             for entry in content.get("entries") or []
         )
     elif key == "progression":
         inner = _fields(
-            [("Standing", content.get("standing")), ("Outcome", content.get("outcome"))]
+            [("Standing", (content.get("standing") or "").title()),
+             ("Outcome", (content.get("outcome") or "").title())]
         ) + "".join(
-            f"<p>{_e(decision['kind'].title())} — {_e(decision['occurred_on'])}"
-            + (f" ({_e(decision['reason'])})" if decision.get("reason") else "")
+            f'<p class="ed-doc__comment">{_e(d["kind"].title())} — {_e(d["occurred_on"])}'
+            + (f" · {_e(d['reason'])}" if d.get("reason") else "")
             + "</p>"
-            for decision in content.get("decisions") or []
+            for d in content.get("decisions") or []
         )
     elif key == "qualifications":
         inner = "".join(
-            _fields(
-                [
-                    ("Award", row.get("qualification")),
-                    ("Classification", row.get("classification")),
-                    ("Awarded", row.get("awarded_on")),
-                    ("Reference", row.get("reference")),
-                    ("Awarding body", row.get("awarding_body")),
-                ]
-            )
+            _fields([
+                ("Award", row.get("qualification")),
+                ("Classification", row.get("classification")),
+                ("Awarded", row.get("awarded_on")),
+                ("Reference", row.get("reference")),
+                ("Awarding body", row.get("awarding_body")),
+            ])
             for row in content.get("rows") or []
         )
     elif key == "grading_key":
@@ -374,64 +394,58 @@ def _render_section(block: dict, terms: dict, branding: Branding) -> str:
         for scale in content.get("scales") or []:
             cells = "".join(
                 "<tr>"
-                f"<td>{_e(band['label'])}</td>"
-                f"<td class=\"num\">{_e(_number(band.get('min_value')))}</td>"
-                f"<td class=\"num\">{_e(_number(band.get('max_value')))}</td>"
-                f"<td class=\"num\">{_e(_number(band.get('points')))}</td>"
-                f"<td>{_e(band.get('descriptor') or '')}</td>"
+                f'<td>{_e(band["label"])}</td>'
+                f'<td class="num">{_e(_number(band.get("min_value")))}'
+                + (f'{EN_DASH}{_e(_number(band.get("max_value")))}'
+                   if band.get("max_value") is not None else "")
+                + "</td>"
+                f'<td class="num">{_e(_number(band.get("points")))}</td>'
+                f'<td>{_e(band.get("descriptor") or "")}</td>'
                 "</tr>"
                 for band in scale.get("bands") or []
             )
             parts.append(
-                f"<h3>{_e(scale.get('name'))}</h3>"
-                "<table><thead><tr><th>Grade</th><th class='num'>From</th>"
-                "<th class='num'>To</th><th class='num'>Points</th><th>Descriptor</th>"
-                f"</tr></thead><tbody>{cells}</tbody></table>"
+                f'<p class="ed-doc__period">{_e(scale.get("name"))}</p>'
+                '<table data-shape="key"><thead><tr><th>Grade</th><th class="num">Range</th>'
+                '<th class="num">Points</th><th>Descriptor</th></tr></thead>'
+                f"<tbody>{cells}</tbody></table>"
             )
         inner = "".join(parts)
     elif key == "narrative":
         align = content.get("align", "center")
         return (
-            f'<div class="narrative" style="text-align:{_e(align)}">'
-            + "".join(
-                f"<p>{_e(paragraph)}</p>"
-                for paragraph in str(content.get("text") or "").split("\n\n")
-            )
+            f'<div class="ed-doc__narrative" style="text-align:{_e(align)}">'
+            + "".join(f"<p>{_e(p)}</p>"
+                      for p in str(content.get("text") or "").split("\n\n"))
             + "</div>"
         )
     elif key == "signatures":
         blocks = "".join(
-            '<div class="signature">'
-            + (
-                f'<img src="{_e(s["image_url"])}" alt="" style="height:36px">'
-                if s.get("image_url")
-                else '<div style="height:36px"></div>'
-            )
-            + f'<div class="signature__line">{_e(s.get("name") or "")}</div>'
-            f'<div class="signature__title">{_e(s.get("title"))}</div>'
+            "<div>"
+            + (f'<img src="{_e(s["image_url"])}" alt="" style="height:2.2rem">'
+               if s.get("image_url") else '<div style="height:2.2rem"></div>')
+            + f'<div class="ed-doc__sign-line">{_e(s.get("name") or "")}</div>'
+            f'<div class="ed-doc__sign-title">{_e(s.get("title"))}</div>'
             "</div>"
             for s in content.get("signatories") or []
         )
-        return f'<div class="signatures">{blocks}</div>' if blocks else ""
+        return f'<div class="ed-doc__signatures">{blocks}</div>' if blocks else ""
     elif key == "verification":
-        url = content.get("url") or ""
-        right = (
-            f'Verify at {_e(url)}'
-            if url
-            else (f"Code {_e(content.get('code'))}" if content.get("code") else "")
+        pairs = [("Document number", content.get("number")),
+                 ("Issued", content.get("issued_on")),
+                 ("Verification code", content.get("code"))]
+        if content.get("checksum"):
+            pairs.append(("Checksum", content["checksum"][:16] + "…"))
+        if content.get("url"):
+            pairs.append(("Verify at", content["url"]))
+        cells = "".join(
+            f"<div><dt>{_e(k)}</dt><dd>{_e(v)}</dd></div>" for k, v in pairs if v
         )
-        return (
-            '<div class="verification">'
-            f"<span>{_e(content.get('number'))} · issued {_e(content.get('issued_on'))}</span>"
-            f"<span>{right}</span>"
-            "</div>"
-        )
+        return f'<dl class="ed-doc__verify">{cells}</dl>'
     else:  # pragma: no cover - every catalogue key is handled above
         inner = ""
 
-    if not inner:
-        return ""
-    return f"<section><h2>{_e(title)}</h2>{inner}</section>"
+    return _section(title, inner)
 
 
 # --- entry points -----------------------------------------------------------
@@ -444,24 +458,24 @@ def render_html(
     page: dict | None = None,
     watermark: str = "",
 ) -> str:
-    """A complete, self-contained page for one document.
+    """A complete, self-contained sheet for one document.
 
     `payload` is the document's frozen content and `branding` is resolved by the
     caller — from the document itself when the template froze it, otherwise from
     the institution as it stands today. This function never chooses between the
     two, because that is a policy decision and this is a renderer.
     """
+    from app.modules.design import ornament
+
     page = page or {}
     terms = payload.get("terminology") or {}
     context = payload.get("context") or {}
     periods = context.get("periods") or []
     subtitle = " · ".join(
-        part
-        for part in (
+        part for part in (
             context.get("academic_year"),
             ", ".join(p["name"] for p in periods) if periods else "",
-        )
-        if part
+        ) if part
     )
 
     body = "".join(
@@ -469,22 +483,40 @@ def render_html(
         for block in payload.get("sections") or []
     )
     footer = (
-        f'<p class="footer-note">{_e(branding.footer_note)}</p>'
-        if branding.footer_note
-        else ""
+        f'<p class="ed-doc__foot">{_e(branding.footer_note)}</p>'
+        if branding.footer_note else ""
     )
-    stamp = f'<div class="void">{_e(watermark)}</div>' if watermark else ""
+    stamp = f'<div class="ed-doc__void">{_e(watermark)}</div>' if watermark else ""
 
     return (
-        "<!doctype html><html><head><meta charset='utf-8'>"
+        "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">"
+        '<meta name="viewport" content="width=device-width, initial-scale=1">'
         f"<title>{_e(payload.get('title'))} — "
         f"{_e((payload.get('subject') or {}).get('full_name'))}</title>"
-        f"<style>{_styles(branding, page)}</style></head><body>"
+        f"<style>{_fonts()}{_styles(branding, page)}</style></head>"
+        '<body class="ed-doc"><article class="ed-sheet">'
+        f'<div class="ed-sheet__ground">{ornament.lattice(cell=132)}</div>'
+        f'<span class="ed-sheet__corner ed-sheet__corner--bl">{ornament.corner(26)}</span>'
+        f'<span class="ed-sheet__corner ed-sheet__corner--br">{ornament.corner(26)}</span>'
         f"{stamp}{_masthead(branding)}"
-        f"<h1 class='doc-title'>{_e(payload.get('title'))}</h1>"
-        + (f"<p class='doc-context'>{_e(subtitle)}</p>" if subtitle else "")
-        + f"{body}{footer}</body></html>"
+        f'<h1 class="ed-doc__title">{_e(payload.get("title"))}</h1>'
+        + (f'<p class="ed-doc__context">{_e(subtitle)}</p>' if subtitle
+           else '<div style="height:var(--space-7)"></div>')
+        + f"{body}{footer}</article></body></html>"
     )
+
+
+def _fonts() -> str:
+    """Embedded, because a document has to render on its own years later.
+
+    A transcript emailed to an embassy in 2031 cannot depend on a stylesheet
+    still being served from our domain, so the faces travel with it. The cost is
+    real and is the right trade for an artefact that is meant to outlive the
+    session that produced it.
+    """
+    from app.modules.design.typeface import font_face_css
+
+    return font_face_css(embed=True)
 
 
 def render_text(payload: dict) -> str:

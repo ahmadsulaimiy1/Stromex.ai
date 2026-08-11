@@ -1,7 +1,69 @@
 # EdirasX Design System
 
 **Derives from:** `EDTECHX_EDITORIAL_BIBLE.md` §4, `EDTECHX_UX_PRINCIPLES.md`
-**Version:** 1.0
+**Version:** 2.0 — implemented (ADR-035). Implementation: `app/modules/design/`.
+
+---
+
+## 0. The visual direction
+
+> A royal institution, rendered by a precision instrument.
+
+The reference points are a university's charter, an annual report set by
+somebody who cares about type, and a private bank's statement. Not a dashboard.
+
+**Prestige comes from restraint, and restraint is enforced.** There is no
+gradient in the system except the select chevron and the loading shimmer, both
+of which are mechanisms rather than decoration — asserted by a test. There is
+one shadow, for things that genuinely float. Radii are 2–4px, because a sharp
+edge reads as institutional and a soft one reads as consumer. Depth is made from
+surface value and a hairline, the way it is made on paper.
+
+**Gold behaves like jewellery.** Champagne is never a background and never a
+large fill. It marks the origin of a rule, an active state, a key figure, a
+ceremonial action. There is at most one gold button on a screen, and it is
+earned by consequence — publishing results, issuing a transcript — never by
+prominence. A gold-coloured interface is a cheap one.
+
+**Two grounds.** *Midnight* carries the institution's chrome: the rail, the
+masthead, ceremonial surfaces. *Ivory* carries the work. The contrast between an
+authoritative dark frame and a warm editorial page is the half-second signature.
+
+**Rules, not cards.** A card is drawn when there is genuinely a boundary. Most
+grouping is done with a micro-label, a hairline and space — which is how an
+annual report does it, and why one looks composed while a dashboard looks
+assembled. A row of metrics is separated by rules rather than boxed in six
+rectangles; that single decision is the largest visible difference between this
+and a generic admin theme.
+
+**The Arabic DNA is structural, never decorative.** EdirasX is named from
+الدراسة, so the identity comes from Islamic geometric construction rather than
+from calligraphy placed on a screen: two squares at 45°, producing the
+eight-point seal, whose central negative space is a cross. **The X of EdirasX is
+the void at the centre of the star** — the Latin letterform is produced by the
+Arabic geometry rather than set beside it. One construction generates the mark,
+the rule terminator, the list node, the empty-state figure, the ceremonial
+lattice and the loading indicator. Five separately-drawn ornaments read as a
+moodboard; one construction at five scales reads as an identity.
+
+The inner radius is √(2−√2) ≈ 0.765 and is derived rather than chosen. It
+shipped once at 1/(1+√2) ≈ 0.414 and rendered as a spiky asterisk; a test now
+pins the construction.
+
+---
+
+## 0.1 Typography
+
+| Role | Face | Why |
+|---|---|---|
+| Display | Source Serif 4 | Carries identity. Institution names, page titles, large figures, grades. A large serif number reads as considered; the same number in the interface sans reads as a readout. |
+| Interface | Inter | Carries work. Tables, labels, controls. Deliberately invisible: a distinctive UI face is a distraction in a register of four hundred children. |
+| Arabic | Amiri | A first-class family, not a fallback. Set at 1.15× with its own line height so it sits level with the Latin. A product named from الدراسة does not treat Arabic as something the Latin stack falls through to. |
+| Mono | IBM Plex Mono | Reference numbers, codes, verification strings — anything read aloud or typed back. |
+
+Tracking is tuned per size (−0.022em at display sizes, +0.16em at micro-label
+sizes). A single tracking value across a type system is why most of them look
+untuned.
 
 ---
 

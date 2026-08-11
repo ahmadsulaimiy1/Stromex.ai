@@ -54,6 +54,15 @@ class Capability:
     term: str | None
     # Where it sits. Groups are ordered by the role, not by this list.
     group: str
+    # An explicit name, used when the terminology term would be *right* for the
+    # concept and *wrong* for the navigation. Grading scales and results are both
+    # named by the institution's word for a grade; a rail containing "Grades"
+    # twice is a rail nobody can use. Set this and terminology is not consulted.
+    #
+    # Added after a design review rendered four institutions and found three
+    # pairs of items resolving to the same word. `validate_catalogue` now
+    # refuses the collision at boot.
+    name: str = ""
     # The layers whose presence means this institution uses the concept. Any one
     # of them is enough. Empty means the capability does not depend on academic
     # configuration at all — every institution has people.
@@ -208,6 +217,7 @@ CAPABILITIES: Final[tuple[Capability, ...]] = (
     Capability(
         key="academics.grading",
         term="grade",
+        name="Grading scales",
         group="academics",
         layers=("grading",),
         permission="academics.grading_scale.read",
@@ -216,6 +226,7 @@ CAPABILITIES: Final[tuple[Capability, ...]] = (
     Capability(
         key="academics.progression",
         term="level",
+        name="Progression rules",
         group="academics",
         layers=("progression",),
         permission="academics.level.manage",
@@ -251,6 +262,7 @@ CAPABILITIES: Final[tuple[Capability, ...]] = (
         key="operations.assessment",
         term="assessment",
         group="operations",
+        layers=("grading",),
         permission="assessment.assessment.read",
         feature="core.assessment",
         empty_action="Create your first {term}",
@@ -258,7 +270,9 @@ CAPABILITIES: Final[tuple[Capability, ...]] = (
     Capability(
         key="operations.results",
         term="grade",
+        name="Results",
         group="operations",
+        layers=("grading",),
         permission="assessment.result.read",
         feature="core.assessment",
         empty_action="Results appear here once marks are entered",
@@ -267,6 +281,7 @@ CAPABILITIES: Final[tuple[Capability, ...]] = (
         key="operations.report_cards",
         term="report_card",
         group="operations",
+        layers=("grading",),
         permission="reporting.report_card.read",
         feature="core.report_cards",
         empty_action="Design your first {term}",
@@ -274,6 +289,7 @@ CAPABILITIES: Final[tuple[Capability, ...]] = (
     Capability(
         key="operations.transcripts",
         term="qualification",
+        name="Transcripts",
         group="operations",
         layers=("credits", "qualifications"),
         permission="reporting.transcript.read",
@@ -304,6 +320,7 @@ CAPABILITIES: Final[tuple[Capability, ...]] = (
     Capability(
         key="operations.timetable",
         term="class_group",
+        name="Timetable",
         group="operations",
         layers=("classes",),
         permission="academics.class.read",
@@ -320,6 +337,7 @@ CAPABILITIES: Final[tuple[Capability, ...]] = (
     Capability(
         key="operations.imports",
         term="person",
+        name="Bulk import",
         group="operations",
         permission="people.person.create",
         feature="core.bulk_import",
@@ -362,6 +380,7 @@ CAPABILITIES: Final[tuple[Capability, ...]] = (
     Capability(
         key="learning.courses",
         term="course",
+        name="Course content",
         group="operations",
         permission="learning.course.read",
         feature="learning.courses",
@@ -529,3 +548,42 @@ DEFAULT_SHAPE: Final[RoleShape] = RoleShape(
     ("today", "people", "academics", "operations", "finance", "communication",
      "insight", "configuration"),
 )
+
+
+def validate_catalogue() -> None:
+    """Called at boot, on the same principle as the permission catalogue.
+
+    The interesting check is not that the keys are unique — they obviously are —
+    but that no two capabilities can ever resolve to the *same label*. Two rail
+    items reading "Grades" is a navigation nobody can use, and it is invisible in
+    every test that inspects keys. This one catches it before a screen does.
+
+    Terminology-derived labels can still collide at run time if an institution
+    gives two concepts the same word; `experience.resolve` is where that is
+    caught, because only there is the institution's vocabulary known.
+    """
+    keys = [c.key for c in CAPABILITIES]
+    if len(keys) != len(set(keys)):
+        raise ValueError("Two capabilities share a key.")
+    for capability in CAPABILITIES:
+        if capability.group not in GROUPS:
+            raise ValueError(
+                f"{capability.key} sits in {capability.group!r}, which is not a group."
+            )
+
+    # Capabilities named by the same terminology term, in the same group, would
+    # render identically for every institution.
+    seen: dict[tuple[str, str], str] = {}
+    for capability in CAPABILITIES:
+        if capability.name:
+            token = ("name", capability.name)
+        elif capability.term:
+            token = ("term", capability.term)
+        else:
+            continue
+        if token in seen:
+            raise ValueError(
+                f"{capability.key} and {seen[token]} would both be labelled from "
+                f"{token[1]!r}. Give one of them an explicit `name`."
+            )
+        seen[token] = capability.key

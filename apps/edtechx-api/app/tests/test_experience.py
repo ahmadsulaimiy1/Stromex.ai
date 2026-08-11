@@ -50,6 +50,7 @@ from app.modules.authz.system_roles import SYSTEM_ROLES_BY_KEY
 from app.modules.billing import service as billing
 from app.modules.billing.plans import PLANS
 from app.modules.customization import terminology
+from app.modules.experience import capabilities
 from app.modules.experience import service as experience
 from app.tests.conftest import TenantFixture, requires_db
 from app.tests.test_people_enrolment import _provision
@@ -653,3 +654,83 @@ def test_every_capability_term_is_a_known_word() -> None:
     for capability in CAPABILITIES:
         if capability.term:
             assert capability.term in terminology.DEFAULT_TERMS, capability.key
+
+
+# --- what a design review found ---------------------------------------------
+
+
+def test_no_two_capabilities_can_carry_the_same_label() -> None:
+    """A rail containing "Grades" twice is a rail nobody can use.
+
+    Invisible to every test that inspects capability *keys*, which is what every
+    test here did until four institutions were rendered and looked at. Five
+    pairs collided: grading scales and results, class groups and the timetable,
+    curriculum subjects and course content, levels and progression rules,
+    qualifications and transcripts.
+    """
+    capabilities.validate_catalogue()
+
+
+def test_every_institution_renders_a_navigation_with_no_repeated_item(
+    institutions: dict[str, TenantFixture],
+) -> None:
+    """The check that would have caught it, applied to every world we have."""
+    for key in ("nursery", "secondary", "university", "doctoral"):
+        for role in ("admin", "teacher", "student", "guardian"):
+            resolved = world(institutions, key, role)
+            labels = [c.label_plural for c in resolved.capabilities]
+            repeated = sorted({label for label in labels if labels.count(label) > 1})
+            assert not repeated, (
+                f"{key}/{role} would show these items twice: {repeated}"
+            )
+
+
+def test_an_institutions_own_vocabulary_cannot_produce_two_identical_items(
+    institutions: dict[str, TenantFixture],
+) -> None:
+    """The catalogue cannot prevent this; only resolution can.
+
+    A school that calls both its class groups and its cohorts "Sets" would get
+    two rail items reading "Sets". The second is dropped, and the reason is
+    recorded rather than swallowed.
+    """
+    school = institutions["university"]
+    session = school.session()
+    try:
+        # Both concepts have to be present before they can collide.
+        experience.declare_layers(session, layers=["classes", "cohorts"])
+        terminology.publish(session, terms={
+            "class_group": {"singular": "set", "plural": "sets"},
+            "cohort": {"singular": "set", "plural": "sets"},
+        })
+        session.flush()
+        resolved = experience.resolve(
+            session, actor("admin", school.tenant_id), role_keys=["admin"]
+        )
+        labels = [c.label_plural for c in resolved.capabilities]
+        assert len(labels) == len(set(labels))
+        assert experience.NAME_COLLISION in resolved.absent.values()
+    finally:
+        session.rollback()
+        session.close()
+
+
+def test_a_nursery_is_not_offered_grades_assessments_or_report_cards(
+    institutions: dict[str, TenantFixture],
+) -> None:
+    """An institution that grades nobody has no grading scale rows.
+
+    These three were ungated, so every institution in the product was offered
+    them — a nursery administrator's navigation carried Assessments, Grades and
+    Report cards beside Children and Rooms. Found by rendering a nursery and
+    looking at it.
+    """
+    nursery = world(institutions, "nursery")
+    for key in ("operations.assessment", "operations.results",
+                "operations.report_cards"):
+        assert key not in nursery.keys()
+        assert nursery.absent[key] == experience.NOT_CONFIGURED
+
+    secondary = world(institutions, "secondary")
+    assert {"operations.assessment", "operations.results",
+            "operations.report_cards"} <= set(secondary.keys())

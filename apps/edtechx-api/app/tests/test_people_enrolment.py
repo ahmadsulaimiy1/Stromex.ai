@@ -1069,3 +1069,35 @@ def test_the_people_module_never_mutates_a_placement_column() -> None:
         "one. Moving a student must close a placement and open another:\n"
         + "\n".join(offending)
     )
+
+
+def test_an_institution_that_issues_no_references_can_still_register_everybody(
+    nine: dict[str, TenantFixture],
+) -> None:
+    """A nursery does not give four-year-olds admission numbers.
+
+    The uniqueness index treats an empty string as a value, so storing `""`
+    would let such an institution register exactly one child before colliding
+    with itself. Blank is therefore stored as absent. Found by building a
+    nursery in the design review and looking at it — no assertion in this file
+    had ever registered two people without references.
+    """
+    session = nine["inst:non-credit"].session()
+    try:
+        for name in ("Amara Bello", "Theo Lindqvist", "Sana Qureshi"):
+            person = service.record_person(session, full_name=name)
+            student = service.register_student(session, person, reference="   ")
+            assert student.reference is None
+        session.flush()
+
+        # A real reference is still unique.
+        first = service.record_person(session, full_name="Ada Nwosu")
+        service.register_student(session, first, reference="REF-UNIQ-1")
+        session.flush()
+        second = service.record_person(session, full_name="Ada Nwosu the second")
+        with pytest.raises(IntegrityError):
+            # `register_student` flushes, so the violation surfaces there.
+            service.register_student(session, second, reference="REF-UNIQ-1")
+    finally:
+        session.rollback()
+        session.close()

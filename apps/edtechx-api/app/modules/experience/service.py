@@ -61,6 +61,8 @@ NOT_CONFIGURED = Absence("not_configured")
 NOT_PERMITTED = Absence("not_permitted")
 NOT_ENTITLED = Absence("not_entitled")
 HIDDEN_BY_INSTITUTION = Absence("hidden_by_institution")
+#: Two concepts that this institution's own vocabulary names identically.
+NAME_COLLISION = Absence("name_collision")
 
 
 @dataclass(frozen=True, slots=True)
@@ -219,6 +221,16 @@ def _shape_for(role_keys: list[str]) -> RoleShape:
 
 
 def _label(capability: Capability, words: terminology.Vocabulary) -> tuple[str, str]:
+    """The institution's own word, unless the concept needs its own name.
+
+    Terminology first, because a nursery's children are children. But a handful
+    of capabilities are *about* a term rather than named by it — grading scales
+    and results are both named by the word for a grade — and those carry an
+    explicit name, because a navigation containing "Grades" twice is a
+    navigation nobody can use.
+    """
+    if capability.name:
+        return capability.name, capability.name
     if capability.term is None:
         return _humanise(capability.key), _humanise(capability.key)
     return (
@@ -265,6 +277,7 @@ def resolve(
 
     resolved: list[ResolvedCapability] = []
     absent: dict[str, str] = {}
+    taken: dict[str, str] = {}
 
     for capability in CAPABILITIES:
         if not _admits(capability, layers):
@@ -290,6 +303,16 @@ def resolve(
                     continue
 
         label, plural = _label(capability, words)
+        if plural in taken:
+            # The catalogue guarantees two capabilities never share a *fixed*
+            # label; it cannot guarantee it for labels drawn from an
+            # institution's own vocabulary. A school that calls both its class
+            # groups and its cohorts "Sets" would otherwise get two identical
+            # rail items. The later one is dropped and the reason recorded, so
+            # support can see it rather than guess.
+            absent[capability.key] = NAME_COLLISION
+            continue
+        taken[plural] = capability.key
         resolved.append(
             ResolvedCapability(
                 key=capability.key,

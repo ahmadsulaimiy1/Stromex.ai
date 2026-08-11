@@ -140,6 +140,13 @@ money invariants · payment port with sandbox adapter · journeys 1, 4, 5, 6, 7.
 
 ## Phase 4 — Experience 🔨
 
+✅ **The EdirasX design system** — visual direction, tokens, semantic roles,
+typography with Arabic as a first-class family, the geometric identity,
+component library with every state, accessibility guardrails that answer with a
+remedy, per-data-shape responsive compositions, and a configuration-aware
+application shell rendered from four real institutions at three widths
+(ADR-035) · ✅ visual evidence in `docs/edtechx/design/shots`
+
 ✅ **Contextual complexity resolution** — one call returns this person's world:
 only what the institution uses, only what they may see, only what the plan
 includes, ordered by what they came to do (ADR-031) · ✅ capability catalogue ·

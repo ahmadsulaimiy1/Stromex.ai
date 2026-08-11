@@ -5,7 +5,7 @@ continue without re-deriving anything. Consolidated from the nine state files
 the brief specified — see `EDTECHX_DECISIONS.md` ADR-015 for why three files
 beat nine.
 
-**Last updated:** session 6
+**Last updated:** session 7
 **Current phase:** Phase 1 complete · Phase 2 in progress
 
 ---
@@ -32,7 +32,12 @@ Phase 3 has begun with attendance — journey 1, end to end, in three requests
 lifecycle with snapshot publication (ADR-033), and the configurable academic
 document engine issues report cards, transcripts, certificates and statements
 from one machine while guaranteeing that a document says what it said (ADR-034).
-697 tests pass; ruff is clean. Nothing is stubbed or faked.
+(ADR-034), and Phase 4 has established the EdirasX visual identity — a royal
+institution rendered by a precision instrument, with the Arabic geometric seal
+whose central void is the X, tokens an institution can retheme, guardrails that
+refuse to let it ruin its own readability, and a configuration-aware shell
+rendered from four real institutions (ADR-035). 751 tests pass; ruff is clean.
+Nothing is stubbed or faked.
 
 ---
 
@@ -399,6 +404,32 @@ term and every mark would have appeared twice on a transcript. And two templates
 sharing a number prefix each kept their own counter, so both issued
 `RC/2026/0001`; the counter now belongs to the series rather than to the
 template.
+
+**The design system** (`modules/design/`, `tools/design/`). The visual direction
+was redirected at the token level rather than polished: *a royal institution
+rendered by a precision instrument*. Midnight chrome, ivory work surface,
+champagne used as jewellery, rules instead of cards, radii of 2–4px, one shadow,
+no decorative gradient. The identity is the eight-point seal from two squares at
+45°, with the X of EdirasX held in its centre as void — one construction
+generating the mark, the rule terminator, the node, the lattice and the spinner.
+
+Everything is a token and a theme is a validated schema, which is what makes the
+future Design Studio able to emit overrides rather than CSS. Every institutional
+colour passes a guardrail that answers with a remedy rather than a verdict, and
+an institution's ornament gold is never used as its text gold.
+
+Dense tables no longer overflow onto phones: a table declares its data shape and
+its small-screen composition follows — labelled records, course-and-grade with
+the grade held large, a people list, or the one genuinely two-dimensional shape
+that scrolls with its time column pinned.
+
+The shell renders from `experience.resolve`, and four real institutions were
+provisioned and screenshotted at three widths to prove it: a nursery shows
+Children, Rooms and Parents; a university shows Modules, Credits, Qualifications
+and Transcripts; a doctoral institute shows Researchers, Research programmes,
+Supervisors and Milestones. The review found six defects no test would have —
+see ADR-035 — including a navigation that showed the same word twice in five
+places and a nursery being offered Grades.
 
 ---
 

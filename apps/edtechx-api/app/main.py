@@ -21,6 +21,7 @@ from app.db import registry  # noqa: F401  (populates model metadata)
 from app.modules.authz.system_roles import validate_catalogue
 from app.modules.billing.catalogue import validate_catalogue as validate_entitlement_catalogue
 from app.modules.documents.sections import validate_catalogue as validate_section_catalogue
+from app.modules.experience.capabilities import validate_catalogue as validate_capability_catalogue
 
 
 def configure_logging(json_logs: bool) -> None:
@@ -50,6 +51,7 @@ def create_app() -> FastAPI:
     validate_catalogue()
     validate_entitlement_catalogue()
     validate_section_catalogue()
+    validate_capability_catalogue()
 
     app = FastAPI(
         title="EdTechX API",

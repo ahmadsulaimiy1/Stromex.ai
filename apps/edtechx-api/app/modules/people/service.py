@@ -144,7 +144,15 @@ def register_student(
     status: RelationshipStatus = RelationshipStatus.prospective,
     **fields: object,
 ) -> StudentRelationship:
-    """Record that this person learns here."""
+    """Record that this person learns here.
+
+    A blank reference is stored as absent rather than as an empty string. The
+    uniqueness index treats `""` as a value, so a nursery that issues no
+    admission numbers could register exactly one child before colliding with
+    itself — found by building a nursery and looking at it, which is the point
+    of building one.
+    """
+    reference = (reference or "").strip() or None
     relationship = StudentRelationship(
         person_id=person.id,
         reference=reference,
@@ -177,6 +185,7 @@ def register_staff(
     **fields: object,
 ) -> StaffRelationship:
     """Record that this person works here. Independent of any student record."""
+    reference = (reference or "").strip() or None
     relationship = StaffRelationship(
         person_id=person.id,
         reference=reference,

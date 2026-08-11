@@ -1,0 +1,1034 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Ashford Grange School — EdirasX</title><style>@font-face{font-family:'Source Serif 4';src:url('fonts/SourceSerif4-400.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap;}
+@font-face{font-family:'Source Serif 4';src:url('fonts/SourceSerif4-400i.ttf') format('truetype');font-weight:400;font-style:italic;font-display:swap;}
+@font-face{font-family:'Source Serif 4';src:url('fonts/SourceSerif4-600.ttf') format('truetype');font-weight:600;font-style:normal;font-display:swap;}
+@font-face{font-family:'Source Serif 4';src:url('fonts/SourceSerif4-700.ttf') format('truetype');font-weight:700;font-style:normal;font-display:swap;}
+@font-face{font-family:'Inter';src:url('fonts/Inter-400.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap;}
+@font-face{font-family:'Inter';src:url('fonts/Inter-500.ttf') format('truetype');font-weight:500;font-style:normal;font-display:swap;}
+@font-face{font-family:'Inter';src:url('fonts/Inter-600.ttf') format('truetype');font-weight:600;font-style:normal;font-display:swap;}
+@font-face{font-family:'Inter';src:url('fonts/Inter-700.ttf') format('truetype');font-weight:700;font-style:normal;font-display:swap;}
+@font-face{font-family:'IBM Plex Mono';src:url('fonts/IBMPlexMono-400.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap;}
+@font-face{font-family:'IBM Plex Mono';src:url('fonts/IBMPlexMono-600.ttf') format('truetype');font-weight:600;font-style:normal;font-display:swap;}
+@font-face{font-family:'Amiri';src:url('fonts/Amiri-400.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap;}:root {
+  --midnight-900: #060A12;
+  --midnight-800: #0A101C;
+  --midnight-700: #0F1728;
+  --midnight-600: #152036;
+  --midnight-500: #1C2A45;
+  --midnight-400: #2A3B5C;
+  --royal-800: #12294F;
+  --royal-700: #152B54;
+  --royal-600: #1A3566;
+  --royal-500: #354D78;
+  --royal-400: #4A7BC8;
+  --royal-300: #88AADD;
+  --royal-200: #C3D6F0;
+  --royal-100: #E6EEF9;
+  --gold-800: #5E4A21;
+  --gold-700: #715F37;
+  --gold-600: #9C7E3E;
+  --gold-500: #C9A961;
+  --gold-400: #D5BC84;
+  --gold-300: #EBDCB6;
+  --gold-200: #F5EDD9;
+  --gold-100: #FBF7EC;
+  --ivory-50: #FFFDF8;
+  --ivory-100: #FAF6EE;
+  --ivory-200: #F3EDE1;
+  --ivory-300: #E8DFCE;
+  --ivory-400: #D8CCB4;
+  --charcoal-900: #12161C;
+  --charcoal-800: #1E222A;
+  --charcoal-700: #2B303A;
+  --charcoal-600: #3E4553;
+  --charcoal-500: #5A6273;
+  --charcoal-400: #7C8494;
+  --charcoal-300: #A6ACB8;
+  --charcoal-200: #CDD1D9;
+  --charcoal-100: #E7E9ED;
+  --garnet-800: #571622;
+  --garnet-700: #6E1F2E;
+  --garnet-600: #8E2A3C;
+  --garnet-500: #A8394D;
+  --garnet-400: #C86E7E;
+  --garnet-200: #F0D8DD;
+  --verdant-700: #14543A;
+  --verdant-600: #1F6B4A;
+  --verdant-500: #2E8560;
+  --verdant-200: #D3E7DC;
+  --amber-700: #7A5310;
+  --amber-600: #9A6A12;
+  --amber-500: #BE871F;
+  --amber-200: #F5E6C4;
+  --text-3xs: 0.6875rem;
+  --text-2xs: 0.75rem;
+  --text-xs: 0.8125rem;
+  --text-sm: 0.875rem;
+  --text-base: 0.9375rem;
+  --text-md: 1.0625rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 1.875rem;
+  --text-3xl: 2.375rem;
+  --text-4xl: 3rem;
+  --text-5xl: 3.75rem;
+  --text-6xl: 4.75rem;
+  --leading-tight: 1.08;
+  --leading-snug: 1.22;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.62;
+  --leading-loose: 1.75;
+  --tracking-tighter: -0.022em;
+  --tracking-tight: -0.012em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.02em;
+  --tracking-wider: 0.08em;
+  --tracking-widest: 0.16em;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --space-0: 0;
+  --space-px: 1px;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1.0rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-7: 2.0rem;
+  --space-8: 2.5rem;
+  --space-9: 3.0rem;
+  --space-10: 4.0rem;
+  --space-11: 5.0rem;
+  --space-12: 6.5rem;
+  --space-13: 8.0rem;
+  --radius-none: 0;
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-full: 999px;
+  --border-hair: 1px;
+  --border-thin: 1.5px;
+  --border-thick: 2px;
+  --border-rule: 3px;
+  --shadow-none: none;
+  --shadow-overlay: 0 24px 48px -12px rgba(6, 10, 18, 0.28), 0 2px 6px rgba(6, 10, 18, 0.10);
+  --shadow-raised: 0 1px 2px rgba(6, 10, 18, 0.06);
+  --shadow-ring: 0 0 0 3px rgba(42, 87, 158, 0.28);
+  --shadow-ring-gold: 0 0 0 3px rgba(201, 169, 97, 0.34);
+  --duration-instant: 90ms;
+  --duration-fast: 150ms;
+  --duration-normal: 220ms;
+  --duration-slow: 340ms;
+  --easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --easing-exit: cubic-bezier(0.4, 0, 1, 1);
+  --easing-enter: cubic-bezier(0, 0, 0.2, 1);
+  --surface-canvas: #FAF6EE;
+  --surface-raised: #FFFDF8;
+  --surface-sunken: #F3EDE1;
+  --surface-inverse: #0A101C;
+  --surface-selected: #FBF7EC;
+  --surface-accent-wash: #E6EEF9;
+  --surface-overlay: #FFFDF8;
+  --text-primary: #12161C;
+  --text-secondary: #5A6273;
+  --text-tertiary: #7C8494;
+  --text-inverse: #FFFDF8;
+  --text-accent: #152B54;
+  --text-on-accent: #FFFDF8;
+  --text-gold: #715F37;
+  --text-success: #14543A;
+  --text-warning: #7A5310;
+  --text-danger: #6E1F2E;
+  --border-hairline: #E8DFCE;
+  --border-strong: #D8CCB4;
+  --border-control: #7C8494;
+  --border-accent: #1A3566;
+  --border-gold: #C9A961;
+  --border-inverse: #152036;
+  --accent-strong: #1A3566;
+  --accent-hover: #152B54;
+  --accent-subtle: #E6EEF9;
+  --accent-metal: #C9A961;
+  --accent-metal-deep: #715F37;
+  --accent-ceremonial: #6E1F2E;
+  --state-success: #1F6B4A;
+  --state-success-wash: #D3E7DC;
+  --state-warning: #9A6A12;
+  --state-warning-wash: #F5E6C4;
+  --state-danger: #8E2A3C;
+  --state-danger-wash: #F0D8DD;
+  --state-info: #354D78;
+  --state-info-wash: #E6EEF9;
+  --state-disabled: #A6ACB8;
+  --state-disabled-surface: #F3EDE1;
+  --font-display: 'Source Serif 4', 'Iowan Old Style', Georgia, serif;
+  --font-sans: 'Inter', 'SF Pro Text', -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SF Mono', ui-monospace, monospace;
+  --font-arabic: 'Amiri', 'Noto Naskh Arabic', serif;
+  --layer-base: 0;
+  --layer-raised: 10;
+  --layer-sticky: 100;
+  --layer-drawer: 300;
+  --layer-overlay: 400;
+  --layer-toast: 500;
+  --space-scale: 1;
+  --control-height: 2.25rem;
+  --row-height: 2.75rem;
+  --ornament-level: restrained;
+  --ornament-opacity: 0.05;
+  --font-size-arabic-adjust: 1.15;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--surface-canvas);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  font-feature-settings: 'kern' 1, 'liga' 1, 'cv05' 1;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+[lang="ar"], .ed-arabic {
+  font-family: var(--font-arabic);
+  font-size: calc(1em * var(--font-size-arabic-adjust));
+  line-height: 1.9;
+  direction: rtl;
+}
+
+/* --- type ---------------------------------------------------------------
+   The display face carries identity; the sans carries work. Sizes come from
+   the ramp and tracking is tuned per size, which is most of the difference
+   between typography and text. */
+
+.ed-display {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-tight);
+}
+.ed-title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-snug);
+  margin: 0;
+}
+.ed-heading {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  margin: 0;
+}
+/* The micro-label. Used above every metric and beside every rule; it is the
+   texture that makes the interface read as editorial rather than as a form. */
+.ed-label {
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 0;
+}
+.ed-label--gold { color: var(--text-gold); }
+.ed-lede {
+  font-size: var(--text-md);
+  line-height: var(--leading-relaxed);
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 62ch;
+}
+.ed-muted { color: var(--text-secondary); }
+.ed-quiet { color: var(--text-tertiary); }
+.ed-numeric { font-variant-numeric: tabular-nums; }
+
+/* A large editorial figure. A serif number at 60px reads as considered; the
+   same number in the interface sans reads as a readout. */
+.ed-figure {
+  font-family: var(--font-display);
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tighter);
+  line-height: 1;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--text-primary);
+  display: block;
+}
+.ed-figure--lead { font-size: var(--text-5xl); }
+.ed-figure__unit {
+  font-size: 0.42em;
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-normal);
+  color: var(--text-secondary);
+  margin-inline-start: 0.18em;
+}
+
+/* --- the signature rule ------------------------------------------------- */
+
+.ed-rule {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: var(--rule-width, 100%);
+}
+.ed-rule__line {
+  flex: 1;
+  height: 1px;
+  background: var(--border-hairline);
+}
+.ed-node { flex: none; display: block; }
+
+/* A section: micro-label, rule, content. Repeated everywhere, which is what
+   makes twelve unrelated screens feel like one product. */
+.ed-section { margin-block-end: var(--space-8); }
+.ed-section__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin-block-end: var(--space-4);
+}
+.ed-section__head .ed-rule { flex: 1; }
+.ed-section__aside { flex: none; font-size: var(--text-2xs); color: var(--text-tertiary); }
+
+/* --- surfaces ----------------------------------------------------------- */
+
+.ed-panel {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+}
+/* The one deliberately decorated surface: a 2px gold edge along the top. Used
+   for the single most important panel on a screen and never for a grid of six. */
+.ed-panel--crowned { border-top: var(--border-thick) solid var(--accent-metal); }
+.ed-panel--quiet { background: transparent; border: 0; padding: 0; }
+.ed-panel--sunken { background: var(--surface-sunken); border-color: transparent; }
+.ed-panel--inverse {
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  border-color: transparent;
+}
+
+/* --- buttons ------------------------------------------------------------ */
+
+.ed-btn {
+  --btn-bg: transparent;
+  --btn-fg: var(--text-primary);
+  --btn-border: var(--border-control);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-height);
+  padding-inline: var(--space-4);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  border: 1px solid var(--btn-border);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wide);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background var(--duration-fast) var(--easing-standard),
+              border-color var(--duration-fast) var(--easing-standard),
+              color var(--duration-fast) var(--easing-standard);
+}
+.ed-btn:hover { background: var(--surface-sunken); }
+.ed-btn:focus-visible { outline: none; box-shadow: var(--shadow-ring); }
+.ed-btn:active { transform: translateY(0.5px); }
+.ed-btn[disabled], .ed-btn[aria-disabled="true"] {
+  color: var(--state-disabled);
+  border-color: var(--state-disabled);
+  background: var(--state-disabled-surface);
+  cursor: not-allowed;
+}
+.ed-btn--primary {
+  --btn-bg: var(--accent-strong);
+  --btn-fg: var(--text-on-accent);
+  --btn-border: var(--accent-strong);
+}
+.ed-btn--primary:hover { --btn-bg: var(--accent-hover); --btn-border: var(--accent-hover); }
+/* The premium action — issue a transcript, publish results. Gold is earned by
+   consequence, not by prominence, and there is at most one on a screen. */
+.ed-btn--ceremonial {
+  --btn-bg: transparent;
+  --btn-fg: var(--text-gold);
+  --btn-border: var(--accent-metal);
+}
+.ed-btn--ceremonial:hover { --btn-bg: var(--surface-selected); }
+.ed-btn--ceremonial:focus-visible { box-shadow: var(--shadow-ring-gold); }
+.ed-btn--quiet { --btn-border: transparent; }
+.ed-btn--danger { --btn-fg: var(--text-danger); --btn-border: var(--state-danger); }
+.ed-btn--sm { min-height: calc(var(--control-height) * 0.82); font-size: var(--text-2xs); }
+.ed-btn--icon { padding-inline: var(--space-2); }
+.ed-btn[data-loading] { color: transparent; position: relative; }
+.ed-btn[data-loading] .ed-spinner {
+  position: absolute; inset: 0; margin: auto;
+}
+
+.ed-link {
+  color: var(--text-accent);
+  text-decoration: none;
+  border-block-end: 1px solid color-mix(in srgb, var(--text-accent) 30%, transparent);
+  transition: border-color var(--duration-fast) var(--easing-standard);
+}
+.ed-link:hover { border-block-end-color: currentColor; }
+.ed-link:focus-visible { outline: none; box-shadow: var(--shadow-ring); border-radius: 1px; }
+
+/* --- fields ------------------------------------------------------------- */
+
+.ed-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.ed-field__label {
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.ed-field__hint { font-size: var(--text-2xs); color: var(--text-tertiary); }
+.ed-field__error {
+  font-size: var(--text-2xs);
+  color: var(--text-danger);
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
+}
+.ed-input, .ed-select, .ed-textarea {
+  width: 100%;
+  min-height: var(--control-height);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: var(--text-sm);
+  transition: border-color var(--duration-fast) var(--easing-standard);
+}
+.ed-textarea { min-height: calc(var(--control-height) * 3); resize: vertical; }
+.ed-input:hover, .ed-select:hover, .ed-textarea:hover { border-color: var(--text-tertiary); }
+.ed-input:focus, .ed-select:focus, .ed-textarea:focus {
+  outline: none;
+  border-color: var(--accent-strong);
+  box-shadow: var(--shadow-ring);
+}
+.ed-input[aria-invalid="true"] { border-color: var(--state-danger); }
+.ed-input[disabled], .ed-select[disabled], .ed-textarea[disabled] {
+  background: var(--state-disabled-surface);
+  color: var(--state-disabled);
+  cursor: not-allowed;
+}
+.ed-input::placeholder { color: var(--text-tertiary); }
+.ed-select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+                    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: right var(--space-4) center, right calc(var(--space-4) - 4px) center;
+  background-size: 4px 4px, 4px 4px;
+  background-repeat: no-repeat;
+  padding-inline-end: var(--space-7);
+}
+
+.ed-check { display: inline-flex; align-items: center; gap: var(--space-2); cursor: pointer; }
+.ed-check input { position: absolute; opacity: 0; width: 0; height: 0; }
+.ed-check__box {
+  width: 1.05rem; height: 1.05rem;
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  display: grid; place-items: center;
+  transition: all var(--duration-fast) var(--easing-standard);
+}
+.ed-check__box--round { border-radius: var(--radius-full); }
+.ed-check input:checked + .ed-check__box {
+  background: var(--accent-strong); border-color: var(--accent-strong);
+}
+.ed-check input:checked + .ed-check__box::after {
+  content: ''; width: 0.3rem; height: 0.55rem;
+  border: solid var(--text-on-accent); border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+.ed-check__box--round input:checked + &::after { border-radius: var(--radius-full); }
+.ed-check input:focus-visible + .ed-check__box { box-shadow: var(--shadow-ring); }
+.ed-check input[disabled] + .ed-check__box {
+  background: var(--state-disabled-surface); border-color: var(--state-disabled);
+}
+
+.ed-switch { display: inline-flex; align-items: center; gap: var(--space-3); cursor: pointer; }
+.ed-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+.ed-switch__track {
+  width: 2.25rem; height: 1.2rem;
+  background: var(--border-control);
+  border-radius: var(--radius-full);
+  padding: 2px;
+  transition: background var(--duration-normal) var(--easing-standard);
+}
+.ed-switch__thumb {
+  width: 0.95rem; height: 0.95rem;
+  background: var(--surface-raised);
+  border-radius: var(--radius-full);
+  transition: transform var(--duration-normal) var(--easing-standard);
+}
+.ed-switch input:checked + .ed-switch__track { background: var(--accent-strong); }
+.ed-switch input:checked + .ed-switch__track .ed-switch__thumb {
+  transform: translateX(1.05rem);
+}
+.ed-switch input:focus-visible + .ed-switch__track { box-shadow: var(--shadow-ring); }
+
+/* --- badges, chips, avatars --------------------------------------------- */
+
+.ed-badge {
+  display: inline-flex; align-items: center; gap: var(--space-1);
+  padding: 0.15rem var(--space-2);
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.ed-badge--neutral { background: var(--surface-sunken); color: var(--text-secondary); }
+.ed-badge--accent { background: var(--accent-subtle); color: var(--text-accent); }
+.ed-badge--gold {
+  background: transparent; color: var(--text-gold); border-color: var(--accent-metal);
+}
+.ed-badge--success { background: var(--state-success-wash); color: var(--text-success); }
+.ed-badge--warning { background: var(--state-warning-wash); color: var(--text-warning); }
+.ed-badge--danger  { background: var(--state-danger-wash);  color: var(--text-danger); }
+
+.ed-avatar {
+  width: 2rem; height: 2rem;
+  border-radius: var(--radius-full);
+  background: var(--accent-subtle);
+  color: var(--text-accent);
+  display: grid; place-items: center;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  flex: none;
+  border: 1px solid var(--border-hairline);
+}
+.ed-avatar--lg { width: 2.75rem; height: 2.75rem; font-size: var(--text-sm); }
+
+/* --- tables -------------------------------------------------------------
+   A table is a table. It gets a hairline, tabular numerals, right-aligned
+   numbers and nothing else — no zebra striping, no border box, no rounded
+   corners. Every one of those is a way of decorating data instead of
+   presenting it. The mobile treatment lives in `page_css`. */
+
+.ed-table { width: 100%; border-collapse: collapse; }
+.ed-table th {
+  text-align: start;
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  padding: var(--space-2) var(--space-3);
+  border-block-end: 1px solid var(--border-strong);
+  white-space: nowrap;
+}
+.ed-table td {
+  padding: var(--space-3);
+  border-block-end: 1px solid var(--border-hairline);
+  font-size: var(--text-sm);
+  vertical-align: baseline;
+}
+.ed-table tbody tr { transition: background var(--duration-fast) var(--easing-standard); }
+.ed-table tbody tr:hover { background: var(--surface-sunken); }
+.ed-table .num, .ed-table th.num { text-align: end; font-variant-numeric: tabular-nums; }
+.ed-table__primary { font-weight: var(--weight-medium); }
+
+/* A results matrix on a wide screen. The grade is set in the display face and
+   larger than the row around it, because a grade is what the reader came for
+   and rendering it at body size buries the answer inside its own evidence.
+   The supporting detail is a spaced run rather than a sentence: without the
+   separator the cells read as "82 / 100Examination", which is how the first
+   render of this actually looked. */
+.ed-data[data-shape="matrix"] td[data-role="detail"] {
+  display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-5);
+  color: var(--text-secondary); font-size: var(--text-2xs);
+}
+.ed-data[data-shape="matrix"] td[data-role="detail"] span::before {
+  content: attr(data-label) ' ';
+  text-transform: uppercase; letter-spacing: var(--tracking-wider);
+  color: var(--text-tertiary); font-size: 0.9em;
+}
+.ed-data[data-shape="matrix"] td[data-role="grade"] {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+  white-space: nowrap;
+}
+.ed-data[data-shape="matrix"] td[data-role="note"] {
+  color: var(--text-secondary); font-size: var(--text-2xs); font-style: italic;
+}
+.ed-table caption {
+  caption-side: top; text-align: start;
+  font-size: var(--text-2xs); color: var(--text-tertiary);
+  padding-block-end: var(--space-2);
+}
+
+/* Controls that belong together but are each a self-contained label read as
+   one run when they wrapped. A column on small screens, a row above it. */
+.ed-choices { display: grid; gap: var(--space-3); }
+@media (min-width: 40rem) {
+  .ed-choices { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-5); }
+}
+
+/* --- tabs, breadcrumbs, pagination -------------------------------------- */
+
+.ed-tabs {
+  display: flex; gap: var(--space-6);
+  border-block-end: 1px solid var(--border-hairline);
+}
+.ed-tab {
+  appearance: none; background: none; border: 0; padding: var(--space-3) 0;
+  font: inherit; font-size: var(--text-sm); color: var(--text-secondary);
+  cursor: pointer; position: relative;
+  transition: color var(--duration-fast) var(--easing-standard);
+}
+.ed-tab:hover { color: var(--text-primary); }
+.ed-tab[aria-selected="true"] { color: var(--text-primary); font-weight: var(--weight-medium); }
+.ed-tab[aria-selected="true"]::after {
+  content: ''; position: absolute; inset-inline: 0; bottom: -1px; height: 2px;
+  background: var(--accent-metal);
+}
+.ed-tab:focus-visible { outline: none; box-shadow: var(--shadow-ring); border-radius: 2px; }
+
+.ed-crumbs {
+  display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
+  font-size: var(--text-2xs); color: var(--text-tertiary);
+}
+.ed-crumbs a { color: var(--text-secondary); text-decoration: none; }
+.ed-crumbs a:hover { color: var(--text-primary); }
+.ed-crumbs__sep { opacity: 0.5; }
+
+.ed-pager { display: flex; align-items: center; gap: var(--space-1); }
+.ed-pager__item {
+  min-width: 2rem; height: 2rem; display: grid; place-items: center;
+  border-radius: var(--radius-sm); font-size: var(--text-2xs);
+  color: var(--text-secondary); text-decoration: none;
+  font-variant-numeric: tabular-nums;
+}
+.ed-pager__item:hover { background: var(--surface-sunken); color: var(--text-primary); }
+.ed-pager__item[aria-current="page"] {
+  color: var(--text-primary); font-weight: var(--weight-semibold);
+  box-shadow: inset 0 -2px 0 var(--accent-metal);
+}
+
+/* --- feedback ----------------------------------------------------------- */
+
+.ed-alert {
+  display: flex; gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border-inline-start: var(--border-rule) solid var(--state-info);
+  background: var(--state-info-wash);
+  font-size: var(--text-sm);
+}
+.ed-alert--success { border-inline-start-color: var(--state-success);
+  background: var(--state-success-wash); }
+.ed-alert--warning { border-inline-start-color: var(--state-warning);
+  background: var(--state-warning-wash); }
+.ed-alert--danger  { border-inline-start-color: var(--state-danger);
+  background: var(--state-danger-wash); }
+.ed-alert__title { font-weight: var(--weight-semibold); margin: 0 0 var(--space-1); }
+.ed-alert p { margin: 0; }
+
+.ed-progress {
+  height: 3px; background: var(--surface-sunken); border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.ed-progress__bar {
+  height: 100%; background: var(--accent-metal);
+  transition: width var(--duration-slow) var(--easing-standard);
+}
+
+.ed-spinner { animation: ed-turn 1.6s linear infinite; }
+@keyframes ed-turn { to { transform: rotate(360deg); } }
+
+/* Loading, as a shimmer of the surface rather than a grey block. */
+.ed-skeleton {
+  background: linear-gradient(90deg,
+    var(--surface-sunken) 0%, var(--surface-raised) 50%, var(--surface-sunken) 100%);
+  background-size: 200% 100%;
+  animation: ed-shimmer 1.6s var(--easing-standard) infinite;
+  border-radius: var(--radius-sm);
+  height: 0.75rem;
+}
+@keyframes ed-shimmer { to { background-position: -200% 0; } }
+
+/* The empty state. It is a *composition*, not an apology: the seal at low
+   opacity, a sentence saying what this place is for, and the action that
+   fills it. A grey box saying "No data" teaches a person that they have done
+   something wrong. */
+.ed-empty {
+  display: grid; justify-items: center; gap: var(--space-3);
+  padding: var(--space-10) var(--space-6);
+  text-align: center;
+}
+.ed-empty__mark { opacity: 0.22; }
+.ed-empty__title { font-family: var(--font-display); font-size: var(--text-lg); margin: 0; }
+.ed-empty__body { color: var(--text-secondary); max-width: 42ch; margin: 0;
+  font-size: var(--text-sm); }
+
+.ed-tooltip {
+  position: absolute; z-index: var(--layer-overlay);
+  background: var(--surface-inverse); color: var(--text-inverse);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm); font-size: var(--text-3xs);
+  box-shadow: var(--shadow-overlay);
+}
+
+.ed-dialog {
+  background: var(--surface-overlay);
+  border: 1px solid var(--border-hairline);
+  border-top: var(--border-thick) solid var(--accent-metal);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-overlay);
+  padding: var(--space-7);
+  max-width: 32rem; width: 100%;
+}
+.ed-scrim { position: fixed; inset: 0; background: rgba(6, 10, 18, 0.52); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Visible only to a screen reader. Present because a system that ships this
+   late ships it never. */
+.ed-sr {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.ed-skip {
+  position: absolute; inset-inline-start: var(--space-4); top: -3rem;
+  background: var(--surface-raised); color: var(--text-primary);
+  padding: var(--space-2) var(--space-4); border-radius: var(--radius-sm);
+  z-index: var(--layer-toast);
+  transition: top var(--duration-fast) var(--easing-standard);
+}
+.ed-skip:focus { top: var(--space-3); }
+
+/* --- the shell ---------------------------------------------------------- */
+
+.ed-app {
+  display: grid;
+  grid-template-columns: 15.5rem 1fr;
+  min-height: 100vh;
+}
+.ed-rail {
+  background: var(--midnight-800);
+  color: var(--ivory-50);
+  border-inline-end: 1px solid var(--midnight-600);
+  display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh;
+  overflow: hidden;
+}
+.ed-identity, .ed-rail__foot { flex: none; }
+/* The lattice, at the opacity the institution's ornament level sets. It is the
+   only decorated surface in the product and it is behind everything. */
+.ed-rail__ground {
+  position: absolute; inset: 0; opacity: var(--ornament-opacity);
+  color: var(--gold-500); pointer-events: none;
+}
+.ed-rail > *:not(.ed-rail__ground) { position: relative; }
+
+.ed-identity {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-6) var(--space-5) var(--space-5);
+  border-block-end: 1px solid var(--midnight-600);
+}
+.ed-identity__name {
+  font-family: var(--font-display); font-size: var(--text-sm);
+  font-weight: var(--weight-semibold); line-height: 1.2; margin: 0;
+  color: var(--ivory-50);
+}
+.ed-identity__kind {
+  font-size: var(--text-3xs); letter-spacing: var(--tracking-widest);
+  text-transform: uppercase; color: var(--gold-500); margin: 2px 0 0;
+}
+
+.ed-nav {
+  padding: var(--space-5) var(--space-3);
+  overflow-y: auto; flex: 1 1 auto; min-height: 0;
+  scrollbar-width: thin; scrollbar-color: var(--midnight-500) transparent;
+}
+.ed-nav::-webkit-scrollbar { width: 6px; }
+.ed-nav::-webkit-scrollbar-thumb { background: var(--midnight-500); border-radius: 3px; }
+.ed-nav__group + .ed-nav__group { margin-block-start: var(--space-6); }
+.ed-nav__label {
+  font-size: var(--text-3xs); letter-spacing: var(--tracking-widest);
+  text-transform: uppercase; color: var(--charcoal-400);
+  padding-inline: var(--space-3); margin: 0 0 var(--space-2);
+}
+.ed-nav__item {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  color: var(--charcoal-200); text-decoration: none;
+  font-size: var(--text-sm); border-radius: var(--radius-sm);
+  transition: background var(--duration-fast) var(--easing-standard),
+              color var(--duration-fast) var(--easing-standard);
+}
+.ed-nav__item:hover { background: var(--midnight-600); color: var(--ivory-50); }
+.ed-nav__item[aria-current="page"] {
+  background: var(--midnight-700); color: var(--ivory-50);
+  font-weight: var(--weight-medium);
+}
+/* The active marker is the seal, not a bar. */
+.ed-nav__item[aria-current="page"] .ed-node { color: var(--gold-500); }
+.ed-nav__item .ed-node { opacity: 0; transition: opacity var(--duration-fast); }
+.ed-nav__item[aria-current="page"] .ed-node { opacity: 1; }
+.ed-nav__count {
+  margin-inline-start: auto; font-size: var(--text-3xs);
+  color: var(--charcoal-400); font-variant-numeric: tabular-nums;
+}
+.ed-nav__upgrade { margin-inline-start: auto; color: var(--gold-500); font-size: var(--text-3xs); }
+
+.ed-rail__foot {
+  border-block-start: 1px solid var(--midnight-600);
+  padding: var(--space-4) var(--space-3);
+}
+.ed-account {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm);
+  color: var(--ivory-50); text-decoration: none;
+}
+.ed-account:hover { background: var(--midnight-600); }
+.ed-account__name { font-size: var(--text-2xs); line-height: 1.3; margin: 0; }
+.ed-account__role { font-size: var(--text-3xs); color: var(--charcoal-400); margin: 0; }
+
+.ed-main { display: flex; flex-direction: column; min-width: 0; }
+.ed-topbar {
+  display: flex; align-items: center; gap: var(--space-4);
+  padding: var(--space-3) var(--space-7);
+  border-block-end: 1px solid var(--border-hairline);
+  background: var(--surface-raised);
+  position: sticky; top: 0; z-index: var(--layer-sticky);
+}
+.ed-search {
+  flex: 1; max-width: 30rem; display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-hairline); border-radius: var(--radius-sm);
+  background: var(--surface-canvas); color: var(--text-tertiary);
+  font-size: var(--text-sm); cursor: text; min-width: 0;
+}
+/* The hint is a hint. On a 390px screen an un-truncated placeholder wrapped to
+   four lines and made the masthead taller than the page title. */
+.ed-search > span {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+}
+.ed-search kbd { flex: none; }
+.ed-search kbd {
+  margin-inline-start: auto; font-family: var(--font-mono);
+  font-size: var(--text-3xs); color: var(--text-tertiary);
+  border: 1px solid var(--border-hairline); border-radius: 2px;
+  padding: 1px 4px;
+}
+.ed-topbar__actions { display: flex; align-items: center; gap: var(--space-2);
+  margin-inline-start: auto; }
+.ed-bell { position: relative; }
+.ed-bell__dot {
+  position: absolute; top: 4px; inset-inline-end: 4px;
+  width: 6px; height: 6px; border-radius: var(--radius-full);
+  background: var(--accent-metal);
+}
+
+.ed-page { padding: var(--space-7); max-width: 88rem; width: 100%; }
+.ed-page__head { margin-block-end: var(--space-7); }
+.ed-page__title-row {
+  display: flex; align-items: flex-end; gap: var(--space-5); flex-wrap: wrap;
+  margin-block-start: var(--space-2);
+}
+.ed-page__title {
+  font-family: var(--font-display); font-size: var(--text-3xl);
+  font-weight: var(--weight-semibold); letter-spacing: var(--tracking-tighter);
+  line-height: 1.05; margin: 0;
+}
+.ed-page__actions { display: flex; gap: var(--space-2); margin-inline-start: auto; }
+.ed-page__lede { margin-block-start: var(--space-3); }
+
+/* --- composition -------------------------------------------------------- */
+
+.ed-grid { display: grid; gap: var(--space-6); }
+.ed-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ed-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ed-grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.ed-grid--sidebar { grid-template-columns: minmax(0, 1fr) 20rem; gap: var(--space-8); }
+
+/* A row of figures separated by rules rather than boxed in cards. This is the
+   single biggest difference between this and a generic dashboard. */
+.ed-figures {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  border-block-start: 1px solid var(--border-hairline);
+}
+.ed-figures__item {
+  padding: var(--space-5) var(--space-5) var(--space-5) 0;
+  border-inline-end: 1px solid var(--border-hairline);
+}
+.ed-figures__item:last-child { border-inline-end: 0; }
+.ed-figures__item:not(:first-child) { padding-inline-start: var(--space-5); }
+.ed-figures__delta { font-size: var(--text-2xs); margin-block-start: var(--space-2); }
+.ed-figures__delta--up { color: var(--text-success); }
+.ed-figures__delta--down { color: var(--text-danger); }
+
+.ed-list { list-style: none; margin: 0; padding: 0; }
+.ed-list__item {
+  display: flex; align-items: center; gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-block-end: 1px solid var(--border-hairline);
+}
+.ed-list__item:last-child { border-block-end: 0; }
+.ed-list__body { min-width: 0; flex: 1; }
+.ed-list__title { margin: 0; font-size: var(--text-sm); font-weight: var(--weight-medium); }
+.ed-list__meta { margin: 2px 0 0; font-size: var(--text-2xs); color: var(--text-secondary); }
+
+/* --- data: the responsive contract ---------------------------------------
+   Each table declares what *kind* of data it holds, and the mobile treatment
+   follows from that rather than from one generic rule:
+
+     `ledger`   — a long record list (academic history, payments). Becomes a
+                  stack of records: the identifying line stays prominent and the
+                  fields become labelled rows. Nothing is hidden.
+     `matrix`   — results and marks. Becomes one block per course with the grade
+                  held at the right, because the grade is what the reader came
+                  for and everything else is supporting.
+     `roster`   — people. Becomes a list with avatar, name and one meta line;
+                  the rest moves behind a detail view.
+     `schedule` — a timetable. Genuinely two-dimensional, so it is the one kind
+                  that scrolls horizontally, with the time column pinned.
+
+   The `data-label` attribute on each cell carries the column heading down to
+   the stacked layout, so the mobile view is generated from the same markup
+   rather than from a second template that will drift. */
+
+.ed-data { width: 100%; }
+.ed-data__scroll { overflow-x: auto; }
+
+@media (max-width: 60rem) {
+  .ed-app { grid-template-columns: 1fr; }
+  .ed-rail {
+    position: fixed; inset-block: 0; inset-inline-start: 0; width: 17rem;
+    transform: translateX(-100%); z-index: var(--layer-drawer);
+    transition: transform var(--duration-normal) var(--easing-standard);
+  }
+  .ed-app[data-nav="open"] .ed-rail { transform: none; }
+  .ed-page { padding: var(--space-5) var(--space-4); }
+  .ed-topbar { padding: var(--space-3) var(--space-4); gap: var(--space-3); }
+  .ed-search kbd { display: none; }
+  /* A primary action floating right of a wrapped title reads as an orphan.
+     Full width, under the title, where a thumb can reach it. */
+  .ed-page__actions { margin-inline-start: 0; width: 100%; }
+  .ed-page__actions .ed-btn { flex: 1; }
+  .ed-page__title-row { gap: var(--space-4); }
+  .ed-grid--2, .ed-grid--3, .ed-grid--4, .ed-grid--sidebar { grid-template-columns: 1fr; }
+  .ed-page__title { font-size: var(--text-2xl); }
+
+  .ed-figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ed-figures__item {
+    padding: var(--space-4) var(--space-4) var(--space-4) 0;
+    border-block-end: 1px solid var(--border-hairline);
+  }
+  .ed-figures__item:nth-child(even) {
+    border-inline-end: 0; padding-inline-start: var(--space-4);
+  }
+
+  /* ledger + matrix + roster: the table stops being a table. */
+  .ed-data[data-shape="ledger"] thead,
+  .ed-data[data-shape="matrix"] thead,
+  .ed-data[data-shape="roster"] thead { display: none; }
+
+  .ed-data[data-shape="ledger"] tr,
+  .ed-data[data-shape="matrix"] tr,
+  .ed-data[data-shape="roster"] tr {
+    display: block;
+    padding: var(--space-4) 0;
+    border-block-end: 1px solid var(--border-hairline);
+  }
+  .ed-data[data-shape="ledger"] td,
+  .ed-data[data-shape="roster"] td {
+    display: flex; justify-content: space-between; gap: var(--space-4);
+    padding: var(--space-1) 0; border: 0; text-align: start;
+  }
+  .ed-data[data-shape="ledger"] td::before,
+  .ed-data[data-shape="roster"] td::before {
+    content: attr(data-label);
+    font-size: var(--text-3xs); letter-spacing: var(--tracking-wider);
+    text-transform: uppercase; color: var(--text-secondary);
+    flex: none;
+  }
+  /* The first cell is the record's identity: it keeps the whole line and is
+     set at reading size rather than being labelled like a field. */
+  .ed-data[data-shape="ledger"] td:first-child,
+  .ed-data[data-shape="roster"] td:first-child {
+    display: block; font-size: var(--text-md);
+    font-family: var(--font-display); font-weight: var(--weight-semibold);
+    margin-block-end: var(--space-2);
+  }
+  .ed-data[data-shape="ledger"] td:first-child::before,
+  .ed-data[data-shape="roster"] td:first-child::before { content: none; }
+
+  /* matrix: course on the left, grade held at the right, detail beneath. */
+  .ed-data[data-shape="matrix"] tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-auto-rows: min-content;
+    column-gap: var(--space-4);
+    align-items: baseline;
+  }
+  .ed-data[data-shape="matrix"] td { border: 0; padding: 0; }
+  .ed-data[data-shape="matrix"] td[data-role="subject"] {
+    grid-column: 1; font-size: var(--text-md); font-family: var(--font-display);
+    font-weight: var(--weight-semibold); line-height: 1.25;
+  }
+  .ed-data[data-shape="matrix"] td[data-role="grade"] {
+    grid-column: 2; grid-row: 1 / span 2;
+    font-family: var(--font-display); font-size: var(--text-2xl);
+    font-weight: var(--weight-semibold); color: var(--text-primary);
+    text-align: end; align-self: center;
+  }
+  .ed-data[data-shape="matrix"] td[data-role="detail"] {
+    grid-column: 1; display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4);
+    font-size: var(--text-2xs); color: var(--text-secondary);
+    margin-block-start: var(--space-1);
+  }
+  .ed-data[data-shape="matrix"] td[data-role="detail"] span::before {
+    content: attr(data-label) ' ';
+    text-transform: uppercase; letter-spacing: var(--tracking-wider);
+    font-size: 0.9em; color: var(--text-tertiary);
+  }
+  .ed-data[data-shape="matrix"] td[data-role="note"] {
+    grid-column: 1 / -1; font-size: var(--text-2xs); color: var(--text-secondary);
+    margin-block-start: var(--space-2); font-style: italic;
+  }
+
+  /* schedule is the one shape that genuinely needs two dimensions. */
+  .ed-data[data-shape="schedule"] { display: block; overflow-x: auto; }
+  .ed-data[data-shape="schedule"] th:first-child,
+  .ed-data[data-shape="schedule"] td:first-child {
+    position: sticky; inset-inline-start: 0; background: var(--surface-raised);
+  }
+}
+
+@media (min-width: 60.01rem) {
+  .ed-mobile-only { display: none !important; }
+}
+@media (max-width: 60rem) {
+  .ed-desktop-only { display: none !important; }
+}
+</style></head><body><a class="ed-skip" href="#main">Skip to content</a><div class="ed-app"><aside class="ed-rail"><div class="ed-rail__ground"><svg class="ed-lattice" aria-hidden="true" focusable="false" width="100%" height="100%"><defs><pattern id="ed-seal" width="64" height="64" patternUnits="userSpaceOnUse"><path d="M 37.143 19.583 L 39.274 24.726 L 44.417 26.857 L 42.287 32.000 L 44.417 37.143 L 39.274 39.274 L 37.143 44.417 L 32.000 42.287 L 26.857 44.417 L 24.726 39.274 L 19.583 37.143 L 21.713 32.000 L 19.583 26.857 L 24.726 24.726 L 26.857 19.583 L 32.000 21.713 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/><path d="M 5.143 -12.417 L 7.274 -7.274 L 12.417 -5.143 L 10.287 0.000 L 12.417 5.143 L 7.274 7.274 L 5.143 12.417 L 0.000 10.287 L -5.143 12.417 L -7.274 7.274 L -12.417 5.143 L -10.287 0.000 L -12.417 -5.143 L -7.274 -7.274 L -5.143 -12.417 L -0.000 -10.287 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/><path d="M 69.143 -12.417 L 71.274 -7.274 L 76.417 -5.143 L 74.287 0.000 L 76.417 5.143 L 71.274 7.274 L 69.143 12.417 L 64.000 10.287 L 58.857 12.417 L 56.726 7.274 L 51.583 5.143 L 53.713 0.000 L 51.583 -5.143 L 56.726 -7.274 L 58.857 -12.417 L 64.000 -10.287 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/><path d="M 5.143 51.583 L 7.274 56.726 L 12.417 58.857 L 10.287 64.000 L 12.417 69.143 L 7.274 71.274 L 5.143 76.417 L 0.000 74.287 L -5.143 76.417 L -7.274 71.274 L -12.417 69.143 L -10.287 64.000 L -12.417 58.857 L -7.274 56.726 L -5.143 51.583 L -0.000 53.713 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/><path d="M 69.143 51.583 L 71.274 56.726 L 76.417 58.857 L 74.287 64.000 L 76.417 69.143 L 71.274 71.274 L 69.143 76.417 L 64.000 74.287 L 58.857 76.417 L 56.726 71.274 L 51.583 69.143 L 53.713 64.000 L 51.583 58.857 L 56.726 56.726 L 58.857 51.583 L 64.000 53.713 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/></pattern></defs><rect width="100%" height="100%" fill="url(#ed-seal)"/></svg></div><div class="ed-identity"><svg class="ed-monogram" width="30" height="30" viewBox="0 0 30 30" role="img" aria-label="EdirasX" fill="none"><path d="M 20.396 1.973 L 22.631 7.369 L 28.027 9.604 L 25.792 15.000 L 28.027 20.396 L 22.631 22.631 L 20.396 28.027 L 15.000 25.792 L 9.604 28.027 L 7.369 22.631 L 1.973 20.396 L 4.208 15.000 L 1.973 9.604 L 7.369 7.369 L 9.604 1.973 L 15.000 4.208 Z" stroke="var(--gold-500)" stroke-width="1.50" stroke-linejoin="miter"/><path d="M 22.631 7.369 L 7.369 22.631" stroke="var(--ivory-50)" stroke-width="2.55" stroke-linecap="butt"/><path d="M 22.631 22.631 L 7.369 7.369" stroke="var(--ivory-50)" stroke-width="2.55" stroke-linecap="butt"/></svg><div><p class="ed-identity__name">Ashford Grange School</p><p class="ed-identity__kind"></p></div></div><nav class="ed-nav" aria-label="Sections"><div class="ed-nav__group"><p class="ed-nav__label">People</p><a class="ed-nav__item" href="#people.students" aria-current="page"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Students</span></a><a class="ed-nav__item" href="#people.enrolment"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Enrolments</span></a><a class="ed-nav__item" href="#people.guardians"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Parents</span></a></div><div class="ed-nav__group"><p class="ed-nav__label">Academic structure</p><a class="ed-nav__item" href="#academics.classes"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Classes</span></a><a class="ed-nav__item" href="#academics.stages"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Stages</span></a><a class="ed-nav__item" href="#academics.levels"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Year groups</span></a><a class="ed-nav__item" href="#academics.courses"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Subjects</span></a><a class="ed-nav__item" href="#academics.calendar"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Academic years</span></a><a class="ed-nav__item" href="#academics.grading"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Grading scales</span></a></div><div class="ed-nav__group"><p class="ed-nav__label">Operations</p><a class="ed-nav__item" href="#operations.attendance"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Attendance</span></a><a class="ed-nav__item" href="#operations.results"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Results</span></a><a class="ed-nav__item" href="#operations.report_cards"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Report cards</span></a><a class="ed-nav__item" href="#operations.documents"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Documents</span></a><a class="ed-nav__item" href="#operations.timetable"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Timetable</span></a><a class="ed-nav__item" href="#operations.admissions"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Admissions</span></a><a class="ed-nav__item" href="#operations.imports"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Bulk import</span></a></div><div class="ed-nav__group"><p class="ed-nav__label">Communication</p><a class="ed-nav__item" href="#communication.announcements"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Announcements</span></a></div><div class="ed-nav__group"><p class="ed-nav__label">Insight</p><a class="ed-nav__item" href="#insight.overview"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Overview</span></a></div><div class="ed-nav__group"><p class="ed-nav__label">Configuration</p><a class="ed-nav__item" href="#configuration.document_templates"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Document templates</span></a></div></nav><div class="ed-rail__foot"><a class="ed-account" href="#account"><span class="ed-avatar" role="img" aria-label="Adaeze Umeh">AU</span><span><p class="ed-account__name">Adaeze Umeh</p><p class="ed-account__role">Registrar</p></span></a></div></aside><div class="ed-main"><div class="ed-topbar"><button class="ed-btn ed-btn--quiet ed-btn--sm ed-mobile-only" type="button" aria-label="Open navigation"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.3"/></svg></button><div class="ed-search" role="search"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.4 10.4 14 14" stroke="currentColor" stroke-width="1.3"/></svg><span>Search students, classes, documents…</span><kbd>⌘K</kbd></div><div class="ed-topbar__actions"><button class="ed-btn ed-btn--quiet ed-btn--sm" type="button">New</button><span class="ed-bell"><button class="ed-btn ed-btn--quiet ed-btn--sm" type="button" aria-label="3 notifications"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5a3.5 3.5 0 0 0-3.5 3.5v2.2L3 10h10l-1.5-2.8V5A3.5 3.5 0 0 0 8 1.5Z" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M6.6 12a1.4 1.4 0 0 0 2.8 0" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button><span class="ed-bell__dot"></span></span></div></div><main class="ed-page" id="main"><header class="ed-page__head"><p class="ed-label ed-label--gold">Good morning · Thursday 12 November</p><div class="ed-page__title-row"><h1 class="ed-page__title">Autumn Term, week nine</h1><div class="ed-page__actions"><button class="ed-btn ed-btn--primary" type="button">Take today&#x27;s register</button></div></div></header><div class="ed-figures"><div class="ed-figures__item"><p class="ed-label">On roll</p><span class="ed-figure">412</span><p class="ed-figures__delta ed-figures__delta--up">▲ +18 this term</p></div><div class="ed-figures__item"><p class="ed-label">Attendance</p><span class="ed-figure">96.4<span class="ed-figure__unit">%</span></span><p class="ed-figures__delta ed-figures__delta--down">▼ −0.8</p></div><div class="ed-figures__item"><p class="ed-label">Result sets</p><span class="ed-figure">7<span class="ed-figure__unit">of 9</span></span><p class="ed-figures__delta ed-quiet">Two awaiting the board</p></div><div class="ed-figures__item"><p class="ed-label">Documents issued</p><span class="ed-figure">1,284</span><p class="ed-figures__delta ed-figures__delta--up">▲ +96</p></div></div><div class="ed-alert ed-alert--warning" role="status"><div><p class="ed-alert__title">Needs your attention</p><p>Two result sets are waiting on approvals before they can be published.</p></div></div><div class="ed-grid ed-grid--sidebar" style="margin-block-start:var(--space-8)"><div><section class="ed-section"><div class="ed-section__head"><p class="ed-label">Year 10A</p><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><div class="ed-data__scroll"><table class="ed-table ed-data" data-shape="roster"><thead><tr><th class="" scope="col">Student</th><th class="" scope="col">Class</th><th class="num" scope="col">Attendance</th><th class="" scope="col">Results</th></tr></thead><tbody><tr><td class="" data-label="Student">Ada Nwosu</td><td class="" data-label="Class">10A</td><td class="num" data-label="Attendance">98.2%</td><td class="" data-label="Results"><span class="ed-badge ed-badge--success">Published</span></td></tr><tr><td class="" data-label="Student">Bilal Haddad</td><td class="" data-label="Class">10A</td><td class="num" data-label="Attendance">94.6%</td><td class="" data-label="Results"><span class="ed-badge ed-badge--success">Published</span></td></tr><tr><td class="" data-label="Student">Chidera Okafor</td><td class="" data-label="Class">10A</td><td class="num" data-label="Attendance">88.1%</td><td class="" data-label="Results"><span class="ed-badge ed-badge--warning">In review</span></td></tr><tr><td class="" data-label="Student">Dina Farouk</td><td class="" data-label="Class">10A</td><td class="num" data-label="Attendance">96.9%</td><td class="" data-label="Results"><span class="ed-badge ed-badge--success">Published</span></td></tr></tbody></table></div></section></div><div><section class="ed-section"><div class="ed-section__head"><p class="ed-label">Today</p><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--border-strong)"/></svg><span class="ed-rule__line"></span></div></div><ul class="ed-list"><li class="ed-list__item"><span class="ed-quiet ed-numeric" style="font-size:var(--text-2xs);min-width:3.2rem">09:00</span><div class="ed-list__body"><p class="ed-list__title">Year 11 results — board approval</p><p class="ed-list__meta">Awaiting the Principal</p></div><span class="ed-badge ed-badge--warning">Blocked</span></li><li class="ed-list__item"><span class="ed-quiet ed-numeric" style="font-size:var(--text-2xs);min-width:3.2rem">11:30</span><div class="ed-list__body"><p class="ed-list__title">Admissions panel</p><p class="ed-list__meta">Six applications</p></div></li><li class="ed-list__item"><span class="ed-quiet ed-numeric" style="font-size:var(--text-2xs);min-width:3.2rem">14:00</span><div class="ed-list__body"><p class="ed-list__title">Report cards — Year 10</p><p class="ed-list__meta">412 ready to issue</p></div><span class="ed-badge ed-badge--success">Ready</span></li></ul></section></div></div></main></div></div></body></html>

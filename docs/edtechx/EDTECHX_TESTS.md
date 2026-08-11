@@ -425,6 +425,30 @@ document is never *offered* a credit summary or a grade-point average.
 
 Fifteen sabotages, all caught.
 
+### `test_design.py` — 31 tests
+
+The parts of a visual language a test can actually help with, which are the
+parts that fail silently. The seal's construction (√(2−√2), pinned after it
+shipped at 1/(1+√2) and rendered as an asterisk). No colour literal anywhere in
+the foundation stylesheet. No decorative gradient — the stylesheet is parsed and
+the two blocks permitted to contain one are named. Institutional radii. Every
+semantic role present in both modes, every variable the foundation reads
+actually emitted — an undefined custom property makes a rule *do nothing*, so a
+page renders looking almost right.
+
+Then the guardrails: the EdirasX theme passes its own review; a pale gold on
+ivory is refused *with the nearest tone that would work*; a suggestion is still
+recognisably the colour that was chosen; a mid-grey background is told it is
+itself the problem; an institution's choice is judged and never silently
+corrected; a theme may only change what `ThemeShape` opens.
+
+And the markup contracts a screenshot catches only by luck: a caller's class
+surviving into a component, a loading button actually reading as loading, every
+data shape carrying its headings into the stacked layout, an empty table
+becoming an empty state, hostile text escaped everywhere, a disabled and focus
+treatment existing for every control, and gold never being the only signal of a
+state.
+
 ### `test_api.py` — 16 tests
 
 Health is public; security headers present; unknown host refused; `/context`
@@ -495,6 +519,11 @@ driver names; oversized bodies rejected at the edge.
 | Entitlement is checked | `billing.require` removed | Flagged |
 | Placement is historical | Resolved from today's enrolment | Flagged — after the test was strengthened; see below |
 | A mark is published once | The already-published guard removed | Flagged |
+| The navigation never repeats a word | — | **Not caught by any test.** Five pairs of capabilities resolved to the same label; every test inspected keys. Found by rendering four institutions. Now refused at boot and dropped at resolution |
+| A nursery is not offered Grades | — | **Not caught.** Three capabilities had no layer gate. Found by rendering a nursery |
+| A caller's class survives into a component | Two `class` attributes emitted | **Not caught.** A hamburger was visible on a 1440px desktop; the browser honours the first attribute |
+| An institution issuing no references can register everybody | — | **Not caught.** `""` collides on the uniqueness index; a nursery could register one child |
+| A control's border is visible | Divider and control sharing one token | **Not caught by a test; caught by the guardrail** at 1.47:1 against a 3:1 standard, once the guardrail was written |
 | **Routes cannot query a scoped table directly** | `from sqlalchemy import select as _select` in a handler | **Not caught.** The check listed unsafe call *names*, and a rename walked past it. Now inverted: every call taking a scoped model is suspect unless it is one of the four helpers that carry a predicate by construction. Re-sabotaged; caught |
 
 ---

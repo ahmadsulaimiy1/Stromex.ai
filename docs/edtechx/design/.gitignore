@@ -1,0 +1,6 @@
+# The rendered documents embed their typefaces so they survive on their own, which
+# makes each one several megabytes. They are reproducible from `tools/design`;
+# the screenshots beside them are the record that gets committed.
+0*-school-report-card.html
+0*-university-transcript.html
+0*-certificate.html

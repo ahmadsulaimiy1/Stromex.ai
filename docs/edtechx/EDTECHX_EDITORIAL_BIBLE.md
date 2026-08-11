@@ -225,6 +225,42 @@ These are the visual language of products that need to *look* expensive. EdirasX
 
 **Excellent information design.** Data presented so the reader draws the correct conclusion quickly. Readable tables. Forms that guide. Charts that inform rather than decorate.
 
+### 4.2a The EdirasX signature
+
+A person shown a screenshot for half a second, with the name removed, should
+know it is EdirasX. That is the bar, and four things carry it.
+
+**A midnight rail against an ivory page.** An authoritative dark frame around a
+warm editorial working surface. Not white — a pure-white canvas beside a
+midnight rail reads as a screenshot of two different products.
+
+**Champagne used as jewellery.** Gold marks the origin of a rule, the item you
+are on, a figure that matters, an action with consequences. It is never a
+background, never a large fill, and there is at most one gold button on a
+screen. A gold-coloured interface is a cheap one; a navy interface with gold at
+the joints is not.
+
+**Rules, not cards.** Grouping is done with a micro-label, a hairline and space.
+A row of figures separated by rules looks composed; the same figures in six
+rounded rectangles look assembled, and are interchangeable with every other
+product built this decade.
+
+**The seal.** Two squares at 45° produce the eight-point star, whose central
+negative space is a cross — so the X of EdirasX is the void at the centre of the
+star, and the Latin letterform is produced by the Arabic geometry rather than
+placed beside it. One construction generates the mark, the terminator on every
+rule, the marker on the item you are on, the figure in every empty state, the
+ceremonial lattice and the loading indicator. It is meant to be noticed on the
+fourth screen, not the first.
+
+**And what prestige is not.** Minimal is not the same as prestigious. A white
+page with a heading, thin grey lines and ordinary tables is entirely minimal and
+says nothing about the institution using it. Luxury manufactured through
+gradients, glass, heavy shadows, large rounded cards and decorative animation is
+cheaper still. Prestige here comes from typography, proportion, hierarchy,
+restraint, precision and consistency — and from the fact that every one of those
+is enforced by a token or a test rather than requested in a document.
+
 ### 4.3 The standard
 
 > A screen is finished when a prestigious institution would be proud to project it in a board meeting, and a teacher would be happy to use it every day for a year.
@@ -505,6 +541,9 @@ The following are grounds to block a release, regardless of schedule:
 9. A change that makes a student's academic history editable in place.
 10. A change that makes an issued academic document say something other than
     what it said when it was issued.
+11. An institutional customization that is published despite failing the
+    accessibility guardrails, or one that is silently corrected instead of
+    being explained.
 
 ---
 
