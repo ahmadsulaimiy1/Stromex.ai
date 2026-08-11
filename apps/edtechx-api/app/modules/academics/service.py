@@ -32,9 +32,15 @@ from app.modules.academics.structure import Cohort, Programme, Qualification
 __all__ = [
     "ResolvedPlacement",
     "academic_unit_subtree",
+    "class_group",
     "class_group_ids_taught_by",
     "class_group_ids_under",
+    "cohort",
+    "course",
+    "credit_unit_label",
+    "current_period",
     "current_year",
+    "default_grading_scale",
     "find_class_group",
     "find_cohort",
     "find_course",
@@ -42,10 +48,16 @@ __all__ = [
     "find_programme",
     "find_qualification",
     "grading_scale",
+    "grading_scale_by_code",
+    "level",
     "period",
+    "periods_in",
     "populated_layers",
+    "programme",
     "programme_ids_under",
+    "qualification",
     "resolve_placement",
+    "year",
 ]
 
 
@@ -338,3 +350,90 @@ def grading_scale(db: Session, scale_id: uuid.UUID | None):
     from app.modules.academics.models import GradingScale
 
     return db.get(GradingScale, scale_id) if scale_id else None
+
+
+# --- reading the structure a document has to describe ----------------------
+#
+# By id rather than by code, because a document is composed from rows another
+# module already holds ids for — an enrolment's level, a published result's
+# course — and looking those up by code would mean fetching them twice.
+
+
+def year(db: Session, year_id: uuid.UUID | None) -> AcademicYear | None:
+    return db.get(AcademicYear, year_id) if year_id else None
+
+
+def level(db: Session, level_id: uuid.UUID | None) -> Level | None:
+    return db.get(Level, level_id) if level_id else None
+
+
+def class_group(db: Session, class_group_id: uuid.UUID | None) -> ClassGroup | None:
+    return db.get(ClassGroup, class_group_id) if class_group_id else None
+
+
+def course(db: Session, course_id: uuid.UUID | None) -> Course | None:
+    return db.get(Course, course_id) if course_id else None
+
+
+def programme(db: Session, programme_id: uuid.UUID | None):
+    return db.get(Programme, programme_id) if programme_id else None
+
+
+def cohort(db: Session, cohort_id: uuid.UUID | None):
+    return db.get(Cohort, cohort_id) if cohort_id else None
+
+
+def qualification(db: Session, qualification_id: uuid.UUID | None):
+    return db.get(Qualification, qualification_id) if qualification_id else None
+
+
+def periods_in(db: Session, academic_year_id: uuid.UUID | None) -> list[AcademicPeriod]:
+    """Every period of one year, in the institution's own sequence."""
+    if academic_year_id is None:
+        return []
+    return list(
+        db.execute(
+            select(AcademicPeriod)
+            .where(AcademicPeriod.academic_year_id == academic_year_id)
+            .order_by(AcademicPeriod.sequence)
+        ).scalars().all()
+    )
+
+
+def credit_unit_label(db: Session, credit_system_id: uuid.UUID | None) -> tuple[str, str]:
+    """What this institution calls one unit of academic work, and several.
+
+    Returns empty strings when the institution counts nothing, which is the
+    signal a document uses to leave the credit column out entirely rather than
+    printing a blank one under a heading nobody here recognises.
+    """
+    from app.modules.academics.structure import CreditSystem
+
+    system = db.get(CreditSystem, credit_system_id) if credit_system_id else None
+    if system is None:
+        system = db.execute(
+            select(CreditSystem).where(CreditSystem.is_default.is_(True))
+        ).scalars().first()
+    if system is None:
+        return ("", "")
+    return (system.unit_label, system.unit_label_plural)
+
+
+def default_grading_scale(db: Session):
+    from app.modules.academics.models import GradingScale
+
+    return db.execute(
+        select(GradingScale).where(GradingScale.is_default.is_(True))
+    ).scalars().first()
+
+
+def grading_scale_by_code(db: Session, code: str):
+    """The scale a published result named, for printing its key on a document.
+
+    Returns `None` when the scale has since been deleted, and the caller prints
+    the document without a grading key rather than refusing to print it — the
+    result itself already carries the band it was awarded (ADR-033).
+    """
+    from app.modules.academics.models import GradingScale
+
+    return _by_code(db, GradingScale, code) if code else None

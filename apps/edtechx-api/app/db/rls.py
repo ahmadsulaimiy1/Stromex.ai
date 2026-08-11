@@ -46,7 +46,13 @@ APPEND_ONLY_TABLES: tuple[str, ...] = (
 # Rows that may be corrected but never erased. A published result joins the
 # list for the same reason an enrolment does: it happened, it was relied on, and
 # a system able to make it disappear cannot be trusted with the ones that remain.
-UNDELETABLE_TABLES: tuple[str, ...] = ("enrolments", "published_results")
+# An issued document is the same argument with a signature on it: it is withdrawn
+# by being voided and replaced by being superseded, and both survive.
+UNDELETABLE_TABLES: tuple[str, ...] = (
+    "enrolments",
+    "published_results",
+    "documents",
+)
 
 
 def tenant_owned_table_names() -> list[str]:

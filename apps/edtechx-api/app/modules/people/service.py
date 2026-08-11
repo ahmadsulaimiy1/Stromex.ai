@@ -1024,3 +1024,34 @@ def students_in_class(
         for student in students.values()
         if student.person_id in found
     ]
+
+
+def awards_for(db: Session, student: StudentRelationship) -> list[QualificationAward]:
+    """Every qualification this student has been awarded, oldest first."""
+    return list(
+        db.execute(
+            select(QualificationAward)
+            .where(QualificationAward.student_relationship_id == student.id)
+            .order_by(QualificationAward.awarded_on, QualificationAward.created_at)
+        )
+        .scalars()
+        .all()
+    )
+
+
+def guardians_of(db: Session, person_record: Person) -> list[GuardianRelationship]:
+    """The guardianships naming this person as the child.
+
+    Returned as the relationships rather than as the guardians themselves,
+    because the institution's word for the relationship — "mother", "uncle",
+    "carer", "sponsor" — is on the link and is what a document prints.
+    """
+    return list(
+        db.execute(
+            select(GuardianRelationship)
+            .where(GuardianRelationship.student_person_id == person_record.id)
+            .order_by(GuardianRelationship.created_at)
+        )
+        .scalars()
+        .all()
+    )

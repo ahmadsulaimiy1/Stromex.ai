@@ -23,10 +23,11 @@ than deciding.
 from __future__ import annotations
 
 import uuid
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.modules.assessment.models import (
@@ -544,6 +545,16 @@ def publish(
 
     for assessment in _assessments_for(db, result_set):
         scale = academics.grading_scale(db, assessment.grading_scale_id)
+        # The course's credit value *as it stands at publication*, frozen onto
+        # every row below. Reading it at transcript time instead would make a
+        # graduate's total change whenever a department revalued a module.
+        subject = academics.course(db, assessment.course_id)
+        credits = subject.credits if subject else None
+        unit_label = ""
+        if credits is not None:
+            unit_label, _plural = academics.credit_unit_label(
+                db, subject.credit_system_id
+            )
         rows = db.execute(
             select(AssessmentScore).where(AssessmentScore.assessment_id == assessment.id)
         ).scalars().all()
@@ -562,6 +573,9 @@ def publish(
                 is_pass=band.is_pass if band else None,
                 is_absent=row.is_absent,
                 grading_scale_code=scale.code if scale else None,
+                credits=credits,
+                credit_unit_label=unit_label or None,
+                weight=assessment.weight,
                 comment=row.comment,
                 published_at=now,
             )
@@ -587,16 +601,113 @@ def publish(
 
 
 def results_for(
-    db: Session, student_relationship_id: uuid.UUID
+    db: Session,
+    student_relationship_id: uuid.UUID,
+    *,
+    period_ids: Sequence[uuid.UUID] | None = None,
 ) -> list[PublishedResult]:
-    """A student's official record — only what was published."""
-    return list(
-        db.execute(
-            select(PublishedResult)
-            .where(PublishedResult.student_relationship_id == student_relationship_id)
-            .order_by(PublishedResult.published_at)
-        ).scalars().all()
+    """A student's official record — only what was published.
+
+    `period_ids` narrows to particular terms, which is what a report card asks
+    for and a transcript does not. The period comes from the *result set* rather
+    than from the assessment: an institution that publishes a January resit
+    against the autumn term has said which term it belongs to, and the
+    assessment's own period would contradict it.
+    """
+    statement = select(PublishedResult).where(
+        PublishedResult.student_relationship_id == student_relationship_id
     )
+    if period_ids is not None:
+        ids = list(period_ids)
+        if not ids:
+            return []
+        statement = statement.where(
+            PublishedResult.result_set_id.in_(
+                select(ResultSet.id).where(ResultSet.academic_period_id.in_(ids))
+            )
+        )
+    return list(
+        db.execute(statement.order_by(PublishedResult.published_at)).scalars().all()
+    )
+
+
+def results_with_periods(
+    db: Session,
+    student_relationship_id: uuid.UUID,
+    *,
+    period_ids: Sequence[uuid.UUID] | None = None,
+) -> list[tuple[PublishedResult, uuid.UUID | None]]:
+    """Published results paired with the period each belongs to.
+
+    The pairing comes from the *result set* rather than from the assessment: an
+    institution that publishes a January resit against the autumn term has said
+    which term it counts for, and the assessment's own period would contradict
+    it. One query, because a transcript otherwise asks this question once per
+    result.
+    """
+    statement = (
+        select(PublishedResult, ResultSet.academic_period_id)
+        .join(ResultSet, ResultSet.id == PublishedResult.result_set_id)
+        .where(PublishedResult.student_relationship_id == student_relationship_id)
+    )
+    if period_ids is not None:
+        ids = list(period_ids)
+        if not ids:
+            return []
+        statement = statement.where(ResultSet.academic_period_id.in_(ids))
+    return [
+        (row[0], row[1])
+        for row in db.execute(
+            statement.order_by(PublishedResult.published_at)
+        ).all()
+    ]
+
+
+def assessment_summaries(
+    db: Session, assessment_ids: Sequence[uuid.UUID]
+) -> dict[uuid.UUID, dict]:
+    """Enough about each assessment to name it on a document."""
+    ids = [i for i in assessment_ids if i is not None]
+    if not ids:
+        return {}
+    rows = db.execute(
+        select(
+            Assessment.id,
+            Assessment.code,
+            Assessment.name,
+            Assessment.kind_label,
+            Assessment.course_id,
+        ).where(Assessment.id.in_(ids))
+    ).all()
+    return {
+        row[0]: {
+            "code": row[1],
+            "name": row[2],
+            "kind_label": row[3],
+            "course_id": row[4],
+        }
+        for row in rows
+    }
+
+
+def amendment_counts(
+    db: Session, published_result_ids: Sequence[uuid.UUID]
+) -> dict[uuid.UUID, int]:
+    """How many times each of these results has been corrected.
+
+    Used by the document engine to tell whether a document issued earlier has
+    been overtaken by a correction. Counting rather than fetching, because the
+    question is "has this changed since?" and the answer is a number.
+    """
+    ids = list(published_result_ids)
+    if not ids:
+        return {}
+    rows = db.execute(
+        select(ResultAmendment.published_result_id, func.count())
+        .where(ResultAmendment.published_result_id.in_(ids))
+        .group_by(ResultAmendment.published_result_id)
+    ).all()
+    return {row[0]: row[1] for row in rows}
 
 
 # --- correcting what has been published ------------------------------------

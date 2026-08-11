@@ -281,6 +281,27 @@ CAPABILITIES: Final[tuple[Capability, ...]] = (
         empty_action="Transcripts appear once results are published",
     ),
     Capability(
+        key="operations.documents",
+        term=None,
+        group="operations",
+        permission="reporting.document.read",
+        feature="core.report_cards",
+        empty_action="Issue your first certificate or statement",
+        description=(
+            "Certificates, statements and letters — the documents that are "
+            "neither a report card nor a transcript."
+        ),
+    ),
+    Capability(
+        key="configuration.document_templates",
+        term=None,
+        group="configuration",
+        permission="reporting.template.read",
+        feature="core.report_cards",
+        empty_action="Design how your documents look",
+        description="What goes on a report card, a transcript, a certificate.",
+    ),
+    Capability(
         key="operations.timetable",
         term="class_group",
         group="operations",

@@ -258,3 +258,51 @@ def _set_status(tenant_id: uuid.UUID, status: TenantStatus, reason: str) -> None
         audit.commit()
     finally:
         audit.close()
+
+
+@dataclass(frozen=True, slots=True)
+class TenantIdentity:
+    """What another module may know about the school it is running inside.
+
+    Deliberately narrow. A module that needs the institution's name to print it
+    on a report card should not thereby be handed its subscription status, its
+    provisioning history, or its domains.
+    """
+
+    tenant_id: uuid.UUID
+    slug: str
+    name: str
+    legal_name: str
+    country: str
+    timezone: str
+    locale: str
+    currency: str
+
+
+def identity_of(
+    session, tenant_id: uuid.UUID | None = None
+) -> TenantIdentity | None:
+    """The identifying facts about one school, read on the caller's session.
+
+    Defaults to the tenant bound to the current request context, so the usual
+    call is `identity_of(db)`. Passing an id explicitly is for the platform
+    console, which legitimately looks at schools other than the one it is in.
+    """
+    from app.core.context import get_tenant
+
+    resolved = tenant_id or get_tenant()
+    if resolved is None:
+        return None
+    tenant = session.get(Tenant, resolved)
+    if tenant is None:
+        return None
+    return TenantIdentity(
+        tenant_id=tenant.id,
+        slug=tenant.slug,
+        name=tenant.name,
+        legal_name=tenant.legal_name or "",
+        country=tenant.country or "",
+        timezone=tenant.timezone,
+        locale=tenant.locale,
+        currency=tenant.currency,
+    )

@@ -323,6 +323,18 @@ class PublishedResult(UUIDPrimaryKey, Timestamped, TenantOwned, Base):
     # Which scale produced the band, named rather than joined — the scale may be
     # edited or deleted, and this row must still explain itself.
     grading_scale_code: Mapped[str | None] = mapped_column(String(40))
+    # What this result was worth, in the institution's own counting. Snapshotted
+    # for the same reason the band is: a university that revalues a module from
+    # 15 credits to 20 must not retroactively change what a graduate earned, and
+    # a transcript reprinted a decade later has to total to the same number.
+    # The unit label travels with it because "12" means nothing without it and a
+    # credit, a credit hour and an ECTS credit are not the same quantity.
+    credits: Mapped[float | None] = mapped_column(Numeric(8, 2))
+    credit_unit_label: Mapped[str | None] = mapped_column(String(60))
+    # How much this assessment counted toward its course, as the institution
+    # weighted it at publication. A school that moves coursework from 30% to 40%
+    # next year has not changed last year's report card.
+    weight: Mapped[float | None] = mapped_column(Numeric(8, 3))
     comment: Mapped[str | None] = mapped_column(Text)
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     # Set by an amendment, so the current value and the fact that it changed are

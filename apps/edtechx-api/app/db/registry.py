@@ -53,7 +53,12 @@ from app.modules.billing.models import (
     SubscriptionOverride,
     UsageRecord,
 )
-from app.modules.customization.models import TerminologySet
+from app.modules.customization.models import BrandingProfile, TerminologySet
+from app.modules.documents.models import (
+    Document,
+    DocumentSequence,
+    DocumentTemplate,
+)
 from app.modules.experience.models import InterfaceProfile, UserPreference
 from app.modules.identity.models import (
     Membership,
@@ -88,7 +93,11 @@ __all__ = [
     "AttendanceSession",
     "AuditEvent",
     "Base",
+    "BrandingProfile",
     "ClassGroup",
+    "Document",
+    "DocumentSequence",
+    "DocumentTemplate",
     "Enrolment",
     "EnrolmentEvent",
     "FeatureSetting",

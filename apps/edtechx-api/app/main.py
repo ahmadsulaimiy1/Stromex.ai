@@ -19,6 +19,8 @@ from app.core.middleware import (
 )
 from app.db import registry  # noqa: F401  (populates model metadata)
 from app.modules.authz.system_roles import validate_catalogue
+from app.modules.billing.catalogue import validate_catalogue as validate_entitlement_catalogue
+from app.modules.documents.sections import validate_catalogue as validate_section_catalogue
 
 
 def configure_logging(json_logs: bool) -> None:
@@ -41,9 +43,13 @@ def create_app() -> FastAPI:
     settings = get_settings()
     configure_logging(json_logs=settings.is_production)
 
-    # Fail the boot, not a request, if a role template drifted from the
-    # permission catalogue.
+    # Fail the boot, not a request, if a declared vocabulary drifted from what
+    # the product implements: a role naming a permission nobody defined, a plan
+    # naming a feature nobody built, a document template naming a section
+    # nobody wrote. Each of those otherwise fails at 08:15 on results day.
     validate_catalogue()
+    validate_entitlement_catalogue()
+    validate_section_catalogue()
 
     app = FastAPI(
         title="EdTechX API",

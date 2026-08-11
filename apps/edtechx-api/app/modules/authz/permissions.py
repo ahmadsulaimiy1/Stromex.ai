@@ -82,8 +82,13 @@ CATALOGUE: Final[frozenset[str]] = frozenset(
     | _perms("assessment", "score", READ, WRITE, EXPORT)
     | _perms("assessment", "result", READ, APPROVE, PUBLISH, EXPORT)
     # reporting
+    # Three document resources rather than one, because a school that lets a
+    # form tutor print report cards has not thereby let them print transcripts,
+    # and `document` has to exist for the certificates and statements neither
+    # word covers. A template declares which of the three governs it.
     | _perms("reporting", "report_card", READ, CREATE, EXPORT)
     | _perms("reporting", "transcript", READ, CREATE, EXPORT)
+    | _perms("reporting", "document", READ, CREATE, EXPORT)
     | _perms("reporting", "template", READ, WRITE, PUBLISH)
     # finance
     | _perms("finance", "fee_structure", READ, WRITE, MANAGE)
