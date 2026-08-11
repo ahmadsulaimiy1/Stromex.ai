@@ -28,7 +28,9 @@ Entitlement is separated from authorization in both directions (ADR-030), and
 the experience layer now resolves each institution's world from its own
 configuration so a nursery never meets the academic engine (ADR-031), and
 Phase 3 has begun with attendance — journey 1, end to end, in three requests
-(ADR-032). 573 tests pass; ruff is clean. Nothing is stubbed or faked.
+(ADR-032), and assessment and results now carry a real academic-record
+lifecycle with snapshot publication (ADR-033). 621 tests pass; ruff is clean.
+Nothing is stubbed or faked.
 
 ---
 
@@ -329,6 +331,32 @@ problem in the right place: the attendance scope plan reached for `people.models
 to build a guardian's clause. The exception list stayed empty and `people.scopes`
 gained a published selectable — the better answer, because a parent's reach over
 attendance must be the same reach they have over the child.
+
+**Assessment and results** (`modules/assessment/`). Journeys 4 and 5. A score is
+what a teacher entered; a result is what the institution has said. The lifecycle
+is draft → submitted → in review → approved → published, and `published` is
+terminal: corrections are amendments, never different values.
+
+Publishing **snapshots** — the mark and the grading it was given, including the
+band, the points, the pass flag and the scale's code. A test moves an A boundary
+from 70 to 90 afterwards and asserts the already-published A stays an A. That
+redundancy is the feature; recomputing from a live scale would silently rewrite
+every award an institution ever made.
+
+Approval workflows are rows: a school's Teacher → Principal and a university's
+Lecturer → Coordinator → Department → Board from one machine, taken in order,
+each step authorised by its own permission. An institution with no workflow
+publishes in one action, which is a configuration rather than an omission.
+
+Readiness *reports* rather than refuses — missing marks, marks outside the
+scale, assessments still open, unmoderated papers — because "not ready" is
+useless at four o'clock on results day. `force` overrides those warnings with a
+stated reason and does **not** override the workflow.
+
+Twenty-eight tests; six sabotages caught, one per attack in the brief. The suite
+found a real defect: readiness took the class list as of *today* rather than as
+of the period the results cover, so publishing an autumn term in January would
+have reported an empty set as ready.
 
 ---
 

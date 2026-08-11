@@ -1,6 +1,6 @@
 # EdirasX Test Strategy and Status
 
-**Version:** 1.8 · **Status as of:** session 5 — **573 passing, 0 failing**
+**Version:** 1.9 · **Status as of:** session 5 — **621 passing, 0 failing**
 
 ---
 
@@ -52,6 +52,7 @@ A release does not go out with any of these red. They are not "known failures".
 | `test_entitlements.py` | What a person may do and what the institution has bought stay separate in both directions |
 | `test_experience.py` | No institution is shown complexity it does not use |
 | `test_attendance.py` | A register is fast enough to be taken, and solid enough to be quoted |
+| `test_assessment.py` | A published result is what the institution said, and stays it |
 | `test_boundaries.py` | Boundaries hold; no route is unguarded |
 | `test_authz.py` | Permissions cannot leak across resources |
 | `test_security.py` | Credentials, tokens, and production configuration |
@@ -431,6 +432,12 @@ driver names; oversized bodies rejected at the edge.
 | Corrections leave a trace | The amendment write skipped | Flagged |
 | An unexplained absence holds the register | The check removed | Flagged |
 | Register membership is derived from the day | Made to list everyone ever in the group | Flagged — a register from before a child joined had her in it |
+| A published result snapshots its grading | Band, points and pass flag left null | Two tests failed, including the one that moves a grade boundary afterwards |
+| An amendment keeps the previous value | Previous score and band discarded | Flagged |
+| An amendment needs a reason | The check removed | Flagged |
+| An amendment needs authority | The permission check removed | Flagged |
+| A correction leaves an audit event | The audit write skipped | Flagged |
+| Publication needs the required approvals | Outstanding steps forced empty | Flagged — and `force` still did not cover it |
 | **Routes cannot query a scoped table directly** | `from sqlalchemy import select as _select` in a handler | **Not caught.** The check listed unsafe call *names*, and a rename walked past it. Now inverted: every call taking a scoped model is suspect unless it is one of the four helpers that carry a predicate by construction. Re-sabotaged; caught |
 
 ---
@@ -442,8 +449,8 @@ driver names; oversized bodies rejected at the edge.
 | 1 | Teacher marks attendance | ✅ **Covered — three requests, end to end** |
 | 2 | Student submits an assignment | Phase 6 |
 | 3 | Teacher grades a submission | Phase 6 |
-| 4 | Admin publishes results | Phase 3 |
-| 5 | Parent views a published result | Phase 3 |
+| 4 | Admin publishes results | ✅ **Covered — with the workflow, the readiness review, and the six attacks** |
+| 5 | Parent views a published result | ✅ **Scope covered — a guardian reaches published results and never a draft score** |
 | 6 | Admin issues a fee; parent sees it | Phase 3 |
 | 7 | Parent records a payment | Phase 3 |
 | 8 | School publishes a theme | Phase 7 |

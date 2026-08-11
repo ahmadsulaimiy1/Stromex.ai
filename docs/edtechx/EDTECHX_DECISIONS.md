@@ -618,3 +618,34 @@ Four sabotages caught: showing every concept the database supports, rendering un
 **Enforcement.** `test_attendance.py` — 22 tests. Four sabotages caught: silently changing a submitted register, corrections leaving no trace, submitting an unexplained absence, and membership taken from everyone-ever rather than from the enrolments covering the day.
 
 **A defect the boundary test caught, in the right place.** The attendance scope plan reached for `people.models` to build a guardian's clause. The exception list stayed empty and `people.scopes` gained a published `student_ids_where`, which is the better answer for a reason beyond tidiness: a parent's reach over attendance must be the *same* reach they have over the child, and two copies of it drift.
+
+---
+
+## ADR-033 — A score is not a result, and a published result is a snapshot
+
+**Status:** Accepted · **Constitutional**
+
+**Context.** In most school systems a teacher types a mark and it is instantly official. That single design choice removes the institution's ability to correct a transcription error before a parent sees it, to moderate two markers of the same paper, to hold results until a board has met — and, most damagingly, to answer *what did we actually publish in July?* once somebody edits a cell in September.
+
+**Decision.** Two tables and an explicit act between them.
+
+    a score  is what a teacher entered — working, revisable, theirs
+    a result is what the institution has said — official, immutable, quoted
+
+The lifecycle is `draft → submitted → in_review → approved → published`, with `published` terminal. There is no transition out of it: a published result is corrected by an **amendment**, which is a new fact about it rather than a different value in it.
+
+**Publishing snapshots.** A `published_result` carries the mark *and the grading it was given* — band label, points, pass flag, and the scale's code — because a school that moves its grade boundaries next summer must not silently change what it awarded last summer. A transcript reprinted in 2031 has to say what the 2026 transcript said. Recomputing from live scores and a live scale would be smaller, tidier, and wrong. A test moves an A boundary from 70 to 90 and asserts that an already-published A stays an A.
+
+**The workflow is the institution's.** `approval_workflows` holds an ordered list of steps, each naming a permission validated against the catalogue when the workflow is saved. A school configures Teacher → Principal; a university Lecturer → Programme Coordinator → Department → Examination Board. Steps are taken **in order** and each is authorised by *its own* permission, so a coordinator cannot take the board's step however senior they are. Returning a set makes its step outstanding again, because sending work back is the point of a review.
+
+An institution with **no** workflow row publishes in one action. That is a legitimate configuration, not a missing one: a small school where the head teacher enters and publishes the marks herself should not have to invent a committee.
+
+**Readiness reports; it does not refuse.** Missing marks, marks outside the scale, assessments still open, unmoderated papers — listed as problems a person can act on, because "not ready" is useless at four o'clock on results day. A school may knowingly publish over them, with `force` and a stated reason. **`force` does not cover the workflow**: an approval nobody gave is not an approval, and the only override is the one that says out loud what is being overridden.
+
+**Moderation keeps both numbers.** A moderated score sits alongside the original rather than over it. Overwriting would destroy the evidence that moderation happened, which is the only reason a department asks for it.
+
+**A draft is a teacher's; a result is a family's.** The scores plan has no `own_children` or `self` clause at all. A parent reading a working score would be reading a mark before the institution had decided it was right.
+
+**Enforcement.** `test_assessment.py` — 28 tests. Six sabotages caught, one per attack named in the brief: publishing without snapshotting the grading, an amendment that discards the previous value, an amendment without a reason, an amendment without authority, a correction with no audit event, and publication without the required approvals. Cross-institution access is refused by row-level security and asserted directly.
+
+**A defect the suite found.** `readiness` took the class list as of *today* rather than as of the period the results cover. Publishing an autumn term in January would have found nobody expected — every child having since moved on — and reported a result set with no marks in it as ready to publish. It now asks who was in the class on the last day of the period, which is what "the autumn term's results" means.

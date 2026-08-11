@@ -82,7 +82,7 @@ Legend: ✅ done · 🔨 in progress · ⬜ not started
 - ✅ Core-layering test
 - ✅ Provider-SDK confinement test
 - ✅ Route coverage test — **proven load-bearing**
-- ✅ 573 tests passing; ruff clean
+- ✅ 621 tests passing; ruff clean
 - ✅ Alembic baseline migration with an RLS gate · ⬜ CI pipeline
 
 ## Phase 2 — Institution 🔨
@@ -119,7 +119,11 @@ registers derived from enrolments, whole-register marking in one write,
 append-only amendments, the absence workflow, scope plans for sessions and
 marks, three endpoints · ✅ **journey 1**
 
-⬜ Assessment and results with an explicit publish step · ⬜ report cards ·
+✅ **Assessment and results** — scores distinct from results, configurable
+approval workflows, readiness review, snapshot publication, append-only
+amendments · ✅ **journeys 4 and 5**
+
+⬜ report cards and transcripts (the academic-document engine) ·
 ⬜ announcements and the notification port · ⬜ fees, invoices, payments,
 receipts, money invariants · ⬜ payment port with sandbox adapter ·
 ⬜ journeys 4, 5, 6, 7.

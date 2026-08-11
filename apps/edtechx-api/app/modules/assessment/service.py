@@ -263,12 +263,10 @@ def _assessments_for(db: Session, result_set: ResultSet) -> list[Assessment]:
 
 def _period_end(db: Session, result_set: ResultSet):
     """The last day of the period these results cover, where there is one."""
-    if result_set.academic_period_id is None:
-        return None
-    from app.modules.academics.models import AcademicPeriod
+    from app.modules.academics import service as academics
 
-    period = db.get(AcademicPeriod, result_set.academic_period_id)
-    return period.ends_on if period else None
+    found = academics.period(db, result_set.academic_period_id)
+    return found.ends_on if found else None
 
 
 def readiness(db: Session, result_set: ResultSet) -> Readiness:
@@ -542,14 +540,10 @@ def publish(
     now = datetime.now(UTC)
     published = Publication(result_set_id=result_set.id)
 
-    from app.modules.academics.models import GradingScale
+    from app.modules.academics import service as academics
 
     for assessment in _assessments_for(db, result_set):
-        scale = (
-            db.get(GradingScale, assessment.grading_scale_id)
-            if assessment.grading_scale_id
-            else None
-        )
+        scale = academics.grading_scale(db, assessment.grading_scale_id)
         rows = db.execute(
             select(AssessmentScore).where(AssessmentScore.assessment_id == assessment.id)
         ).scalars().all()

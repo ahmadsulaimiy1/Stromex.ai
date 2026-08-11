@@ -41,6 +41,8 @@ __all__ = [
     "find_level",
     "find_programme",
     "find_qualification",
+    "grading_scale",
+    "period",
     "populated_layers",
     "programme_ids_under",
     "resolve_placement",
@@ -319,3 +321,20 @@ def populated_layers(db: Session) -> frozenset[str]:
         return frozenset()
     rows = db.execute(union_all(*parts)).scalars().all()
     return frozenset(rows)
+
+
+def period(db: Session, period_id: uuid.UUID | None) -> AcademicPeriod | None:
+    """One academic period by id, for callers that hold one from elsewhere."""
+    return db.get(AcademicPeriod, period_id) if period_id else None
+
+
+def grading_scale(db: Session, scale_id: uuid.UUID | None):
+    """One grading scale, with its bands loaded.
+
+    Returned as the object rather than as a computed band, because the caller
+    asks it `band_for(value)` — the institution's own thresholds applied by the
+    institution's own row, with this module holding no opinion about what passes.
+    """
+    from app.modules.academics.models import GradingScale
+
+    return db.get(GradingScale, scale_id) if scale_id else None
