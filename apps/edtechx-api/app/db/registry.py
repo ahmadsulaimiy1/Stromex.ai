@@ -23,6 +23,15 @@ from app.modules.academics.models import (
     ProgressionRule,
     TeachingAllocation,
 )
+from app.modules.assessment.models import (
+    ApprovalRecord,
+    ApprovalWorkflow,
+    Assessment,
+    AssessmentScore,
+    PublishedResult,
+    ResultAmendment,
+    ResultSet,
+)
 from app.modules.attendance.models import (
     AttendanceAmendment,
     AttendanceCode,
@@ -69,6 +78,10 @@ __all__ = [
     "TENANT_OWNED_MODELS",
     "AcademicStage",
     "AcademicYear",
+    "ApprovalRecord",
+    "ApprovalWorkflow",
+    "Assessment",
+    "AssessmentScore",
     "AttendanceAmendment",
     "AttendanceCode",
     "AttendanceMark",
@@ -93,7 +106,10 @@ __all__ = [
     "PlanFeature",
     "PlanLimit",
     "ProgressionRule",
+    "PublishedResult",
     "QualificationAward",
+    "ResultAmendment",
+    "ResultSet",
     "Role",
     "RolePermission",
     "SecurityEvent",
