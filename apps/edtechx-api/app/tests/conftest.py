@@ -24,6 +24,11 @@ os.environ.setdefault(
     "postgresql+psycopg://edtechx_migrator:edtechx_migrator@localhost:5432/edtechx_test",
 )
 os.environ.setdefault("EDTECHX_SECRET_KEY", "test-secret-key-that-is-long-enough-32")
+# Documents are signed rather than merely digested (ADR-036), so the suite needs
+# a signing key. `issue` refuses outright without one, which is the intended
+# behaviour: a document with a predictable digest looks like a security feature
+# and is none.
+os.environ.setdefault("EDIRASX_DOCUMENT_HASH_SECRET", "test-document-signing-key-32-chars!")
 
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session

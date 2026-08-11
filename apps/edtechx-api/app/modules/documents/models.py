@@ -226,7 +226,16 @@ class Document(UUIDPrimaryKey, Timestamped, TenantOwned, Base):
     sources: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     # SHA-256 of the canonical payload. A holder comparing two copies of a
     # transcript, or a verifier checking one against our record, compares this.
+    # An HMAC over the document's canonical field set, keyed by a secret this
+    # deployment holds. It was a plain SHA-256 until studying a real credential
+    # architecture made the problem obvious: anybody can recompute a plain
+    # digest, so a forger's invented document verifies perfectly. See
+    # `documents/integrity.py`.
     checksum: Mapped[str] = mapped_column(String(64), nullable=False)
+    # Which signing key produced it. Recorded per document because a rotated
+    # secret must not turn every certificate ever issued into a reported
+    # forgery — verification uses the key that *signed* this one.
+    hash_key_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     # Unguessable, and the only thing a third party is given. Verification
     # confirms a document is genuine; it does not disclose the grades.
     verification_code: Mapped[str] = mapped_column(String(32), nullable=False)

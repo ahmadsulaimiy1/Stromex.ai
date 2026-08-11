@@ -739,3 +739,35 @@ EdirasX has to look like something a world-leading royal university, an elite in
 *An institution that issues no admission numbers could register exactly one child.* The uniqueness index treats `""` as a value; blank references are now stored as absent. Found by building a nursery.
 
 *The system's own input borders were at 1.47:1.* A divider and a control's edge shared one token, so making the divider a whisper made the fields nearly invisible. They are now separate tokens, and the guardrail checks the one that carries information. The same pass found that checking *decorative* gold at 3:1 was miscalibrated — it would force a heavier gold and destroy the restraint — and replaced it with the rule that actually matters: gold may never be the only signal of a state, asserted structurally.
+
+---
+
+## ADR-036 — A document's digest must be something a forger cannot compute
+
+**Status:** Accepted · **Constitutional**
+
+**Context.** An issued EdirasX document carried a plain SHA-256 of its own payload, described as the thing "a verifier checks against our record". That description was true and the field was close to useless: anybody can recompute a plain digest, so a forger who invents a transcript computes its checksum in one line and presents a document that verifies perfectly. It looked like a security feature and was an integrity check against ourselves.
+
+The gap became obvious on studying the credential architecture in `ahmadsulaimiy1/Sultan-` — the Sultan Hanafi Royal Schools system, which spans a nursery and primary school, a royal college, a school of Islamic and Arabic studies and a Qur'an college, and is therefore an unusually good stress test for a universal model. Five ideas there are better than what EdirasX had, and four of them are not the obvious one.
+
+**Decision.**
+
+**The digest is an HMAC**, keyed by a secret the deployment holds, over a canonical field set — sorted keys, every value coerced to a string, so a refactor at a call site cannot make a genuine document report as tampered.
+
+**A rotated key must not turn genuine documents into forgeries.** A certificate is permanent. Rotating the signing secret with nothing recorded would make every document ever issued report an integrity failure — the platform publicly accusing real graduates because an operator did the right thing. Each document records the key version that signed it, and verification uses *that* key. Retired keys stay verifiable forever and are supplied from the environment, never from the repository.
+
+**A retired key may never sign again.** Fail-closed, and not arguable at 2am.
+
+**A missing key is a deployment gap, not tampering, and the two are never reported alike.** If this environment holds no key for a document's era, that is an operator's problem; `Verdict.accuses` is false and the document is reported as unverified-here rather than as altered. Saying "this may have been altered" because an environment variable is unset would be a false accusation about somebody's degree.
+
+**The document number checks itself.** Its last segment is derived from the HMAC over the rest of it, including the base number, so a suffix belongs to one number and cannot be lifted onto another. A forger can invent `TR/00042`; they cannot compute `TR/00042-9F3A1`. A verifier refuses it before touching the database — which matters, because an endpoint that queries on every string handed to it is an endpoint somebody enumerates.
+
+**Refuse rather than fake.** With no signing key configured, `issue` raises instead of stamping a document with a predictable digest.
+
+**One place where the reference architecture is followed and one where it is deliberately not.** Followed: a verifier's address is hashed for the institution's own anomaly review and never stored raw, with a plain SHA-256 rather than an HMAC because it is never compared against a secret-keyed input. Not followed: that system's public verification returns the registrar's *revocation note*. On reflection it should not, and EdirasX does not — a note may read "withdrawn following an academic misconduct finding", and anybody holding a verification code would then learn something about a person the institution never decided to publish. The status alone answers the question a verifier actually has.
+
+**An honest boundary, stated once.** None of this makes a rendered page unforgeable; anybody can draw a picture that looks like a transcript. What it guarantees is that a document presented as ours either matches a record we issued or is detectably not one. Watermarks and lattices are deterrents against casual reproduction and are never claimed as more.
+
+**Enforcement.** Seven tests in `test_documents.py`: the signature is not derivable without the key; editing the stored record is detected and is *not* reported as a deployment gap; a rotated key keeps an earlier era verifying and a missing one accuses nothing; a retired key refuses to sign; issuing without a key is refused; a number checks itself and its suffix cannot be transplanted; a verifier's address is hashed. The pinned disclosure-surface test caught the three new fields and forced the decision about the revocation note.
+
+**What was studied and is not yet built**, named rather than quietly dropped: never-fabricate signatory and seal registries with a vacancy as a first-class state; a verification log table; guilloché generated from a closed formula at render time; microprint on a real path; and the template-family taxonomy that would let a design library scale. Each is a real idea from that architecture and each is its own increment.

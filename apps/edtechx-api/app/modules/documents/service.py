@@ -39,6 +39,7 @@ from sqlalchemy.orm import Session
 
 from app.modules.audit.service import AuditAction, record
 from app.modules.customization import branding as branding_module
+from app.modules.documents import integrity
 from app.modules.documents import sections as catalogue
 from app.modules.documents.compose import ComposeError, Composition, compose
 from app.modules.documents.models import (
@@ -357,15 +358,26 @@ def _verification_code() -> str:
     return "".join(secrets.choice(_ALPHABET) for _ in range(16))
 
 
-def _checksum(payload: dict) -> str:
-    """A stable digest of what the document says.
+def _signed_fields(document_number: str, code: str, payload: dict) -> dict:
+    """The canonical field set a document is signed over.
 
-    Sorted keys and no whitespace, so the same content produces the same digest
-    on any machine and in any Python version — a checksum that depends on dict
-    ordering is a checksum that fails verification for no reason.
+    Deliberately the *identifying* facts plus a digest of the content, rather
+    than the whole payload: a signature has to be recomputable years later from
+    a database row, and a field set that includes every nested section is one
+    refactor away from reporting every genuine document as tampered.
     """
-    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
-    return hashlib.sha256(canonical.encode()).hexdigest()
+    subject = payload.get("subject") or {}
+    return {
+        "number": document_number,
+        "code": code,
+        "title": payload.get("title"),
+        "subject": subject.get("student_relationship_id"),
+        "name": subject.get("full_name"),
+        "content": hashlib.sha256(
+            json.dumps(payload, sort_keys=True, separators=(",", ":"),
+                       default=str).encode()
+        ).hexdigest(),
+    }
 
 
 # --- composing without issuing ---------------------------------------------
@@ -436,6 +448,7 @@ def issue(
         _refuse_unpublished(composition)
 
     payload = composition.as_payload()
+    signature = integrity.compute(_signed_fields(number, code, payload))
     now = datetime.now(UTC)
     periods = composition.context.get("periods") or []
     year_id = composition.context.get("academic_year_id")
@@ -462,7 +475,8 @@ def issue(
         issued_by_membership_id=membership_id,
         payload=payload,
         sources=composition.sources,
-        checksum=_checksum(payload),
+        checksum=signature.digest,
+        hash_key_version=signature.key_version,
         verification_code=code,
     )
     db.add(document)
@@ -684,6 +698,18 @@ class Verification:
     status: str
     checksum: str
     superseded_by: str | None = None
+    #: Whether the record still matches the signature it was issued with.
+    content_verified: bool = True
+    #: Set when this environment holds no key for the document's era. A
+    #: deployment gap is not tampering, and reporting them alike would publicly
+    #: accuse a genuine document over an unset environment variable.
+    integrity_unknown: bool = False
+    # A revocation *note* is deliberately absent. The reference architecture
+    # this was modelled on returns one, and on reflection it should not: the
+    # note is written by a registrar and may say "withdrawn following an
+    # academic misconduct finding". Anybody holding a verification code would
+    # then learn something about a person that the institution never decided to
+    # publish. The status alone answers the question a verifier actually has.
 
     @property
     def is_current(self) -> bool:
@@ -709,6 +735,15 @@ def verify(db: Session, code: str) -> Verification | None:
         select(Document.number).where(Document.supersedes_id == document.id)
     ).scalars().first()
 
+    # Recomputed under the key that *signed* this document rather than the
+    # current one. A secret rotation must not report every certificate ever
+    # issued as tampered.
+    check = integrity.verify(
+        _signed_fields(document.number, document.verification_code, document.payload or {}),
+        document.checksum,
+        key_version=document.hash_key_version or 1,
+    )
+
     return Verification(
         number=document.number,
         title=document.title,
@@ -717,6 +752,10 @@ def verify(db: Session, code: str) -> Verification | None:
         status=document.status.value,
         checksum=document.checksum,
         superseded_by=replacement,
+        # `key_unavailable` is deliberately *not* a failure here. The document
+        # is reported as unverified-in-this-environment rather than as altered.
+        content_verified=check.ok or check.is_deployment_gap,
+        integrity_unknown=check.is_deployment_gap,
     )
 
 

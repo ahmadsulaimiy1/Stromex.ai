@@ -36,7 +36,7 @@ from one machine while guaranteeing that a document says what it said (ADR-034).
 institution rendered by a precision instrument, with the Arabic geometric seal
 whose central void is the X, tokens an institution can retheme, guardrails that
 refuse to let it ruin its own readability, and a configuration-aware shell
-rendered from four real institutions (ADR-035). 751 tests pass; ruff is clean.
+rendered from four real institutions (ADR-035). 760 tests pass; ruff is clean.
 Nothing is stubbed or faked.
 
 ---

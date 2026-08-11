@@ -1138,8 +1138,12 @@ def test_verification_confirms_a_document_without_disclosing_its_contents(
         # a new field added to `Verification` in six months would slip past it.
         assert set(documents.Verification.__dataclass_fields__) == {
             "number", "title", "subject_name", "issued_on", "status",
-            "checksum", "superseded_by",
+            "checksum", "superseded_by", "content_verified", "integrity_unknown",
         }
+        # Deliberately absent: the registrar's reason for withdrawing a
+        # document. A verification code must not disclose why somebody's
+        # certificate was revoked.
+        assert not hasattr(checked, "revocation_note")
         disclosed = " ".join(
             str(getattr(checked, name))
             for name in documents.Verification.__dataclass_fields__
@@ -1825,3 +1829,147 @@ def test_a_credit_unit_is_printed_as_the_institution_writes_it(
     finally:
         session.rollback()
         session.close()
+
+
+# --- tamper-evidence, learned from a real credential architecture -----------
+
+
+def test_an_issued_document_is_signed_not_merely_digested(school: World) -> None:
+    """A plain digest is an integrity check against ourselves, not against a
+    forger — anybody can recompute one. The signature is keyed (ADR-036)."""
+    from app.modules.documents import integrity
+
+    session = school.session()
+    try:
+        template = _report_card_template(session, code=f"sg-{_uuid.uuid4().hex[:6]}")
+        issued = documents.issue(
+            session, template=template,
+            student=people.student(session, school.students["Ada Nwosu"]),
+            permissions=REGISTRAR, period_ids=[school.autumn_id],
+        )
+        session.flush()
+        assert issued.hash_key_version >= 1
+        assert documents.verify(session, issued.verification_code).content_verified
+
+        # The digest is not derivable without the key.
+        plain = _uuid.uuid5(_uuid.NAMESPACE_OID, str(issued.payload)).hex
+        assert issued.checksum != plain
+        wrong = integrity.verify(
+            {"number": issued.number}, issued.checksum,
+            key_version=issued.hash_key_version,
+        )
+        assert wrong.reason == "mismatch"
+    finally:
+        session.rollback()
+        session.close()
+
+
+def test_editing_the_stored_record_is_detected(school: World) -> None:
+    """The check the whole mechanism exists for."""
+    session = school.session()
+    try:
+        template = _report_card_template(session, code=f"tm-{_uuid.uuid4().hex[:6]}")
+        issued = documents.issue(
+            session, template=template,
+            student=people.student(session, school.students["Ada Nwosu"]),
+            permissions=REGISTRAR, period_ids=[school.autumn_id],
+        )
+        session.flush()
+        assert documents.verify(session, issued.verification_code).content_verified
+
+        payload = dict(issued.payload)
+        payload["subject"] = {**payload["subject"], "full_name": "Someone Else"}
+        issued.payload = payload
+        session.flush()
+
+        checked = documents.verify(session, issued.verification_code)
+        assert not checked.content_verified
+        assert not checked.integrity_unknown, (
+            "a real mismatch must not be reported as a deployment gap"
+        )
+    finally:
+        session.rollback()
+        session.close()
+
+
+def test_a_missing_key_is_a_deployment_gap_and_never_an_accusation(
+    school: World,
+) -> None:
+    """Rotating a secret must not make the platform publicly call genuine
+    graduates forgers. A key this environment lacks says nothing about the
+    document, and the two outcomes are reported differently."""
+    from app.modules.documents import integrity
+
+    fields = {"number": "TR/00001", "name": "Nadia Rahman"}
+    signed = integrity.compute(
+        fields,
+        env={"EDIRASX_DOCUMENT_HASH_SECRET": "era-one",
+             "EDIRASX_DOCUMENT_HASH_KEY_VERSION": "1"},
+    )
+    rotated = {"EDIRASX_DOCUMENT_HASH_SECRET": "era-two",
+               "EDIRASX_DOCUMENT_HASH_KEY_VERSION": "2"}
+
+    lost = integrity.verify(fields, signed.digest, key_version=1, env=rotated)
+    assert lost.reason == "key_unavailable"
+    assert lost.is_deployment_gap
+    assert not lost.accuses
+
+    kept = integrity.verify(
+        fields, signed.digest, key_version=1,
+        env={**rotated, "EDIRASX_DOCUMENT_HASH_SECRET_V1": "era-one"},
+    )
+    assert kept.ok, "a document signed in an earlier era must keep verifying"
+
+
+def test_a_retired_key_may_never_sign_again() -> None:
+    from app.modules.documents import integrity
+
+    original = dict(integrity.RETIRED_KEY_VERSIONS)
+    integrity.RETIRED_KEY_VERSIONS[7] = "Leaked in the 2027 incident."
+    try:
+        with pytest.raises(integrity.IntegrityError, match="retired"):
+            integrity.compute(
+                {"a": 1},
+                env={"EDIRASX_DOCUMENT_HASH_SECRET": "x",
+                     "EDIRASX_DOCUMENT_HASH_KEY_VERSION": "7"},
+            )
+    finally:
+        integrity.RETIRED_KEY_VERSIONS.clear()
+        integrity.RETIRED_KEY_VERSIONS.update(original)
+
+
+def test_issuing_without_a_signing_key_is_refused_rather_than_faked() -> None:
+    """Better to refuse than to stamp a document with a predictable digest that
+    looks like tamper-evidence and is none."""
+    from app.modules.documents import integrity
+
+    with pytest.raises(integrity.IntegrityError, match="tamper-evidence"):
+        integrity.compute({"a": 1}, env={"EDIRASX_DOCUMENT_HASH_KEY_VERSION": "1"})
+
+
+def test_a_document_number_checks_itself_before_any_lookup() -> None:
+    """A forger can invent TR/00042. They cannot compute its suffix — and a
+    verifier can refuse it without touching the database, which matters because
+    an endpoint that queries on every string handed to it gets enumerated."""
+    from app.modules.documents import integrity
+
+    env = {"EDIRASX_DOCUMENT_HASH_SECRET": "series-key",
+           "EDIRASX_DOCUMENT_HASH_KEY_VERSION": "1"}
+    fields = {"name": "Nadia Rahman", "issued_on": "2027-07-14"}
+    suffix = integrity.serial_suffix("TR/00001", fields, env=env)
+
+    assert integrity.verify_serial(f"TR/00001-{suffix}", fields, env=env).ok
+    # The suffix belongs to that one number and cannot be lifted onto another.
+    assert integrity.verify_serial(f"TR/00042-{suffix}", fields, env=env).reason == "mismatch"
+    assert integrity.verify_serial("TR/00042-9F3A1", fields, env=env).reason == "mismatch"
+    assert integrity.verify_serial("TR/00001", fields, env=env).reason == "unsigned"
+
+
+def test_a_verifiers_address_is_hashed_never_stored(school: World) -> None:
+    from app.modules.documents import integrity
+
+    assert integrity.hash_ip(None) is None
+    digest = integrity.hash_ip("203.0.113.7")
+    assert digest is not None
+    assert "203.0.113" not in digest
+    assert len(digest) == 64
