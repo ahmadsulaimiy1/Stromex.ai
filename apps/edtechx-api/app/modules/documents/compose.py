@@ -120,12 +120,30 @@ class _Gathered:
 # --- gathering --------------------------------------------------------------
 
 
+# Sections that report on a span of academic time. A document containing none of
+# them covers no period, and must not claim one: a certificate of enrolment
+# issued in March is not "the autumn term", and subtitling it that way would be
+# the document asserting something nobody asked it to.
+PERIOD_BEARING = frozenset(
+    {
+        "course_results",
+        "period_results",
+        "attainment_summary",
+        "credit_summary",
+        "grade_points",
+        "attendance",
+        "progression",
+    }
+)
+
+
 def _select_periods(
     db: Session,
     *,
     period_ids: Sequence[uuid.UUID] | None,
     academic_year_id: uuid.UUID | None,
     pairs,
+    reports_on_periods: bool = True,
 ) -> list:
     """Which periods this document covers, in the institution's own order.
 
@@ -141,6 +159,8 @@ def _select_periods(
         return [p for p in found if p is not None]
     if academic_year_id is not None:
         return academics.periods_in(db, academic_year_id)
+    if not reports_on_periods:
+        return []
 
     seen: dict[uuid.UUID, object] = {}
     for _result, pid in pairs:
@@ -190,6 +210,7 @@ def _gather(
     student,
     period_ids: Sequence[uuid.UUID] | None,
     academic_year_id: uuid.UUID | None,
+    reports_on_periods: bool = True,
 ) -> _Gathered:
     person = people.person(db, student.person_id)
     if person is None:
@@ -204,6 +225,7 @@ def _gather(
         period_ids=period_ids,
         academic_year_id=academic_year_id,
         pairs=everything,
+        reports_on_periods=reports_on_periods,
     )
     wanted = {p.id for p in periods}
 
@@ -676,7 +698,7 @@ def _section_signatures(db, data, options, ctx) -> dict:
                 "image_url": signatory.get("image_url") or "",
             }
         )
-    return {"signatories": rows, "columns": int(options.get("columns") or 2)}
+    return {"signatories": rows, "per_row": int(options.get("per_row") or 2)}
 
 
 def _section_verification(db, data, options, ctx) -> dict:
@@ -768,12 +790,15 @@ def compose(
     is why the totals, the averages and the grade-point average are calculated
     in this module rather than in the renderer.
     """
-    layers = academics.populated_layers(db)
     data = _gather(
         db,
         student=student,
         period_ids=period_ids,
         academic_year_id=academic_year_id,
+        reports_on_periods=any(
+            entry["key"] in PERIOD_BEARING and entry.get("visible", True)
+            for entry in template.sections
+        ),
     )
     words = terminology.resolve(db)
     identity = branding_module.resolve(db)
@@ -799,14 +824,24 @@ def compose(
         if not entry.get("visible", True):
             continue
         section = catalogue.get(entry["key"])
-        if section.requires_layers and not any(
-            layer in layers for layer in section.requires_layers
-        ):
-            # The institution's world does not contain this concept. Not shown
-            # empty, not shown greyed out — absent (ADR-032).
-            continue
         content = BUILDERS[section.key](db, data, entry["options"], ctx)
         if not content and entry.get("omit_when_empty", section.omit_when_empty):
+            # A section that composed to nothing is dropped. This is the *only*
+            # rule that removes a section here, and it is deliberately about the
+            # data rather than about the institution's configuration.
+            #
+            # An earlier version also suppressed any section whose academic layer
+            # this institution had no rows in — and a sabotage found it did
+            # nothing that this line does not already do, because a section
+            # requiring credits can only have content where credits exist. Worse,
+            # it could suppress a section that genuinely held historical data: a
+            # university that deleted its credit systems would start printing
+            # transcripts without the credits its graduates actually earned.
+            #
+            # "Complexity must be capability, never burden" (ADR-032) belongs at
+            # the point where a template is *designed* — `sections.available_to`,
+            # which never offers a nursery a grade-point average — not at the
+            # point where an issued document is composed from history.
             continue
         blocks.append(
             {

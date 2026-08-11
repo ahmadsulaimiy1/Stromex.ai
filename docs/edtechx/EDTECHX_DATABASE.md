@@ -175,8 +175,10 @@ School-defined codes; the `category` gives the platform something stable to comp
 
 **assessments** — `id, tenant_id, term_id, class_subject_id, name, kind, max_score, weight, due_on, grading_scale_id, status(draft|open|closed|published)`
 **assessment_scores** — `id, tenant_id, assessment_id, student_id, score NUMERIC, band_id, comment, entered_by, entered_at, moderated_by, moderated_at, override_reason` · `uq(assessment_id, student_id)`
-**result_publications** — `id, tenant_id, term_id, scope jsonb, published_by, published_at, unpublished_at, audience jsonb`
-Publishing is an explicit, audited event; parents never see a mark that has not been through it.
+**published_results** — `id, tenant_id, result_set_id, student_relationship_id, assessment_id?, course_id?, score, max_score, band_label, points, is_pass, is_absent, grading_scale_code, credits, credit_unit_label, weight, comment, published_at, amended_at?`
+The snapshot (ADR-033). The last three of the numeric columns were added by the document engine: a university that revalues a module from 15 credits to 20 must not retroactively change what a graduate earned, and a department that moves coursework from 30% to 40% has not changed last year's report card. `credit_unit_label` travels with the number because "12" means nothing without it — a credit, a credit hour and an ECTS credit are not the same quantity. Undeletable by the application role.
+
+**result_sets / approval_workflows / approval_records / result_amendments** — the publication lifecycle. Publishing is an explicit, audited institutional act; parents never see a mark that has not been through it.
 
 **timetable_periods / rooms / timetable_slots** — the timetable grid, with a clash constraint enforced by a unique index on `(tenant_id, teacher_membership_id, day, period_id, effective_range)` and equivalents for room and class.
 
@@ -192,6 +194,21 @@ file's own, so an error report matches what the person sees in their
 spreadsheet. `content_hash` recognises the same file being uploaded twice, which
 is the most common way a school ends up with every student recorded twice.
 Applying is a single transaction; see ADR-028.
+
+### 6.2 Academic documents
+
+One engine, not one table per document kind (ADR-034).
+
+**document_templates** — `id, tenant_id, code, name, purpose_label, purpose(report_card|transcript|document), status(draft|published|archived), version, parent_version_id, sections jsonb, numbering jsonb, page jsonb, freeze_branding, published_results_only, is_default, custom jsonb, published_at, published_by_membership_id` · `uq(tenant_id, code, version)`
+
+`sections` is the ordered list of `{key, title, visible, omit_when_empty, options}`, validated against the platform's section catalogue when the template is saved — so a template that saves is a template that prints. `purpose` names the permission resource governing it, and there are three rather than one because a school that lets a form tutor print report cards has not thereby let them print transcripts. `purpose_label` is the institution's own word and is never read to make a decision.
+
+**document_sequences** — `id, tenant_id, scope_key, next_value` · `uq(tenant_id, scope_key)`
+The counter behind a document number, incremented under `SELECT … FOR UPDATE`. Keyed on the number's **prefix**, not on the template: two templates numbering `RC/…` are sharing a series and must share a counter. `max(number) + 1` would be smaller and would hand two registrars pressing Issue at the same moment the same transcript number.
+
+**documents** — `id, tenant_id, template_id, template_code, template_version, purpose, purpose_label, title, student_relationship_id, academic_year_id?, academic_period_id?, number, sequence, version, supersedes_id?, status(issued|superseded|void), void_reason?, issued_on, issued_at, issued_by_membership_id, payload jsonb, sources jsonb, checksum, verification_code` · `uq(tenant_id, number)` · `uq(tenant_id, verification_code)`
+
+`payload` is what the document said — every grade, total, comment and the terminology in force — frozen at issue. Reprinting reads it; nothing recomposes it. `sources` records which published results were quoted and how many times each had been amended at that moment, so the engine can report that a document has been overtaken without keeping a second copy of the results. `template_code` and `template_version` are denormalised so a document can name its own design after the template row is archived. **Undeletable** by the application role (§2.2): withdrawn is `void` with a reason, replaced is `superseded` with a link, and both survive.
 
 ---
 
@@ -238,7 +255,10 @@ Applying is a single transaction; see ADR-028.
 **terminology_sets** — `id, tenant_id, locale, status, version, terms jsonb`
 **navigation_configs** — `id, tenant_id, persona, status, version, tree jsonb`
 **dashboard_configs** — `id, tenant_id, persona, status, version, widgets jsonb`
-**document_templates** — `id, tenant_id, kind(report_card|transcript|certificate|invoice|receipt|letter), name, status, version, template jsonb, page jsonb`
+**branding_profiles** — `id, tenant_id, status, version, parent_version_id, display_name, legal_name, motto, address, contact_email, contact_phone, website, logo_url, crest_url, signature_image_url, watermark_url, primary_colour, accent_colour, ink_colour, heading_font, body_font, letterhead_note, footer_note, verification_url_template, custom jsonb, published_at, published_by_membership_id`
+How an institution presents itself. Deliberately **current presentation metadata**: a document resolves it at render rather than freezing it, so a school that moves reprints an old transcript on today's letterhead (ADR-034). Images are URLs; a crest belongs in object storage.
+
+*(Document templates were planned here with a `kind` enum. They were built in §6.2 without one — a fixed list of document kinds is ADR-024's forbidden enum in another costume, and the institution's word for the document is `purpose_label`.)*
 **custom_fields** — `id, tenant_id, entity, key, label, data_type, options jsonb, required, sequence, visibility jsonb`
 Values land in the owning table's `custom jsonb`, validated against the definitions on write.
 **form_definitions / form_submissions** — the generic form engine used by admissions and by school-defined workflows.

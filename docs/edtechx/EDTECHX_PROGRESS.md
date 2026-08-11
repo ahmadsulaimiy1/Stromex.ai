@@ -5,7 +5,7 @@ continue without re-deriving anything. Consolidated from the nine state files
 the brief specified — see `EDTECHX_DECISIONS.md` ADR-015 for why three files
 beat nine.
 
-**Last updated:** session 5
+**Last updated:** session 6
 **Current phase:** Phase 1 complete · Phase 2 in progress
 
 ---
@@ -28,9 +28,11 @@ Entitlement is separated from authorization in both directions (ADR-030), and
 the experience layer now resolves each institution's world from its own
 configuration so a nursery never meets the academic engine (ADR-031), and
 Phase 3 has begun with attendance — journey 1, end to end, in three requests
-(ADR-032), and assessment and results now carry a real academic-record
-lifecycle with snapshot publication (ADR-033). 621 tests pass; ruff is clean.
-Nothing is stubbed or faked.
+(ADR-032), assessment and results now carry a real academic-record
+lifecycle with snapshot publication (ADR-033), and the configurable academic
+document engine issues report cards, transcripts, certificates and statements
+from one machine while guaranteeing that a document says what it said (ADR-034).
+697 tests pass; ruff is clean. Nothing is stubbed or faked.
 
 ---
 
@@ -358,6 +360,46 @@ found a real defect: readiness took the class list as of *today* rather than as
 of the period the results cover, so publishing an autumn term in January would
 have reported an empty set as ready.
 
+**Academic documents** (`modules/documents/`, `modules/customization/branding.py`).
+Journey 5's other half, and the point at which every earlier decision is either
+vindicated or found out.
+
+A report card, a transcript, a progress report, a certificate and a completion
+statement are one engine. `documents.sections` is a platform-fixed catalogue of
+sixteen section kinds validated at boot; a template is an ordered list of keys
+from it with the institution's own titles and options. Adding "certificate of
+enrolment" is a row, not a release. The suite proves it by building a school
+report card, a university transcript with ECTS credits and a credit-weighted
+GPA, and a certificate — from the same `issue` call.
+
+**The line between historical fact and current presentation is the whole
+design**, and it is drawn explicitly (ADR-034). Frozen at issue: results and
+their grading, credits and what they were called, the placement the student
+actually held during the period covered, course names, attendance, comments,
+progression, awards, the grading key, and every computed total. Resolved fresh
+at render: the crest, the colours, the address, the letterhead — because a
+school that has moved reprints an old transcript on the letterhead that reaches
+it today. Terminology sits on the historical side: a report card that said
+"Form" keeps saying "Form".
+
+**Reprinting is not regenerating.** There is no path that recomposes an issued
+document, and a structural test refuses to let the renderer import anything that
+could reach a database. Corrections supersede rather than rewrite; `outdated()`
+reports that a document predates an amendment without altering it; a voided
+document still prints, with VOID across it, and cannot be deleted at all.
+
+Fifty-two tests, fifteen sabotages, all caught. Two of the fifteen initially passed,
+which was the more useful result: both named tests that were asserting against a
+payload frozen *before* the change they were meant to detect. A third found
+machinery rather than a weak test and led to a rule being deleted.
+
+Two real defects surfaced. Publication republished assessments that a second
+result set swept up — a January resit would have republished the whole autumn
+term and every mark would have appeared twice on a transcript. And two templates
+sharing a number prefix each kept their own counter, so both issued
+`RC/2026/0001`; the counter now belongs to the series rather than to the
+template.
+
 ---
 
 ## Next — Phase 2 remainder
@@ -397,7 +439,8 @@ Nothing is blocked. Items awaiting external input, none of which stop Phase 2:
 | 3 | ~~Scopes are parsed and unioned but not compiled~~ | — | **Resolved** — ADR-029. The union was itself a widening defect and is gone |
 | 4 | `starlette.testclient` deprecation warning from FastAPI 0.141 | Trivial | Upstream; revisit on the next FastAPI bump |
 | 5 | `_IncludedRouter` traversal in `test_boundaries.py` reaches into a FastAPI internal | Low | Written to accept both routing shapes so it degrades to the public shape rather than silently checking nothing |
-| 6 | No frontend yet | Expected | Phase 4 |
+| 6 | No frontend yet | Expected | Phase 4 — next |
+| 7 | Assessment and documents ship service-first, with no HTTP endpoints | Expected | Deliberate: routes are written alongside the screens that call them, in Phase 4, so the API shape is decided by a real caller rather than guessed |
 
 ---
 

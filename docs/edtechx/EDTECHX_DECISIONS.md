@@ -649,3 +649,49 @@ An institution with **no** workflow row publishes in one action. That is a legit
 **Enforcement.** `test_assessment.py` — 28 tests. Six sabotages caught, one per attack named in the brief: publishing without snapshotting the grading, an amendment that discards the previous value, an amendment without a reason, an amendment without authority, a correction with no audit event, and publication without the required approvals. Cross-institution access is refused by row-level security and asserted directly.
 
 **A defect the suite found.** `readiness` took the class list as of *today* rather than as of the period the results cover. Publishing an autumn term in January would have found nobody expected — every child having since moved on — and reported a result set with no marks in it as ready to publish. It now asks who was in the class on the last day of the period, which is what "the autumn term's results" means.
+
+---
+
+## ADR-034 — A document says what it said, and prints on today's letterhead
+
+**Status:** Accepted · **Constitutional**
+
+**Context.** A report card, a transcript, a progress report, a certificate, an academic statement and a completion letter look like six features. Built as six, they drift: six layouts, six numbering schemes, six ideas of what a grade is, and six places to fix a bug. Built as one, the temptation is the opposite mistake — a single hard-coded report card that every institution is asked to live inside.
+
+The harder question sits underneath both. An academic document is a *statement an institution made on a date*. Somebody will ask for another copy in five years, by which time the grading scale has moved, a module has been revalued, the school has renamed its forms to classes, a mark has been corrected, and the institution has rebranded. Which of those changes should appear on the reprint?
+
+**Decision.** One engine, a catalogue of sections, and an explicit line between what is frozen and what is resolved fresh.
+
+**One engine.** `documents.sections` is a platform-fixed catalogue of sixteen section kinds — identity, placement, enrolment history, course results, period results, attainment summary, credit summary, grade points, attendance, comments, progression, qualifications, grading key, narrative, signatures, verification — validated at boot on the same principle as the permission and feature catalogues. A `document_template` is an ordered list of keys from it, each with a title the institution chose, a visibility flag, and options. A school report card and a doctoral completion statement are two rows. Adding "certificate of enrolment" to the product is a row, not a release.
+
+**The line, stated precisely.**
+
+*Historical — composed once at issue and frozen into `documents.payload`:* every published result and the grading it was given; the credits it carried and what the institution called them; the programme, level, class and cohort the student was in **during the period covered**, resolved from the enrolment that was open then; the period's name and dates; course names as they stood; attendance for that span; the comments staff wrote; the progression the institution recorded; qualifications awarded; the grading key needed to read the grades; and every total, average and grade-point average.
+
+*Current presentation — resolved fresh at render:* the institution's crest, colours, address, contact details and letterhead. A school that has moved reprints an old transcript with the address that reaches it today, because an address is a way of contacting an institution and not a claim about where it stood in 2019.
+
+*Terminology sits on the historical side*, which is the choice most likely to surprise. A report card that said "Form" keeps saying "Form" after the school renames forms to classes. The document is a record of what the institution said, and it said "Form".
+
+An institution that wants its identity frozen too — a certificate under the body that awarded it — sets `freeze_branding` on the template. Both answers are defensible and institutions want different ones, so it is a setting rather than a judgement made for all of them.
+
+**Reprinting is not regenerating.** `issue` composes; every later reading of that document reads the stored payload. There is no code path that recomposes an issued document. A test moves a grade boundary, renames a course, renames the school's vocabulary and rebrands the institution, then asserts the reprint is byte-identical apart from the letterhead.
+
+**Corrections supersede; they do not rewrite.** `sources` records which published results the document quoted and how many times each had been amended at that moment, so `outdated()` can report "this transcript predates two corrections" without keeping a second copy of the results. The remedy is a `reissue` that supersedes the original and requires a reason. Both survive, linked. A document issued in error is `void` with a reason, and still prints — with VOID across it — because refusing would leave whoever holds a copy unable to learn that it was withdrawn. `documents` joins `enrolments` and `published_results` as undeletable by the application role.
+
+**Approval lives on the record, not on the paper.** The engine introduces no second approval machine. A template declares `published_results_only`, and the engine will not quote a mark the institution has not published. What is on the paper was already approved through the workflow that made it official (ADR-033); signatories are frozen at issue and are a statement of who stood behind it.
+
+**Numbering is a series, not a template.** A document number is unique across the institution, and the counter is keyed on the number's *prefix* — because two templates numbering `RC/…` are deliberately sharing a series and must share a counter. `publish_template` refuses to let two templates draw on one series with different formats or reset points.
+
+**Verification discloses that a document is genuine, not what it says.** A code handed to an employer answers *did you issue this, to this person, on this date, and is it still your current word* — and nothing else. The disclosed surface is pinned by a test; a verification endpoint returning the grades would be a public results database with an unguessable-ish URL.
+
+**Enforcement.** `test_documents.py` — 52 tests across a school, a university and a certificate, plus additions to `test_assessment.py`. Fifteen sabotages, all caught.
+
+**Three defects the work found.**
+
+*Publication republished what was already official.* A result set covers a period and a class rather than a list of assessments — correct, because a results day is a decision about a cohort. It also meant a second set over the same period and class swept up whatever the first had published, so a January resit republished the whole autumn term and every mark would have appeared twice on a transcript. `publish` now skips `(assessment, student)` pairs that already have an official result, and refuses a set with nothing new in it. Found by the document engine, which is the first thing in the product to read a student's results as a list rather than one set at a time.
+
+*Two templates sharing a number prefix each kept their own counter*, and both issued `RC/2026/0001`. Caught by the institution-wide uniqueness constraint, and fixed by making the counter belong to the series rather than to the template.
+
+*Two presentation defects, found by looking at the rendered page rather than at the payload.* A certificate of enrolment issued in March carried a subtitle naming the autumn term, because the periods covered were derived from whatever the student had results for; they now follow what the document actually reports on, and a document containing no results section covers no period. And a university counting in ECTS credits was shown "Ects Credits Attempted", because a label was being title-cased — the unit is now named once, exactly as the institution writes it.
+
+*A redundant rule, removed.* Composition also suppressed any section whose academic layer the institution had no rows in. A sabotage showed it did nothing that `omit_when_empty` did not already do — a credit section can only have content where credits exist — and that it could actively harm: a university that deleted its credit systems would have started printing transcripts without the credits its graduates earned. "Complexity must be capability, never burden" (ADR-031) belongs where a template is *designed*, in `sections.available_to`, which never offers a nursery a grade-point average. It does not belong where an issued document is composed from history.

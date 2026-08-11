@@ -59,11 +59,48 @@ def normalise(text: str) -> str:
     return text.strip().lower()
 
 
+RUNNING_TITLE = "EdirasX Editorial Bible"
+
+
+def strip_page_furniture(page_text: str) -> str:
+    """Remove the running head and folio from one page's extracted text.
+
+    Not cosmetic. A paragraph that spans a page break extracts as
+    `…the comments, the totals, and the` **FLEXIBILITY CONSTITUTION / EdirasX
+    Editorial Bible / 27** `words the institution used…`, and any presence check
+    over a sentence that straddles that boundary reports a miss on text that is
+    plainly on the page. Removing the furniture is what makes the coverage check
+    measure the document rather than its own page layout.
+
+    Deliberately conservative: only trailing lines, only up to the three the
+    layout actually emits, and only ones that are a folio, the book's own title,
+    or a line set entirely in the running-head's capitals. Body text is never
+    all-capitals for a whole line, so nothing real is at risk — and if the
+    layout changes, this stops removing anything rather than starting to remove
+    something it should not.
+    """
+    lines = page_text.splitlines()
+    for _ in range(3):
+        if not lines:
+            break
+        candidate = lines[-1].strip()
+        is_folio = candidate.isdigit()
+        is_title = candidate == RUNNING_TITLE
+        is_running_head = bool(candidate) and candidate == candidate.upper() and any(
+            c.isalpha() for c in candidate
+        )
+        if is_folio or is_title or is_running_head:
+            lines.pop()
+        else:
+            break
+    return "\n".join(lines)
+
+
 def pdf_text(path: pathlib.Path) -> tuple[str, int, dict]:
     import pymupdf
 
     document = pymupdf.open(path)
-    pages = [page.get_text() for page in document]
+    pages = [strip_page_furniture(page.get_text()) for page in document]
     fonts: set[str] = set()
     blank: list[int] = []
     for index, page in enumerate(document):

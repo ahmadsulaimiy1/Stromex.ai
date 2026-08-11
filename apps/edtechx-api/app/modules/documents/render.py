@@ -306,15 +306,16 @@ def _render_section(block: dict, terms: dict, branding: Branding) -> str:
             ]
         )
     elif key == "credit_summary":
-        unit = content.get("unit_label_plural") or "credits"
+        # The unit is named once, in its own row, and never title-cased: an
+        # institution counting in ECTS credits should not be shown "Ects
+        # Credits Attempted" because a formatter thought it knew better.
+        unit = content.get("unit_label_plural") or ""
         inner = _fields(
             [
-                (f"{unit.title()} attempted", _number(content.get("attempted"))),
-                (f"{unit.title()} earned", _number(content.get("earned"))),
-                (
-                    f"Cumulative {unit}",
-                    _number(content.get("cumulative_earned")),
-                ),
+                ("Measured in", unit),
+                ("Attempted", _number(content.get("attempted"))),
+                ("Earned", _number(content.get("earned"))),
+                ("Cumulative", _number(content.get("cumulative_earned"))),
             ]
         )
     elif key == "grade_points":

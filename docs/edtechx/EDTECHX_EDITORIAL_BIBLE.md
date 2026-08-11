@@ -438,7 +438,39 @@ rewriting it rather than merely disinclined.
 group and no programme, a programme and no class group, or neither. §8.3 applies
 unchanged to people: nothing about being a student may assume a school.
 
-### 8.6 The principle
+### 8.6 A document is a statement an institution made on a date
+
+An academic document — a report card, a transcript, a certificate, a statement
+of completion — is not a view over current data. It is a record of what the
+institution said, on the day it said it, and somebody will ask for another copy
+five years later.
+
+**Reprinting is not regenerating.** A document's content is composed once, at
+issue, and stored. Every later reading of it reads that. A system that
+recomposes on reprint looks perfectly healthy and is wrong in the only way that
+matters: the copy produced in 2031 disagrees with the copy produced in 2026, and
+neither party can say which is the institution's word.
+
+**What is frozen and what is fresh is a decision, not an accident.** The grades,
+the credits, the placement the student actually held, the period's dates, the
+comments, the totals, and the words the institution used are historical facts
+and are frozen. The crest, the colours and the address are how to reach the
+institution *now*, and are resolved at render — a school that has moved should
+not reprint an old transcript with an address that no longer exists. An
+institution that wants its identity frozen too says so on the template.
+
+**A correction supersedes; it does not rewrite.** A document overtaken by an
+amendment is replaced by a new one that supersedes it, with a reason, and both
+survive. A document issued in error is voided and still prints, marked void,
+because refusing to print it would leave whoever holds a copy unable to learn
+that it was withdrawn.
+
+**And one engine, not one per document.** A report card and a doctoral
+completion statement differ in which sections they contain and what the
+institution calls them. If they differ in code, the product has six things to
+maintain and an institution that needs a seventh has to wait for a release.
+
+### 8.7 The principle
 
 > The institution defines its academic world. EdirasX provides the technology
 > to represent it.
@@ -471,6 +503,8 @@ The following are grounds to block a release, regardless of schedule:
 7. Secrets reachable from a browser, or written to logs.
 8. A required flow that is unusable on a 360px viewport.
 9. A change that makes a student's academic history editable in place.
+10. A change that makes an issued academic document say something other than
+    what it said when it was issued.
 
 ---
 

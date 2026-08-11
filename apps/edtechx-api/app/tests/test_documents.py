@@ -747,15 +747,24 @@ def test_revaluing_a_module_does_not_change_an_issued_transcript(
         course.credits = 30
         session.flush()
 
-        credit = next(
-            b["content"] for b in issued.payload["sections"] if b["key"] == "credit_summary"
+        def attempted(document):
+            return next(
+                b["content"]["attempted"] for b in document.payload["sections"]
+                if b["key"] == "credit_summary"
+            )
+
+        # The document issued before the change is frozen, which is the easy half.
+        assert attempted(issued) == 30
+
+        # The half that matters: a transcript issued *after* the revaluation
+        # still reports what the student earned, because the credit value was
+        # snapshotted onto the published result rather than read from the course.
+        reissued = documents.issue(
+            session, template=template, student=student, permissions=REGISTRAR,
         )
-        assert credit["attempted"] == 30
-        # And the published rows themselves carry the value they were awarded.
+        assert attempted(reissued) == 30
         rows = session.execute(
-            text(
-                "SELECT credits FROM published_results WHERE course_id = :c"
-            ),
+            text("SELECT credits FROM published_results WHERE course_id = :c"),
             {"c": str(university.algorithms_id)},
         ).scalars().all()
         assert {float(c) for c in rows} == {20.0}
@@ -797,11 +806,10 @@ def test_a_report_card_shows_the_class_the_student_was_in_then(school: World) ->
     try:
         template = _report_card_template(session, code=f"place-{_uuid.uuid4().hex[:6]}")
         student = people.student(session, school.students["Bilal Haddad"])
-        autumn_card = documents.issue(
-            session, template=template, student=student, permissions=REGISTRAR,
-            period_ids=[school.autumn_id],
-        )
 
+        # The transfer happens *first*, so that both documents are issued while
+        # the student sits in 10B. A card that read today's placement would say
+        # 10B for the autumn term, and the test would not be able to tell.
         current = people.open_enrolments(session, student)[0]
         people.transfer(
             session, current, on=date(2027, 1, 6),
@@ -811,6 +819,10 @@ def test_a_report_card_shows_the_class_the_student_was_in_then(school: World) ->
         )
         session.flush()
 
+        autumn_card = documents.issue(
+            session, template=template, student=student, permissions=REGISTRAR,
+            period_ids=[school.autumn_id],
+        )
         spring_card = documents.issue(
             session, template=template, student=student, permissions=REGISTRAR,
             period_ids=[school.spring_id],
@@ -1225,7 +1237,16 @@ def test_a_university_is_offered_all_of_them() -> None:
 def test_a_credit_section_on_a_school_template_composes_to_nothing(
     school: World,
 ) -> None:
-    """Not an empty heading. The institution's world does not contain credits."""
+    """Not an empty heading, and the designer was never offered it either.
+
+    Two guarantees, in the two places they belong. `available_to` is where
+    "complexity must be capability" applies — a school designing a report card
+    is not shown a credit section at all. This test covers the other end: if one
+    is configured anyway, it composes to nothing rather than to a blank heading.
+    """
+    assert "credit_summary" not in {
+        s.key for s in catalogue.available_to(frozenset({"levels", "classes"}))
+    }
     session = school.session()
     try:
         template = documents.define_template(
@@ -1741,6 +1762,66 @@ def test_the_checksum_is_stable_across_renderings(school: World) -> None:
         assert documents.verify(session, issued.verification_code).checksum == (
             issued.checksum
         )
+    finally:
+        session.rollback()
+        session.close()
+
+
+def test_a_document_that_reports_no_period_does_not_claim_one(school: World) -> None:
+    """A certificate issued in March is not "the autumn term".
+
+    Found by looking at the rendered page rather than at the payload: the
+    certificate carried a subtitle naming a term it says nothing about, because
+    the periods covered were derived from whatever the student had results for.
+    They now follow what the document actually reports on.
+    """
+    session = school.session()
+    try:
+        certificate = documents.define_template(
+            session, code=f"pd-{_uuid.uuid4().hex[:6]}", name="Certificate",
+            purpose_label="Certificate of Enrolment", purpose="document",
+            sections=[{"key": "identity"}, {"key": "placement"},
+                      {"key": "verification"}],
+        )
+        documents.publish_template(session, certificate)
+        student = people.student(session, school.students["Ada Nwosu"])
+        issued = documents.issue(
+            session, template=certificate, student=student, permissions=REGISTRAR,
+            issued_on=date(2027, 3, 2),
+        )
+        assert issued.payload["context"]["periods"] == []
+        assert issued.academic_period_id is None
+        page = documents.render(session, issued)
+        assert "Autumn Term" not in page
+
+        # And a report card, which does report on a period, still names it.
+        card_template = _report_card_template(session, code=f"pc-{_uuid.uuid4().hex[:6]}")
+        card = documents.issue(
+            session, template=card_template, student=student, permissions=REGISTRAR,
+        )
+        assert [p["name"] for p in card.payload["context"]["periods"]] == ["Autumn Term"]
+        assert "Autumn Term" in documents.render(session, card)
+    finally:
+        session.rollback()
+        session.close()
+
+
+def test_a_credit_unit_is_printed_as_the_institution_writes_it(
+    university: World,
+) -> None:
+    """Not title-cased. An institution counting in ECTS credits is not counting
+    in Ects Credits, and a formatter that thinks it knows better is a formatter
+    that mangles every acronym an institution has."""
+    session = university.session()
+    try:
+        template = _transcript_template(session)
+        student = people.student(session, university.students["Nadia Rahman"])
+        issued = documents.issue(
+            session, template=template, student=student, permissions=REGISTRAR,
+        )
+        page = documents.render(session, issued)
+        assert "ECTS credits" in page
+        assert "Ects" not in page
     finally:
         session.rollback()
         session.close()

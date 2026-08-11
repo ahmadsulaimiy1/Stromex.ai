@@ -123,10 +123,15 @@ marks, three endpoints · ✅ **journey 1**
 approval workflows, readiness review, snapshot publication, append-only
 amendments · ✅ **journeys 4 and 5**
 
-⬜ report cards and transcripts (the academic-document engine) ·
+✅ **The academic document engine** — one engine for report cards, transcripts,
+progress reports, certificates and completion statements; a validated section
+catalogue; per-institution sections, ordering, titles, branding, numbering and
+page setup; documents frozen at issue and reprinted rather than recomposed;
+supersession, voiding and verification (ADR-034)
+
 ⬜ announcements and the notification port · ⬜ fees, invoices, payments,
 receipts, money invariants · ⬜ payment port with sandbox adapter ·
-⬜ journeys 4, 5, 6, 7.
+⬜ journeys 6, 7.
 
 Superseded plan: attendance (configurable model, school-defined codes,
 corrections, absence workflow) · assessment and results with an explicit publish step · report cards ·

@@ -47,6 +47,17 @@ Actions: `read · write · create · delete · approve · publish · export · m
 
 An admissions clerk who may create a person is not thereby entitled to read every learner's enrolment history; a teacher who may read a pupil's name is not thereby entitled to their medical notes. Both distinctions are asserted in `test_authz.py`.
 
+**`reporting` is three document resources for the same reason.** A document template declares which of them governs it, and the engine derives the permission from that declaration rather than from what the document is called:
+
+| Permission | Covers |
+|---|---|
+| `reporting.report_card.*` | Termly and periodic reports on a student |
+| `reporting.transcript.*` | The cumulative academic record |
+| `reporting.document.*` | Certificates, statements, letters — the documents neither word covers |
+| `reporting.template.*` | Designing and publishing the templates themselves |
+
+A school that lets a form tutor print report cards has not thereby let them print transcripts, and a registrar who issues certificates of enrolment has not thereby been given the design of the certificate. `test_documents.py` asserts the first of those directly.
+
 **Rules**
 - Permissions are additive; there are no negative permissions. Denial is the absence of a grant. Negative permissions make effective-permission reasoning intractable and produce bugs nobody can explain to an auditor.
 - Wildcards only at the trailing segment: `finance.invoice.*`, `finance.*`. Never `*.invoice.read`.

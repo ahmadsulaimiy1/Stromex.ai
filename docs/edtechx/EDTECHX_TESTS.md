@@ -383,6 +383,48 @@ Four sabotages caught: showing every concept the database supports, rendering
 unpermitted capabilities as disabled rows, advertising upgrades to everybody, and
 hiding a layer that has rows.
 
+### `test_documents.py` — 52 tests
+
+One engine, three institutions. A school report card (identity, placement,
+weighted subject results, attendance, comments, grading key, signatures,
+verification), a university transcript (results grouped by semester, ECTS
+credits, a credit-weighted grade-point average, the qualification framework),
+and a certificate of enrolment that is the same machine with four rows instead
+of nine.
+
+**Historical integrity is most of the suite.** A grade boundary is moved from 70
+to 90 and an already-issued A stays an A. A module is revalued from 20 credits
+to 30 and a transcript issued *afterwards* still reports what the graduate
+earned. The school renames its vocabulary and a report card that said "Subject"
+keeps saying "Subject". A student is transferred from 10A to 10B and a report
+card issued after the transfer still places them in 10A for the autumn term. A
+published result is amended and the issued document is untouched — while
+`outdated()` reports that it has been overtaken. A reprint after all of it is
+byte-identical.
+
+**And the line on the other side.** The institution rebrands; the letterhead
+changes and not one grade does. A template that sets `freeze_branding` keeps the
+identity that awarded it.
+
+**Numbering, verification, withdrawal.** Numbers are sequential, never repeat,
+and restart with the year when the series says so; a preview allocates none. A
+verification code confirms who a document is about and whether it is still the
+institution's current word, and the disclosed surface is pinned by a test rather
+than sampled from a repr. A voided document still prints, with VOID across it,
+and the application role cannot delete it at all.
+
+**Authorization and entitlement, separately.** Permission to print report cards
+is not permission to print transcripts. A guardian reaches documents about their
+own child and the scoped count agrees with the scoped select. An institution
+that switched the feature off cannot issue however permitted its registrar is.
+
+**Two structural checks.** The renderer imports nothing that can reach a
+database — a renderer that can query is one that will eventually be asked to
+refresh the totals on a historical transcript. And a nursery designing a
+document is never *offered* a credit summary or a grade-point average.
+
+Fifteen sabotages, all caught.
+
 ### `test_api.py` — 16 tests
 
 Health is public; security headers present; unknown host refused; `/context`
@@ -438,6 +480,21 @@ driver names; oversized bodies rejected at the edge.
 | An amendment needs authority | The permission check removed | Flagged |
 | A correction leaves an audit event | The audit write skipped | Flagged |
 | Publication needs the required approvals | Outstanding steps forced empty | Flagged — and `force` still did not cover it |
+| A reprint reads the payload | `render` made to recompose from live data | Two tests failed, including the one that moves a grade boundary |
+| Terminology is frozen at issue | Resolved at render instead | Flagged: a report card started using words the school adopted afterwards |
+| Branding is *not* frozen | Frozen always | Flagged: a rebrand never reached an old document |
+| Credits come from the snapshot | Read from the live course | Flagged on a transcript issued after a revaluation |
+| An empty section is dropped | `omit_when_empty` disabled | Flagged: a school's report card grew a blank Credit heading |
+| A nursery is not offered what it cannot use | `available_to` made to offer everything | Flagged |
+| A configured sentence cannot reach attributes | `str.format` used on administrator text | Flagged: `{student_name.__class__}` resolved |
+| A guardian reaches only their own child | The clause widened to every student | Flagged |
+| Document numbers do not repeat | The counter made not to advance | Flagged |
+| Verification does not disclose contents | A `payload` field added to `Verification` | Flagged by the pinned surface |
+| The renderer escapes | Escaping removed | Flagged on a name containing markup |
+| A draft template cannot issue | The status check removed | Flagged |
+| Entitlement is checked | `billing.require` removed | Flagged |
+| Placement is historical | Resolved from today's enrolment | Flagged — after the test was strengthened; see below |
+| A mark is published once | The already-published guard removed | Flagged |
 | **Routes cannot query a scoped table directly** | `from sqlalchemy import select as _select` in a handler | **Not caught.** The check listed unsafe call *names*, and a rename walked past it. Now inverted: every call taking a scoped model is suspect unless it is one of the four helpers that carry a predicate by construction. Re-sabotaged; caught |
 
 ---
@@ -450,7 +507,7 @@ driver names; oversized bodies rejected at the edge.
 | 2 | Student submits an assignment | Phase 6 |
 | 3 | Teacher grades a submission | Phase 6 |
 | 4 | Admin publishes results | ✅ **Covered — with the workflow, the readiness review, and the six attacks** |
-| 5 | Parent views a published result | ✅ **Scope covered — a guardian reaches published results and never a draft score** |
+| 5 | Parent views a published result | ✅ **Scope covered — a guardian reaches published results and never a draft score, and reaches the documents about their own child and no others** |
 | 6 | Admin issues a fee; parent sees it | Phase 3 |
 | 7 | Parent records a payment | Phase 3 |
 | 8 | School publishes a theme | Phase 7 |
@@ -462,6 +519,19 @@ driver names; oversized bodies rejected at the edge.
 ---
 
 ## 7. Gaps, stated plainly
+
+**Two sabotages that did not fire, and what they were worth.** A sabotage that
+passes is more useful than one that fails, because it names a test that was
+never discriminating. Reading credits from the live course did not fail the
+transcript test, because that test only inspected a payload frozen *before* the
+revaluation — the assertion looked right and proved nothing. Resolving placement
+from today did not fail the placement test, because the test issued the autumn
+card before the transfer, so both readings gave the same answer. Both tests were
+rewritten to act after the change rather than before it, and both sabotages then
+fired. A third sabotage found machinery rather than a weak test: composition
+suppressed sections whose academic layer had no rows, and removing that rule
+changed nothing the `omit_when_empty` rule did not already do. It was deleted
+(ADR-034).
 
 Not yet written, because the features they would test do not yet exist:
 authentication endpoint tests (login, refresh rotation, reuse detection,
