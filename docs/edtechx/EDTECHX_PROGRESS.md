@@ -642,6 +642,41 @@ Islamic and F·R6 Future Royal are not yet built. C has not been started.
 
 ---
 
+## Language architecture, and two instruments from the press specification
+
+Arabic + English was becoming a compulsory formula, which is as templated as a
+compulsory ornament. `design/language.py` makes the arrangement a design
+decision recorded on the template: eight arrangements — Latin-only, Arabic-only,
+Arabic-primary, Latin-primary, peer, zoned, integrated, three-run — all through
+**one code path with no `if arabic:` anywhere**. The proof renders M02's plate
+under six of them with nothing swapped but the architecture.
+
+The module knows three things a translation table does not: optical size is not
+nominal size (so "peer" means optically equal), direction belongs to the run and
+not the page, and absence is ordinary — a missing translation re-balances the
+composition instead of leaving a ghost.
+
+Two composition rules came out of the hostile data. Subordinate scripts carry
+identity, not prose: names and qualifications appear in every script, a
+250-character legal paragraph appears once. And the plate responds to the
+arrangement's typographic load, because a two-script sheet needs more field than
+a one-script sheet. Both replaced shrinking the recipient's name.
+
+**A collision audit now runs on every build.** Its first run said all four
+finalists overflowed — M11 by 31.8mm, M12 by 16.4mm — three of them invisible at
+contact-sheet size. This defect class had been found by eye four times and never
+by a test.
+
+**A counted stroke census** replaced the asserted hairline floor, and
+immediately found 1,320 strokes at 0.050mm, all of them derived from sub-stroke
+multipliers compounding inside the rosette. The floor is now enforced where the
+multiplication happens.
+
+Each specification also carries the three questions that block a press file:
+ICC output profile, PDF/X part (X-1a and X-3 force a flatten that rasterises
+every guilloché line), and TAC with whether pure black stays 100% K.
+
+
 ## The masterpiece pass: the ornament becomes the document's own
 
 Four finalists — Imperial Islamic, Crimson Imperial, EdirasX Signature, Royal

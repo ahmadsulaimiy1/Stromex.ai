@@ -74,16 +74,64 @@ The emboss and variable-data layers are emitted at *measured* positions read
 back from the rendered page, because those elements are placed by the layout and
 their coordinates are a result rather than an input.
 
-## 6 · Linework
+## 6 · Linework — counted, not asserted
 
-| Element | Weight |
+Every stroke in the supplied separations, by width:
+
+| Width | Count |
 |---|---|
-| Fine text and micro-texture | 0.07–0.09 mm |
-| Fine register | 0.09–0.20 mm |
-| Engraved rule | three flat strokes, 0.28–0.72 mm overall |
-| Frame register | 0.55–0.72 mm |
+| **0.070 mm** | 1323 |
+| **0.090 mm** | 1493 |
+| **0.094 mm** | 540 |
+| **0.143 mm** | 4 |
+| **0.160 mm** | 4 |
+| **0.161 mm** | 40 |
+| **0.165 mm** | 4 |
+| **0.170 mm** | 540 |
+| **0.186 mm** | 40 |
+| **0.187 mm** | 4 |
+| **0.200 mm** | 1 |
+| **0.220 mm** | 5 |
+| **0.260 mm** | 7 |
+| **0.300 mm** | 5 |
+| **0.420 mm** | 3 |
+| **0.550 mm** | 4 |
+| **0.700 mm** | 1 |
 
-No opacity on any line, at any weight. Every pale tone is a flat pre-mixed ink.
+**The floor in this artwork is 0.070 mm.** That is stated so you can act on
+it: confirm your reproduction floor and anything underneath it will be raised,
+rather than being left to drop out or fill in. Nothing here uses a "hairline"
+keyword — every stroke is an explicit width in millimetres.
+
+No opacity on any line, at any weight. Every pale tone is a flat pre-mixed ink,
+because a stroke with an opacity separates into a screen percentage and a
+screened hairline is the first thing to leave the sheet.
+
+## 6a · Three questions, answers required in writing
+
+Nothing further can be finished until these are answered. Each blocks a specific
+step; none is a preference.
+
+**Which ICC output profile?** A PDF/X file *is* a PDF plus an output intent, and
+the output intent is your characterisation of your press, your paper and your
+ink. There is no safe default and one will not be guessed — guessing ships a
+file that states, in machine-readable form, a printing condition nobody agreed
+to. It also blocks the RGB→CMYK separation, because the separation is *to* that
+profile.
+
+**Which PDF/X part — and will you accept PDF/X-4?** The artwork uses live
+transparency in the emboss simulation. PDF/X-1a and PDF/X-3 forbid it and force
+a flatten; PDF/X-4 permits it. This is not a metadata setting: a flatten turns
+every rule, guilloché line and fine-text rail into a raster at the flattener's
+resolution, and a certificate that has been rasterised is a photograph of a
+certificate. If you require X-1a or X-3, say so and the transparency will be
+removed by redrawing rather than by conversion.
+
+**Your maximum total area coverage, and must pure black stay 100 % K?** The
+plate carries large solid dark areas, so the separation has to be built to your
+TAC limit rather than trimmed to it afterwards. And if a machine-readable mark
+is added to this family later it will be drawn in pure black: separated into a
+rich four-colour black it picks up registration spread and stops scanning.
 
 ## 7 · Fine text — measured, and not microprint
 

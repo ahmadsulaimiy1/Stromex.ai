@@ -177,8 +177,70 @@ code.
 
 ---
 
-## 8 · Still to do
+## 8 · Language architecture — Arabic + English is not the formula
 
+A compulsory bilingual layout is exactly as templated as a compulsory ornament,
+so the language arrangement is now a design decision recorded on the template
+and resolved by `design/language.py`. **Every arrangement goes through one code
+path. There is no `if arabic:` anywhere**, and there must never be one: the
+moment one script is a branch and another is the default, the system has an
+opinion it was not asked for.
+
+Eight arrangements, none a special case: `latin-only`, `arabic-only`,
+`arabic-primary`, `latin-primary`, `peer`, `zoned`, `integrated`, three-run.
+The proof is `masterpieces/language/` — M02's plate under six of them, nothing
+swapped but the architecture.
+
+**Three things the module knows that a translation table does not.** Optical
+size is not nominal size, so Amiri carries a 1.18 multiplier and "peer" means
+*optically* equal. Direction is a property of the run, not of the page. And
+absence is ordinary — an institution that never supplied an Arabic name gets a
+composition that re-balances, not a gap where something used to be.
+
+**Two composition rules came out of the hostile data.** Subordinate scripts
+carry *identity, not prose*: the institution, the recipient and the
+qualification appear in every script the document sets; a 250-character legal
+paragraph appears once, in the lead script. And the plate responds to the
+arrangement — the ceremonial panel opens as the typographic load rises, because
+a sheet setting two scripts genuinely needs more field than one setting a
+single script. Both replaced the alternative of shrinking the recipient's name
+until two scripts fitted in one script's room.
+
+**A stated limitation.** This models *scripts*, not languages. An English /
+French / Arabic document is three languages in two scripts, and there is no way
+yet to express two Latin runs that must not be collapsed. The arrangement is
+named "three runs" rather than "trilingual" for that reason.
+
+## 9 · Two instruments taken from the Sultan Hanafi press specification
+
+**A collision audit on every sheet.** The reference runs one; this project had
+found the same defect class — content leaving the ceremonial panel and landing
+on the border — four times by eye and never by a test. `audit_overflow()` now
+measures a field's overflow in millimetres on every build. Its first run
+reported that **all four finalists overflowed**, three of them invisibly at
+contact-sheet size: M11 by 31.8 mm, M12 by 16.4 mm, M01 by 7.7 mm. Eyes are the
+right instrument for judging a composition and the wrong one for measuring
+whether it fits.
+
+**A counted stroke census, not an asserted floor.** The reference does not claim
+a hairline minimum; it counts every stroke and tells the printer the
+distribution. Doing the same here found **1,320 strokes at 0.050 mm** — all of
+them *derived*, from sub-stroke multipliers compounding inside the rosette, all
+below this package's own stated floor and below the 0.25 pt most litho
+specifications quote. Nothing asked for 0.05 mm; arithmetic produced it. The
+floor is now enforced where the multiplication happens (`signature.STROKE_FLOOR`),
+and every specification carries the census.
+
+**And three questions that block a press file**, added to each specification:
+which ICC output profile, which PDF/X part (and specifically whether X-4 is
+acceptable, because X-1a and X-3 force a flatten that turns every guilloché line
+into a raster), and the TAC limit with whether pure black must stay 100 % K.
+
+## 10 · Still to do
+
+* The `zoned` and `integrated` arrangements are defined but no plate opts into
+  them yet — integrated text is drawn rather than laid out, so it needs a plate
+  built for it.
 * A4 portrait and Letter compositions for the four finalists — designed, not scaled.
 * Greyscale and photocopy behaviour.
 * The remaining fourteen certificates and five transcripts.

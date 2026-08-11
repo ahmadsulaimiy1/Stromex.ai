@@ -50,6 +50,11 @@ OUT = ROOT / "docs" / "edtechx" / "design" / "masterpieces"
 from app.modules.design import architecture as arch  # noqa: E402
 from app.modules.design import geometry as geo  # noqa: E402
 from app.modules.design.gilding import Scheme, scheme_for  # noqa: E402
+from app.modules.design.language import (  # noqa: E402
+    Architecture,
+    Phrase,
+    architecture_for,
+)
 from app.modules.design.signature import Motif, motif_for  # noqa: E402
 from app.modules.design.typeface import font_face_css  # noqa: E402
 
@@ -57,21 +62,46 @@ W, H = 297.0, 210.0
 
 # --- the record ---------------------------------------------------------------
 
-INSTITUTION = "The Meridian Institute for Advanced Study and Research"
-INSTITUTION_AR = "معهد مريديان للدراسات العليا والبحث العلمي"
-RECIPIENT = "Muhammad Abdulrahman Ibrahim Abdulwahid Al-Sulaimiy"
-RECIPIENT_AR = "محمد عبد الرحمن إبراهيم عبد الواحد السليمي"
-DEGREE = "Doctor of Philosophy"
-DEGREE_AR = "درجة الدكتوراه في الفلسفة"
-STUDY = "Educational Leadership and Institutional Development"
-CONFERRAL = "The Senate of the Institute has conferred upon"
-STATEMENT = (
-    "having pursued the prescribed programme of research, submitted a thesis "
-    "examined and approved by the Board of Examiners, and satisfied the Senate "
-    "in the oral examination held on the fourteenth day of March, two thousand "
-    "and thirty-one."
-)
-DISTINCTION = "With the commendation of the Senate"
+# Content is a *phrase* — a mapping of script to text — never a Latin string
+# with a translation beside it. A phrase carrying one script is as ordinary as
+# one carrying three, and no slot below asks which it has.
+INSTITUTION = Phrase({
+    "latin": "The Meridian Institute for Advanced Study and Research",
+    "arabic": "معهد مريديان للدراسات العليا والبحث العلمي",
+})
+RECIPIENT = Phrase({
+    "latin": "Muhammad Abdulrahman Ibrahim Abdulwahid Al-Sulaimiy",
+    "arabic": "محمد عبد الرحمن إبراهيم عبد الواحد السليمي",
+})
+DEGREE = Phrase({
+    "latin": "Doctor of Philosophy",
+    "arabic": "درجة الدكتوراه في الفلسفة",
+})
+STUDY = Phrase({
+    "latin": "Educational Leadership and Institutional Development",
+    "arabic": "القيادة التربوية والتطوير المؤسسي",
+})
+CONFERRAL = Phrase({
+    "latin": "The Senate of the Institute has conferred upon",
+    "arabic": "منح مجلس المعهد",
+})
+STATEMENT = Phrase({
+    "latin": (
+        "having pursued the prescribed programme of research, submitted a "
+        "thesis examined and approved by the Board of Examiners, and satisfied "
+        "the Senate in the oral examination held on the fourteenth day of "
+        "March, two thousand and thirty-one."
+    ),
+    "arabic": (
+        "بعد إتمام برنامج البحث المقرر، وتقديم أطروحة فحصها وأقرها مجلس "
+        "الممتحنين، واجتياز المناقشة الشفوية المنعقدة في الرابع عشر من مارس "
+        "لعام ألفين وواحد وثلاثين."
+    ),
+})
+DISTINCTION = Phrase({
+    "latin": "With the commendation of the Senate",
+    "arabic": "مع تنويه من مجلس المعهد",
+})
 SIGNATORIES = (
     ("Prof. Amina Yusuf", "Vice-Chancellor", "Presiding authority of the Senate"),
     ("Dr Tomas Reinholt", "Dean of the Graduate School", "Board of Examiners"),
@@ -84,7 +114,8 @@ SEAL_LEGEND = "MERIDIAN INSTITUTE"
 
 #: The document's own geometry. One family for every doctoral award this
 #: institution issues; the security layer is what varies per sheet.
-MOTIF: Motif = motif_for(institution=INSTITUTION, family="doctoral")
+MOTIF: Motif = motif_for(
+    institution=INSTITUTION.get("latin") or "", family="doctoral")
 
 
 #: Separation order. This is the order a press lays them down, and the preview
@@ -113,6 +144,10 @@ class Plate:
     ground: str
     ink: str
     accent: str
+    #: Which scripts this document sets, where, and at what weight. A design
+    #: decision recorded on the template — never inferred, never defaulted.
+    language: Architecture = field(
+        default_factory=lambda: architecture_for("peer"))
     paper: str = "#F7F2E6"
     layers: dict[str, list[str]] = field(default_factory=dict)
     defs: list[str] = field(default_factory=list)
@@ -142,6 +177,66 @@ def keep(text: str) -> str:
 
 
 # --- shared construction ------------------------------------------------------
+
+
+FACE = {
+    "display": "Fraunces", "display-alt": "Source Serif 4",
+    "display-modern": "Archivo", "body": "Source Serif 4",
+    "arabic": "Amiri", "arabic-modern": "Cairo", "ui": "Inter",
+    "mono": "IBM Plex Mono",
+}
+
+
+def slot(plate: Plate, phrase: Phrase, *, base: float, cls: str,
+         inline: bool = False, hyphen: bool = False, face: str = "",
+         lead_only: bool = False) -> str:
+    """Render one content slot under the plate's language architecture.
+
+    The whole point of this function is that it contains no test for any
+    particular script. It asks the architecture for runs, sets each run at its
+    own optical size, leading and direction, and returns nothing at all if the
+    institution supplied nothing — no empty element, no placeholder, no ghost
+    rule where a translation used to be.
+
+    `inline` puts the runs on one line for a peer arrangement, which is what
+    peer means for a short slot like a qualification; long slots stack whatever
+    the arrangement, because two long runs side by side is two narrow columns.
+    """
+    runs = plate.language.resolve(phrase)
+    if lead_only:
+        # **Subordinate scripts carry identity, not prose.** The institution,
+        # the recipient and the qualification appear in every script the
+        # document sets, because those are what the sheet is about. A
+        # 250-character legal paragraph appears once, in the lead script.
+        #
+        # This is an editorial rule, not a space-saving trick, and it is the
+        # right answer to a real failure: setting the conferral statement twice
+        # pushed the execution band off the ivory panel and onto the midnight
+        # border in five of six arrangements — seal half off the field,
+        # signature rules and verification code illegible on a dark ground.
+        # The alternative fix would have been to shrink the typography until it
+        # fitted, which is the thing this project has refused from the start.
+        runs = tuple(run for run in runs if run.lead)[:1]
+    if not runs:
+        return ""
+    parts: list[str] = []
+    for run in runs:
+        text = keep(run.text) if hyphen else run.text
+        family = FACE[face or run.script.face]
+        style = (
+            f"font-size:{base * run.scale:.2f}mm;"
+            f"line-height:{run.script.leading};"
+            f"direction:{run.direction};"
+            f"font-family:'{family}',Georgia,serif"
+        )
+        lead = " is-lead" if run.lead else " is-sub"
+        parts.append(
+            f'<div class="{cls} {cls}--{run.script.key}{lead}"'
+            f' style="{style}">{text}</div>'
+        )
+    if inline and len(parts) > 1 and plate.language.mode == "peer":
+        return f'<div class="{cls}-row">' + "".join(parts) + "</div>"
+    return "".join(parts)
 
 
 def substrate(plate: Plate, *, screen: bool = True) -> None:
@@ -315,7 +410,8 @@ def fine_text(plate: Plate, rect: geo.Rect, tag: str) -> None:
     """
     plate.add("finetext", geo.fine_text_ring(
         rect, identifier=tag,
-        text=f"{INSTITUTION.upper()} · {SERIAL} · {CODE} · ",
+        text=f"{(INSTITUTION.get('latin') or SEAL_LEGEND).upper()} · "
+             f"{SERIAL} · {CODE} · ",
         ink=plate.ink, size=0.58, strength=0.30))
 
 
@@ -334,12 +430,14 @@ html, body { margin: 0; padding: 0; background: #221F1B; }
 .plate { position: absolute; inset: 0; }
 .plate svg { display: block; width: 100%; height: 100%; }
 .field { position: absolute; display: flex; flex-direction: column; }
-.spacer { flex: 1 1 auto; min-height: 2.5mm; }
+.spacer { flex: 1 1 auto; min-height: 1.0mm; }
 .divider { display: block; flex: none; height: 3mm; }
 .mono { font-family: 'IBM Plex Mono', monospace; }
 .lab { font-family: 'Inter', sans-serif; text-transform: uppercase; font-weight: 600; }
-.exec { display: flex; align-items: flex-end; gap: 6mm; width: 100%; flex: none; }
-.sigrow { flex: 1 1 auto; display: flex; align-items: flex-start; gap: 6mm; }
+.exec { margin-top: 2.4mm; display: flex; align-items: flex-end;
+  gap: 6mm; width: 100%; flex: none; }
+.sigrow { flex: 1 1 auto; display: flex; align-items: flex-start;
+  gap: 6mm; }
 .sealbox { flex: none; width: 33mm; }
 .sealbox svg { display: block; width: 100%; height: auto; }
 .sig { flex: 1 1 0; text-align: center; }
@@ -359,7 +457,35 @@ html, body { margin: 0; padding: 0; background: #221F1B; }
 .vpanel .v { font-family: 'IBM Plex Mono', monospace; font-size: 2.5mm;
   margin: 0.3mm 0 1.1mm; letter-spacing: 0.02em; }
 .vpanel .v:last-child { margin-bottom: 0; }
-.name, .name-ar { text-wrap: balance; }
+/* Slot styling is shared, and keyed on the *script* rather than on a
+   language. `text-transform: uppercase` is a Latin instruction — Arabic has no
+   case, so applying it to both runs silently does nothing to one of them and
+   the two stop matching. That is what the `has_case` fact in language.py is
+   for, and this is where it is spent. */
+.conf, .dist { text-transform: uppercase; font-weight: 600; flex: none; }
+.conf { letter-spacing: 0.34em; }
+.dist { letter-spacing: 0.26em; margin-top: 1.6mm; }
+.conf--arabic, .dist--arabic { text-transform: none; letter-spacing: 0; }
+.name { font-weight: 600; letter-spacing: -0.006em; margin-top: 1.8mm;
+  flex: none; text-wrap: balance; }
+.name.is-sub { margin-top: 1.1mm; font-weight: 600; }
+.name--arabic { letter-spacing: 0; font-weight: 700; }
+.deg { text-transform: uppercase; font-weight: 600; letter-spacing: 0.15em;
+  flex: none; margin-top: 2.4mm; }
+.deg--arabic { text-transform: none; letter-spacing: 0; font-weight: 700; }
+.deg-row { display: flex; gap: 6mm; align-items: baseline;
+  justify-content: center; flex: none; margin-top: 2.4mm; }
+.deg-row .deg { margin-top: 0; }
+.study { font-style: italic; flex: none; margin-top: 1.1mm; }
+.study--arabic { font-style: normal; }
+.stmt { flex: none; margin-top: 2.0mm; max-width: 84%; }
+.lockup--stack { flex-direction: column; gap: 2.2mm; width: 100%; margin: 0; }
+.lkcol { display: flex; flex-direction: column; align-items: center;
+  gap: 1.3mm; }
+.lk { flex: 1 1 0; font-weight: 600; }
+.lk--latin { letter-spacing: 0.12em; text-transform: uppercase; }
+.lk--arabic { font-weight: 700; }
+.nameinner { position: relative; }
 .lockup { display: flex; align-items: center; justify-content: center;
   gap: 6mm; flex: none; width: 124%; margin: 0 -12%; }
 .lockup .mark { flex: none; width: 15mm; }
@@ -369,11 +495,36 @@ html, body { margin: 0; padding: 0; background: #221F1B; }
 """
 
 
+def palette_css(plate: Plate) -> str:
+    """Colour, and only colour. Sizes come from the language architecture.
+
+    Separating the two is what lets one plate carry eight arrangements: the
+    scheme decides what is ink and what is accent, the architecture decides what
+    is large and what is subordinate, and neither needs to know about the other.
+    """
+    s = plate.scheme
+    return f"""
+.lk--latin {{ color: {plate.accent}; }}
+.lk--arabic, .lk--arabic-modern {{ color: {plate.accent}; }}
+.conf {{ color: {geo.tint(plate.ink, 0.58)}; }}
+.name {{ color: {plate.ink}; }}
+.name.is-sub {{ color: {geo.tint(plate.ink, 0.86)}; }}
+.name--arabic.is-sub {{ color: {plate.accent}; }}
+.deg {{ color: {s.engraved.shadow}; }}
+.study {{ color: {geo.tint(plate.ink, 0.84)}; }}
+.dist {{ color: {plate.accent}; }}
+.stmt {{ color: {geo.tint(plate.ink, 0.78)}; }}
+.sig .nm, .vpanel .v {{ color: {plate.ink}; }}
+.sig .of {{ color: {geo.tint(plate.accent, 0.93)}; }}
+.sig .auth, .vpanel .k {{ color: {geo.tint(plate.ink, 0.52)}; }}
+"""
+
+
 def page(plate: Plate, body: str, css: str) -> str:
     return (
         '<!doctype html><html lang="en"><head><meta charset="utf-8">'
-        f"<title>{plate.name} — {DEGREE}</title><style>"
-        + font_face_css(embed=True) + BASE_CSS + css
+        f"<title>{plate.name} — {plate.language.name}</title><style>"
+        + font_face_css(embed=True) + BASE_CSS + palette_css(plate) + css
         + '</style></head><body><div class="wrap">'
         + f'<p class="tag"><b>{plate.key} · {plate.name}</b> — {plate.intent}'
         f' · motif {{{MOTIF.order}/{MOTIF.density}}} · lathe {MOTIF.lathe}</p>'
@@ -383,25 +534,52 @@ def page(plate: Plate, body: str, css: str) -> str:
     )
 
 
-def lockup(plate: Plate, *, en_size: float, ar_size: float,
-           mark_radius: float = 6.4) -> str:
-    """Arabic and Latin as one object, either side of the institution's mark.
+def lockup(plate: Plate, *, base: float, mark_radius: float = 6.4) -> str:
+    """The institution's identity, arranged by the document's architecture.
 
-    Not English with a translation beneath it. The two names sit on one
-    baseline at optically matched sizes — the Arabic set larger, because naskh
-    at the same nominal size reads smaller than a Latin capital — flanking the
-    embossed mark. Neither script can be removed without destroying the lockup,
-    which is the test of whether a bilingual design is bilingual.
+    Four outcomes from one function, and none of them is a branch on a script:
+
+        peer        the runs flank the embossed mark, optically equal. Removing
+                    either destroys the lockup — the test of whether a bilingual
+                    design is actually bilingual.
+        solo        one run beside the mark. The design is complete; there is no
+                    space reserved for something that was never coming.
+        stacked     the runs above one another, the mark on the axis above them.
+        zoned /     the mark leads and the runs follow it; the plate places the
+        integrated  second run elsewhere on the sheet.
+
+    A phrase carrying one script under a peer architecture simply produces the
+    solo layout. That is not a fallback — it is the same rule with one run.
     """
     d = mark_radius * 2 + 3
-    return (
-        '<div class="lockup">'
-        f'<div class="disp en" style="font-size:{en_size:.2f}mm">{INSTITUTION}</div>'
+    mark = (
         f'<div class="mark"><svg viewBox="0 0 {d:.1f} {d:.1f}">'
         + institutional_mark(plate, d / 2, d / 2, mark_radius) + "</svg></div>"
-        f'<div class="ar" style="font-size:{ar_size:.2f}mm">{INSTITUTION_AR}</div>'
-        "</div>"
     )
+    runs = plate.language.resolve(INSTITUTION)
+    if not runs:
+        return ""
+    if plate.language.mode == "peer" and len(runs) >= 2:
+        left, right = runs[0], runs[1]
+        cells = "".join(
+            f'<div class="lk lk--{run.script.key}" style="'
+            f"font-size:{base * run.scale:.2f}mm;"
+            f"line-height:{run.script.leading};direction:{run.direction};"
+            f"text-align:{align};"
+            f"font-family:\'{FACE[run.script.face]}\',Georgia,serif\">{run.text}</div>"
+            for run, align in ((left, "right"), (right, "left"))
+        )
+        head, tail = cells[:cells.index("</div>") + 6], cells[cells.index("</div>") + 6:]
+        return f'<div class="lockup">{head}{mark}{tail}</div>'
+    cells = "".join(
+        f'<div class="lk lk--{run.script.key}" style="'
+        f"font-size:{base * run.scale:.2f}mm;"
+        f"line-height:{run.script.leading};direction:{run.direction};"
+        f"font-family:\'{FACE[run.script.face]}\',Georgia,serif\">{run.text}</div>"
+        for run in runs
+    )
+    return f'<div class="lockup lockup--stack">{mark}<div class="lkcol">{cells}</div></div>'
+
 
 
 # =============================================================================
@@ -418,12 +596,13 @@ def lockup(plate: Plate, *, en_size: float, ar_size: float,
 #         5 cm: the lathe petals, the construction polygram, the fine text.
 
 
-def m02() -> tuple[Plate, str, str]:
+def m02(*, language: Architecture | None = None) -> tuple[Plate, str, str]:
     plate = Plate(
         key="M02", name="Imperial Islamic",
         intent="a midnight strapwork border with an ivory field cut into it",
         scheme=scheme_for("imperial"), ground="#F5F0E2", ink="#0E1B33",
         accent="#0E1B33",
+        language=language or architecture_for("peer"),
     )
     s = plate.scheme
     sheet = geo.Rect(0, 0, W, H)
@@ -432,19 +611,43 @@ def m02() -> tuple[Plate, str, str]:
     band = sheet.inset(6.0)
     plate.add("process", f'<rect {band.attrs()} fill="{plate.accent}"/>')
     # The border is the document's own family, not a pattern applied to it.
+    panel_gap = min(22.0, max(12.0, 22.0 - 9.0 * (
+        (sum(r.scale for r in plate.language.resolve(RECIPIENT)) or 1.0) - 1.0
+    ))) + 7.0
     plate.add("foil-primary", MOTIF.field(
         band, cell=11.5, ink=s.primary.face, strength=1.0, width=0.17,
-        hollow=22.0))
+        hollow=panel_gap))
     plate.add("foil-secondary", MOTIF.field(
-        band.inset(13.0), cell=6.4, ink=s.secondary.face, strength=1.0,
-        width=0.09, hollow=9.0))
+        band.inset(max(8.0, panel_gap - 9.0)), cell=6.4,
+        ink=s.secondary.face, strength=1.0, width=0.09, hollow=9.0))
     plate.add("foil-primary", arch._perimeter_rule(band, metal=s.primary,
                                                    weight=0.55))
     plate.add("security", geo.guilloche_band(
-        band.inset(20.4), ink=s.security.core, width=0.07, strength=0.9,
-        amplitude=1.0, waves=int(W / 1.9)))
+        band.inset(max(11.0, panel_gap - 1.6)), ink=s.security.core,
+        width=0.07, strength=0.9, amplitude=1.0, waves=int(W / 1.9)))
 
-    panel = band.inset(22.0)
+    # **The plate responds to the arrangement.** A sheet setting two scripts
+    # carries two runs in every identity slot — the name, the qualification, the
+    # field of study — and that is roughly 20mm more content than a single-script
+    # sheet. Holding the ceremonial panel at one size and letting the execution
+    # band fall onto the midnight border is what happened on the first render of
+    # this proof: seal half off the field, signature rules and verification code
+    # illegible on a dark ground.
+    #
+    # So the panel opens as the arrangement asks for more. This is a design
+    # consequence of language, which is the whole point — the alternative was to
+    # shrink the recipient's name until two scripts fitted in one script's room.
+    # The response is continuous in the arrangement's *typographic load* —
+    # the summed optical scale of the runs in an identity slot — rather than in
+    # a count of scripts. Two arrangements can both set two runs and differ by
+    # 15% in height: `trilingual` gives its Latin run 0.66 where `arabic-primary`
+    # gives it 0.52, and counting scripts treats those as the same document.
+    runs = plate.language.resolve(RECIPIENT)
+    load = sum(run.scale for run in runs) or 1.0
+    scripts = max(1, len(runs))
+    panel = band.inset(min(22.0, max(12.0, 22.0 - 9.0 * (load - 1.0))))
+    field_side = min(45.0, max(32.0, 45.0 - 9.0 * (load - 1.0)))
+    field_end = min(33.0, max(15.0, 33.0 - 15.0 * (load - 1.0)))
     plate.add("process", (
         f'<path d="{arch.stepped_rect_path(panel, cut=13.0)}"'
         f' fill="{plate.ground}"/>'
@@ -471,10 +674,9 @@ def m02() -> tuple[Plate, str, str]:
     fine_text(plate, sheet.inset(9.0), "m02")
 
     css = f"""
-.field {{ left: 47mm; right: 47mm; top: 37mm; bottom: 37mm; align-items: center;
+.field {{ left: {field_side}mm; right: {field_side}mm;
+  top: {field_end}mm; bottom: {field_end}mm; align-items: center;
   text-align: center; }}
-.disp {{ font-family: 'Fraunces', Georgia, serif; }}
-.ar {{ font-family: 'Amiri', serif; direction: rtl; }}
 .lockup .en {{ letter-spacing: 0.11em; text-transform: uppercase;
   color: {plate.accent}; font-weight: 600; line-height: 1.24; }}
 .lockup .ar {{ color: {plate.accent}; font-weight: 700; line-height: 1.5; }}
@@ -486,8 +688,6 @@ def m02() -> tuple[Plate, str, str]:
 .name-ar {{ font-family: 'Amiri', serif; direction: rtl; font-size: 5.8mm;
   font-weight: 700; color: {plate.accent}; line-height: 1.5; flex: none;
   margin-top: 2.0mm; }}
-.degwrap {{ display: flex; align-items: baseline; justify-content: center;
-  gap: 6mm; flex: none; margin-top: 3.4mm; }}
 .deg {{ font-family: 'Fraunces', Georgia, serif; font-size: 6.6mm;
   letter-spacing: 0.155em; text-transform: uppercase; font-weight: 600;
   color: {s.engraved.shadow}; }}
@@ -506,17 +706,15 @@ def m02() -> tuple[Plate, str, str]:
 """
     body = f"""
 <div class="field">
-  {lockup(plate, en_size=3.5, ar_size=4.6)}
+  {lockup(plate, base=3.7)}
   <div class="spacer"></div>
-  <div class="lab conf">{CONFERRAL}</div>
-  <div class="disp name">{keep(RECIPIENT)}</div>
-  <div class="name-ar">{RECIPIENT_AR}</div>
-  <div class="degwrap"><span class="deg">{DEGREE}</span>
-    <span class="deg-ar">{DEGREE_AR}</span></div>
-  <div class="study">{STUDY}</div>
-  <div class="stmt">{STATEMENT}</div>
+  {slot(plate, CONFERRAL, base=2.45, cls="conf", face="ui", lead_only=True)}
+  {slot(plate, RECIPIENT, base=12.4, cls="name", hyphen=True)}
+  {slot(plate, DEGREE, base=6.6, cls="deg", inline=True)}
+  {slot(plate, STUDY, base=4.0, cls="study")}
+  {slot(plate, STATEMENT, base=2.9, cls="stmt", face="body", lead_only=True)}
   <div class="spacer"></div>
-  {divider(plate)}
+  {divider(plate) if scripts == 1 else ""}
   <div class="spacer"></div>
   {execution(plate)}
 </div>
@@ -543,7 +741,7 @@ def m11() -> tuple[Plate, str, str]:
         key="M11", name="Crimson Imperial",
         intent="crimson mass, gold architecture, one bright ceremonial centre",
         scheme=scheme_for("crimson"), ground="#F7F1E4", ink="#2A0E18",
-        accent="#5A1226",
+        accent="#5A1226", language=architecture_for("latin-primary"),
     )
     s = plate.scheme
     sheet = geo.Rect(0, 0, W, H)
@@ -553,10 +751,10 @@ def m11() -> tuple[Plate, str, str]:
     plate.add("process", f'<rect {band.attrs()} fill="{plate.accent}"/>')
     plate.add("foil-secondary", MOTIF.field(
         band, cell=8.8, ink=s.secondary.highlight, strength=0.80, width=0.11,
-        hollow=19.0))
+        hollow=15.0))
     plate.add("foil-primary", arch._perimeter_rule(band, metal=s.primary,
                                                    weight=0.62))
-    inner = band.inset(19.0)
+    inner = band.inset(15.0)
     plate.add("process", (
         f'<path d="{arch.stepped_rect_path(inner, cut=11.0, step=2.4)}"'
         f' fill="{plate.ground}"/>'
@@ -577,7 +775,7 @@ def m11() -> tuple[Plate, str, str]:
     ground_figure(plate, W / 2, H * 0.52, 50, strength=0.028)
     fine_text(plate, sheet.inset(8.4), "m11")
 
-    cart = geo.Rect(3.0, 3.0, 170.0, 22.0)
+    cart = geo.Rect(3.0, 3.0, 170.0, 19.0)
     plaque = (
         '<svg class="cart" viewBox="0 0 176 28" preserveAspectRatio="none">'
         f'<path d="{arch.cartouche_path(cart, arch=3.6, cut=7.0)}"'
@@ -586,10 +784,8 @@ def m11() -> tuple[Plate, str, str]:
         f' fill="none" stroke="{s.engraved.shadow}" stroke-width="0.2"/></svg>'
     )
     css = f"""
-.field {{ left: 42mm; right: 42mm; top: 34mm; bottom: 28mm; align-items: center;
+.field {{ left: 38mm; right: 38mm; top: 22mm; bottom: 18mm; align-items: center;
   text-align: center; }}
-.disp {{ font-family: 'Fraunces', Georgia, serif; }}
-.ar {{ font-family: 'Amiri', serif; direction: rtl; }}
 .lockup .en {{ letter-spacing: 0.13em; text-transform: uppercase;
   color: {plate.accent}; font-weight: 600; line-height: 1.24; }}
 .lockup .ar {{ color: {plate.accent}; font-weight: 700; line-height: 1.5; }}
@@ -600,7 +796,7 @@ def m11() -> tuple[Plate, str, str]:
 .cart {{ position: absolute; inset: 0; width: 100%; height: 100%; }}
 .name {{ position: relative; font-family: 'Fraunces', Georgia, serif;
   font-size: 12.2mm; font-weight: 600; line-height: 1.06; color: {plate.ink};
-  padding: 3.2mm 7mm; letter-spacing: -0.006em; }}
+  padding: 2.4mm 7mm; letter-spacing: -0.006em; }}
 .name-ar {{ font-family: 'Amiri', serif; direction: rtl; font-size: 5.5mm;
   color: {plate.accent}; line-height: 1.5; flex: none; margin-top: 2.0mm; }}
 .deg {{ font-family: 'Fraunces', Georgia, serif; font-size: 6.4mm;
@@ -621,17 +817,18 @@ def m11() -> tuple[Plate, str, str]:
 """
     body = f"""
 <div class="field">
-  {lockup(plate, en_size=3.8, ar_size=4.7)}
+  {lockup(plate, base=3.9)}
   <div class="spacer"></div>
-  <div class="lab conf">{CONFERRAL}</div>
-  <div class="namewrap">{plaque}<span class="disp name">{keep(RECIPIENT)}</span></div>
-  <div class="name-ar">{RECIPIENT_AR}</div>
-  <div class="disp deg">{DEGREE}</div>
-  <div class="study">{STUDY}</div>
-  <div class="lab dist">{DISTINCTION}</div>
-  <div class="stmt">{STATEMENT}</div>
+  {slot(plate, CONFERRAL, base=2.45, cls="conf", face="ui", lead_only=True)}
+  <div class="namewrap">{plaque}
+    <div class="nameinner">{slot(plate, RECIPIENT, base=12.0, cls="name", hyphen=True)}</div>
+  </div>
+  {slot(plate, DEGREE, base=6.6, cls="deg", inline=True)}
+  {slot(plate, STUDY, base=4.0, cls="study")}
+  {slot(plate, DISTINCTION, base=2.3, cls="dist", face="ui", lead_only=True)}
+  {slot(plate, STATEMENT, base=2.9, cls="stmt", face="body", lead_only=True)}
   <div class="spacer"></div>
-  {divider(plate)}
+  {divider(plate) if len(plate.language.order) == 1 else ''}
   <div class="spacer"></div>
   {execution(plate)}
 </div>
@@ -659,7 +856,7 @@ def m12() -> tuple[Plate, str, str]:
         intent="one construction for frame and field: the lattice dissolving "
                "from trim to centre",
         scheme=scheme_for("signature"), ground="#F7F2E6", ink="#0A101C",
-        accent="#132038",
+        accent="#132038", language=architecture_for("peer"),
     )
     s = plate.scheme
     sheet = geo.Rect(0, 0, W, H)
@@ -668,7 +865,7 @@ def m12() -> tuple[Plate, str, str]:
     # Four densities. The value range is what makes the dissolve legible; when
     # the bands sat within a factor of six of each other the frame read as one
     # even lattice and the concept did not appear at all.
-    field = content_field(43, 43, 33, 30)
+    field = content_field(43, 43, 28, 23)
     for inset, cell, strength, width, metal in (
         (5.0, 7.0, 1.000, 0.20, s.primary),
         (15.0, 12.0, 0.460, 0.13, s.primary),
@@ -689,10 +886,8 @@ def m12() -> tuple[Plate, str, str]:
     fine_text(plate, sheet.inset(9.6), "m12")
 
     css = f"""
-.field {{ left: 43mm; right: 43mm; top: 33mm; bottom: 30mm; align-items: center;
+.field {{ left: 43mm; right: 43mm; top: 28mm; bottom: 23mm; align-items: center;
   text-align: center; }}
-.disp {{ font-family: 'Source Serif 4', Georgia, serif; }}
-.ar {{ font-family: 'Amiri', serif; direction: rtl; }}
 .lockup .en {{ letter-spacing: 0.14em; text-transform: uppercase;
   color: {plate.accent}; font-weight: 700; line-height: 1.26;
   font-family: 'Source Serif 4', serif; }}
@@ -722,16 +917,15 @@ def m12() -> tuple[Plate, str, str]:
 """
     body = f"""
 <div class="field">
-  {lockup(plate, en_size=3.6, ar_size=4.7, mark_radius=7.4)}
+  {lockup(plate, base=3.7, mark_radius=7.4)}
   <div class="spacer"></div>
-  <div class="lab conf">{CONFERRAL}</div>
-  <div class="disp name">{keep(RECIPIENT)}</div>
-  <div class="name-ar">{RECIPIENT_AR}</div>
-  <div class="disp deg">{DEGREE}</div>
-  <div class="study">{STUDY}</div>
-  <div class="stmt">{STATEMENT}</div>
+  {slot(plate, CONFERRAL, base=2.45, cls="conf", face="ui", lead_only=True)}
+  {slot(plate, RECIPIENT, base=12.4, cls="name", hyphen=True)}
+  {slot(plate, DEGREE, base=6.6, cls="deg", inline=True)}
+  {slot(plate, STUDY, base=4.0, cls="study")}
+  {slot(plate, STATEMENT, base=2.9, cls="stmt", face="body", lead_only=True)}
   <div class="spacer"></div>
-  {divider(plate)}
+  {divider(plate) if len(plate.language.order) == 1 else ''}
   <div class="spacer"></div>
   {execution(plate)}
 </div>
@@ -760,7 +954,7 @@ def m01() -> tuple[Plate, str, str]:
         intent="a palace doorcase: mass at the corners, a stepped architrave, "
                "a crest breaking the line",
         scheme=scheme_for("palace"), ground="#F7F2E6", ink="#101826",
-        accent="#14294C",
+        accent="#14294C", language=architecture_for("latin-only"),
     )
     s = plate.scheme
     sheet = geo.Rect(0, 0, W, H)
@@ -778,7 +972,7 @@ def m01() -> tuple[Plate, str, str]:
     plate.add("foil-secondary", MOTIF.field(
         sheet.inset(13.1), cell=6.0, ink=s.secondary.core, strength=0.62,
         width=0.085, hollow=6.0,
-        keep_out=content_field(37, 37, 44, 34).inset(-3.0)))
+        keep_out=content_field(37, 37, 40, 30).inset(-3.0)))
 
     architrave = inner.inset(2.6)
     plate.add("foil-primary", (
@@ -799,10 +993,8 @@ def m01() -> tuple[Plate, str, str]:
     fine_text(plate, sheet.inset(9.0), "m01")
 
     css = f"""
-.field {{ left: 37mm; right: 37mm; top: 44mm; bottom: 34mm; align-items: center;
+.field {{ left: 37mm; right: 37mm; top: 40mm; bottom: 30mm; align-items: center;
   text-align: center; }}
-.disp {{ font-family: 'Fraunces', Georgia, serif; }}
-.ar {{ font-family: 'Amiri', serif; direction: rtl; }}
 .lockup .en {{ letter-spacing: 0.12em; text-transform: uppercase;
   color: {plate.accent}; font-weight: 600; line-height: 1.24; }}
 .lockup .ar {{ color: {plate.accent}; font-weight: 700; line-height: 1.5; }}
@@ -832,17 +1024,16 @@ def m01() -> tuple[Plate, str, str]:
 """
     body = f"""
 <div class="field">
-  {lockup(plate, en_size=3.7, ar_size=4.7)}
+  {lockup(plate, base=3.8)}
   <div class="spacer"></div>
-  <div class="lab conf">{CONFERRAL}</div>
-  <div class="disp name">{keep(RECIPIENT)}</div>
-  <div class="name-ar">{RECIPIENT_AR}</div>
-  <div class="disp deg">{DEGREE}</div>
-  <div class="study">{STUDY}</div>
-  <div class="lab dist">{DISTINCTION}</div>
-  <div class="stmt">{STATEMENT}</div>
+  {slot(plate, CONFERRAL, base=2.45, cls="conf", face="ui", lead_only=True)}
+  {slot(plate, RECIPIENT, base=12.4, cls="name", hyphen=True)}
+  {slot(plate, DEGREE, base=6.6, cls="deg", inline=True)}
+  {slot(plate, STUDY, base=4.0, cls="study")}
+  {slot(plate, DISTINCTION, base=2.3, cls="dist", face="ui", lead_only=True)}
+  {slot(plate, STATEMENT, base=2.9, cls="stmt", face="body", lead_only=True)}
   <div class="spacer"></div>
-  {divider(plate)}
+  {divider(plate) if len(plate.language.order) == 1 else ''}
   <div class="spacer"></div>
   {execution(plate)}
 </div>
@@ -851,6 +1042,20 @@ def m01() -> tuple[Plate, str, str]:
 
 
 FINALISTS = (m02, m11, m12, m01)
+
+#: The language proof. One plate architecture — M02 — under six arrangements,
+#: because the rule is that no arrangement is a special case and the only way to
+#: show that is to render them all from the same builder with nothing swapped
+#: but the architecture. Two of them carry a phrase the institution never
+#: supplied a second script for, which is the ordinary case, not an error case.
+LANGUAGE_PROOF: tuple[tuple[str, str], ...] = (
+    ("peer", "Side by side, optically equal"),
+    ("latin-only", "English only — an international award"),
+    ("arabic-only", "Arabic only — a scholarly ijāzah"),
+    ("arabic-primary", "Arabic ceremonial, English explanatory"),
+    ("latin-primary", "English ceremonial, Arabic institutional"),
+    ("trilingual", "Three scripts, because three must not break the layout"),
+)
 
 
 def measured_separations(page_path: pathlib.Path, plate: Plate) -> None:
@@ -922,6 +1127,27 @@ def measured_separations(page_path: pathlib.Path, plate: Plate) -> None:
         ))
 
 
+def stroke_census(plate: Plate) -> list[tuple[float, int]]:
+    """Every stroke width in the artwork, counted.
+
+    Taken from the Sultan Hanafi press specification, which does not *claim* a
+    hairline floor — it counts the strokes and tells the printer the
+    distribution, then asks them to confirm their reproduction floor. That is a
+    better document than an assertion, because a printer can act on it: they can
+    say "0.05mm will fill in on our press" and the specific 2 strokes at that
+    width get raised, rather than the whole plate being re-drawn on a guess.
+    """
+    import collections
+    import re
+
+    counts: collections.Counter[float] = collections.Counter()
+    for fragments in plate.layers.values():
+        for fragment in fragments:
+            for value in re.findall(r'stroke-width="([\d.]+)"', fragment):
+                counts[round(float(value), 3)] += 1
+    return sorted(counts.items())
+
+
 def specification(plate: Plate) -> str:
     """The print specification, generated from the plate the artwork is.
 
@@ -931,6 +1157,12 @@ def specification(plate: Plate) -> str:
     same objects the plate is drawn from.
     """
     s = plate.scheme
+    widths = stroke_census(plate)
+    census = "\n".join(
+        ["| Width | Count |", "|---|---|"]
+        + [f"| **{width:.3f} mm** | {count} |" for width, count in widths]
+    ) or "_no strokes_"
+    floor = widths[0][0] if widths else 0.0
     rows = "\n".join(
         f"| {name} | {description} |"
         for name, description in SEPARATIONS if plate.layers.get(name)
@@ -1011,16 +1243,46 @@ The emboss and variable-data layers are emitted at *measured* positions read
 back from the rendered page, because those elements are placed by the layout and
 their coordinates are a result rather than an input.
 
-## 6 · Linework
+## 6 · Linework — counted, not asserted
 
-| Element | Weight |
-|---|---|
-| Fine text and micro-texture | 0.07–0.09 mm |
-| Fine register | 0.09–0.20 mm |
-| Engraved rule | three flat strokes, 0.28–0.72 mm overall |
-| Frame register | 0.55–0.72 mm |
+Every stroke in the supplied separations, by width:
 
-No opacity on any line, at any weight. Every pale tone is a flat pre-mixed ink.
+{census}
+
+**The floor in this artwork is {floor:.3f} mm.** That is stated so you can act on
+it: confirm your reproduction floor and anything underneath it will be raised,
+rather than being left to drop out or fill in. Nothing here uses a "hairline"
+keyword — every stroke is an explicit width in millimetres.
+
+No opacity on any line, at any weight. Every pale tone is a flat pre-mixed ink,
+because a stroke with an opacity separates into a screen percentage and a
+screened hairline is the first thing to leave the sheet.
+
+## 6a · Three questions, answers required in writing
+
+Nothing further can be finished until these are answered. Each blocks a specific
+step; none is a preference.
+
+**Which ICC output profile?** A PDF/X file *is* a PDF plus an output intent, and
+the output intent is your characterisation of your press, your paper and your
+ink. There is no safe default and one will not be guessed — guessing ships a
+file that states, in machine-readable form, a printing condition nobody agreed
+to. It also blocks the RGB→CMYK separation, because the separation is *to* that
+profile.
+
+**Which PDF/X part — and will you accept PDF/X-4?** The artwork uses live
+transparency in the emboss simulation. PDF/X-1a and PDF/X-3 forbid it and force
+a flatten; PDF/X-4 permits it. This is not a metadata setting: a flatten turns
+every rule, guilloché line and fine-text rail into a raster at the flattener's
+resolution, and a certificate that has been rasterised is a photograph of a
+certificate. If you require X-1a or X-3, say so and the transparency will be
+removed by redrawing rather than by conversion.
+
+**Your maximum total area coverage, and must pure black stay 100 % K?** The
+plate carries large solid dark areas, so the separation has to be built to your
+TAC limit rather than trimmed to it afterwards. And if a machine-readable mark
+is added to this family later it will be drawn in pure black: separated into a
+rich four-colour black it picks up registration spread and stops scanning.
 
 ## 7 · Fine text — measured, and not microprint
 
@@ -1058,6 +1320,57 @@ a specification, not a result.
 """
 
 
+def audit_overflow(page_path: pathlib.Path) -> float:
+    """Measure whether the composition overflowed its field. Returns mm over.
+
+    The Sultan Hanafi work runs a collision audit against every sheet, and the
+    reason is visible in this project's own history: the same defect class —
+    content leaving the ceremonial panel and landing on the border — has been
+    found by eye four times and never by a test. Eyes are the right instrument
+    for judging a composition and the wrong one for measuring whether it fits.
+
+    A flex column's `scrollHeight` above its `clientHeight` is exactly the
+    overflow, in pixels, converted here at 96 px per inch. Zero is the only
+    acceptable answer; anything else means the execution band, the seal or the
+    verification code is somewhere the design did not put it.
+    """
+    from playwright.sync_api import sync_playwright
+
+    chrome = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
+    with sync_playwright() as play:
+        browser = play.chromium.launch(executable_path=chrome)
+        view = browser.new_context(
+            viewport={"width": 1400, "height": 1000}).new_page()
+        view.goto(page_path.resolve().as_uri())
+        view.wait_for_timeout(600)
+        over = view.evaluate(
+            "() => { const f = document.querySelector('.field');"
+            " return f ? f.scrollHeight - f.clientHeight : 0; }"
+        )
+        browser.close()
+    return max(0.0, over) * 25.4 / 96.0
+
+
+def language_proof() -> None:
+    """M02 under every arrangement, rendered into `masterpieces/language/`."""
+    out = OUT / "language"
+    out.mkdir(parents=True, exist_ok=True)
+    for key, note in LANGUAGE_PROOF:
+        plate, body, css = m02(language=architecture_for(key))
+        plate = replace_language_note(plate, note)
+        target = out / f"lang-{key}.html"
+        target.write_text(page(plate, body, css), encoding="utf-8")
+        over = audit_overflow(target)
+        flag = "OK " if over <= 0.05 else f"OVERFLOW {over:5.1f}mm"
+        print(f"  {key:16s} {flag}")
+    print(f"language proof: {len(LANGUAGE_PROOF)} arrangements")
+
+
+def replace_language_note(plate: Plate, note: str) -> Plate:
+    plate.intent = f"{plate.language.name} — {note}"
+    return plate
+
+
 def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     for build in FINALISTS:
@@ -1079,7 +1392,10 @@ def main() -> int:
         (OUT / f"{slug}--specification.md").write_text(
             specification(plate), encoding="utf-8")
         made = [n for n, _ in SEPARATIONS if plate.layers.get(n)]
-        print(f"{slug:32s} {len(made)} separations + specification")
+        over = audit_overflow(page_path)
+        flag = "fits" if over <= 0.05 else f"OVERFLOWS by {over:.1f}mm"
+        print(f"{slug:32s} {len(made)} separations + spec · {flag}")
+    language_proof()
     return 0
 
 

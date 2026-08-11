@@ -63,6 +63,24 @@ __all__ = [
 #: reads as "generated" at close range.
 ORDERS: Final[tuple[int, ...]] = (8, 10, 12)
 
+#: The thinnest stroke this module will emit, in millimetres. Every figure here
+#: derives sub-strokes from a caller's width — a rosette's construction polygram
+#: is 0.55 of its star's weight, its kites 0.62 — and those multipliers compound
+#: silently. A stroke census over the finished separations found **1320 strokes
+#: at 0.050 mm**, all of them derived, all of them below this package's own
+#: stated floor and below the 0.25 pt hairline most litho specifications quote.
+#: Nothing in the artwork asked for 0.05 mm; arithmetic produced it.
+#:
+#: So the floor is enforced where the multiplication happens rather than
+#: audited afterwards. A line that would print as a broken dash, or fill in, is
+#: not a fine line — it is a defect that looks like restraint at 300 DPI.
+STROKE_FLOOR: Final[float] = 0.07
+
+
+def _held(width: float) -> float:
+    """A stroke width, never below the press floor."""
+    return max(STROKE_FLOOR, width)
+
 
 #: The sharpness every family's stars are struck at. Not a preference: it is the
 #: number that makes an eight-fold and a twelve-fold document look like
@@ -173,7 +191,7 @@ class Motif:
              width: float, sharpen: float = 1.0, fill: str = "none") -> str:
         return (
             f'<path d="{self.star_path(cx, cy, radius, sharpen=sharpen)}"'
-            f' fill="{fill}" stroke="{ink}" stroke-width="{width:.3f}"'
+            f' fill="{fill}" stroke="{ink}" stroke-width="{_held(width):.3f}"'
             ' stroke-linejoin="miter"/>'
         )
 
@@ -202,7 +220,7 @@ class Motif:
             out.append("".join(points) + "Z")
         return (
             f'<path d="{"".join(out)}" fill="none" stroke="{ink}"'
-            f' stroke-width="{width:.3f}" stroke-linejoin="miter"/>'
+            f' stroke-width="{_held(width):.3f}" stroke-linejoin="miter"/>'
         )
 
     def rosette(self, cx: float, cy: float, radius: float, *, ink: str,
@@ -244,7 +262,7 @@ class Motif:
                     f'<path d="M{base[0]:.2f} {base[1]:.2f} '
                     f'L{left[0]:.2f} {left[1]:.2f} L{tip[0]:.2f} {tip[1]:.2f} '
                     f'L{right[0]:.2f} {right[1]:.2f} Z" fill="none"'
-                    f' stroke="{ink}" stroke-width="{width * 0.62:.3f}"/>'
+                    f' stroke="{ink}" stroke-width="{_held(width * 0.62):.3f}"/>'
                 )
         return "".join(out)
 
@@ -354,7 +372,7 @@ class Motif:
             path = geo.epitrochoid(cx, cy, big, small, pen, scale=scale)
             out.append(
                 f'<path d="{path}" fill="none" stroke="{stroke}"'
-                f' stroke-width="{width:.3f}"'
+                f' stroke-width="{_held(width):.3f}"'
                 f' transform="rotate({rotation:.2f} {cx:.2f} {cy:.2f})"/>'
             )
         return "".join(out)
