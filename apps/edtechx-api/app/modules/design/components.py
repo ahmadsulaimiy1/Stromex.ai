@@ -32,6 +32,8 @@ __all__ = [
     "badge",
     "breadcrumbs",
     "button",
+    "candidature_axis",
+    "caseload_row",
     "checkbox",
     "command_palette",
     "data_table",
@@ -43,6 +45,8 @@ __all__ = [
     "figure",
     "figures",
     "list_item",
+    "milestone_row",
+    "milestone_track",
     "notification",
     "page_header",
     "pagination",
@@ -100,12 +104,18 @@ def section(
     The most repeated composition in EdirasX, and the reason a dozen unrelated
     screens read as one product. The rule is what carries the identity; the
     label is what makes a person able to scan a page in two seconds.
+
+    The label is an `<h2>`, not a paragraph. It reads as a heading, it is used
+    as one, and rendering it as a paragraph meant a page went from `<h1>` to
+    the `<h3>` inside a panel with nothing in between — which is how somebody
+    navigating by heading loses the structure of the page entirely. Found by an
+    audit, on five journeys at once.
     """
-    title = f'<h2 class="ed-heading">{e(heading)}</h2>' if heading else ""
+    title = f'<h3 class="ed-heading">{e(heading)}</h3>' if heading else ""
     return (
         '<section class="ed-section">'
         '<div class="ed-section__head">'
-        f'<p class="ed-label">{e(label)}</p>'
+        f'<h2 class="ed-label">{e(label)}</h2>'
         f"{ornament.rule(gold=gold)}"
         + (f'<span class="ed-section__aside">{aside}</span>' if aside else "")
         + "</div>"
@@ -265,10 +275,15 @@ def field(
     required: bool = False,
 ) -> str:
     marker = ' <span class="ed-label--gold" aria-hidden="true">•</span>' if required else ""
+    # The label wraps the control rather than sitting beside it. A `<label>`
+    # with no `for` and no child input is a paragraph in a smaller font: an
+    # audit reported three unlabelled inputs on the styleguide, and it was the
+    # component at fault rather than the page.
     return (
         '<div class="ed-field">'
-        f'<label class="ed-field__label">{e(label)}{marker}</label>'
+        f'<label class="ed-field__label">{e(label)}{marker}'
         + control
+        + "</label>"
         + (f'<p class="ed-field__hint">{e(hint)}</p>' if hint and not error else "")
         + (f'<p class="ed-field__error">{e(error)}</p>' if error else "")
         + "</div>"
@@ -394,6 +409,13 @@ def alert(
 
 
 def progress(value: float, *, label: str = "") -> str:
+    """A determinate bar, which must say what it is measuring.
+
+    `aria-valuenow` alone tells a screen-reader user "68 percent" and not 68
+    percent *of what*. An audit reported this as an unnamed progressbar on
+    every page that used one, which was fair: the visible label was beside the
+    bar and not attached to it.
+    """
     pct = max(0.0, min(100.0, value))
     return (
         "<div>"
@@ -405,7 +427,8 @@ def progress(value: float, *, label: str = "") -> str:
             if label else ""
         )
         + f'<div class="ed-progress" role="progressbar" aria-valuenow="{pct:.0f}" '
-          f'aria-valuemin="0" aria-valuemax="100">'
+          f'aria-valuemin="0" aria-valuemax="100" '
+          f'aria-label="{e(label or "Progress")}">'
           f'<div class="ed-progress__bar" style="width:{pct:.1f}%"></div></div>'
         + "</div>"
     )
@@ -534,8 +557,19 @@ def matrix_row(
     beneath the subject — because a parent opening a report card on a phone came
     to see the grade, and everything else is supporting it.
     """
-    detail_cells = "".join(
-        f'<span data-label="{e(label)}">{e(value)}</span>' for label, value in details
+    # The runs live inside a wrapper rather than making the `<td>` itself a
+    # flex container. A cell with `display: flex` is no longer a table-cell, so
+    # `border-collapse` stops governing it: on the last row of a matrix every
+    # other cell's rule was collapsed away and this one's was not, leaving a
+    # 270px hairline floating under one column. Visible only at tablet width,
+    # which is where it was found.
+    detail_cells = (
+        '<span class="ed-detail">'
+        + "".join(
+            f'<span data-label="{e(label)}">{e(value)}</span>'
+            for label, value in details
+        )
+        + "</span>"
     )
     return (
         "<tr>"
@@ -658,7 +692,7 @@ def drawer(title: str, body: str, *, meta: str = "", actions: str = "") -> str:
     """
     return (
         '<div class="ed-drawer__scrim">'
-        '<aside class="ed-drawer" role="dialog" aria-modal="true" '
+        '<div class="ed-drawer" role="dialog" aria-modal="true" '
         'aria-labelledby="ed-drawer-title">'
         '<header class="ed-drawer__head"><div>'
         f'<h2 class="ed-title" id="ed-drawer-title">{e(title)}</h2>'
@@ -671,9 +705,13 @@ def drawer(title: str, body: str, *, meta: str = "", actions: str = "") -> str:
             style="margin-inline-start:auto",
         )
         + "</header>"
-        + f'<div class="ed-drawer__body">{body}</div>'
+        # `tabindex="0"` because the body scrolls: a region a mouse can scroll
+        # and a keyboard cannot is unreachable content, and axe is right to
+        # call it a failure rather than a nicety.
+        + f'<div class="ed-drawer__body" tabindex="0" role="group" '
+          f'aria-label="{e(title)} details">{body}</div>'
         + (f'<div class="ed-drawer__foot">{actions}</div>' if actions else "")
-        + "</aside></div>"
+        + "</div></div>"
     )
 
 
@@ -726,4 +764,145 @@ def register_row(
         + f'<div class="ed-marks" role="group" aria-label="Attendance for {e(name)}">'
         + marks
         + "</div></div>"
+    )
+
+
+# --- candidature ------------------------------------------------------------
+#
+# The one part of EdirasX where the unit of time is the year. A research
+# candidate's screen cannot be built from the components above without lying
+# about the shape of the thing: a doctorate is not a list of items due this
+# week, and rendering it as one is how every student-information system ends up
+# telling a fourth-year candidate that they have nothing on today.
+#
+# So the primary object is an *axis*. It is drawn from arithmetic — months
+# elapsed over the horizon the programme itself set — and the milestones sit on
+# it at their own offsets. Nothing here is decorative: every position on the
+# line is a date somebody will be held to.
+
+
+def _pct(value: float, total: float) -> float:
+    if total <= 0:
+        return 0.0
+    return max(0.0, min(100.0, value / total * 100.0))
+
+
+def candidature_axis(
+    *,
+    months: int,
+    elapsed: int,
+    marks: Sequence[tuple[str, int, str]] = (),
+    summary: str,
+    compact: bool = False,
+) -> str:
+    """Position along a candidature, drawn to scale.
+
+    `marks` are `(label, month, state)`, where state is one of `done`, `due`,
+    `late` or `ahead`. The axis itself is hidden from assistive technology and
+    `summary` carries the same facts in a sentence — a screen reader user gets
+    "Month 20 of 48" rather than a list of unlabelled positions, and the
+    milestone names are in the track below where they read properly.
+    """
+    ticks = ""
+    if not compact and months:
+        years = months // 12
+        ticks = "".join(
+            f'<span class="ed-axis__tick" style="inset-inline-start:{_pct(y * 12, months):.4f}%">'
+            f'<span class="ed-axis__tick-label">Year {y + 1}</span></span>'
+            for y in range(years)
+        )
+    nodes = "".join(
+        f'<span class="ed-axis__mark" data-state="{e(state)}" '
+        f'style="inset-inline-start:{_pct(month, months):.4f}%" '
+        f'title="{e(label)}">{ornament.node(7 if compact else 9)}</span>'
+        for label, month, state in marks
+    )
+    here = _pct(elapsed, months)
+    return (
+        f'<div class="ed-axis{" ed-axis--compact" if compact else ""}">'
+        + f'<p class="ed-sr">{e(summary)}</p>'
+        + '<div class="ed-axis__line" aria-hidden="true">'
+        + f'<span class="ed-axis__elapsed" style="inline-size:{here:.4f}%"></span>'
+        + ticks
+        + nodes
+        + f'<span class="ed-axis__now" style="inset-inline-start:{here:.4f}%"></span>'
+        + "</div>"
+        + (
+            ""
+            if compact
+            else f'<p class="ed-axis__caption ed-quiet">{e(summary)}</p>'
+        )
+        + "</div>"
+    )
+
+
+def milestone_row(
+    name: str,
+    *,
+    state: str,
+    when: str,
+    detail: str = "",
+    trail: str = "",
+) -> str:
+    """One checkpoint on the vertical track.
+
+    The node is filled for what has happened, hollow for what has not, and
+    garnet for what is late — and the state is *also* written in words beside
+    it, because a colour that is the only carrier of meaning is not a signal to
+    somebody who cannot see it.
+    """
+    return (
+        f'<li class="ed-track__item" data-state="{e(state)}">'
+        + '<span class="ed-track__node" aria-hidden="true"></span>'
+        + '<div class="ed-track__body">'
+        + f'<p class="ed-track__name">{e(name)}</p>'
+        + (f'<p class="ed-track__detail">{e(detail)}</p>' if detail else "")
+        + "</div>"
+        + f'<div class="ed-track__when"><p class="ed-track__date">{e(when)}</p>'
+        + (f'<div class="ed-track__trail">{trail}</div>' if trail else "")
+        + "</div></li>"
+    )
+
+
+def milestone_track(rows: Iterable[str]) -> str:
+    return f'<ol class="ed-track">{"".join(rows)}</ol>'
+
+
+def caseload_row(
+    name: str,
+    *,
+    meta: str,
+    axis: str,
+    contact: str,
+    contact_state: str = "",
+    next_up: str,
+    next_state: str = "",
+    actions: str = "",
+) -> str:
+    """One researcher, as the person responsible for them needs to see them.
+
+    Two facts get their own columns and neither appears on any other screen in
+    the product: how long since this candidate was last seen, and what the next
+    requirement is. They are the two numbers that go wrong months before a
+    research degree formally fails.
+    """
+    return (
+        '<div class="ed-caseload__row">'
+        + '<div class="ed-caseload__who">'
+        + avatar(name)
+        + f'<div><p class="ed-caseload__name">{e(name)}</p>'
+        + f'<p class="ed-caseload__meta">{e(meta)}</p></div>'
+        + "</div>"
+        + f'<div class="ed-caseload__axis">{axis}</div>'
+        + '<div class="ed-caseload__facts">'
+        + '<div class="ed-caseload__fact">'
+        + '<p class="ed-label">Last met</p>'
+        + f'<p class="ed-caseload__value" data-state="{e(contact_state)}">{e(contact)}</p>'
+        + "</div>"
+        + '<div class="ed-caseload__fact">'
+        + '<p class="ed-label">Next</p>'
+        + f'<p class="ed-caseload__value" data-state="{e(next_state)}">{e(next_up)}</p>'
+        + "</div></div>"
+        + (f'<div class="ed-caseload__actions">{actions}</div>' if actions else "")
+        + "</div>"
     )

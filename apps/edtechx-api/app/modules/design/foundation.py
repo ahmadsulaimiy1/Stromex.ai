@@ -31,6 +31,15 @@ __all__ = ["FOUNDATION", "document_css", "page_css"]
 
 
 FOUNDATION = """
+/* The focus indicator, composed here rather than in the token file because it
+   is a shadow built *from* a themed colour. It was a fixed translucent royal
+   in the primitives, which meant the ring did not change with the mode and was
+   all but invisible on midnight — the defect an axe run plus a keyboard walk
+   found together, and neither would have found alone. */
+:root {
+  --focus-ring: 0 0 0 3px var(--border-focus);
+  --focus-ring-gold: 0 0 0 3px var(--accent-metal);
+}
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body {
@@ -139,7 +148,16 @@ body {
    makes twelve unrelated screens feel like one product. */
 .ed-section { margin-block-end: var(--space-8); }
 .ed-grid + .ed-section, .ed-panel + .ed-section,
-.ed-figures + .ed-section { margin-block-start: var(--space-8); }
+.ed-figures + .ed-section,
+/* An alert sat flush against the label of the section beneath it: correct
+   markup, and it read as one bruised block. */
+.ed-alert + .ed-section, .ed-caseload + .ed-section
+  { margin-block-start: var(--space-8); }
+/* And the mirror of it. A warning sitting flush on the rule beneath a row of
+   figures read as part of the figures — found on the secondary administrator's
+   screen at tablet width, where the two collide first. */
+.ed-figures + .ed-alert, .ed-panel + .ed-alert, .ed-grid + .ed-alert
+  { margin-block-start: var(--space-6); }
 .ed-section__head {
   display: flex;
   align-items: baseline;
@@ -196,7 +214,7 @@ body {
               color var(--duration-fast) var(--easing-standard);
 }
 .ed-btn:hover { background: var(--surface-sunken); }
-.ed-btn:focus-visible { outline: none; box-shadow: var(--shadow-ring); }
+.ed-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .ed-btn:active { transform: translateY(0.5px); }
 .ed-btn[disabled], .ed-btn[aria-disabled="true"] {
   color: var(--state-disabled);
@@ -218,7 +236,7 @@ body {
   --btn-border: var(--accent-metal);
 }
 .ed-btn--ceremonial:hover { --btn-bg: var(--surface-selected); }
-.ed-btn--ceremonial:focus-visible { box-shadow: var(--shadow-ring-gold); }
+.ed-btn--ceremonial:focus-visible { box-shadow: var(--focus-ring-gold); }
 .ed-btn--quiet { --btn-border: transparent; }
 .ed-btn--danger { --btn-fg: var(--text-danger); --btn-border: var(--state-danger); }
 .ed-btn--sm { min-height: calc(var(--control-height) * 0.82); font-size: var(--text-2xs); }
@@ -235,17 +253,27 @@ body {
   transition: border-color var(--duration-fast) var(--easing-standard);
 }
 .ed-link:hover { border-block-end-color: currentColor; }
-.ed-link:focus-visible { outline: none; box-shadow: var(--shadow-ring); border-radius: 1px; }
+.ed-link:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 1px; }
 
 /* --- fields ------------------------------------------------------------- */
 
 .ed-field { display: flex; flex-direction: column; gap: var(--space-2); }
+/* The label now *contains* its control, so it is a column of two rather than
+   a line of text. The typography below applies to the label's own text only. */
 .ed-field__label {
+  display: flex; flex-direction: column; gap: var(--space-2);
   font-size: var(--text-2xs);
   font-weight: var(--weight-semibold);
   letter-spacing: var(--tracking-wider);
   text-transform: uppercase;
   color: var(--text-secondary);
+}
+.ed-field__label > .ed-input,
+.ed-field__label > .ed-select,
+.ed-field__label > .ed-textarea {
+  font-size: var(--text-sm); font-weight: var(--weight-regular);
+  letter-spacing: var(--tracking-normal); text-transform: none;
+  color: var(--text-primary);
 }
 .ed-field__hint { font-size: var(--text-2xs); color: var(--text-tertiary); }
 .ed-field__error {
@@ -272,7 +300,7 @@ body {
 .ed-input:focus, .ed-select:focus, .ed-textarea:focus {
   outline: none;
   border-color: var(--accent-strong);
-  box-shadow: var(--shadow-ring);
+  box-shadow: var(--focus-ring);
 }
 .ed-input[aria-invalid="true"] { border-color: var(--state-danger); }
 .ed-input[disabled], .ed-select[disabled], .ed-textarea[disabled] {
@@ -311,7 +339,7 @@ body {
   transform: rotate(45deg) translate(-1px, -1px);
 }
 .ed-check__box--round input:checked + &::after { border-radius: var(--radius-full); }
-.ed-check input:focus-visible + .ed-check__box { box-shadow: var(--shadow-ring); }
+.ed-check input:focus-visible + .ed-check__box { box-shadow: var(--focus-ring); }
 .ed-check input[disabled] + .ed-check__box {
   background: var(--state-disabled-surface); border-color: var(--state-disabled);
 }
@@ -335,7 +363,7 @@ body {
 .ed-switch input:checked + .ed-switch__track .ed-switch__thumb {
   transform: translateX(1.05rem);
 }
-.ed-switch input:focus-visible + .ed-switch__track { box-shadow: var(--shadow-ring); }
+.ed-switch input:focus-visible + .ed-switch__track { box-shadow: var(--focus-ring); }
 
 /* --- badges, chips, avatars --------------------------------------------- */
 
@@ -409,10 +437,12 @@ body {
    separator the cells read as "82 / 100Examination", which is how the first
    render of this actually looked. */
 .ed-data[data-shape="matrix"] td[data-role="detail"] {
-  display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-5);
   color: var(--text-secondary); font-size: var(--text-2xs);
 }
-.ed-data[data-shape="matrix"] td[data-role="detail"] span::before {
+.ed-data[data-shape="matrix"] .ed-detail {
+  display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-5);
+}
+.ed-data[data-shape="matrix"] td[data-role="detail"] span span::before {
   content: attr(data-label) ' ';
   text-transform: uppercase; letter-spacing: var(--tracking-wider);
   color: var(--text-tertiary); font-size: 0.9em;
@@ -458,7 +488,7 @@ body {
   content: ''; position: absolute; inset-inline: 0; bottom: -1px; height: 2px;
   background: var(--accent-metal);
 }
-.ed-tab:focus-visible { outline: none; box-shadow: var(--shadow-ring); border-radius: 2px; }
+.ed-tab:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 2px; }
 
 .ed-crumbs {
   display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
@@ -719,7 +749,7 @@ body {
   transition: all var(--duration-fast) var(--easing-standard);
 }
 .ed-mark:hover { border-color: var(--text-tertiary); }
-.ed-mark:focus-visible { outline: none; box-shadow: var(--shadow-ring); }
+.ed-mark:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .ed-mark[aria-pressed="true"] {
   background: var(--accent-strong); border-color: var(--accent-strong);
   color: var(--text-on-accent);
@@ -752,6 +782,155 @@ body {
      supporting information: it gets its own line above the action. */
   .ed-sticky-bar .ed-label { flex: 1 0 100%; }
   .ed-sticky-bar .ed-btn { flex: 1; margin-inline-start: 0; }
+}
+
+/* --- candidature: the only screen whose unit of time is the year --------- */
+
+.ed-axis { display: block; }
+.ed-axis__line {
+  position: relative;
+  block-size: 1px;
+  background: var(--border-strong);
+  margin-block: var(--space-7) var(--space-5);
+}
+.ed-axis--compact .ed-axis__line { margin-block: var(--space-4); }
+/* Elapsed time is drawn as weight on the same line rather than as a filled
+   bar: a progress bar says "68% done", and a candidature is not 68% done
+   because twenty months have passed. */
+.ed-axis__elapsed {
+  position: absolute; inset-block-start: 0; inset-inline-start: 0;
+  block-size: 1px; background: var(--text-primary);
+}
+/* Where the candidate is today. Two pixels rather than one, because at one it
+   disappeared beside the milestone node it happened to sit next to. */
+.ed-axis__now {
+  position: absolute; inset-block-start: -9px;
+  inline-size: 2px; block-size: 19px;
+  background: var(--accent-metal);
+}
+.ed-axis--compact .ed-axis__now { inset-block-start: -5px; block-size: 11px; }
+.ed-axis__tick {
+  position: absolute; inset-block-start: 0;
+  inline-size: 1px; block-size: 5px;
+  background: var(--border-strong);
+}
+.ed-axis__tick-label {
+  position: absolute; inset-block-start: -1.5rem; inset-inline-start: 0;
+  font-size: var(--text-3xs); letter-spacing: var(--tracking-widest);
+  text-transform: uppercase; color: var(--text-tertiary);
+  white-space: nowrap;
+}
+.ed-axis__mark {
+  position: absolute; inset-block-start: 50%;
+  transform: translate(-50%, -50%); line-height: 0;
+}
+/* The node's own `fill` attribute sits on the path, so the class on the <svg>
+   never reached it and every mark rendered the same ink. Found by looking at
+   the axis and seeing five identical dots where two should have been gold. */
+.ed-axis__mark .ed-node path { fill: var(--text-tertiary); }
+.ed-axis__mark[data-state="done"] .ed-node path { fill: var(--accent-metal); }
+.ed-axis__mark[data-state="due"] .ed-node path { fill: var(--text-primary); }
+.ed-axis__mark[data-state="late"] .ed-node path { fill: var(--state-danger); }
+.ed-axis__mark[data-state="ahead"] .ed-node path { fill: var(--border-strong); }
+.ed-axis__caption {
+  font-size: var(--text-2xs); margin: 0;
+}
+
+/* The track: what the axis cannot say, said in words. */
+.ed-track { list-style: none; margin: 0; padding: 0; position: relative; }
+.ed-track::before {
+  content: ""; position: absolute;
+  inset-block: 0.9rem; inset-inline-start: 5px;
+  inline-size: 1px; background: var(--border-hairline);
+}
+.ed-track__item {
+  position: relative;
+  display: grid; grid-template-columns: auto 1fr auto;
+  gap: var(--space-4); align-items: baseline;
+  padding: var(--space-4) 0;
+  border-block-end: 1px solid var(--border-hairline);
+}
+.ed-track__item:last-child { border-block-end: none; }
+.ed-track__node {
+  inline-size: 11px; block-size: 11px; border-radius: var(--radius-full);
+  border: 1px solid var(--border-strong); background: var(--surface-canvas);
+  align-self: center; margin-block-start: 0;
+}
+.ed-track__item[data-state="done"] .ed-track__node {
+  background: var(--accent-metal); border-color: var(--accent-metal);
+}
+.ed-track__item[data-state="late"] .ed-track__node {
+  background: var(--state-danger); border-color: var(--state-danger);
+}
+.ed-track__item[data-state="due"] .ed-track__node {
+  border-color: var(--text-primary); border-width: 2px;
+}
+.ed-track__name {
+  font-family: var(--font-display); font-size: var(--text-md);
+  font-weight: var(--weight-semibold); margin: 0;
+}
+.ed-track__item[data-state="ahead"] .ed-track__name { color: var(--text-secondary); }
+.ed-track__detail {
+  font-size: var(--text-2xs); color: var(--text-secondary); margin: 2px 0 0;
+  max-width: 52ch;
+}
+.ed-track__when { text-align: end; }
+.ed-track__date {
+  font-family: var(--font-mono); font-size: var(--text-2xs);
+  color: var(--text-secondary); margin: 0; white-space: nowrap;
+}
+.ed-track__trail { margin-block-start: var(--space-2); }
+
+/* The caseload: a supervisor's list, ordered by who is drifting. */
+/* One grid for the whole list, not one per row: a caseload whose columns do
+   not line up is a list a supervisor has to read rather than scan, and each
+   row sizing its own columns is exactly what produced two axes of different
+   lengths on the first render. */
+.ed-caseload {
+  border-block-start: 1px solid var(--border-hairline);
+  display: grid;
+  grid-template-columns: minmax(11rem, 1.1fr) minmax(9rem, 1.5fr) auto auto;
+}
+.ed-caseload__row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  gap: var(--space-5); align-items: center;
+  padding: var(--space-5) 0;
+  border-block-end: 1px solid var(--border-hairline);
+}
+.ed-caseload__who { display: flex; gap: var(--space-3); align-items: center; }
+.ed-caseload__name {
+  font-family: var(--font-display); font-size: var(--text-md);
+  font-weight: var(--weight-semibold); margin: 0;
+}
+.ed-caseload__meta {
+  font-size: var(--text-2xs); color: var(--text-secondary); margin: 2px 0 0;
+}
+.ed-caseload__facts { display: flex; gap: var(--space-6); }
+.ed-caseload__fact { min-width: 6.5rem; }
+.ed-caseload__value {
+  font-size: var(--text-sm); margin: var(--space-1) 0 0;
+}
+.ed-caseload__value[data-state="late"] { color: var(--text-danger); }
+.ed-caseload__value[data-state="soon"] { color: var(--text-warning); }
+.ed-caseload__actions { display: flex; gap: var(--space-2); }
+
+/* Narrower than a laptop there is no room for four columns, so the parent
+   drops to two and the row's subgrid follows it — which is the reason the
+   list owns the columns and the row does not. */
+@media (max-width: 62rem) {
+  .ed-caseload { grid-template-columns: 1fr auto; }
+  .ed-caseload__row { row-gap: var(--space-4); }
+  .ed-caseload__axis, .ed-caseload__facts { grid-column: 1 / -1; }
+}
+@media (max-width: 46rem) {
+  .ed-caseload { grid-template-columns: 1fr; }
+  .ed-caseload__actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .ed-caseload__facts { gap: var(--space-4); }
+  .ed-track__item { grid-template-columns: auto 1fr; }
+  .ed-track__when { grid-column: 2; text-align: start; }
+  .ed-axis__tick-label { font-size: 0.55rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -994,23 +1173,36 @@ def page_css() -> str:
   .ed-topbar { padding: var(--space-3) var(--space-4); gap: var(--space-3); }
   .ed-search kbd { display: none; }
   /* A primary action floating right of a wrapped title reads as an orphan.
-     Full width, under the title, where a thumb can reach it. */
+     Under the title, where a thumb can reach it — but only stretched to the
+     full width on a phone. On a tablet a 780px-wide button is not a button,
+     it is a banner, and the tablet review is where that showed. */
   .ed-page__actions { margin-inline-start: 0; width: 100%; }
-  .ed-page__actions .ed-btn { flex: 1; }
   .ed-page__title-row { gap: var(--space-4); }
   .ed-grid--2, .ed-grid--3, .ed-grid--4, .ed-grid--sidebar { grid-template-columns: 1fr; }
   .ed-page__title { font-size: var(--text-2xl); }
 
-  .ed-figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .ed-figures__item {
-    padding: var(--space-4) var(--space-4) var(--space-4) 0;
-    border-block-end: 1px solid var(--border-hairline);
-  }
-  .ed-figures__item:nth-child(even) {
-    border-inline-end: 0; padding-inline-start: var(--space-4);
-  }
 
-  /* ledger + matrix + roster: the table stops being a table. */
+  /* schedule is the one shape that genuinely needs two dimensions. */
+  .ed-data[data-shape="schedule"] { display: block; overflow-x: auto; }
+  .ed-data[data-shape="schedule"] th:first-child,
+  .ed-data[data-shape="schedule"] td:first-child {
+    position: sticky; inset-inline-start: 0; background: var(--surface-raised);
+  }
+}
+
+/* The table stops being a table on a *phone*, not on a tablet.
+ 
+   These rules were in the 60rem block alongside the rail's collapse, and the
+   two are different questions: at 834px an iPad has 780px of page and can
+   carry a six-column register comfortably, but it was showing four students in
+   the space that fits twenty because every row had decomposed into label-value
+   pairs. Reading the tablet screenshots is the only way that surfaces —
+   nothing about it is wrong at 390px or at 1440px, which are the widths a
+   review actually looks at.
+ 
+   Between the two breakpoints a wide table scrolls inside `.ed-data__scroll`,
+   which is what that wrapper has always been for. */
+@media (max-width: 46rem) {  /* ledger + matrix + roster: the table stops being a table. */
   .ed-data[data-shape="ledger"] thead,
   .ed-data[data-shape="matrix"] thead,
   .ed-data[data-shape="roster"] thead { display: none; }
@@ -1065,11 +1257,14 @@ def page_css() -> str:
     text-align: end; align-self: center;
   }
   .ed-data[data-shape="matrix"] td[data-role="detail"] {
-    grid-column: 1; display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4);
+    grid-column: 1;
     font-size: var(--text-2xs); color: var(--text-secondary);
     margin-block-start: var(--space-1);
   }
-  .ed-data[data-shape="matrix"] td[data-role="detail"] span::before {
+  .ed-data[data-shape="matrix"] .ed-detail {
+    display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4);
+  }
+  .ed-data[data-shape="matrix"] td[data-role="detail"] span span::before {
     content: attr(data-label) ' ';
     text-transform: uppercase; letter-spacing: var(--tracking-wider);
     font-size: 0.9em; color: var(--text-tertiary);
@@ -1078,13 +1273,6 @@ def page_css() -> str:
     grid-column: 1 / -1; font-size: var(--text-2xs); color: var(--text-secondary);
     margin-block-start: var(--space-2); font-style: italic;
   }
-
-  /* schedule is the one shape that genuinely needs two dimensions. */
-  .ed-data[data-shape="schedule"] { display: block; overflow-x: auto; }
-  .ed-data[data-shape="schedule"] th:first-child,
-  .ed-data[data-shape="schedule"] td:first-child {
-    position: sticky; inset-inline-start: 0; background: var(--surface-raised);
-  }
 }
 
 @media (min-width: 60.01rem) {
@@ -1092,6 +1280,11 @@ def page_css() -> str:
 }
 @media (max-width: 60rem) {
   .ed-desktop-only { display: none !important; }
+}
+/* Only a phone gets the stretched action. Between the two, the button keeps
+   its own width beneath the title. */
+@media (max-width: 46rem) {
+  .ed-page__actions .ed-btn { flex: 1; }
 }
 """
 

@@ -127,6 +127,15 @@ SYSTEM_ROLES: tuple[RoleTemplate, ...] = (
             "reporting.document.read",
             "reporting.document.create",
             "reporting.template.read",
+            # The graduate school's side of research education: who supervises
+            # whom, whether the milestones are being met, and the ruling on
+            # each. A supervisor may move a milestone; approving the outcome is
+            # the institution's act, not the supervisor's, so it lives here.
+            "research.supervision.manage",
+            "research.milestone.read",
+            "research.milestone.write",
+            "research.milestone.approve",
+            "research.meeting.read",
             "communication.announcement.read",
             "communication.announcement.create",
             "identity.membership.read",
@@ -206,6 +215,29 @@ SYSTEM_ROLES: tuple[RoleTemplate, ...] = (
         default_scope=Scope(ScopeKind.taught_by_self),
     ),
     RoleTemplate(
+        key="supervisor",
+        name="Research Supervisor",
+        description="Milestones, meetings and progress for the researchers they supervise.",
+        permissions=_p(
+            "people.person.read",
+            "people.student.read",
+            "research.supervision.read",
+            "research.milestone.read",
+            "research.milestone.write",
+            "research.meeting.read",
+            "research.meeting.create",
+            "learning.submission.read",
+            "learning.grade.read",
+            "reporting.document.read",
+            "communication.message.read",
+            "communication.message.create",
+            "intelligence.assistant.read",
+        ),
+        # Not a teacher with different words. A supervisor's reach follows the
+        # people they supervise, and stops when a supervision ends.
+        default_scope=Scope(ScopeKind.supervised_by_self),
+    ),
+    RoleTemplate(
         key="bursar",
         name="Bursar",
         description="The school's finances.",
@@ -270,6 +302,13 @@ SYSTEM_ROLES: tuple[RoleTemplate, ...] = (
             "reporting.report_card.read",
             "reporting.transcript.read",
             "reporting.document.read",
+            # A research candidate reads their own candidature: the milestones
+            # they are being held to, who supervises them, and the record of
+            # what was agreed. Under the `self` scope, so a taught student in
+            # the same institution holds the permission and reaches nothing.
+            "research.milestone.read",
+            "research.supervision.read",
+            "research.meeting.read",
             "academics.class.read",
             "academics.subject.read",
             "communication.announcement.read",

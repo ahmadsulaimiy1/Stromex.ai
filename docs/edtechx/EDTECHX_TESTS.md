@@ -564,9 +564,39 @@ changed nothing the `omit_when_empty` rule did not already do. It was deleted
 
 Not yet written, because the features they would test do not yet exist:
 authentication endpoint tests (login, refresh rotation, reuse detection,
-lockout), scope-predicate leak tests, escalation and delegation-ceiling tests,
-SSRF egress tests, AI approval-gate bypass tests, accessibility tests,
-performance budget assertions, and E2E journeys 1–11.
+lockout), escalation and delegation-ceiling tests, SSRF egress tests, AI
+approval-gate bypass tests, performance budget assertions, and E2E journeys
+1–11.
+
+**Accessibility is now audited rather than asserted, and the distinction is the
+point.** `tools/design/audit.py` runs axe-core over every rendered journey at
+1440px and 390px and walks the keyboard order in a real browser. Its first run
+reported **697 violations** across nineteen pages — every one of them in code
+that had been written *to be* accessible and reviewed by reading. The current
+run reports zero, and eleven tests in `test_design.py` and `test_experience.py`
+pin the findings so they cannot return silently.
+
+Three limitations, stated because a clean run invites the wrong conclusion:
+
+* **No screen reader was involved.** None is installed here and none can be
+  driven headlessly in this environment. A NVDA or VoiceOver pass over the
+  register, the candidature and the parent's page is outstanding, and until it
+  happens the semantics are verified as *machine-readable*, not as *usable*.
+* **Behaviour needing JavaScript is unverifiable from these pages.** The
+  journeys are static HTML: the drawer and the command palette are rendered
+  open, and no client script traps focus, restores it on close, or wires Escape.
+  The audit reports that as unimplemented rather than as passing.
+* **axe finds roughly a third of real barriers.** Zero violations means no
+  machine-detectable violation. It does not mean an accessible product.
+
+**Research candidature** has its own suite, `test_research.py` (23 tests), and
+most of it is attacks rather than demonstrations: a supervisor reading somebody
+else's candidate, a supervisor still reading one they handed over, a candidate
+reading another candidate, a teacher scope and a guardian scope reaching a
+candidature, a co-supervised candidate appearing twice on one list, a decision
+predating the submission it ruled on, a milestone late by stored flag rather
+than by calendar, and a programme rule change silently moving a date somebody
+has been working towards.
 
 Coverage percentage is not tracked and is not a goal. What is tracked is whether
 each guarantee in `EDTECHX_SECURITY.md` §11 has a test that would fail if the

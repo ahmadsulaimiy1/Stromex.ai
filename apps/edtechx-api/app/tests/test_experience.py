@@ -46,6 +46,7 @@ from app.modules.academics.structure import (
     SupervisionRole,
 )
 from app.modules.authz import permissions as perms
+from app.modules.authz.scopes import ScopeKind
 from app.modules.authz.system_roles import SYSTEM_ROLES_BY_KEY
 from app.modules.billing import service as billing
 from app.modules.billing.plans import PLANS
@@ -734,3 +735,135 @@ def test_a_nursery_is_not_offered_grades_assessments_or_report_cards(
     secondary = world(institutions, "secondary")
     assert {"operations.assessment", "operations.results",
             "operations.report_cards"} <= set(secondary.keys())
+
+
+# --- reach, not only permission --------------------------------------------
+
+
+def scoped_actor(role_key: str, tenant_id: _uuid.UUID, kind: str) -> Principal:
+    """One system role, held at one scope kind rather than school-wide."""
+    template = SYSTEM_ROLES_BY_KEY[role_key]
+    granted = perms.expand(set(template.permissions))
+    return Principal(
+        user_id=_uuid.uuid4(),
+        membership_id=_uuid.uuid4(),
+        tenant_id=tenant_id,
+        permissions=granted,
+        grants=(Grant(frozenset(template.permissions), kind, ()),),
+        session_id=_uuid.uuid4(),
+        authenticated_at=datetime.now(UTC).timestamp(),
+    )
+
+
+def test_a_candidature_and_a_caseload_are_told_apart_by_reach(
+    institutions: dict[str, TenantFixture]
+) -> None:
+    """The permission is the same for both. The scope is the whole distinction.
+
+    A supervisor and a research candidate both hold `research.milestone.read`
+    and both hold `research.supervision.read` — the candidate so their own page
+    can name their supervisors, the supervisor so they can read their
+    candidates'. Gating the two screens on the permissions alone put "Your
+    researchers" in a first-year candidate's rail and "Candidature" in a
+    professor's, which is what rendering both and reading them showed.
+    """
+    school = institutions["doctoral"]
+    session = school.session()
+    try:
+        candidate = experience.resolve(
+            session,
+            scoped_actor("student", school.tenant_id, ScopeKind.self_only.value),
+            role_keys=["student"],
+        )
+        supervisor = experience.resolve(
+            session,
+            scoped_actor(
+                "supervisor", school.tenant_id, ScopeKind.supervised_by_self.value
+            ),
+            role_keys=["supervisor"],
+        )
+
+        assert "research.candidature" in candidate.keys()
+        assert "research.caseload" not in candidate.keys()
+        assert candidate.absent["research.caseload"] == experience.NOT_IN_SCOPE
+
+        assert "research.caseload" in supervisor.keys()
+        assert "research.candidature" not in supervisor.keys()
+        assert supervisor.absent["research.candidature"] == experience.NOT_IN_SCOPE
+    finally:
+        session.close()
+
+
+def test_a_research_candidate_is_not_offered_registers_or_coursework(
+    institutions: dict[str, TenantFixture]
+) -> None:
+    """Attendance and course content belong to institutions that have classes.
+
+    Meridian has neither, and its researchers were being shown Attendance,
+    Assignments and Course content — with Attendance marked as the current page,
+    because it was the first item in the rail. Found by rendering the screen.
+    """
+    school = institutions["doctoral"]
+    session = school.session()
+    try:
+        candidate = experience.resolve(
+            session,
+            scoped_actor("student", school.tenant_id, ScopeKind.self_only.value),
+            role_keys=["student"],
+        )
+        for key in ("operations.attendance", "learning.courses", "learning.assignments"):
+            assert key not in candidate.keys()
+            assert candidate.absent[key] == experience.NOT_CONFIGURED
+    finally:
+        session.close()
+
+
+def test_a_role_is_named_in_the_institutions_own_words(
+    institutions: dict[str, TenantFixture]
+) -> None:
+    """"Student" under a person Meridian calls a researcher is the same defect
+    as a parent shown a section called "Operations"."""
+    session = institutions["doctoral"].session()
+    try:
+        assert experience.role_label(session, "student") == "Researcher"
+        # And the roles that name a job the platform defines are left alone.
+        assert experience.role_label(session, "registrar") == "Registrar"
+    finally:
+        session.close()
+
+
+def test_a_rendered_shell_has_exactly_one_main_and_names_its_landmarks(
+    institutions: dict[str, TenantFixture],
+) -> None:
+    """Everything on the page belongs to a region somebody can jump to.
+
+    The topbar was a `<div>`, which left the search field and the notification
+    bell outside every landmark, and the bare `document()` page had no `<main>`
+    at all. An audit counted the second one 53 times on a single page.
+    """
+    from app.modules.customization import branding as branding_module
+    from app.modules.design.shell import document, shell
+    from app.modules.design.theme import for_institution
+
+    school = institutions["secondary"]
+    session = school.session()
+    try:
+        page = shell(
+            theme=for_institution(session),
+            experience=world(institutions, "secondary", "admin"),
+            branding=branding_module.resolve(session),
+            body="<p>work</p>",
+            person="A Person",
+            role="Administrator",
+        )
+        assert page.count('<main class="ed-page"') == 1
+        assert '<header class="ed-topbar">' in page
+        assert '<aside class="ed-rail" id="ed-rail" aria-label="Institution">' in page
+        assert 'aria-expanded="false"' in page and 'aria-controls="ed-rail"' in page
+        # And every rail link goes somewhere.
+        assert 'href="#' not in page.split('<main')[0].replace('href="#main"', "")
+
+        bare = document(theme=for_institution(session), body="<p>styleguide</p>")
+        assert bare.count("<main id=\"main\">") == 1
+    finally:
+        session.close()

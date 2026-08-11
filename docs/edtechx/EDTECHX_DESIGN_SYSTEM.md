@@ -304,10 +304,65 @@ Report cards, transcripts, certificates, and invoices are first-class designed a
 
 ---
 
-## 11. Governance
+## 10.1 Breakpoints, and what each one is actually deciding
+
+Three widths, and — this is the part that was wrong for a while — **more than
+one question, answered separately**.
+
+| Width | What changes | Why |
+|---|---|---|
+| **960px** | The rail becomes a drawer; the page grid collapses to one column | Below this there is no room for a fixed 248px column beside the work |
+| **736px** | Tables decompose into label-value pairs; figures go two-up; a primary action stretches to full width | Below this a table cannot be read as a table and a thumb needs the whole width |
+
+Between the two, a wide table scrolls inside `.ed-data__scroll`.
+
+The two were one breakpoint until the tablet captures were read. At 834px an
+iPad has 780px of page and carries a six-column register comfortably; it was
+showing four students in the space that fits twenty, because the rail's collapse
+and the table's decomposition had been treated as the same event. They are not:
+one is about the *chrome* and the other about the *data* (ADR-039).
+
+**A width that is captured and not read is not reviewed.** Every design pass
+opens all three.
+
+---
+
+## 11. Accessibility, and how it is established
+
+Not by reading the markup. `tools/design/audit.py` runs axe-core over every
+rendered journey at 1440px and 390px and walks the keyboard order in a real
+browser, recording where focus lands and whether the browser paints anything
+when it gets there.
+
+Its first run reported 697 violations across nineteen pages — all of it in code
+written to be accessible. Among them: `text.tertiary` at 3.49:1, below AA, and
+the token behind every timestamp, placeholder and unit label; a focus ring that
+was a fixed translucent royal in the *primitives*, so it did not change with the
+mode and was all but invisible on midnight; 248 rail links pointing at anchors
+no document contained; a topbar that was a `<div>` and therefore outside every
+landmark; and a section's micro-label rendered as a paragraph, so five journeys
+went from `<h1>` straight to an `<h3>`.
+
+The theme's own `review()` had missed the contrast failure because
+`text.tertiary` was absent from `_PAIRINGS`, and had never been run against
+midnight mode at all — where three of its own pairings were failing. Both gaps
+are closed and both modes are checked.
+
+What a clean run does **not** establish is written into ADR-038 and repeated
+here because it invites the wrong conclusion: no screen reader was involved,
+behaviour needing JavaScript is unverifiable from static pages, and axe finds
+roughly a third of real barriers.
+
+---
+
+## 12. Governance
 
 - No new colour, spacing, radius, or type value may be introduced outside this document.
 - A component may not reference a primitive token directly.
 - A pattern used three times becomes a component.
-- Contrast is verified programmatically in CI for the default theme and at save time for tenant themes.
+- Contrast is verified programmatically for **both** modes — `test_design.py`
+  asserts `review(...).is_publishable` for ivory and midnight — and at save time
+  for tenant themes.
+- Every rendered journey is audited with axe-core before an accessibility claim
+  is made anywhere in this repository.
 - Changes to this document require an entry in `EDTECHX_DECISIONS.md`.

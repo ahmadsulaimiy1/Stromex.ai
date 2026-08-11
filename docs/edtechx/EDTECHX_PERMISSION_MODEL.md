@@ -83,6 +83,7 @@ A role grant carries a scope narrowing *which* resources it applies to.
 | `class:{ids}` | Limited to specific class groups |
 | `subject:{ids}` | Limited to courses — **deliberately does not reach student records** |
 | `taught_by_self` | Records attached to the class groups this membership currently teaches |
+| `supervised_by_self` | Researchers this person currently supervises. **Not the same as `taught_by_self`** — supervision follows people, teaching follows a room, and a person routinely holds one and not the other |
 | `own_children` | Students this membership's person is guardian of, *at this institution* |
 | `self` | Records about this membership's own person |
 
@@ -123,6 +124,7 @@ Templates, not fixed law. Every one is clonable and editable by a school; a scho
 | `form_tutor` | class | Teacher plus pastoral read across the tutor group |
 | `bursar` | tenant | Finance module |
 | `admissions_officer` | tenant | Admissions pipeline |
+| `supervisor` | supervised_by_self | Milestones, meetings and progress for the researchers they supervise. May move a milestone; may **not** approve one |
 | `student` | self | Own courses, assignments, grades, timetable |
 | `guardian` | own_children | Children's records, fees, communication |
 | `support_staff` | configurable | Narrow, school-defined |
@@ -145,6 +147,34 @@ expressed as a scope over the students a membership supervises.
 The only platform-stable keys are the system templates' own, which exist so the
 platform can reason about "the teacher role" without assuming what a given
 institution put in it.
+
+**Supervision is a scope, and three scope kinds are deliberately absent from the
+research plans** (ADR-037). `taught_by_self`, because a lecturer teaching a
+candidate's taught component has no claim on their thesis milestones — two
+different relationships with the same person, and merging them would let every
+demonstrator on a doctoral training module read every candidate's upgrade
+outcome. `own_children`, because a supervision record is a working relationship
+between two adults. And `tenant` alone does not produce a caseload: `caseload()`
+narrows additionally to the caller's own staff record, so a registrar reading it
+gets nothing rather than the whole graduate school.
+
+`supervised_by_self` follows the **open** supervision, on the same argument as
+`taught_by_self` following the current allocation: a supervisor who hands a
+candidate to a colleague stops reading their record, and the history of who
+supervised whom stays reachable through the programme and unit scopes that exist
+for exactly that question.
+
+**Approving a milestone is the institution's act, not the supervisor's.** A
+supervisor holds `research.milestone.write`; `research.milestone.approve` sits
+with the registrar. Nobody rules on their own candidate's viva.
+
+**And the scope decides a screen, not only a row.** A supervisor and a research
+candidate hold the *same two* research read permissions — the candidate so their
+own page can name their supervisors, the supervisor so they can read their
+candidates'. What separates "Candidature" from "Your researchers" in the rail is
+which scope each holds them at, which is why `Capability` carries a `scopes`
+field and why it lives in the capability catalogue rather than in a role shape:
+it narrows access, and a shape only ever orders and promotes.
 
 ---
 

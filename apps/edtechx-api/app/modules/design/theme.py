@@ -221,6 +221,11 @@ _PAIRINGS: tuple[tuple[str, str, str, float, str], ...] = (
     ("Body text on the page", "text.primary", "surface.canvas", ink.AA_NORMAL, "text"),
     ("Body text on a panel", "text.primary", "surface.raised", ink.AA_NORMAL, "text"),
     ("Secondary text", "text.secondary", "surface.canvas", ink.AA_NORMAL, "text"),
+    # The one the list was missing, and the one a real audit found. Incidental
+    # text is still text: a timestamp, a placeholder and a unit label are read
+    # by somebody, and "quiet" is a design intention rather than an exemption.
+    ("Incidental text", "text.tertiary", "surface.canvas", ink.AA_NORMAL, "text"),
+    ("Incidental text on a panel", "text.tertiary", "surface.raised", ink.AA_NORMAL, "text"),
     ("Link and action text", "text.accent", "surface.canvas", ink.AA_NORMAL, "text"),
     ("Gold text", "text.gold", "surface.canvas", ink.AA_NORMAL, "text"),
     ("Text on a primary button", "text.on-accent", "accent.strong", ink.AA_NORMAL, "text"),
@@ -243,7 +248,8 @@ _PAIRINGS: tuple[tuple[str, str, str, float, str], ...] = (
     # structurally rather than by contrast, because contrast cannot express it.
     ("Input and control borders", "border.control", "surface.raised", ink.NON_TEXT, "border"),
     ("Input borders on the page", "border.control", "surface.canvas", ink.NON_TEXT, "border"),
-    ("Focus and selection", "accent.strong", "surface.canvas", ink.NON_TEXT, "indicator"),
+    ("Focus ring on the page", "border.focus", "surface.canvas", ink.NON_TEXT, "indicator"),
+    ("Focus ring on a panel", "border.focus", "surface.raised", ink.NON_TEXT, "indicator"),
 )
 
 

@@ -557,6 +557,36 @@ say exactly what it defeats. Where it is a deterrent, call it a deterrent. Where
 it needs infrastructure that is not built, name it as unbuilt rather than
 letting it read as shipped.
 
+### 9.2 Understand, adapt, delight
+
+The counterpart to §9.1, and the order matters just as much.
+
+**Understand.** Learn what this person is actually trying to do before deciding
+what to show them. A doctoral candidate is not a Year 10 pupil with different
+words: the unit of time is the year, nothing is due this week, and the honest
+headline is "month 19 of 48". A parent is not a junior administrator. A
+supervisor with fourteen candidates opens the product to find the two who are
+drifting.
+
+**Adapt.** The interface is the answer to that, not a template with the wrong
+labels. If the shape of somebody's work is different, the composition is
+different — a candidature is an axis and a track, not a dashboard and a list.
+And what they are shown is derived from what their institution *is*: a research
+institute with no classes must not be offered a register, and a screen that can
+only ever be empty must not be in anybody's rail.
+
+**Delight.** Only once the first two are true. Delight in EdirasX is precision
+and restraint arriving where somebody expected friction — a register that is
+four taps, a page that says the one number that matters at the size it
+deserves, a warning that names the person and the two things that went quiet in
+the same month. Never ornament standing in for understanding.
+
+The failure mode this exists to prevent has a name: **renaming**. Taking a
+screen that works for one audience, changing its nouns, and shipping it to
+another. Every defect §9.2 was written after came from exactly that.
+
+---
+
 ## 10. Non-negotiables
 
 The following are grounds to block a release, regardless of schedule:
@@ -579,6 +609,11 @@ The following are grounds to block a release, regardless of schedule:
     being explained.
 12. A security property claimed in an interface, a document, or a specification
     that the implementation does not actually provide.
+13. An accessibility property claimed without a run that establishes it. WCAG
+    conformance is asserted from an audit, never from a reading of the markup —
+    and where a tool is unavailable in an environment, the limitation is stated
+    rather than the claim being made anyway.
+14. A screen shipped to one audience by renaming another audience's screen.
 
 ---
 
@@ -592,8 +627,8 @@ A feature is done when *all* of the following are true. "The code works" is one 
 - [ ] Input validation is enforced server-side
 - [ ] Authorization is enforced server-side, including tenant scope
 - [ ] Tests pass, including an authorization test and a tenant-isolation test where applicable
-- [ ] Responsive behaviour verified at 360 / 768 / 1280
-- [ ] Accessibility verified: keyboard path, focus order, labels, contrast
+- [ ] Responsive behaviour verified at 360 / 768 / 1280 — rendered *and read* at each, because a width that is captured and not looked at is not reviewed
+- [ ] Accessibility audited with a tool rather than asserted: axe-core clean at two widths, the keyboard order walked, and every behaviour the audit cannot reach named as unverified
 - [ ] Error handling is comprehensive and actionable
 - [ ] Loading states present
 - [ ] Empty states designed

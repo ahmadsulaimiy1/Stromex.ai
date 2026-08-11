@@ -142,6 +142,11 @@ PRIMITIVES: Final[dict[str, dict[str, Any]]] = {
         "700": "#14543A",
         "600": "#1F6B4A",
         "500": "#2E8560",
+        # Added when an audit of the midnight mode found `text.success` at
+        # 4.2:1 — the ramp had no step between 200 and 500 able to carry green
+        # text on a dark surface, so success was the one state a person could
+        # not read on the chrome the product is named for.
+        "400": "#4C9777",
         "200": "#D3E7DC",
     },
     "amber": {
@@ -296,8 +301,15 @@ SEMANTICS: Final[dict[str, dict[str, str]]] = {
         "surface.overlay": "ivory.50",
 
         "text.primary": "charcoal.900",
-        "text.secondary": "charcoal.500",
-        "text.tertiary": "charcoal.400",
+        # Both a step darker than they were. `text.tertiary` at charcoal.400
+        # measured 3.49:1 on the ivory canvas — below AA for normal text — and
+        # it is the token behind `.ed-quiet`, the search placeholder, the axis
+        # year labels, the section aside and every notification timestamp. An
+        # axe-core run over the rendered journeys reported it on sixteen pages;
+        # the theme's own review had not, because `text.tertiary` was missing
+        # from `_PAIRINGS`. Both the colour and the gap are fixed.
+        "text.secondary": "charcoal.600",
+        "text.tertiary": "charcoal.500",
         "text.inverse": "ivory.50",
         "text.accent": "royal.700",
         "text.on-accent": "ivory.50",
@@ -317,6 +329,7 @@ SEMANTICS: Final[dict[str, dict[str, str]]] = {
         # 3:1 for it. They were one token, which made the fields nearly
         # invisible while the page looked pleasantly quiet.
         "border.control": "charcoal.400",
+        "border.focus": "royal.500",
         "border.accent": "royal.600",
         "border.gold": "gold.500",
         "border.inverse": "midnight.600",
@@ -356,13 +369,22 @@ SEMANTICS: Final[dict[str, dict[str, str]]] = {
         "text.accent": "royal.300",
         "text.on-accent": "ivory.50",
         "text.gold": "gold.400",
-        "text.success": "verdant.500",
+        "text.success": "verdant.400",
         "text.warning": "amber.500",
         "text.danger": "garnet.400",
 
         "border.hairline": "midnight.500",
         "border.strong": "midnight.400",
-        "border.control": "charcoal.500",
+        # 2.92:1 against a raised midnight surface: below the 3:1 that WCAG
+        # 1.4.11 asks of the thing that tells somebody where a field is.
+        "border.control": "charcoal.400",
+        # The focus ring is not the accent. On midnight the accent has to be
+        # dark enough to carry ivory text on a button (royal.500, 6.99:1) and
+        # the ring has to be light enough to be seen against the chrome
+        # (royal.500 is 2.68:1 there). One token could not be both, and using
+        # the accent for both is why a keyboard user could not see where they
+        # were in dark mode.
+        "border.focus": "royal.300",
         "border.accent": "royal.400",
         "border.gold": "gold.600",
         "border.inverse": "ivory.300",

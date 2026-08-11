@@ -54,6 +54,7 @@
   --verdant-700: #14543A;
   --verdant-600: #1F6B4A;
   --verdant-500: #2E8560;
+  --verdant-400: #4C9777;
   --verdant-200: #D3E7DC;
   --amber-700: #7A5310;
   --amber-600: #9A6A12;
@@ -131,8 +132,8 @@
   --surface-accent-wash: #E6EEF9;
   --surface-overlay: #FFFDF8;
   --text-primary: #12161C;
-  --text-secondary: #5A6273;
-  --text-tertiary: #7C8494;
+  --text-secondary: #3E4553;
+  --text-tertiary: #5A6273;
   --text-inverse: #FFFDF8;
   --text-accent: #152B54;
   --text-on-accent: #FFFDF8;
@@ -143,6 +144,7 @@
   --border-hairline: #E8DFCE;
   --border-strong: #D8CCB4;
   --border-control: #7C8494;
+  --border-focus: #354D78;
   --border-accent: #1A3566;
   --border-gold: #C9A961;
   --border-inverse: #152036;
@@ -178,6 +180,15 @@
   --ornament-level: restrained;
   --ornament-opacity: 0.05;
   --font-size-arabic-adjust: 1.15;
+}
+/* The focus indicator, composed here rather than in the token file because it
+   is a shadow built *from* a themed colour. It was a fixed translucent royal
+   in the primitives, which meant the ring did not change with the mode and was
+   all but invisible on midnight — the defect an axe run plus a keyboard walk
+   found together, and neither would have found alone. */
+:root {
+  --focus-ring: 0 0 0 3px var(--border-focus);
+  --focus-ring-gold: 0 0 0 3px var(--accent-metal);
 }
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -287,7 +298,16 @@ body {
    makes twelve unrelated screens feel like one product. */
 .ed-section { margin-block-end: var(--space-8); }
 .ed-grid + .ed-section, .ed-panel + .ed-section,
-.ed-figures + .ed-section { margin-block-start: var(--space-8); }
+.ed-figures + .ed-section,
+/* An alert sat flush against the label of the section beneath it: correct
+   markup, and it read as one bruised block. */
+.ed-alert + .ed-section, .ed-caseload + .ed-section
+  { margin-block-start: var(--space-8); }
+/* And the mirror of it. A warning sitting flush on the rule beneath a row of
+   figures read as part of the figures — found on the secondary administrator's
+   screen at tablet width, where the two collide first. */
+.ed-figures + .ed-alert, .ed-panel + .ed-alert, .ed-grid + .ed-alert
+  { margin-block-start: var(--space-6); }
 .ed-section__head {
   display: flex;
   align-items: baseline;
@@ -344,7 +364,7 @@ body {
               color var(--duration-fast) var(--easing-standard);
 }
 .ed-btn:hover { background: var(--surface-sunken); }
-.ed-btn:focus-visible { outline: none; box-shadow: var(--shadow-ring); }
+.ed-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .ed-btn:active { transform: translateY(0.5px); }
 .ed-btn[disabled], .ed-btn[aria-disabled="true"] {
   color: var(--state-disabled);
@@ -366,7 +386,7 @@ body {
   --btn-border: var(--accent-metal);
 }
 .ed-btn--ceremonial:hover { --btn-bg: var(--surface-selected); }
-.ed-btn--ceremonial:focus-visible { box-shadow: var(--shadow-ring-gold); }
+.ed-btn--ceremonial:focus-visible { box-shadow: var(--focus-ring-gold); }
 .ed-btn--quiet { --btn-border: transparent; }
 .ed-btn--danger { --btn-fg: var(--text-danger); --btn-border: var(--state-danger); }
 .ed-btn--sm { min-height: calc(var(--control-height) * 0.82); font-size: var(--text-2xs); }
@@ -383,17 +403,27 @@ body {
   transition: border-color var(--duration-fast) var(--easing-standard);
 }
 .ed-link:hover { border-block-end-color: currentColor; }
-.ed-link:focus-visible { outline: none; box-shadow: var(--shadow-ring); border-radius: 1px; }
+.ed-link:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 1px; }
 
 /* --- fields ------------------------------------------------------------- */
 
 .ed-field { display: flex; flex-direction: column; gap: var(--space-2); }
+/* The label now *contains* its control, so it is a column of two rather than
+   a line of text. The typography below applies to the label's own text only. */
 .ed-field__label {
+  display: flex; flex-direction: column; gap: var(--space-2);
   font-size: var(--text-2xs);
   font-weight: var(--weight-semibold);
   letter-spacing: var(--tracking-wider);
   text-transform: uppercase;
   color: var(--text-secondary);
+}
+.ed-field__label > .ed-input,
+.ed-field__label > .ed-select,
+.ed-field__label > .ed-textarea {
+  font-size: var(--text-sm); font-weight: var(--weight-regular);
+  letter-spacing: var(--tracking-normal); text-transform: none;
+  color: var(--text-primary);
 }
 .ed-field__hint { font-size: var(--text-2xs); color: var(--text-tertiary); }
 .ed-field__error {
@@ -420,7 +450,7 @@ body {
 .ed-input:focus, .ed-select:focus, .ed-textarea:focus {
   outline: none;
   border-color: var(--accent-strong);
-  box-shadow: var(--shadow-ring);
+  box-shadow: var(--focus-ring);
 }
 .ed-input[aria-invalid="true"] { border-color: var(--state-danger); }
 .ed-input[disabled], .ed-select[disabled], .ed-textarea[disabled] {
@@ -459,7 +489,7 @@ body {
   transform: rotate(45deg) translate(-1px, -1px);
 }
 .ed-check__box--round input:checked + &::after { border-radius: var(--radius-full); }
-.ed-check input:focus-visible + .ed-check__box { box-shadow: var(--shadow-ring); }
+.ed-check input:focus-visible + .ed-check__box { box-shadow: var(--focus-ring); }
 .ed-check input[disabled] + .ed-check__box {
   background: var(--state-disabled-surface); border-color: var(--state-disabled);
 }
@@ -483,7 +513,7 @@ body {
 .ed-switch input:checked + .ed-switch__track .ed-switch__thumb {
   transform: translateX(1.05rem);
 }
-.ed-switch input:focus-visible + .ed-switch__track { box-shadow: var(--shadow-ring); }
+.ed-switch input:focus-visible + .ed-switch__track { box-shadow: var(--focus-ring); }
 
 /* --- badges, chips, avatars --------------------------------------------- */
 
@@ -557,10 +587,12 @@ body {
    separator the cells read as "82 / 100Examination", which is how the first
    render of this actually looked. */
 .ed-data[data-shape="matrix"] td[data-role="detail"] {
-  display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-5);
   color: var(--text-secondary); font-size: var(--text-2xs);
 }
-.ed-data[data-shape="matrix"] td[data-role="detail"] span::before {
+.ed-data[data-shape="matrix"] .ed-detail {
+  display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-5);
+}
+.ed-data[data-shape="matrix"] td[data-role="detail"] span span::before {
   content: attr(data-label) ' ';
   text-transform: uppercase; letter-spacing: var(--tracking-wider);
   color: var(--text-tertiary); font-size: 0.9em;
@@ -606,7 +638,7 @@ body {
   content: ''; position: absolute; inset-inline: 0; bottom: -1px; height: 2px;
   background: var(--accent-metal);
 }
-.ed-tab:focus-visible { outline: none; box-shadow: var(--shadow-ring); border-radius: 2px; }
+.ed-tab:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 2px; }
 
 .ed-crumbs {
   display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
@@ -867,7 +899,7 @@ body {
   transition: all var(--duration-fast) var(--easing-standard);
 }
 .ed-mark:hover { border-color: var(--text-tertiary); }
-.ed-mark:focus-visible { outline: none; box-shadow: var(--shadow-ring); }
+.ed-mark:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .ed-mark[aria-pressed="true"] {
   background: var(--accent-strong); border-color: var(--accent-strong);
   color: var(--text-on-accent);
@@ -900,6 +932,155 @@ body {
      supporting information: it gets its own line above the action. */
   .ed-sticky-bar .ed-label { flex: 1 0 100%; }
   .ed-sticky-bar .ed-btn { flex: 1; margin-inline-start: 0; }
+}
+
+/* --- candidature: the only screen whose unit of time is the year --------- */
+
+.ed-axis { display: block; }
+.ed-axis__line {
+  position: relative;
+  block-size: 1px;
+  background: var(--border-strong);
+  margin-block: var(--space-7) var(--space-5);
+}
+.ed-axis--compact .ed-axis__line { margin-block: var(--space-4); }
+/* Elapsed time is drawn as weight on the same line rather than as a filled
+   bar: a progress bar says "68% done", and a candidature is not 68% done
+   because twenty months have passed. */
+.ed-axis__elapsed {
+  position: absolute; inset-block-start: 0; inset-inline-start: 0;
+  block-size: 1px; background: var(--text-primary);
+}
+/* Where the candidate is today. Two pixels rather than one, because at one it
+   disappeared beside the milestone node it happened to sit next to. */
+.ed-axis__now {
+  position: absolute; inset-block-start: -9px;
+  inline-size: 2px; block-size: 19px;
+  background: var(--accent-metal);
+}
+.ed-axis--compact .ed-axis__now { inset-block-start: -5px; block-size: 11px; }
+.ed-axis__tick {
+  position: absolute; inset-block-start: 0;
+  inline-size: 1px; block-size: 5px;
+  background: var(--border-strong);
+}
+.ed-axis__tick-label {
+  position: absolute; inset-block-start: -1.5rem; inset-inline-start: 0;
+  font-size: var(--text-3xs); letter-spacing: var(--tracking-widest);
+  text-transform: uppercase; color: var(--text-tertiary);
+  white-space: nowrap;
+}
+.ed-axis__mark {
+  position: absolute; inset-block-start: 50%;
+  transform: translate(-50%, -50%); line-height: 0;
+}
+/* The node's own `fill` attribute sits on the path, so the class on the <svg>
+   never reached it and every mark rendered the same ink. Found by looking at
+   the axis and seeing five identical dots where two should have been gold. */
+.ed-axis__mark .ed-node path { fill: var(--text-tertiary); }
+.ed-axis__mark[data-state="done"] .ed-node path { fill: var(--accent-metal); }
+.ed-axis__mark[data-state="due"] .ed-node path { fill: var(--text-primary); }
+.ed-axis__mark[data-state="late"] .ed-node path { fill: var(--state-danger); }
+.ed-axis__mark[data-state="ahead"] .ed-node path { fill: var(--border-strong); }
+.ed-axis__caption {
+  font-size: var(--text-2xs); margin: 0;
+}
+
+/* The track: what the axis cannot say, said in words. */
+.ed-track { list-style: none; margin: 0; padding: 0; position: relative; }
+.ed-track::before {
+  content: ""; position: absolute;
+  inset-block: 0.9rem; inset-inline-start: 5px;
+  inline-size: 1px; background: var(--border-hairline);
+}
+.ed-track__item {
+  position: relative;
+  display: grid; grid-template-columns: auto 1fr auto;
+  gap: var(--space-4); align-items: baseline;
+  padding: var(--space-4) 0;
+  border-block-end: 1px solid var(--border-hairline);
+}
+.ed-track__item:last-child { border-block-end: none; }
+.ed-track__node {
+  inline-size: 11px; block-size: 11px; border-radius: var(--radius-full);
+  border: 1px solid var(--border-strong); background: var(--surface-canvas);
+  align-self: center; margin-block-start: 0;
+}
+.ed-track__item[data-state="done"] .ed-track__node {
+  background: var(--accent-metal); border-color: var(--accent-metal);
+}
+.ed-track__item[data-state="late"] .ed-track__node {
+  background: var(--state-danger); border-color: var(--state-danger);
+}
+.ed-track__item[data-state="due"] .ed-track__node {
+  border-color: var(--text-primary); border-width: 2px;
+}
+.ed-track__name {
+  font-family: var(--font-display); font-size: var(--text-md);
+  font-weight: var(--weight-semibold); margin: 0;
+}
+.ed-track__item[data-state="ahead"] .ed-track__name { color: var(--text-secondary); }
+.ed-track__detail {
+  font-size: var(--text-2xs); color: var(--text-secondary); margin: 2px 0 0;
+  max-width: 52ch;
+}
+.ed-track__when { text-align: end; }
+.ed-track__date {
+  font-family: var(--font-mono); font-size: var(--text-2xs);
+  color: var(--text-secondary); margin: 0; white-space: nowrap;
+}
+.ed-track__trail { margin-block-start: var(--space-2); }
+
+/* The caseload: a supervisor's list, ordered by who is drifting. */
+/* One grid for the whole list, not one per row: a caseload whose columns do
+   not line up is a list a supervisor has to read rather than scan, and each
+   row sizing its own columns is exactly what produced two axes of different
+   lengths on the first render. */
+.ed-caseload {
+  border-block-start: 1px solid var(--border-hairline);
+  display: grid;
+  grid-template-columns: minmax(11rem, 1.1fr) minmax(9rem, 1.5fr) auto auto;
+}
+.ed-caseload__row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  gap: var(--space-5); align-items: center;
+  padding: var(--space-5) 0;
+  border-block-end: 1px solid var(--border-hairline);
+}
+.ed-caseload__who { display: flex; gap: var(--space-3); align-items: center; }
+.ed-caseload__name {
+  font-family: var(--font-display); font-size: var(--text-md);
+  font-weight: var(--weight-semibold); margin: 0;
+}
+.ed-caseload__meta {
+  font-size: var(--text-2xs); color: var(--text-secondary); margin: 2px 0 0;
+}
+.ed-caseload__facts { display: flex; gap: var(--space-6); }
+.ed-caseload__fact { min-width: 6.5rem; }
+.ed-caseload__value {
+  font-size: var(--text-sm); margin: var(--space-1) 0 0;
+}
+.ed-caseload__value[data-state="late"] { color: var(--text-danger); }
+.ed-caseload__value[data-state="soon"] { color: var(--text-warning); }
+.ed-caseload__actions { display: flex; gap: var(--space-2); }
+
+/* Narrower than a laptop there is no room for four columns, so the parent
+   drops to two and the row's subgrid follows it — which is the reason the
+   list owns the columns and the row does not. */
+@media (max-width: 62rem) {
+  .ed-caseload { grid-template-columns: 1fr auto; }
+  .ed-caseload__row { row-gap: var(--space-4); }
+  .ed-caseload__axis, .ed-caseload__facts { grid-column: 1 / -1; }
+}
+@media (max-width: 46rem) {
+  .ed-caseload { grid-template-columns: 1fr; }
+  .ed-caseload__actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .ed-caseload__facts { gap: var(--space-4); }
+  .ed-track__item { grid-template-columns: auto 1fr; }
+  .ed-track__when { grid-column: 2; text-align: start; }
+  .ed-axis__tick-label { font-size: 0.55rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1132,23 +1313,36 @@ body {
   .ed-topbar { padding: var(--space-3) var(--space-4); gap: var(--space-3); }
   .ed-search kbd { display: none; }
   /* A primary action floating right of a wrapped title reads as an orphan.
-     Full width, under the title, where a thumb can reach it. */
+     Under the title, where a thumb can reach it — but only stretched to the
+     full width on a phone. On a tablet a 780px-wide button is not a button,
+     it is a banner, and the tablet review is where that showed. */
   .ed-page__actions { margin-inline-start: 0; width: 100%; }
-  .ed-page__actions .ed-btn { flex: 1; }
   .ed-page__title-row { gap: var(--space-4); }
   .ed-grid--2, .ed-grid--3, .ed-grid--4, .ed-grid--sidebar { grid-template-columns: 1fr; }
   .ed-page__title { font-size: var(--text-2xl); }
 
-  .ed-figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .ed-figures__item {
-    padding: var(--space-4) var(--space-4) var(--space-4) 0;
-    border-block-end: 1px solid var(--border-hairline);
-  }
-  .ed-figures__item:nth-child(even) {
-    border-inline-end: 0; padding-inline-start: var(--space-4);
-  }
 
-  /* ledger + matrix + roster: the table stops being a table. */
+  /* schedule is the one shape that genuinely needs two dimensions. */
+  .ed-data[data-shape="schedule"] { display: block; overflow-x: auto; }
+  .ed-data[data-shape="schedule"] th:first-child,
+  .ed-data[data-shape="schedule"] td:first-child {
+    position: sticky; inset-inline-start: 0; background: var(--surface-raised);
+  }
+}
+
+/* The table stops being a table on a *phone*, not on a tablet.
+ 
+   These rules were in the 60rem block alongside the rail's collapse, and the
+   two are different questions: at 834px an iPad has 780px of page and can
+   carry a six-column register comfortably, but it was showing four students in
+   the space that fits twenty because every row had decomposed into label-value
+   pairs. Reading the tablet screenshots is the only way that surfaces —
+   nothing about it is wrong at 390px or at 1440px, which are the widths a
+   review actually looks at.
+ 
+   Between the two breakpoints a wide table scrolls inside `.ed-data__scroll`,
+   which is what that wrapper has always been for. */
+@media (max-width: 46rem) {  /* ledger + matrix + roster: the table stops being a table. */
   .ed-data[data-shape="ledger"] thead,
   .ed-data[data-shape="matrix"] thead,
   .ed-data[data-shape="roster"] thead { display: none; }
@@ -1203,11 +1397,14 @@ body {
     text-align: end; align-self: center;
   }
   .ed-data[data-shape="matrix"] td[data-role="detail"] {
-    grid-column: 1; display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4);
+    grid-column: 1;
     font-size: var(--text-2xs); color: var(--text-secondary);
     margin-block-start: var(--space-1);
   }
-  .ed-data[data-shape="matrix"] td[data-role="detail"] span::before {
+  .ed-data[data-shape="matrix"] .ed-detail {
+    display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4);
+  }
+  .ed-data[data-shape="matrix"] td[data-role="detail"] span span::before {
     content: attr(data-label) ' ';
     text-transform: uppercase; letter-spacing: var(--tracking-wider);
     font-size: 0.9em; color: var(--text-tertiary);
@@ -1215,13 +1412,6 @@ body {
   .ed-data[data-shape="matrix"] td[data-role="note"] {
     grid-column: 1 / -1; font-size: var(--text-2xs); color: var(--text-secondary);
     margin-block-start: var(--space-2); font-style: italic;
-  }
-
-  /* schedule is the one shape that genuinely needs two dimensions. */
-  .ed-data[data-shape="schedule"] { display: block; overflow-x: auto; }
-  .ed-data[data-shape="schedule"] th:first-child,
-  .ed-data[data-shape="schedule"] td:first-child {
-    position: sticky; inset-inline-start: 0; background: var(--surface-raised);
   }
 }
 
@@ -1231,4 +1421,9 @@ body {
 @media (max-width: 60rem) {
   .ed-desktop-only { display: none !important; }
 }
-</style></head><body><a class="ed-skip" href="#main">Skip to content</a><div class="ed-app"><aside class="ed-rail"><div class="ed-rail__ground"><svg class="ed-lattice" aria-hidden="true" focusable="false" width="100%" height="100%"><defs><pattern id="ed-seal" width="64" height="64" patternUnits="userSpaceOnUse"><path d="M 37.143 19.583 L 39.274 24.726 L 44.417 26.857 L 42.287 32.000 L 44.417 37.143 L 39.274 39.274 L 37.143 44.417 L 32.000 42.287 L 26.857 44.417 L 24.726 39.274 L 19.583 37.143 L 21.713 32.000 L 19.583 26.857 L 24.726 24.726 L 26.857 19.583 L 32.000 21.713 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/><path d="M 5.143 -12.417 L 7.274 -7.274 L 12.417 -5.143 L 10.287 0.000 L 12.417 5.143 L 7.274 7.274 L 5.143 12.417 L 0.000 10.287 L -5.143 12.417 L -7.274 7.274 L -12.417 5.143 L -10.287 0.000 L -12.417 -5.143 L -7.274 -7.274 L -5.143 -12.417 L -0.000 -10.287 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/><path d="M 69.143 -12.417 L 71.274 -7.274 L 76.417 -5.143 L 74.287 0.000 L 76.417 5.143 L 71.274 7.274 L 69.143 12.417 L 64.000 10.287 L 58.857 12.417 L 56.726 7.274 L 51.583 5.143 L 53.713 0.000 L 51.583 -5.143 L 56.726 -7.274 L 58.857 -12.417 L 64.000 -10.287 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/><path d="M 5.143 51.583 L 7.274 56.726 L 12.417 58.857 L 10.287 64.000 L 12.417 69.143 L 7.274 71.274 L 5.143 76.417 L 0.000 74.287 L -5.143 76.417 L -7.274 71.274 L -12.417 69.143 L -10.287 64.000 L -12.417 58.857 L -7.274 56.726 L -5.143 51.583 L -0.000 53.713 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/><path d="M 69.143 51.583 L 71.274 56.726 L 76.417 58.857 L 74.287 64.000 L 76.417 69.143 L 71.274 71.274 L 69.143 76.417 L 64.000 74.287 L 58.857 76.417 L 56.726 71.274 L 51.583 69.143 L 53.713 64.000 L 51.583 58.857 L 56.726 56.726 L 58.857 51.583 L 64.000 53.713 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/></pattern></defs><rect width="100%" height="100%" fill="url(#ed-seal)"/></svg></div><div class="ed-identity"><svg class="ed-monogram" width="30" height="30" viewBox="0 0 30 30" role="img" aria-label="EdirasX" fill="none"><path d="M 20.396 1.973 L 22.631 7.369 L 28.027 9.604 L 25.792 15.000 L 28.027 20.396 L 22.631 22.631 L 20.396 28.027 L 15.000 25.792 L 9.604 28.027 L 7.369 22.631 L 1.973 20.396 L 4.208 15.000 L 1.973 9.604 L 7.369 7.369 L 9.604 1.973 L 15.000 4.208 Z" stroke="var(--gold-500)" stroke-width="1.50" stroke-linejoin="miter"/><path d="M 22.631 7.369 L 7.369 22.631" stroke="var(--ivory-50)" stroke-width="2.55" stroke-linecap="butt"/><path d="M 22.631 22.631 L 7.369 7.369" stroke="var(--ivory-50)" stroke-width="2.55" stroke-linecap="butt"/></svg><div><p class="ed-identity__name">Ashford Grange School</p><p class="ed-identity__kind"></p></div></div><nav class="ed-nav" aria-label="Sections"><div class="ed-nav__group"><p class="ed-nav__label">People</p><a class="ed-nav__item" href="#people.students" aria-current="page"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Students</span></a><a class="ed-nav__item" href="#people.enrolment"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Enrolments</span></a><a class="ed-nav__item" href="#people.guardians"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Parents</span></a></div><div class="ed-nav__group"><p class="ed-nav__label">Academic structure</p><a class="ed-nav__item" href="#academics.classes"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Classes</span></a><a class="ed-nav__item" href="#academics.stages"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Stages</span></a><a class="ed-nav__item" href="#academics.levels"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Year groups</span></a><a class="ed-nav__item" href="#academics.courses"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Subjects</span></a><a class="ed-nav__item" href="#academics.calendar"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Academic years</span></a><a class="ed-nav__item" href="#academics.grading"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Grading scales</span></a></div><div class="ed-nav__group"><p class="ed-nav__label">Operations</p><a class="ed-nav__item" href="#operations.attendance"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Attendance</span></a><a class="ed-nav__item" href="#operations.results"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Results</span></a><a class="ed-nav__item" href="#operations.report_cards"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Report cards</span></a><a class="ed-nav__item" href="#operations.documents"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Documents</span></a><a class="ed-nav__item" href="#operations.timetable"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Timetable</span></a><a class="ed-nav__item" href="#operations.admissions"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Admissions</span></a><a class="ed-nav__item" href="#operations.imports"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Bulk import</span></a></div><div class="ed-nav__group"><p class="ed-nav__label">Communication</p><a class="ed-nav__item" href="#communication.announcements"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Announcements</span></a></div><div class="ed-nav__group"><p class="ed-nav__label">Insight</p><a class="ed-nav__item" href="#insight.overview"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Overview</span></a></div><div class="ed-nav__group"><p class="ed-nav__label">Configuration</p><a class="ed-nav__item" href="#configuration.document_templates"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Document templates</span></a></div></nav><div class="ed-rail__foot"><a class="ed-account" href="#account"><span class="ed-avatar" role="img" aria-label="Adaeze Umeh">AU</span><span><p class="ed-account__name">Adaeze Umeh</p><p class="ed-account__role">Registrar</p></span></a></div></aside><div class="ed-main"><div class="ed-topbar"><button class="ed-btn ed-btn--quiet ed-btn--sm ed-mobile-only" type="button" aria-label="Open navigation"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.3"/></svg></button><div class="ed-search" role="search"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.4 10.4 14 14" stroke="currentColor" stroke-width="1.3"/></svg><span>Search students, classes, documents…</span><kbd>⌘K</kbd></div><div class="ed-topbar__actions"><span class="ed-bell"><button class="ed-btn ed-btn--quiet ed-btn--sm" type="button" aria-label="2 notifications"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5a3.5 3.5 0 0 0-3.5 3.5v2.2L3 10h10l-1.5-2.8V5A3.5 3.5 0 0 0 8 1.5Z" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M6.6 12a1.4 1.4 0 0 0 2.8 0" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button><span class="ed-bell__dot"></span></span></div></div><main class="ed-page" id="main"><header class="ed-page__head"><p class="ed-label ed-label--gold">2 unread</p><div class="ed-page__title-row"><h1 class="ed-page__title">Notifications</h1><div class="ed-page__actions"><button class="ed-btn ed-btn--sm" type="button">Notification settings</button></div></div><p class="ed-lede ed-page__lede">Urgent first, then what is worth knowing today.</p></header><div class="ed-tabs" role="tablist"><button class="ed-tab" role="tab" aria-selected="true">All</button><button class="ed-tab" role="tab" aria-selected="false">Unread</button><button class="ed-tab" role="tab" aria-selected="false">Results</button><button class="ed-tab" role="tab" aria-selected="false">Attendance</button></div><div style="margin-block-start:var(--space-5)"><a class="ed-notice" href="#" data-priority="urgent" data-unread="true"><span class="ed-notice__dot" aria-hidden="true"></span><span><span class="ed-badge ed-badge--danger">urgent</span> <span class="ed-label">Results</span><p class="ed-notice__title">Two result sets are blocked</p><p class="ed-notice__body">Year 11 autumn results are waiting on the Principal&#x27;s approval.</p></span><span class="ed-notice__when"><span class="ed-sr">Received </span>09:04</span></a><a class="ed-notice" href="#" data-priority="important" data-unread="true"><span class="ed-notice__dot" aria-hidden="true"></span><span><span class="ed-badge ed-badge--gold">important</span> <span class="ed-label">Attendance</span><p class="ed-notice__title">Chidera Okafor — third consecutive absence</p><p class="ed-notice__body">Your school asks for a reason after three.</p></span><span class="ed-notice__when"><span class="ed-sr">Received </span>08:31</span></a><a class="ed-notice" href="#" data-priority="informational" data-unread="false"><span class="ed-notice__dot" aria-hidden="true"></span><span><span class="ed-label">Documents</span><p class="ed-notice__title">412 report cards are ready to issue</p><p class="ed-notice__body">Year 10, autumn term. Nothing is outstanding.</p></span><span class="ed-notice__when"><span class="ed-sr">Received </span>Yesterday</span></a><a class="ed-notice" href="#" data-priority="informational" data-unread="false"><span class="ed-notice__dot" aria-hidden="true"></span><span><span class="ed-label">Communication</span><p class="ed-notice__title">Half-term closure published</p><p class="ed-notice__body">Sent to 412 families.</p></span><span class="ed-notice__when"><span class="ed-sr">Received </span>Mon</span></a></div></main></div></div></body></html>
+/* Only a phone gets the stretched action. Between the two, the button keeps
+   its own width beneath the title. */
+@media (max-width: 46rem) {
+  .ed-page__actions .ed-btn { flex: 1; }
+}
+</style></head><body><a class="ed-skip" href="#main">Skip to content</a><div class="ed-app"><aside class="ed-rail" id="ed-rail" aria-label="Institution"><div class="ed-rail__ground"><svg class="ed-lattice" aria-hidden="true" focusable="false" width="100%" height="100%"><defs><pattern id="ed-seal" width="64" height="64" patternUnits="userSpaceOnUse"><path d="M 37.143 19.583 L 39.274 24.726 L 44.417 26.857 L 42.287 32.000 L 44.417 37.143 L 39.274 39.274 L 37.143 44.417 L 32.000 42.287 L 26.857 44.417 L 24.726 39.274 L 19.583 37.143 L 21.713 32.000 L 19.583 26.857 L 24.726 24.726 L 26.857 19.583 L 32.000 21.713 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/><path d="M 5.143 -12.417 L 7.274 -7.274 L 12.417 -5.143 L 10.287 0.000 L 12.417 5.143 L 7.274 7.274 L 5.143 12.417 L 0.000 10.287 L -5.143 12.417 L -7.274 7.274 L -12.417 5.143 L -10.287 0.000 L -12.417 -5.143 L -7.274 -7.274 L -5.143 -12.417 L -0.000 -10.287 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/><path d="M 69.143 -12.417 L 71.274 -7.274 L 76.417 -5.143 L 74.287 0.000 L 76.417 5.143 L 71.274 7.274 L 69.143 12.417 L 64.000 10.287 L 58.857 12.417 L 56.726 7.274 L 51.583 5.143 L 53.713 0.000 L 51.583 -5.143 L 56.726 -7.274 L 58.857 -12.417 L 64.000 -10.287 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/><path d="M 5.143 51.583 L 7.274 56.726 L 12.417 58.857 L 10.287 64.000 L 12.417 69.143 L 7.274 71.274 L 5.143 76.417 L 0.000 74.287 L -5.143 76.417 L -7.274 71.274 L -12.417 69.143 L -10.287 64.000 L -12.417 58.857 L -7.274 56.726 L -5.143 51.583 L -0.000 53.713 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/><path d="M 69.143 51.583 L 71.274 56.726 L 76.417 58.857 L 74.287 64.000 L 76.417 69.143 L 71.274 71.274 L 69.143 76.417 L 64.000 74.287 L 58.857 76.417 L 56.726 71.274 L 51.583 69.143 L 53.713 64.000 L 51.583 58.857 L 56.726 56.726 L 58.857 51.583 L 64.000 53.713 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/></pattern></defs><rect width="100%" height="100%" fill="url(#ed-seal)"/></svg></div><div class="ed-identity"><svg class="ed-monogram" width="30" height="30" viewBox="0 0 30 30" role="img" aria-label="EdirasX" fill="none"><path d="M 20.396 1.973 L 22.631 7.369 L 28.027 9.604 L 25.792 15.000 L 28.027 20.396 L 22.631 22.631 L 20.396 28.027 L 15.000 25.792 L 9.604 28.027 L 7.369 22.631 L 1.973 20.396 L 4.208 15.000 L 1.973 9.604 L 7.369 7.369 L 9.604 1.973 L 15.000 4.208 Z" stroke="var(--gold-500)" stroke-width="1.50" stroke-linejoin="miter"/><path d="M 22.631 7.369 L 7.369 22.631" stroke="var(--ivory-50)" stroke-width="2.55" stroke-linecap="butt"/><path d="M 22.631 22.631 L 7.369 7.369" stroke="var(--ivory-50)" stroke-width="2.55" stroke-linecap="butt"/></svg><div><p class="ed-identity__name">Ashford Grange School</p><p class="ed-identity__kind"></p></div></div><nav class="ed-nav" aria-label="Sections"><div class="ed-nav__group"><p class="ed-nav__label">People</p><a class="ed-nav__item" href="/people/students" aria-current="page"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Students</span></a><a class="ed-nav__item" href="/people/enrolment"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Enrolments</span></a><a class="ed-nav__item" href="/people/guardians"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Parents</span></a></div><div class="ed-nav__group"><p class="ed-nav__label">Academic structure</p><a class="ed-nav__item" href="/academics/classes"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Classes</span></a><a class="ed-nav__item" href="/academics/stages"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Stages</span></a><a class="ed-nav__item" href="/academics/levels"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Year groups</span></a><a class="ed-nav__item" href="/academics/courses"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Subjects</span></a><a class="ed-nav__item" href="/academics/calendar"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Academic years</span></a><a class="ed-nav__item" href="/academics/grading"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Grading scales</span></a></div><div class="ed-nav__group"><p class="ed-nav__label">Operations</p><a class="ed-nav__item" href="/operations/attendance"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Attendance</span></a><a class="ed-nav__item" href="/operations/results"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Results</span></a><a class="ed-nav__item" href="/operations/report_cards"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Report cards</span></a><a class="ed-nav__item" href="/operations/documents"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Documents</span></a><a class="ed-nav__item" href="/operations/timetable"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Timetable</span></a><a class="ed-nav__item" href="/operations/admissions"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Admissions</span></a><a class="ed-nav__item" href="/operations/imports"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Bulk import</span></a></div><div class="ed-nav__group"><p class="ed-nav__label">Communication</p><a class="ed-nav__item" href="/communication/announcements"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Announcements</span></a></div><div class="ed-nav__group"><p class="ed-nav__label">Insight</p><a class="ed-nav__item" href="/insight/overview"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Overview</span></a></div><div class="ed-nav__group"><p class="ed-nav__label">Configuration</p><a class="ed-nav__item" href="/configuration/document_templates"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--gold-500)"/></svg><span>Document templates</span></a></div></nav><div class="ed-rail__foot"><a class="ed-account" href="/account"><span class="ed-avatar" role="img" aria-label="Adaeze Umeh">AU</span><span><p class="ed-account__name">Adaeze Umeh</p><p class="ed-account__role">Registrar</p></span></a></div></aside><div class="ed-main"><header class="ed-topbar"><button class="ed-btn ed-btn--quiet ed-btn--sm ed-mobile-only" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="ed-rail"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.3"/></svg></button><div class="ed-search" role="search"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.4 10.4 14 14" stroke="currentColor" stroke-width="1.3"/></svg><span>Search students, classes, documents…</span><kbd>⌘K</kbd></div><div class="ed-topbar__actions"><span class="ed-bell"><button class="ed-btn ed-btn--quiet ed-btn--sm" type="button" aria-label="2 notifications"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5a3.5 3.5 0 0 0-3.5 3.5v2.2L3 10h10l-1.5-2.8V5A3.5 3.5 0 0 0 8 1.5Z" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M6.6 12a1.4 1.4 0 0 0 2.8 0" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button><span class="ed-bell__dot"></span></span></div></header><main class="ed-page" id="main"><header class="ed-page__head"><p class="ed-label ed-label--gold">2 unread</p><div class="ed-page__title-row"><h1 class="ed-page__title">Notifications</h1><div class="ed-page__actions"><button class="ed-btn ed-btn--sm" type="button">Notification settings</button></div></div><p class="ed-lede ed-page__lede">Urgent first, then what is worth knowing today.</p></header><div class="ed-tabs" role="tablist"><button class="ed-tab" role="tab" aria-selected="true">All</button><button class="ed-tab" role="tab" aria-selected="false">Unread</button><button class="ed-tab" role="tab" aria-selected="false">Results</button><button class="ed-tab" role="tab" aria-selected="false">Attendance</button></div><div style="margin-block-start:var(--space-5)"><a class="ed-notice" href="#" data-priority="urgent" data-unread="true"><span class="ed-notice__dot" aria-hidden="true"></span><span><span class="ed-badge ed-badge--danger">urgent</span> <span class="ed-label">Results</span><p class="ed-notice__title">Two result sets are blocked</p><p class="ed-notice__body">Year 11 autumn results are waiting on the Principal&#x27;s approval.</p></span><span class="ed-notice__when"><span class="ed-sr">Received </span>09:04</span></a><a class="ed-notice" href="#" data-priority="important" data-unread="true"><span class="ed-notice__dot" aria-hidden="true"></span><span><span class="ed-badge ed-badge--gold">important</span> <span class="ed-label">Attendance</span><p class="ed-notice__title">Chidera Okafor — third consecutive absence</p><p class="ed-notice__body">Your school asks for a reason after three.</p></span><span class="ed-notice__when"><span class="ed-sr">Received </span>08:31</span></a><a class="ed-notice" href="#" data-priority="informational" data-unread="false"><span class="ed-notice__dot" aria-hidden="true"></span><span><span class="ed-label">Documents</span><p class="ed-notice__title">412 report cards are ready to issue</p><p class="ed-notice__body">Year 10, autumn term. Nothing is outstanding.</p></span><span class="ed-notice__when"><span class="ed-sr">Received </span>Yesterday</span></a><a class="ed-notice" href="#" data-priority="informational" data-unread="false"><span class="ed-notice__dot" aria-hidden="true"></span><span><span class="ed-label">Communication</span><p class="ed-notice__title">Half-term closure published</p><p class="ed-notice__body">Sent to 412 families.</p></span><span class="ed-notice__when"><span class="ed-sr">Received </span>Mon</span></a></div></main></div></div></body></html>

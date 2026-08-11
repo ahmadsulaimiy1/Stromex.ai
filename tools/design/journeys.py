@@ -22,6 +22,7 @@ sys.path.insert(0, str(ROOT / "apps" / "edtechx-api"))
 
 from app.core.context import Grant, Principal  # noqa: E402
 from app.db.session import bind_tenant, get_session_factory  # noqa: E402
+from app.modules.academics import supervision  # noqa: E402
 from app.modules.academics.models import (  # noqa: E402
     AcademicPeriod,
     AcademicStage,
@@ -33,6 +34,7 @@ from app.modules.academics.models import (  # noqa: E402
     Level,
     ScaleKind,
 )
+from app.modules.academics.research import Milestone, MilestoneState  # noqa: E402
 from app.modules.academics.structure import (  # noqa: E402
     AcademicUnit,
     CreditSystem,
@@ -53,6 +55,7 @@ from app.modules.experience import service as experience  # noqa: E402
 from app.modules.people import service as people  # noqa: E402
 from app.modules.people.service import Placement  # noqa: E402
 from app.modules.tenancy.service import provision_school  # noqa: E402
+from sqlalchemy import select  # noqa: E402
 
 OUT = ROOT / "docs" / "edtechx" / "design"
 
@@ -87,6 +90,39 @@ def _principal(tenant_id, role_key: str) -> Principal:
         tenant_id=tenant_id,
         permissions=granted,
         grants=(Grant(frozenset(granted), "tenant", ()),),
+        session_id=_uuid.uuid4(),
+        authenticated_at=datetime.now(UTC).timestamp(),
+    )
+
+
+def _account(session, name: str):
+    """A real user row, so a principal's scope resolves against a real person."""
+    from app.modules.identity.models import Membership, MembershipStatus, User
+
+    user = User(email=f"{_uuid.uuid4().hex[:8]}@meridian.test", full_name=name)
+    session.add(user); session.flush()
+    session.add(Membership(user_id=user.id, status=MembershipStatus.active,
+                           display_name=name))
+    session.flush()
+    return user.id
+
+
+def _person_principal(tenant_id, role_key: str, user_id):
+    """A principal holding this role's real permissions at its real scope.
+
+    Unlike `_principal`, which grants everything at tenant scope so a rail can
+    be rendered, this one is the actual boundary: a supervisor built here reads
+    their own researchers and nobody else's, and the pages below would render
+    empty if the scope were wrong.
+    """
+    template = SYSTEM_ROLES_BY_KEY[role_key]
+    granted = perms.expand(set(template.permissions))
+    return Principal(
+        user_id=user_id,
+        membership_id=_uuid.uuid4(),
+        tenant_id=tenant_id,
+        permissions=granted,
+        grants=(Grant(frozenset(granted), template.default_scope.kind.value, ()),),
         session_id=_uuid.uuid4(),
         authenticated_at=datetime.now(UTC).timestamp(),
     )
@@ -263,6 +299,14 @@ def university() -> tuple:
 
 
 def doctoral() -> tuple:
+    """A graduate school, with candidatures that are actually under way.
+
+    The two researchers are deliberately at different points and in different
+    health: one nineteen months in with a proposal behind him and an upgrade in
+    the diary, one nine months in who has never been seen. Both facts are rows,
+    not fixtures in a template, so the screens below are reading a candidature
+    rather than describing one.
+    """
     tenant_id = _tenant("doctoral", "Meridian Institute for Advanced Study")
     session = _session(tenant_id)
     billing.subscribe(session, plan_key="plan.institution")
@@ -292,30 +336,89 @@ def doctoral() -> tuple:
                                kind_label="Session", sequence=1,
                                starts_on=date(2026, 10, 1), ends_on=date(2027, 9, 30),
                                is_current=True))
-    level = Level(code="phd-y1", name="Year 1", sequence=0, programme_id=programme.id)
-    session.add(level); session.flush()
     for i, (code, name, months) in enumerate((
             ("proposal", "Research proposal", 6),
             ("upgrade", "Upgrade viva", 18),
+            ("ethics", "Ethics approval", 12),
             ("submission", "Thesis submission", 42),
             ("viva", "Viva voce", 48))):
         session.add(MilestoneDefinition(programme_id=programme.id, code=code,
                                         name=name, sequence=i,
                                         expected_offset_months=months))
+    roles = {}
     for code, name, primary in (("principal", "Principal supervisor", True),
                                 ("second", "Second supervisor", False)):
-        session.add(SupervisionRole(code=code, name=name, is_primary=primary))
-    for name, ref in (("Yusuf Al-Amin", "R-2026-01"), ("Ingrid Sørensen", "R-2026-02")):
-        person = people.record_person(session, full_name=name)
+        row = SupervisionRole(code=code, name=name, is_primary=primary)
+        session.add(row); session.flush()
+        roles[code] = row.id
+
+    staff = {}
+    for name, kind in (("Prof. Amina Yusuf", "Professor"),
+                       ("Dr Tomas Reinholt", "Reader")):
+        user_id = _account(session, name)
+        person = people.record_person(session, full_name=name, user_id=user_id)
+        record = people.register_staff(session, person, kind_label=kind,
+                                       is_teaching=True)
+        staff[name] = (record.id, user_id)
+
+    researchers = {}
+    for name, ref, began in (("Yusuf Al-Amin", "R-2025-01", date(2025, 4, 1)),
+                             ("Ingrid Sørensen", "R-2026-02", date(2026, 2, 16))):
+        user_id = _account(session, name)
+        person = people.record_person(session, full_name=name, user_id=user_id)
         student = people.register_student(session, person, reference=ref,
                                           kind_label="Researcher")
-        placement = people.admit(session, student, on=date(2026, 10, 1),
-                                 placement=Placement(academic_year_id=year.id,
-                                                     programme_id=programme.id,
-                                                     level_id=level.id))
-        people.enrol(session, placement, on=date(2026, 10, 1))
+        # No academic year and no level: research intake is continuous, and a
+        # candidature is not in "Year 1" of anything.
+        placement = people.admit(session, student, on=began,
+                                 placement=Placement(programme_id=programme.id))
+        people.enrol(session, placement, on=began)
+        supervision.plan_milestones(session, student_relationship_id=student.id,
+                                    programme_id=programme.id, from_date=began)
+        researchers[name] = (student.id, user_id, began)
+
+    supervision.assign_supervisor(
+        session, student_relationship_id=researchers["Yusuf Al-Amin"][0],
+        staff_relationship_id=staff["Prof. Amina Yusuf"][0],
+        supervision_role_id=roles["principal"], on=date(2025, 4, 1))
+    supervision.assign_supervisor(
+        session, student_relationship_id=researchers["Yusuf Al-Amin"][0],
+        staff_relationship_id=staff["Dr Tomas Reinholt"][0],
+        supervision_role_id=roles["second"], on=date(2025, 4, 1))
+    supervision.assign_supervisor(
+        session, student_relationship_id=researchers["Ingrid Sørensen"][0],
+        staff_relationship_id=staff["Prof. Amina Yusuf"][0],
+        supervision_role_id=roles["principal"], on=date(2026, 2, 16))
+
+    def milestone(student_id, code):
+        return session.execute(
+            select(Milestone).join(
+                MilestoneDefinition,
+                MilestoneDefinition.id == Milestone.milestone_definition_id,
+            ).where(Milestone.student_relationship_id == student_id,
+                    MilestoneDefinition.code == code)
+        ).scalars().one()
+
+    yusuf = researchers["Yusuf Al-Amin"][0]
+    supervision.record_milestone(
+        session, milestone(yusuf, "proposal"), state=MilestoneState.passed,
+        on=date(2025, 9, 26), outcome_label="Approved without amendment")
+    supervision.record_milestone(
+        session, milestone(yusuf, "ethics"), state=MilestoneState.passed,
+        on=date(2026, 3, 11), outcome_label="Approved — Panel B")
+    supervision.record_milestone(
+        session, milestone(yusuf, "upgrade"), state=MilestoneState.scheduled,
+        on=date(2026, 12, 8))
+    for held, summary in (
+            (date(2026, 9, 18), "Chapter 3 structure agreed. Panel to be named."),
+            (date(2026, 10, 16), "Draft chapter 3 read. Two experiments to repeat."),
+            (date(2026, 11, 3), "Upgrade paperwork checked. Panel confirmed.")):
+        supervision.log_meeting(
+            session, student_relationship_id=yusuf, held_on=held,
+            staff_relationship_id=staff["Prof. Amina Yusuf"][0], summary=summary,
+            next_meeting_on=date(2026, 11, 24))
     session.commit()
-    return tenant_id, session
+    return tenant_id, session, staff, researchers
 
 
 # --- the pages ---------------------------------------------------------------
@@ -362,7 +465,7 @@ def build_administrator(tenant_id, session, role_key: str, *, label: str,
             exp.keys()[0] if exp.keys() else ""
         ),
         person=label,
-        role=SYSTEM_ROLES_BY_KEY[role_key].name,
+        role=experience.role_label(session, role_key),
         notifications=3,
         title=f"{branding.display_name} — EdirasX",
         topbar_actions=ui.button("New", variant="quiet", size="sm"),
@@ -488,7 +591,7 @@ def main() -> int:
     session.close()
 
     # --- doctoral ---
-    tenant_id, session = doctoral()
+    tenant_id, session, supervisors, researchers = doctoral()
     pages["04-doctoral-administrator"] = build_administrator(
         tenant_id, session, "registrar", label="Prof. Idris Kamara",
         headline="Graduate School",
@@ -516,6 +619,27 @@ def main() -> int:
             ("—", "Yusuf Al-Amin — upgrade viva", "Panel not yet appointed", ""),
         ]),
         notice="One research proposal is overdue and no panel has been appointed.",
+    )
+
+    yusuf_id, yusuf_user, _began = researchers["Yusuf Al-Amin"]
+    pages["14-researcher-candidature"] = _frame(
+        session, tenant_id, "student", person="Yusuf Al-Amin",
+        body=researcher_candidature(
+            session,
+            _person_principal(tenant_id, "student", yusuf_user),
+            yusuf_id,
+        ),
+        current="research.candidature", notifications=1,
+    )
+    amina_staff, amina_user = supervisors["Prof. Amina Yusuf"]
+    pages["15-supervisor-caseload"] = _frame(
+        session, tenant_id, "supervisor", person="Prof. Amina Yusuf",
+        body=supervisor_caseload(
+            session,
+            _person_principal(tenant_id, "supervisor", amina_user),
+            "Prof. Amina Yusuf",
+        ),
+        current="research.caseload", notifications=2,
     )
     session.close()
 
@@ -693,7 +817,7 @@ def _frame(session, tenant_id, role_key, *, person, body, current="",
         body=body,
         current=current or (exp.keys()[0] if exp.keys() else ""),
         person=person,
-        role=SYSTEM_ROLES_BY_KEY[role_key].name,
+        role=experience.role_label(session, role_key),
         notifications=notifications,
         topbar_actions=actions,
         title=title or f"{branding.display_name} — EdirasX",
@@ -826,11 +950,11 @@ def student_day(*, university: bool) -> str:
         + "<div>"
         + ui.section("Timetable", f'<ul class="ed-list">{items}</ul>')
         + ui.section("Recent results", ui.data_table(
-            [(word, "text"), ("Detail", "text"), ("Grade", "num"), ("", "text")],
+            [(word, "text"), ("Detail", "text"), ("Grade", "num"), ("Note", "text")],
             [], shape="matrix",
             empty_state='<table class="ed-table ed-data" data-shape="matrix">'
             f"<thead><tr><th>{word}</th><th>Assessment</th>"
-            '<th class="num">Grade</th><th></th></tr></thead><tbody>'
+            '<th class="num">Grade</th><th>Note</th></tr></thead><tbody>'
             + ui.matrix_row(subject="Chemistry", grade="A",
                             details=[("Mark", "82 / 100")])
             + ui.matrix_row(subject="History", grade="B",
@@ -859,7 +983,7 @@ def parent_overview() -> str:
             '<div style="display:flex;align-items:flex-start;gap:var(--space-4)">'
             + ui.avatar(name, large=True)
             + "<div style='flex:1;min-width:0'>"
-            + f'<h3 class="ed-heading">{ui.e(name)}</h3>'
+            + f'<h2 class="ed-heading">{ui.e(name)}</h2>'
             + f'<p class="ed-list__meta">{ui.e(klass)}</p></div>'
             + ui.badge(note, tone=tone)
             + "</div>"
@@ -896,6 +1020,290 @@ def parent_overview() -> str:
             + "</ul>"
         ), gold=False)
     )
+
+
+
+# --- research: the only journey whose horizon is measured in years ----------
+#
+# A candidature screen built from the components used everywhere else would be
+# a lie about the shape of the thing. There is no timetable, nothing is due
+# this week, and the honest headline is not "3 tasks" but "month 19 of 48".
+# Everything below is read from the rows created in `doctoral()`, through the
+# reader's own scope — the supervisor's page renders their two researchers
+# because the SQL says so, and would render nothing if the scope were wrong.
+
+RESEARCH_TODAY = date(2026, 11, 12)
+
+
+def _long(value) -> str:
+    return value.strftime("%-d %B %Y") if value else "—"
+
+
+def _short(value) -> str:
+    return value.strftime("%b %Y") if value else "—"
+
+
+def _mark_state(m) -> str:
+    if m.is_overdue:
+        return "late"
+    if m.state.value in {"passed", "waived"}:
+        return "done"
+    if m.state.value in {"scheduled", "submitted", "referred"}:
+        return "due"
+    return "ahead"
+
+
+def _milestone_words(m) -> tuple[str, str]:
+    """The state in words, and the one date worth showing, kept disjoint.
+
+    The date belongs in exactly one of the two. An earlier version put it in
+    both — "Expected by 1 October 2028" beside "1 October 2028" — which reads
+    as two facts on a wide screen and as a stutter on a phone, where the two
+    columns become two lines.
+    """
+    if m.is_overdue:
+        return "Overdue", _long(m.due_on)
+    return {
+        "passed": (m.outcome_label or "Passed", _long(m.decided_on)),
+        "waived": (m.outcome_label or "Waived", _long(m.decided_on)),
+        "referred": (m.outcome_label or "Referred", _long(m.decided_on)),
+        "failed": (m.outcome_label or "Not passed", _long(m.decided_on)),
+        "scheduled": ("Scheduled", _long(m.scheduled_for)),
+        "submitted": ("With the examiners", _long(m.submitted_on)),
+    }.get(m.state.value, ("Expected", _long(m.due_on)))
+
+
+def _axis(state, *, compact: bool = False) -> str:
+    return ui.candidature_axis(
+        months=state.horizon_months or 1,
+        elapsed=state.elapsed_months,
+        marks=[
+            (m.name, m.offset_months or 0, _mark_state(m))
+            for m in state.milestones
+            if m.offset_months
+        ],
+        summary=(
+            f"Month {state.elapsed_months} of {state.horizon_months}. "
+            f"{state.completed} of {len(state.milestones)} requirements complete."
+        ),
+        compact=compact,
+    )
+
+
+def researcher_candidature(session, principal, student_id) -> str:
+    state = supervision.candidature(
+        session, principal, student_relationship_id=student_id, on=RESEARCH_TODAY
+    )
+    remaining = state.horizon_months - state.elapsed_months
+    next_up = state.next_requirement
+
+    track = ui.milestone_track([
+        ui.milestone_row(
+            m.name,
+            state=_mark_state(m),
+            when=_milestone_words(m)[1],
+            detail=_milestone_words(m)[0],
+            trail=(
+                ui.button("Upload your paperwork", size="sm", variant="primary")
+                if next_up and m.code == next_up.code and m.state.value == "scheduled"
+                else ""
+            ),
+        )
+        for m in state.milestones
+    ])
+
+    supervisors = "".join(
+        ui.list_item(
+            s.name, s.role,
+            lead=ui.avatar(s.name),
+            trail=ui.button("Message", size="sm"),
+        )
+        for s in state.supervisors
+    )
+    # The date is the lead; the note is the title. Rendering the date twice —
+    # once as a lead and again as the heading — was the first version, and it
+    # made a meeting log unreadable at a glance.
+    meetings = "".join(
+        ui.list_item(
+            m.summary or "No note recorded",
+            f"with {state.supervisors[0].name}" if state.supervisors else "Supervision",
+            lead=f'<span class="ed-quiet ed-numeric" style="font-size:var(--text-2xs);'
+                 f'min-width:3.6rem">{m.held_on.strftime("%d %b")}</span>',
+        )
+        for m in state.meetings[:3]
+    )
+
+    facts = ui.figures([
+        ui.figure("Registered", _short(state.started_on)),
+        ui.figure("Elapsed", str(state.elapsed_months), unit="months"),
+        ui.figure("Remaining", str(remaining), unit="months",
+                  note=f"to {_short(supervision.add_months(state.started_on, state.horizon_months))}"),
+        ui.figure("Complete", f"{state.completed}", unit=f"of {len(state.milestones)}"),
+    ])
+
+    return (
+        ui.page_header(
+            "Candidature",
+            eyebrow=f"Month {state.elapsed_months} of {state.horizon_months} · "
+                    "PhD in Computer Science",
+            lede=(
+                f"Your upgrade viva is on {_long(next_up.when)}. "
+                "Everything before it has been signed off."
+                if next_up and next_up.state.value == "scheduled"
+                else "Where your research degree stands, and what is next."
+            ),
+            actions=ui.button("Request a meeting", variant="primary"),
+        )
+        + ui.panel(_axis(state) + facts, crowned=True)
+        + '<div class="ed-grid ed-grid--sidebar" style="margin-block-start:var(--space-8)">'
+        + "<div>"
+        + ui.section("What is required of you", track)
+        + ui.section("Recent meetings", (
+            f'<ul class="ed-list">{meetings}</ul>' if meetings else ui.empty(
+                "No meetings recorded yet",
+                "When your supervisor writes one up it appears here, with what "
+                "was agreed.",
+            )
+        ), gold=False)
+        + "</div><div>"
+        + ui.section(
+            "Next",
+            ui.panel(
+                f'<p class="ed-label ed-label--gold">{ui.e(next_up.name)}</p>'
+                f'<p class="ed-lede" style="margin-block:var(--space-2) 0">'
+                f'{ui.e(_milestone_words(next_up)[0])}</p>'
+                + '<div style="display:flex;gap:var(--space-2);flex-wrap:wrap;'
+                  'margin-block-start:var(--space-4)">'
+                + ui.button("Open the checklist", variant="ceremonial", size="sm")
+                + "</div>",
+                quiet=True,
+            ) if next_up else ui.empty(
+                "Nothing outstanding",
+                "Every requirement on your programme has been ruled on.",
+            ),
+            gold=False,
+        )
+        + ui.section("Supervision", f'<ul class="ed-list">{supervisors}</ul>', gold=False)
+        # A sidebar is the wrong place for the full empty state: rendered there
+        # it was a centred ornament and a 24px serif heading, and it became the
+        # loudest thing on a page about a doctorate.
+        + ui.section("Documents", ui.panel(
+            '<p class="ed-lede" style="font-size:var(--text-sm)">A statement of '
+            "candidature appears here once your upgrade is confirmed. Your "
+            "degree certificate follows the viva.</p>",
+            quiet=True,
+        ), gold=False)
+        + "</div></div>"
+    )
+
+
+def supervisor_caseload(session, principal, name: str) -> str:
+    rows = supervision.caseload(session, principal, on=RESEARCH_TODAY)
+    drifting = [r for r in rows if r.needs_attention]
+
+    def contact(entry):
+        gap = entry.candidature.days_since_meeting
+        if gap is None:
+            return "Never", "late"
+        if gap > supervision.CONTACT_GAP_DAYS:
+            return f"{gap} days ago", "late"
+        return f"{gap} days ago", ""
+
+    def upcoming(entry):
+        """The next requirement, dated by what is *happening* to it.
+
+        A viva with a date in the diary is described by that date, not by the
+        month the programme originally expected it — the first render read
+        "Upgrade viva · Oct 2026" for a viva confirmed for 8 December, which is
+        the kind of small wrongness that costs a product its credibility with
+        the one person who knows the answer.
+        """
+        nxt = entry.candidature.next_requirement
+        if nxt is None:
+            return "Nothing outstanding", ""
+        if nxt.is_overdue:
+            return f"{nxt.name} — overdue", "late"
+        when = nxt.when
+        soon = when is not None and (when - RESEARCH_TODAY).days <= 90
+        return f"{nxt.name} · {_short(when)}", "soon" if soon else ""
+
+    body = "".join(
+        ui.caseload_row(
+            entry.researcher,
+            meta=f"{entry.reference} · {entry.role.lower()} since "
+                 f"{_short(entry.since)}",
+            axis=_axis(entry.candidature, compact=True),
+            contact=contact(entry)[0],
+            contact_state=contact(entry)[1],
+            next_up=upcoming(entry)[0],
+            next_state=upcoming(entry)[1],
+            actions=ui.button("Open", size="sm")
+            + ui.button("Log a meeting", size="sm", variant="primary"),
+        )
+        for entry in rows
+    )
+
+    return (
+        ui.page_header(
+            "Your researchers",
+            eyebrow=f"{name} · Graduate School",
+            lede="Ordered by who needs you rather than alphabetically.",
+        )
+        # Written from the rows rather than typed, so it cannot describe a
+        # situation the caseload beneath it does not show.
+        + (ui.alert(
+            " ".join(
+                f"{r.researcher} has "
+                + (
+                    "no recorded supervision meeting"
+                    if r.candidature.days_since_meeting is None
+                    else f"not been seen for "
+                         f"{r.candidature.days_since_meeting} days"
+                )
+                + (
+                    f" and {len(r.candidature.overdue)} requirement"
+                    f"{'s' if len(r.candidature.overdue) > 1 else ''} past "
+                    "its date." if r.candidature.overdue else "."
+                )
+                for r in drifting
+            ),
+            title=(
+                "One candidature needs you" if len(drifting) == 1
+                else f"{len(drifting)} candidatures need you"
+            ),
+            tone="warning",
+        ) if drifting else "")
+        + ui.section(
+            "Caseload",
+            f'<div class="ed-caseload">{body}</div>',
+            aside=f"{len(rows)} in candidature",
+        )
+        + '<div class="ed-grid ed-grid--sidebar" style="margin-block-start:var(--space-8)">'
+        + "<div>"
+        + ui.section("Waiting on you", (
+            '<ul class="ed-list">'
+            + ui.list_item(
+                "Upgrade panel — Yusuf Al-Amin",
+                "Viva 8 December · your report is due a week before",
+                trail=ui.button("Write it", size="sm", variant="primary"))
+            + ui.list_item(
+                "Research proposal — Ingrid Sørensen",
+                "Not submitted. The graduate school asks for a reason after 30 days.",
+                trail=ui.badge("Overdue", tone="danger"))
+            + "</ul>"
+        ), gold=False)
+        + "</div><div>"
+        + ui.section("From the graduate school", (
+            '<ul class="ed-list">'
+            + ui.list_item("Annual progress review opens 1 December",
+                           "All candidates in their second year or beyond")
+            + ui.list_item("Panel nominations — Faculty of Science",
+                           "Two panels still unnamed")
+            + "</ul>"
+        ), gold=False)
+        + "</div></div>"
+    )
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

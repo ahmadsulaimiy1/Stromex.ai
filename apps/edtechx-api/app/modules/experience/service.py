@@ -39,6 +39,8 @@ from sqlalchemy.orm import Session
 from app.core.context import Principal
 from app.modules.academics import service as academics
 from app.modules.authz import permissions as perms
+from app.modules.authz.scopes import scopes_for
+from app.modules.authz.system_roles import SYSTEM_ROLES_BY_KEY
 from app.modules.billing import service as billing
 from app.modules.customization import terminology
 from app.modules.experience.capabilities import (
@@ -63,6 +65,10 @@ NOT_ENTITLED = Absence("not_entitled")
 HIDDEN_BY_INSTITUTION = Absence("hidden_by_institution")
 #: Two concepts that this institution's own vocabulary names identically.
 NAME_COLLISION = Absence("name_collision")
+#: Held the permission, but not over the right things. Distinct from
+#: `not_permitted` because the two need different answers from support: one is
+#: "your account does not include this", the other is "this is not your screen".
+NOT_IN_SCOPE = Absence("not_in_scope")
 
 
 @dataclass(frozen=True, slots=True)
@@ -251,6 +257,21 @@ def _admits(capability: Capability, layers: frozenset[str]) -> bool:
     return any(layer in layers for layer in capability.layers)
 
 
+def _reaches(principal: Principal | None, capability) -> bool:
+    """Whether this person holds the capability's permission at one of its scopes.
+
+    Read from the grants that actually confer the permission, not from the
+    principal's scopes in general — the same rule the predicate compiler
+    follows, and for the same reason: a broad scope on one permission must not
+    widen another.
+    """
+    if principal is None:
+        return False
+    held = scopes_for(principal, capability.permission)
+    wanted = set(capability.scopes)
+    return any(scope.kind.value in wanted for scope in held.scopes)
+
+
 def resolve(
     db: Session,
     principal: Principal | None,
@@ -288,6 +309,9 @@ def resolve(
             continue
         if capability.permission and not perms.has(held, capability.permission):
             absent[capability.key] = NOT_PERMITTED
+            continue
+        if capability.scopes and not _reaches(principal, capability):
+            absent[capability.key] = NOT_IN_SCOPE
             continue
 
         upgrade_from: str | None = None
@@ -370,3 +394,31 @@ def capability_is_present(experience: Experience, key: str) -> bool:
     if key not in BY_KEY:
         raise KeyError(f"{key!r} is not a capability")
     return key in experience.keys()
+
+
+#: Roles whose *name* is a word the institution owns. A Meridian account badge
+#: reading "Student" beneath a person the institution calls a researcher is the
+#: same defect as a parent shown a section called "Operations": correct, and
+#: written for somebody who works on the platform rather than at the school.
+#: Found by rendering a doctoral candidate's shell and reading the footer.
+ROLE_TERMS: dict[str, str] = {
+    "student": "student",
+    "guardian": "guardian",
+    "teacher": "teacher",
+    "supervisor": "supervisor",
+}
+
+
+def role_label(db: Session, role_key: str) -> str:
+    """A role's name in the institution's own vocabulary where it has one.
+
+    Only for the four roles that *are* a word a school renames. "Registrar",
+    "Bursar" and "Principal" stay as they are: they name a job the platform
+    defines, not a person the institution has a word for.
+    """
+    template = SYSTEM_ROLES_BY_KEY.get(role_key)
+    fallback = template.name if template else role_key.replace("_", " ").title()
+    term = ROLE_TERMS.get(role_key)
+    if term is None:
+        return fallback
+    return terminology.resolve(db).title(term)

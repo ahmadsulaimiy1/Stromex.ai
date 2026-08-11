@@ -32,7 +32,12 @@ from app.modules.academics import service as academics
 from app.modules.authz.predicates import ScopeContext, ScopePlan
 from app.modules.authz.scopes import ScopeKind
 from app.modules.people.enrolment import Enrolment
-from app.modules.people.models import GuardianRelationship, Person, StudentRelationship
+from app.modules.people.models import (
+    GuardianRelationship,
+    Person,
+    StaffRelationship,
+    StudentRelationship,
+)
 
 __all__ = [
     "ENROLMENTS",
@@ -41,6 +46,9 @@ __all__ = [
     "own_children_clause",
     "student_ids_where",
     "student_self_clause",
+    "students_in_programmes_clause",
+    "students_in_units_clause",
+    "supervised_by_self_clause",
 ]
 
 
@@ -94,6 +102,20 @@ def _my_class_group_ids(context: ScopeContext):
     return academics.class_group_ids_taught_by(context.membership_id)
 
 
+def _my_staff_relationship_ids(context: ScopeContext):
+    """This institution's staff record for the person making the request.
+
+    Matched through `Person`, not through the membership, because a supervisor
+    is a member of staff whether or not they have logged in this year, and
+    because the same human at another institution is a different `Person` and
+    supervises nobody here (ADR-027).
+    """
+    return select(StaffRelationship.id).where(
+        StaffRelationship.person_id.in_(_my_person_id(context)),
+        StaffRelationship.ended_on.is_(None),
+    )
+
+
 # --- student relationships -------------------------------------------------
 
 
@@ -142,6 +164,20 @@ def _students_taught_by_self(context: ScopeContext) -> ColumnElement[bool] | Non
     return _students_where(lambda p: p.c.class_group_id.in_(mine))
 
 
+def _students_supervised_by_self(context: ScopeContext) -> ColumnElement[bool] | None:
+    """The researchers this person currently supervises.
+
+    Through `academics`, which owns the supervision table, rather than by
+    importing it — the same boundary rule that makes a teacher's reach come
+    from `class_group_ids_taught_by` instead of a join written here.
+    """
+    if context.user_id is None:
+        return None
+    return StudentRelationship.id.in_(
+        academics.student_ids_supervised_by(_my_staff_relationship_ids(context))
+    )
+
+
 def _own_children(context: ScopeContext) -> ColumnElement[bool] | None:
     if context.user_id is None:
         return None
@@ -165,6 +201,7 @@ STUDENT_RELATIONSHIPS = ScopePlan(
         ScopeKind.level: _students_in_levels,
         ScopeKind.klass: _students_in_classes,
         ScopeKind.taught_by_self: _students_taught_by_self,
+        ScopeKind.supervised_by_self: _students_supervised_by_self,
         ScopeKind.own_children: _own_children,
         ScopeKind.self_only: _student_self,
         # `subject` is deliberately absent. A subject scope says which courses
@@ -222,6 +259,9 @@ PEOPLE = ScopePlan(
         ScopeKind.level: _people_via_students(_students_in_levels),
         ScopeKind.klass: _people_via_students(_students_in_classes),
         ScopeKind.taught_by_self: _people_via_students(_students_taught_by_self),
+        ScopeKind.supervised_by_self: _people_via_students(
+            _students_supervised_by_self
+        ),
         ScopeKind.own_children: _person_own_children,
         ScopeKind.self_only: _person_self,
     },
@@ -275,6 +315,7 @@ ENROLMENTS = ScopePlan(
             Enrolment.class_group_id.in_(c.ids) if c.ids else None
         ),
         ScopeKind.taught_by_self: _enrolments_of(_students_taught_by_self),
+        ScopeKind.supervised_by_self: _enrolments_of(_students_supervised_by_self),
         ScopeKind.own_children: _enrolments_of(_own_children),
         ScopeKind.self_only: _enrolments_of(_student_self),
     },
@@ -286,6 +327,9 @@ ENROLMENTS = ScopePlan(
 # and one of them is wrong about whose child a parent may read.
 own_children_clause = _own_children
 student_self_clause = _student_self
+supervised_by_self_clause = _students_supervised_by_self
+students_in_units_clause = _students_in_units
+students_in_programmes_clause = _students_in_programmes
 
 
 def student_ids_where(clause):

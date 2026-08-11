@@ -147,8 +147,14 @@ def test_every_semantic_reference_resolves() -> None:
 def test_the_emitted_stylesheet_covers_every_variable_the_foundation_reads() -> None:
     """The failure this catches is invisible: an undefined custom property makes
     a rule *do nothing*, so a page renders looking almost right."""
+    sheet = FOUNDATION + page_css()
     declared = set(css_variables(resolve()))
-    used = set(re.findall(r"var\((--[a-z0-9-]+)", FOUNDATION + page_css()))
+    # Anything the foundation declares for itself counts as declared. Read from
+    # the stylesheet rather than listed here, so a composed token — the focus
+    # ring is one: a shadow built from a themed colour, which cannot live in a
+    # colour token — does not have to be remembered in two places.
+    declared |= set(re.findall(r"^\s*(--[a-z0-9-]+)\s*:", sheet, re.MULTILINE))
+    used = set(re.findall(r"var\((--[a-z0-9-]+)", sheet))
     # Locals a component defines for itself.
     local = {"--btn-bg", "--btn-fg", "--btn-border", "--rule-width"}
     missing = used - declared - local
@@ -390,3 +396,97 @@ def test_gold_is_never_the_only_signal_of_a_state() -> None:
     # The current page in a pager: a gold rule, and also a colour and a weight.
     pager = blocks.get('.ed-pager__item[aria-current="page"]', "")
     assert "color:" in pager and "font-weight:" in pager
+
+
+# --- what an audit found, pinned so it cannot come back ---------------------
+#
+# Every assertion below corresponds to a violation an axe-core run over the
+# rendered journeys reported. They are here rather than in a checklist because
+# a checklist is a thing somebody remembers and a test is a thing nobody has
+# to. See `tools/design/audit.py` for the run itself, which is the part that
+# finds what these cannot.
+
+
+@pytest.mark.parametrize("mode", ["ivory", "midnight"])
+def test_both_modes_are_publishable(mode: str) -> None:
+    """The guardrail, run on the palette EdirasX ships rather than only on one.
+
+    `review` had never been called on midnight mode. When an audit ran it,
+    three of its own pairings failed: success text at 4.2:1, control borders at
+    2.92:1, and the focus ring at 2.68:1 — the last of which is the indicator a
+    keyboard user needs to know where they are.
+    """
+    verdict = review(resolve({"mode": mode}))
+    assert verdict.is_publishable, [
+        (v.role, round(v.ratio, 2), v.required) for v in verdict.errors
+    ]
+
+
+@pytest.mark.parametrize("mode", ["ivory", "midnight"])
+def test_incidental_text_is_still_text(mode: str) -> None:
+    """`text.tertiary` carries timestamps, placeholders and units. It is read."""
+    theme = resolve({"mode": mode})
+    for surface in ("surface.canvas", "surface.raised"):
+        ratio = ink.contrast(theme.colour("text.tertiary"), theme.colour(surface))
+        assert ratio >= ink.AA_NORMAL, f"{mode}: tertiary on {surface} is {ratio:.2f}"
+
+
+def test_the_focus_ring_is_its_own_token() -> None:
+    """Because the accent cannot be both a button fill and a visible ring.
+
+    On midnight the fill has to be dark enough to carry ivory text and the ring
+    has to be light enough to be seen against the chrome. One token was doing
+    both jobs, and the ring was the one that lost.
+    """
+    css = FOUNDATION + page_css()
+    assert "--focus-ring: 0 0 0 3px var(--border-focus)" in css
+    assert "var(--shadow-ring)" not in css, "a mode-independent ring is back"
+    for mode in ("ivory", "midnight"):
+        theme = resolve({"mode": mode})
+        ratio = ink.contrast(theme.colour("border.focus"), theme.colour("surface.canvas"))
+        assert ratio >= ink.NON_TEXT, f"{mode}: focus ring at {ratio:.2f}"
+
+
+def test_a_section_label_is_a_heading() -> None:
+    """It reads as one and is used as one, so it must be marked up as one.
+
+    As a paragraph it left five journeys going from `<h1>` straight to the
+    `<h3>` inside a panel — a document somebody navigating by heading cannot
+    follow.
+    """
+    html = ui.section("Waiting on you", "<p>body</p>")
+    assert '<h2 class="ed-label">Waiting on you</h2>' in html
+    assert "<h3" in ui.section("A", "b", heading="A heading")
+
+
+def test_a_field_label_is_attached_to_its_control() -> None:
+    """A `<label>` beside an input labels nothing at all."""
+    html = ui.field("Full name", ui.text_input(value="Ada"))
+    label = html[html.index("<label") : html.index("</label>")]
+    assert "<input" in label, "the control is outside its own label"
+
+
+def test_a_progressbar_says_what_it_is_measuring() -> None:
+    assert 'aria-label="Publishing results"' in ui.progress(68, label="Publishing results")
+    assert 'aria-label="Progress"' in ui.progress(68)
+
+
+def test_a_navigation_item_points_at_a_page() -> None:
+    """`#capability.key` is an anchor to an id no document contains."""
+    from app.modules.design.shell import href_for
+
+    assert href_for("people.students") == "/people/students"
+    assert not href_for("people.students").startswith("#")
+
+
+def test_a_matrix_detail_cell_stays_a_table_cell() -> None:
+    """`display: flex` takes a `<td>` out of `border-collapse`.
+
+    The visible symptom was one hairline floating under one column on the last
+    row of every results matrix. The structural cause is that a flex container
+    is not a table-cell, so the run of details lives in a wrapper.
+    """
+    row = ui.matrix_row(subject="Chemistry", grade="A", details=[("Mark", "82")])
+    assert '<td data-role="detail"><span class="ed-detail">' in row
+    css = FOUNDATION + page_css()
+    assert 'td[data-role="detail"] {\n  display: flex' not in css

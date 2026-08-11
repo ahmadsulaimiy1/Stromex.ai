@@ -54,6 +54,7 @@
   --verdant-700: #14543A;
   --verdant-600: #1F6B4A;
   --verdant-500: #2E8560;
+  --verdant-400: #4C9777;
   --verdant-200: #D3E7DC;
   --amber-700: #7A5310;
   --amber-600: #9A6A12;
@@ -131,8 +132,8 @@
   --surface-accent-wash: #E6EEF9;
   --surface-overlay: #FFFDF8;
   --text-primary: #14171D;
-  --text-secondary: #5A6273;
-  --text-tertiary: #7C8494;
+  --text-secondary: #3E4553;
+  --text-tertiary: #5A6273;
   --text-inverse: #FFFDF8;
   --text-accent: #1A3566;
   --text-on-accent: #FFFDF8;
@@ -143,6 +144,7 @@
   --border-hairline: #E8DFCE;
   --border-strong: #D8CCB4;
   --border-control: #7C8494;
+  --border-focus: #2A579E;
   --border-accent: #204480;
   --border-gold: #C9A961;
   --border-inverse: #152036;
@@ -178,6 +180,15 @@
   --ornament-level: restrained;
   --ornament-opacity: 0.05;
   --font-size-arabic-adjust: 1.15;
+}
+/* The focus indicator, composed here rather than in the token file because it
+   is a shadow built *from* a themed colour. It was a fixed translucent royal
+   in the primitives, which meant the ring did not change with the mode and was
+   all but invisible on midnight — the defect an axe run plus a keyboard walk
+   found together, and neither would have found alone. */
+:root {
+  --focus-ring: 0 0 0 3px var(--border-focus);
+  --focus-ring-gold: 0 0 0 3px var(--accent-metal);
 }
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -286,6 +297,17 @@ body {
 /* A section: micro-label, rule, content. Repeated everywhere, which is what
    makes twelve unrelated screens feel like one product. */
 .ed-section { margin-block-end: var(--space-8); }
+.ed-grid + .ed-section, .ed-panel + .ed-section,
+.ed-figures + .ed-section,
+/* An alert sat flush against the label of the section beneath it: correct
+   markup, and it read as one bruised block. */
+.ed-alert + .ed-section, .ed-caseload + .ed-section
+  { margin-block-start: var(--space-8); }
+/* And the mirror of it. A warning sitting flush on the rule beneath a row of
+   figures read as part of the figures — found on the secondary administrator's
+   screen at tablet width, where the two collide first. */
+.ed-figures + .ed-alert, .ed-panel + .ed-alert, .ed-grid + .ed-alert
+  { margin-block-start: var(--space-6); }
 .ed-section__head {
   display: flex;
   align-items: baseline;
@@ -342,7 +364,7 @@ body {
               color var(--duration-fast) var(--easing-standard);
 }
 .ed-btn:hover { background: var(--surface-sunken); }
-.ed-btn:focus-visible { outline: none; box-shadow: var(--shadow-ring); }
+.ed-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .ed-btn:active { transform: translateY(0.5px); }
 .ed-btn[disabled], .ed-btn[aria-disabled="true"] {
   color: var(--state-disabled);
@@ -364,7 +386,7 @@ body {
   --btn-border: var(--accent-metal);
 }
 .ed-btn--ceremonial:hover { --btn-bg: var(--surface-selected); }
-.ed-btn--ceremonial:focus-visible { box-shadow: var(--shadow-ring-gold); }
+.ed-btn--ceremonial:focus-visible { box-shadow: var(--focus-ring-gold); }
 .ed-btn--quiet { --btn-border: transparent; }
 .ed-btn--danger { --btn-fg: var(--text-danger); --btn-border: var(--state-danger); }
 .ed-btn--sm { min-height: calc(var(--control-height) * 0.82); font-size: var(--text-2xs); }
@@ -381,17 +403,27 @@ body {
   transition: border-color var(--duration-fast) var(--easing-standard);
 }
 .ed-link:hover { border-block-end-color: currentColor; }
-.ed-link:focus-visible { outline: none; box-shadow: var(--shadow-ring); border-radius: 1px; }
+.ed-link:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 1px; }
 
 /* --- fields ------------------------------------------------------------- */
 
 .ed-field { display: flex; flex-direction: column; gap: var(--space-2); }
+/* The label now *contains* its control, so it is a column of two rather than
+   a line of text. The typography below applies to the label's own text only. */
 .ed-field__label {
+  display: flex; flex-direction: column; gap: var(--space-2);
   font-size: var(--text-2xs);
   font-weight: var(--weight-semibold);
   letter-spacing: var(--tracking-wider);
   text-transform: uppercase;
   color: var(--text-secondary);
+}
+.ed-field__label > .ed-input,
+.ed-field__label > .ed-select,
+.ed-field__label > .ed-textarea {
+  font-size: var(--text-sm); font-weight: var(--weight-regular);
+  letter-spacing: var(--tracking-normal); text-transform: none;
+  color: var(--text-primary);
 }
 .ed-field__hint { font-size: var(--text-2xs); color: var(--text-tertiary); }
 .ed-field__error {
@@ -418,7 +450,7 @@ body {
 .ed-input:focus, .ed-select:focus, .ed-textarea:focus {
   outline: none;
   border-color: var(--accent-strong);
-  box-shadow: var(--shadow-ring);
+  box-shadow: var(--focus-ring);
 }
 .ed-input[aria-invalid="true"] { border-color: var(--state-danger); }
 .ed-input[disabled], .ed-select[disabled], .ed-textarea[disabled] {
@@ -457,7 +489,7 @@ body {
   transform: rotate(45deg) translate(-1px, -1px);
 }
 .ed-check__box--round input:checked + &::after { border-radius: var(--radius-full); }
-.ed-check input:focus-visible + .ed-check__box { box-shadow: var(--shadow-ring); }
+.ed-check input:focus-visible + .ed-check__box { box-shadow: var(--focus-ring); }
 .ed-check input[disabled] + .ed-check__box {
   background: var(--state-disabled-surface); border-color: var(--state-disabled);
 }
@@ -481,7 +513,7 @@ body {
 .ed-switch input:checked + .ed-switch__track .ed-switch__thumb {
   transform: translateX(1.05rem);
 }
-.ed-switch input:focus-visible + .ed-switch__track { box-shadow: var(--shadow-ring); }
+.ed-switch input:focus-visible + .ed-switch__track { box-shadow: var(--focus-ring); }
 
 /* --- badges, chips, avatars --------------------------------------------- */
 
@@ -555,10 +587,12 @@ body {
    separator the cells read as "82 / 100Examination", which is how the first
    render of this actually looked. */
 .ed-data[data-shape="matrix"] td[data-role="detail"] {
-  display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-5);
   color: var(--text-secondary); font-size: var(--text-2xs);
 }
-.ed-data[data-shape="matrix"] td[data-role="detail"] span::before {
+.ed-data[data-shape="matrix"] .ed-detail {
+  display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-5);
+}
+.ed-data[data-shape="matrix"] td[data-role="detail"] span span::before {
   content: attr(data-label) ' ';
   text-transform: uppercase; letter-spacing: var(--tracking-wider);
   color: var(--text-tertiary); font-size: 0.9em;
@@ -604,7 +638,7 @@ body {
   content: ''; position: absolute; inset-inline: 0; bottom: -1px; height: 2px;
   background: var(--accent-metal);
 }
-.ed-tab:focus-visible { outline: none; box-shadow: var(--shadow-ring); border-radius: 2px; }
+.ed-tab:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 2px; }
 
 .ed-crumbs {
   display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
@@ -701,6 +735,353 @@ body {
   max-width: 32rem; width: 100%;
 }
 .ed-scrim { position: fixed; inset: 0; background: rgba(6, 10, 18, 0.52); }
+
+/* --- command palette -----------------------------------------------------
+   An acceleration layer, never an authorization bypass: what it can find is
+   whatever `experience.resolve` and the scope predicates already permit. The
+   visual job is to get out of the way — it sits high on the page rather than
+   centred, because a person typing is looking at what they typed. */
+
+.ed-palette__scrim {
+  position: fixed; inset: 0; background: rgba(6, 10, 18, 0.52);
+  display: flex; justify-content: center; align-items: flex-start;
+  padding: 12vh var(--space-4) var(--space-4);
+  z-index: var(--layer-overlay);
+}
+.ed-palette {
+  width: 100%; max-width: 40rem;
+  background: var(--surface-overlay);
+  border: 1px solid var(--border-hairline);
+  border-top: var(--border-thick) solid var(--accent-metal);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-overlay);
+  overflow: hidden;
+}
+.ed-palette__field {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-block-end: 1px solid var(--border-hairline);
+}
+.ed-palette__input {
+  flex: 1; border: 0; background: none; font: inherit;
+  font-size: var(--text-md); color: var(--text-primary); outline: none;
+}
+.ed-palette__results { max-height: 26rem; overflow-y: auto; padding: var(--space-2); }
+.ed-palette__group + .ed-palette__group { margin-block-start: var(--space-3); }
+.ed-palette__label {
+  font-size: var(--text-3xs); letter-spacing: var(--tracking-widest);
+  text-transform: uppercase; color: var(--text-tertiary);
+  padding: var(--space-2) var(--space-3) var(--space-1);
+  margin: 0;
+}
+.ed-palette__item {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm); text-decoration: none;
+  color: var(--text-primary); font-size: var(--text-sm);
+}
+.ed-palette__item[aria-selected="true"] { background: var(--surface-selected); }
+.ed-palette__item[aria-selected="true"] .ed-node { opacity: 1; }
+.ed-palette__item .ed-node { opacity: 0; flex: none; }
+.ed-palette__meta { margin-inline-start: auto; font-size: var(--text-2xs);
+  color: var(--text-tertiary); }
+.ed-palette__foot {
+  display: flex; gap: var(--space-4); padding: var(--space-2) var(--space-5);
+  border-block-start: 1px solid var(--border-hairline);
+  background: var(--surface-sunken);
+  font-size: var(--text-3xs); color: var(--text-tertiary);
+}
+.ed-palette__foot kbd {
+  font-family: var(--font-mono); border: 1px solid var(--border-hairline);
+  border-radius: 2px; padding: 0 3px;
+}
+
+/* --- notifications -------------------------------------------------------
+   Priority is carried by more than colour: an urgent item has a garnet rule, a
+   filled marker AND the word. Colour alone fails for a reader who cannot see
+   the difference, and it fails again in a photocopy. */
+
+.ed-notice {
+  display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-4) var(--space-3);
+  border-block-end: 1px solid var(--border-hairline);
+  border-inline-start: var(--border-rule) solid transparent;
+  text-decoration: none; color: inherit;
+}
+.ed-notice:hover { background: var(--surface-sunken); }
+.ed-notice[data-priority="urgent"] { border-inline-start-color: var(--state-danger); }
+.ed-notice[data-priority="important"] { border-inline-start-color: var(--accent-metal); }
+.ed-notice[data-unread="true"] { background: var(--surface-selected); }
+.ed-notice__dot {
+  width: 7px; height: 7px; border-radius: var(--radius-full);
+  background: var(--accent-metal); margin-block-start: 0.42rem;
+}
+.ed-notice[data-unread="false"] .ed-notice__dot { background: transparent; }
+.ed-notice__title { margin: 0; font-size: var(--text-sm); font-weight: var(--weight-medium); }
+.ed-notice__body { margin: 2px 0 0; font-size: var(--text-2xs); color: var(--text-secondary); }
+.ed-notice__when {
+  font-size: var(--text-3xs); color: var(--text-tertiary); white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- drawer --------------------------------------------------------------
+   For contextual inspection and lightweight editing. A complex workflow does
+   not belong in one, and neither does it belong in a dialog. */
+
+.ed-drawer__scrim {
+  position: fixed; inset: 0; background: rgba(6, 10, 18, 0.4);
+  display: flex; justify-content: flex-end; z-index: var(--layer-drawer);
+}
+.ed-drawer {
+  width: min(30rem, 100%); background: var(--surface-raised);
+  border-inline-start: 1px solid var(--border-hairline);
+  display: flex; flex-direction: column;
+  box-shadow: var(--shadow-overlay);
+}
+.ed-drawer__head {
+  display: flex; align-items: flex-start; gap: var(--space-4);
+  padding: var(--space-6) var(--space-6) var(--space-4);
+  border-block-end: 1px solid var(--border-hairline);
+}
+.ed-drawer__body { padding: var(--space-6); overflow-y: auto; flex: 1; }
+.ed-drawer__foot {
+  display: flex; gap: var(--space-2); justify-content: flex-end;
+  padding: var(--space-4) var(--space-6);
+  border-block-start: 1px solid var(--border-hairline);
+  background: var(--surface-sunken);
+}
+@media (max-width: 46rem) {
+  .ed-drawer__scrim { align-items: flex-end; }
+  .ed-drawer {
+    width: 100%; max-height: 88vh;
+    border-inline-start: 0; border-block-start: var(--border-thick) solid var(--accent-metal);
+    border-start-start-radius: var(--radius-lg); border-start-end-radius: var(--radius-lg);
+  }
+}
+
+/* --- error ---------------------------------------------------------------
+   Calm, actionable, and saying nothing a person is not entitled to know. An
+   authorization failure never explains what exists behind it. */
+
+.ed-error {
+  display: grid; justify-items: center; gap: var(--space-3);
+  padding: var(--space-11) var(--space-6); text-align: center;
+}
+.ed-error__mark { color: var(--state-danger); opacity: 0.5; }
+.ed-error__title { font-family: var(--font-display); font-size: var(--text-xl); margin: 0; }
+.ed-error__body { color: var(--text-secondary); max-width: 44ch; margin: 0;
+  font-size: var(--text-sm); }
+.ed-error__ref {
+  font-family: var(--font-mono); font-size: var(--text-3xs);
+  color: var(--text-tertiary); margin: var(--space-2) 0 0;
+}
+
+/* --- the register: the teacher's most repeated screen -------------------- */
+
+.ed-register { border-block-start: 1px solid var(--border-hairline); }
+.ed-register__row {
+  display: grid; grid-template-columns: auto 1fr auto;
+  gap: var(--space-4); align-items: center;
+  padding: var(--space-3) 0;
+  border-block-end: 1px solid var(--border-hairline);
+}
+.ed-register__name { font-size: var(--text-md); font-family: var(--font-display);
+  font-weight: var(--weight-semibold); margin: 0; }
+.ed-register__meta { font-size: var(--text-2xs); color: var(--text-secondary); margin: 2px 0 0; }
+.ed-marks { display: flex; gap: var(--space-1); }
+.ed-mark {
+  min-width: 2.5rem; min-height: 2.5rem;
+  display: grid; place-items: center;
+  border: 1px solid var(--border-control); border-radius: var(--radius-sm);
+  background: var(--surface-raised); color: var(--text-secondary);
+  font-size: var(--text-sm); font-weight: var(--weight-semibold);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--easing-standard);
+}
+.ed-mark:hover { border-color: var(--text-tertiary); }
+.ed-mark:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.ed-mark[aria-pressed="true"] {
+  background: var(--accent-strong); border-color: var(--accent-strong);
+  color: var(--text-on-accent);
+}
+.ed-mark[aria-pressed="true"][data-code="A"] {
+  background: var(--state-danger); border-color: var(--state-danger);
+}
+.ed-mark[aria-pressed="true"][data-code="L"] {
+  background: var(--state-warning); border-color: var(--state-warning);
+}
+/* A submit bar that stays reachable while a teacher works down a long class. */
+.ed-sticky-bar {
+  position: sticky; bottom: 0;
+  display: flex; align-items: center; gap: var(--space-4);
+  padding: var(--space-4) 0;
+  background: var(--surface-canvas);
+  border-block-start: 1px solid var(--border-hairline);
+}
+.ed-sticky-bar .ed-btn { margin-inline-start: auto; }
+@media (max-width: 46rem) {
+  .ed-register__row { grid-template-columns: 1fr auto; }
+  .ed-register__row .ed-avatar { display: none; }
+  .ed-mark { min-width: 2.75rem; min-height: 2.75rem; }
+  .ed-sticky-bar {
+    margin-inline: calc(var(--space-4) * -1);
+    padding-inline: var(--space-4);
+    flex-wrap: wrap;
+  }
+  /* The tally wrapped onto two lines and shoved the button sideways. It is
+     supporting information: it gets its own line above the action. */
+  .ed-sticky-bar .ed-label { flex: 1 0 100%; }
+  .ed-sticky-bar .ed-btn { flex: 1; margin-inline-start: 0; }
+}
+
+/* --- candidature: the only screen whose unit of time is the year --------- */
+
+.ed-axis { display: block; }
+.ed-axis__line {
+  position: relative;
+  block-size: 1px;
+  background: var(--border-strong);
+  margin-block: var(--space-7) var(--space-5);
+}
+.ed-axis--compact .ed-axis__line { margin-block: var(--space-4); }
+/* Elapsed time is drawn as weight on the same line rather than as a filled
+   bar: a progress bar says "68% done", and a candidature is not 68% done
+   because twenty months have passed. */
+.ed-axis__elapsed {
+  position: absolute; inset-block-start: 0; inset-inline-start: 0;
+  block-size: 1px; background: var(--text-primary);
+}
+/* Where the candidate is today. Two pixels rather than one, because at one it
+   disappeared beside the milestone node it happened to sit next to. */
+.ed-axis__now {
+  position: absolute; inset-block-start: -9px;
+  inline-size: 2px; block-size: 19px;
+  background: var(--accent-metal);
+}
+.ed-axis--compact .ed-axis__now { inset-block-start: -5px; block-size: 11px; }
+.ed-axis__tick {
+  position: absolute; inset-block-start: 0;
+  inline-size: 1px; block-size: 5px;
+  background: var(--border-strong);
+}
+.ed-axis__tick-label {
+  position: absolute; inset-block-start: -1.5rem; inset-inline-start: 0;
+  font-size: var(--text-3xs); letter-spacing: var(--tracking-widest);
+  text-transform: uppercase; color: var(--text-tertiary);
+  white-space: nowrap;
+}
+.ed-axis__mark {
+  position: absolute; inset-block-start: 50%;
+  transform: translate(-50%, -50%); line-height: 0;
+}
+/* The node's own `fill` attribute sits on the path, so the class on the <svg>
+   never reached it and every mark rendered the same ink. Found by looking at
+   the axis and seeing five identical dots where two should have been gold. */
+.ed-axis__mark .ed-node path { fill: var(--text-tertiary); }
+.ed-axis__mark[data-state="done"] .ed-node path { fill: var(--accent-metal); }
+.ed-axis__mark[data-state="due"] .ed-node path { fill: var(--text-primary); }
+.ed-axis__mark[data-state="late"] .ed-node path { fill: var(--state-danger); }
+.ed-axis__mark[data-state="ahead"] .ed-node path { fill: var(--border-strong); }
+.ed-axis__caption {
+  font-size: var(--text-2xs); margin: 0;
+}
+
+/* The track: what the axis cannot say, said in words. */
+.ed-track { list-style: none; margin: 0; padding: 0; position: relative; }
+.ed-track::before {
+  content: ""; position: absolute;
+  inset-block: 0.9rem; inset-inline-start: 5px;
+  inline-size: 1px; background: var(--border-hairline);
+}
+.ed-track__item {
+  position: relative;
+  display: grid; grid-template-columns: auto 1fr auto;
+  gap: var(--space-4); align-items: baseline;
+  padding: var(--space-4) 0;
+  border-block-end: 1px solid var(--border-hairline);
+}
+.ed-track__item:last-child { border-block-end: none; }
+.ed-track__node {
+  inline-size: 11px; block-size: 11px; border-radius: var(--radius-full);
+  border: 1px solid var(--border-strong); background: var(--surface-canvas);
+  align-self: center; margin-block-start: 0;
+}
+.ed-track__item[data-state="done"] .ed-track__node {
+  background: var(--accent-metal); border-color: var(--accent-metal);
+}
+.ed-track__item[data-state="late"] .ed-track__node {
+  background: var(--state-danger); border-color: var(--state-danger);
+}
+.ed-track__item[data-state="due"] .ed-track__node {
+  border-color: var(--text-primary); border-width: 2px;
+}
+.ed-track__name {
+  font-family: var(--font-display); font-size: var(--text-md);
+  font-weight: var(--weight-semibold); margin: 0;
+}
+.ed-track__item[data-state="ahead"] .ed-track__name { color: var(--text-secondary); }
+.ed-track__detail {
+  font-size: var(--text-2xs); color: var(--text-secondary); margin: 2px 0 0;
+  max-width: 52ch;
+}
+.ed-track__when { text-align: end; }
+.ed-track__date {
+  font-family: var(--font-mono); font-size: var(--text-2xs);
+  color: var(--text-secondary); margin: 0; white-space: nowrap;
+}
+.ed-track__trail { margin-block-start: var(--space-2); }
+
+/* The caseload: a supervisor's list, ordered by who is drifting. */
+/* One grid for the whole list, not one per row: a caseload whose columns do
+   not line up is a list a supervisor has to read rather than scan, and each
+   row sizing its own columns is exactly what produced two axes of different
+   lengths on the first render. */
+.ed-caseload {
+  border-block-start: 1px solid var(--border-hairline);
+  display: grid;
+  grid-template-columns: minmax(11rem, 1.1fr) minmax(9rem, 1.5fr) auto auto;
+}
+.ed-caseload__row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  gap: var(--space-5); align-items: center;
+  padding: var(--space-5) 0;
+  border-block-end: 1px solid var(--border-hairline);
+}
+.ed-caseload__who { display: flex; gap: var(--space-3); align-items: center; }
+.ed-caseload__name {
+  font-family: var(--font-display); font-size: var(--text-md);
+  font-weight: var(--weight-semibold); margin: 0;
+}
+.ed-caseload__meta {
+  font-size: var(--text-2xs); color: var(--text-secondary); margin: 2px 0 0;
+}
+.ed-caseload__facts { display: flex; gap: var(--space-6); }
+.ed-caseload__fact { min-width: 6.5rem; }
+.ed-caseload__value {
+  font-size: var(--text-sm); margin: var(--space-1) 0 0;
+}
+.ed-caseload__value[data-state="late"] { color: var(--text-danger); }
+.ed-caseload__value[data-state="soon"] { color: var(--text-warning); }
+.ed-caseload__actions { display: flex; gap: var(--space-2); }
+
+/* Narrower than a laptop there is no room for four columns, so the parent
+   drops to two and the row's subgrid follows it — which is the reason the
+   list owns the columns and the row does not. */
+@media (max-width: 62rem) {
+  .ed-caseload { grid-template-columns: 1fr auto; }
+  .ed-caseload__row { row-gap: var(--space-4); }
+  .ed-caseload__axis, .ed-caseload__facts { grid-column: 1 / -1; }
+}
+@media (max-width: 46rem) {
+  .ed-caseload { grid-template-columns: 1fr; }
+  .ed-caseload__actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .ed-caseload__facts { gap: var(--space-4); }
+  .ed-track__item { grid-template-columns: auto 1fr; }
+  .ed-track__when { grid-column: 2; text-align: start; }
+  .ed-axis__tick-label { font-size: 0.55rem; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -932,23 +1313,36 @@ body {
   .ed-topbar { padding: var(--space-3) var(--space-4); gap: var(--space-3); }
   .ed-search kbd { display: none; }
   /* A primary action floating right of a wrapped title reads as an orphan.
-     Full width, under the title, where a thumb can reach it. */
+     Under the title, where a thumb can reach it — but only stretched to the
+     full width on a phone. On a tablet a 780px-wide button is not a button,
+     it is a banner, and the tablet review is where that showed. */
   .ed-page__actions { margin-inline-start: 0; width: 100%; }
-  .ed-page__actions .ed-btn { flex: 1; }
   .ed-page__title-row { gap: var(--space-4); }
   .ed-grid--2, .ed-grid--3, .ed-grid--4, .ed-grid--sidebar { grid-template-columns: 1fr; }
   .ed-page__title { font-size: var(--text-2xl); }
 
-  .ed-figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .ed-figures__item {
-    padding: var(--space-4) var(--space-4) var(--space-4) 0;
-    border-block-end: 1px solid var(--border-hairline);
-  }
-  .ed-figures__item:nth-child(even) {
-    border-inline-end: 0; padding-inline-start: var(--space-4);
-  }
 
-  /* ledger + matrix + roster: the table stops being a table. */
+  /* schedule is the one shape that genuinely needs two dimensions. */
+  .ed-data[data-shape="schedule"] { display: block; overflow-x: auto; }
+  .ed-data[data-shape="schedule"] th:first-child,
+  .ed-data[data-shape="schedule"] td:first-child {
+    position: sticky; inset-inline-start: 0; background: var(--surface-raised);
+  }
+}
+
+/* The table stops being a table on a *phone*, not on a tablet.
+ 
+   These rules were in the 60rem block alongside the rail's collapse, and the
+   two are different questions: at 834px an iPad has 780px of page and can
+   carry a six-column register comfortably, but it was showing four students in
+   the space that fits twenty because every row had decomposed into label-value
+   pairs. Reading the tablet screenshots is the only way that surfaces —
+   nothing about it is wrong at 390px or at 1440px, which are the widths a
+   review actually looks at.
+ 
+   Between the two breakpoints a wide table scrolls inside `.ed-data__scroll`,
+   which is what that wrapper has always been for. */
+@media (max-width: 46rem) {  /* ledger + matrix + roster: the table stops being a table. */
   .ed-data[data-shape="ledger"] thead,
   .ed-data[data-shape="matrix"] thead,
   .ed-data[data-shape="roster"] thead { display: none; }
@@ -1003,11 +1397,14 @@ body {
     text-align: end; align-self: center;
   }
   .ed-data[data-shape="matrix"] td[data-role="detail"] {
-    grid-column: 1; display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4);
+    grid-column: 1;
     font-size: var(--text-2xs); color: var(--text-secondary);
     margin-block-start: var(--space-1);
   }
-  .ed-data[data-shape="matrix"] td[data-role="detail"] span::before {
+  .ed-data[data-shape="matrix"] .ed-detail {
+    display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4);
+  }
+  .ed-data[data-shape="matrix"] td[data-role="detail"] span span::before {
     content: attr(data-label) ' ';
     text-transform: uppercase; letter-spacing: var(--tracking-wider);
     font-size: 0.9em; color: var(--text-tertiary);
@@ -1016,13 +1413,6 @@ body {
     grid-column: 1 / -1; font-size: var(--text-2xs); color: var(--text-secondary);
     margin-block-start: var(--space-2); font-style: italic;
   }
-
-  /* schedule is the one shape that genuinely needs two dimensions. */
-  .ed-data[data-shape="schedule"] { display: block; overflow-x: auto; }
-  .ed-data[data-shape="schedule"] th:first-child,
-  .ed-data[data-shape="schedule"] td:first-child {
-    position: sticky; inset-inline-start: 0; background: var(--surface-raised);
-  }
 }
 
 @media (min-width: 60.01rem) {
@@ -1030,6 +1420,11 @@ body {
 }
 @media (max-width: 60rem) {
   .ed-desktop-only { display: none !important; }
+}
+/* Only a phone gets the stretched action. Between the two, the button keeps
+   its own width beneath the title. */
+@media (max-width: 46rem) {
+  .ed-page__actions .ed-btn { flex: 1; }
 }
 
 .sg { max-width: 78rem; margin: 0 auto; padding: var(--space-10) var(--space-7) var(--space-13); }
@@ -1059,4 +1454,4 @@ body {
 .sg__dark { background: var(--midnight-800); padding: var(--space-6);
   border-radius: var(--radius-md); }
 .sg__dark * { color: var(--ivory-50); }
-</style></head><body><div class="sg"><header class="sg__masthead"><svg class="ed-monogram" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="EdirasX" fill="none"><path d="M 43.511 4.210 L 48.279 15.721 L 59.790 20.489 L 55.022 32.000 L 59.790 43.511 L 48.279 48.279 L 43.511 59.790 L 32.000 55.022 L 20.489 59.790 L 15.721 48.279 L 4.210 43.511 L 8.978 32.000 L 4.210 20.489 L 15.721 15.721 L 20.489 4.210 L 32.000 8.978 Z" stroke="var(--accent-metal)" stroke-width="3.20" stroke-linejoin="miter"/><path d="M 48.279 15.721 L 15.721 48.279" stroke="var(--text-primary)" stroke-width="5.44" stroke-linecap="butt"/><path d="M 48.279 48.279 L 15.721 15.721" stroke="var(--text-primary)" stroke-width="5.44" stroke-linecap="butt"/></svg><div><h1 class="sg__title">EdirasX</h1><p class="sg__sub">The design system. Royal institution, rendered by a precision instrument.</p></div></header><section class="ed-section"><div class="ed-section__head"><p class="ed-label">Identity</p><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><h2 class="ed-heading">One construction, at five scales</h2><div class="ed-grid ed-grid--3" style="align-items:center"><div><svg class="ed-monogram" width="120" height="120" viewBox="0 0 120 120" role="img" aria-label="EdirasX" fill="none"><path d="M 81.583 7.893 L 90.523 29.477 L 112.107 38.417 L 103.167 60.000 L 112.107 81.583 L 90.523 90.523 L 81.583 112.107 L 60.000 103.167 L 38.417 112.107 L 29.477 90.523 L 7.893 81.583 L 16.833 60.000 L 7.893 38.417 L 29.477 29.477 L 38.417 7.893 L 60.000 16.833 Z" stroke="var(--accent-metal)" stroke-width="6.00" stroke-linejoin="miter"/><path d="M 90.523 29.477 L 29.477 90.523" stroke="var(--text-primary)" stroke-width="10.20" stroke-linecap="butt"/><path d="M 90.523 90.523 L 29.477 29.477" stroke="var(--text-primary)" stroke-width="10.20" stroke-linecap="butt"/></svg><p class="ed-lede" style="margin-block-start:var(--space-4);font-size:var(--text-sm)">The seal — two squares at 45° — with the X held in its centre as void. The Latin letterform is produced by the Arabic geometry rather than placed beside it.</p></div><div style="display:grid;gap:var(--space-4);justify-items:start"><div><svg class="ed-node" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M 6.913 0.381 L 7.706 2.294 L 9.619 3.087 L 8.827 5.000 L 9.619 6.913 L 7.706 7.706 L 6.913 9.619 L 5.000 8.827 L 3.087 9.619 L 2.294 7.706 L 0.381 6.913 L 1.173 5.000 L 0.381 3.087 L 2.294 2.294 L 3.087 0.381 L 5.000 1.173 Z" fill="currentColor"/></svg></div><div style="width:100%"><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><div><svg class="ed-corner" width="48" height="48" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M 1.5 29.76 L 1.5 1.5 L 29.76 1.5" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/><path d="M 32.607 22.886 L 33.786 25.734 L 36.634 26.913 L 35.454 29.760 L 36.634 32.607 L 33.786 33.786 L 32.607 36.634 L 29.760 35.454 L 26.913 36.634 L 25.734 33.786 L 22.886 32.607 L 24.066 29.760 L 22.886 26.913 L 25.734 25.734 L 26.913 22.886 L 29.760 24.066 Z" fill="var(--accent-metal)"/><path d="M 1.5 29.76 L 22.32 22.32" fill="none" stroke="var(--accent-metal)" stroke-width="0.75" opacity="0.5"/></svg></div><div><svg class="ed-spinner" width="28" height="28" viewBox="0 0 28 28" role="status" aria-label="Loading"><path d="M 18.822 2.359 L 20.819 7.181 L 25.641 9.178 L 23.644 14.000 L 25.641 18.822 L 20.819 20.819 L 18.822 25.641 L 14.000 23.644 L 9.178 25.641 L 7.181 20.819 L 2.359 18.822 L 4.356 14.000 L 2.359 9.178 L 7.181 7.181 L 9.178 2.359 L 14.000 4.356 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.9" opacity="0.3"/><path d="M 3.139 11.154 L 3.627 12.333 L 4.806 12.821 L 4.317 14.000 L 4.806 15.179 L 3.627 15.667 L 3.139 16.846 L 1.960 16.357 L 0.781 16.846 L 0.293 15.667 L -0.886 15.179 L -0.397 14.000 L -0.886 12.821 L 0.293 12.333 L 0.781 11.154 L 1.960 11.643 Z" fill="var(--accent-metal)"/></svg></div><p class="ed-label">Node · rule · corner · progress</p></div><div style="position:relative;height:12rem;background:var(--midnight-800);border-radius:var(--radius-md);overflow:hidden"><div style="position:absolute;inset:0;opacity:.12;color:var(--gold-500)"><svg class="ed-lattice" aria-hidden="true" focusable="false" width="100%" height="100%"><defs><pattern id="ed-seal" width="58" height="58" patternUnits="userSpaceOnUse"><path d="M 33.661 17.747 L 35.592 22.408 L 40.253 24.339 L 38.322 29.000 L 40.253 33.661 L 35.592 35.592 L 33.661 40.253 L 29.000 38.322 L 24.339 40.253 L 22.408 35.592 L 17.747 33.661 L 19.678 29.000 L 17.747 24.339 L 22.408 22.408 L 24.339 17.747 L 29.000 19.678 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/><path d="M 4.661 -11.253 L 6.592 -6.592 L 11.253 -4.661 L 9.322 0.000 L 11.253 4.661 L 6.592 6.592 L 4.661 11.253 L 0.000 9.322 L -4.661 11.253 L -6.592 6.592 L -11.253 4.661 L -9.322 0.000 L -11.253 -4.661 L -6.592 -6.592 L -4.661 -11.253 L -0.000 -9.322 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/><path d="M 62.661 -11.253 L 64.592 -6.592 L 69.253 -4.661 L 67.322 0.000 L 69.253 4.661 L 64.592 6.592 L 62.661 11.253 L 58.000 9.322 L 53.339 11.253 L 51.408 6.592 L 46.747 4.661 L 48.678 0.000 L 46.747 -4.661 L 51.408 -6.592 L 53.339 -11.253 L 58.000 -9.322 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/><path d="M 4.661 46.747 L 6.592 51.408 L 11.253 53.339 L 9.322 58.000 L 11.253 62.661 L 6.592 64.592 L 4.661 69.253 L 0.000 67.322 L -4.661 69.253 L -6.592 64.592 L -11.253 62.661 L -9.322 58.000 L -11.253 53.339 L -6.592 51.408 L -4.661 46.747 L -0.000 48.678 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/><path d="M 62.661 46.747 L 64.592 51.408 L 69.253 53.339 L 67.322 58.000 L 69.253 62.661 L 64.592 64.592 L 62.661 69.253 L 58.000 67.322 L 53.339 69.253 L 51.408 64.592 L 46.747 62.661 L 48.678 58.000 L 46.747 53.339 L 51.408 51.408 L 53.339 46.747 L 58.000 48.678 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/></pattern></defs><rect width="100%" height="100%" fill="url(#ed-seal)"/></svg></div><p class="ed-label" style="position:absolute;bottom:var(--space-4);left:var(--space-4);color:var(--gold-500)">Lattice · ceremonial ground</p></div></div></section><section class="ed-section"><div class="ed-section__head"><p class="ed-label">Palette</p><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><h2 class="ed-heading">Six ramps. The number beside each step is its contrast on ivory.</h2><div class="sg__stack"><div><p class="ed-label" style="margin-block-end:var(--space-2)">Midnight — the institutional ground</p><div class="sg__swatches"><div class="sg__swatch"><div class="sg__chip" style="background:#060A12"></div><div class="sg__meta"><span>midnight.900</span><span>18.4</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#0A101C"></div><div class="sg__meta"><span>midnight.800</span><span>17.6</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#0F1728"></div><div class="sg__meta"><span>midnight.700</span><span>16.6</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#152036"></div><div class="sg__meta"><span>midnight.600</span><span>15.1</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#1C2A45"></div><div class="sg__meta"><span>midnight.500</span><span>13.3</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#2A3B5C"></div><div class="sg__meta"><span>midnight.400</span><span>10.4</span></div></div></div></div><div><p class="ed-label" style="margin-block-end:var(--space-2)">Royal — authority, and the interactive colour</p><div class="sg__swatches"><div class="sg__swatch"><div class="sg__chip" style="background:#12294F"></div><div class="sg__meta"><span>royal.800</span><span>13.4</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#1A3566"></div><div class="sg__meta"><span>royal.700</span><span>11.2</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#204480"></div><div class="sg__meta"><span>royal.600</span><span>8.9</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#2A579E"></div><div class="sg__meta"><span>royal.500</span><span>6.6</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#4A7BC8"></div><div class="sg__meta"><span>royal.400</span><span>3.9</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#88AADD"></div><div class="sg__meta"><span>royal.300</span><span>2.2</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#C3D6F0"></div><div class="sg__meta"><span>royal.200</span><span>1.4</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#E6EEF9"></div><div class="sg__meta"><span>royal.100</span><span>1.1</span></div></div></div></div><div><p class="ed-label" style="margin-block-end:var(--space-2)">Champagne — jewellery, never a background</p><div class="sg__swatches"><div class="sg__swatch"><div class="sg__chip" style="background:#5E4A21"></div><div class="sg__meta"><span>gold.800</span><span>7.9</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#7E6530"></div><div class="sg__meta"><span>gold.700</span><span>5.1</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#9C7E3E"></div><div class="sg__meta"><span>gold.600</span><span>3.6</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#C9A961"></div><div class="sg__meta"><span>gold.500</span><span>2.1</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#DCC48A"></div><div class="sg__meta"><span>gold.400</span><span>1.6</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#EBDCB6"></div><div class="sg__meta"><span>gold.300</span><span>1.3</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#F5EDD9"></div><div class="sg__meta"><span>gold.200</span><span>1.1</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#FBF7EC"></div><div class="sg__meta"><span>gold.100</span><span>1.0</span></div></div></div></div><div><p class="ed-label" style="margin-block-end:var(--space-2)">Ivory — the page</p><div class="sg__swatches"><div class="sg__swatch"><div class="sg__chip" style="background:#FFFDF8"></div><div class="sg__meta"><span>ivory.50</span><span>1.1</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#FAF6EE"></div><div class="sg__meta"><span>ivory.100</span><span>1.0</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#F3EDE1"></div><div class="sg__meta"><span>ivory.200</span><span>1.1</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#E8DFCE"></div><div class="sg__meta"><span>ivory.300</span><span>1.2</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#D8CCB4"></div><div class="sg__meta"><span>ivory.400</span><span>1.5</span></div></div></div></div><div><p class="ed-label" style="margin-block-end:var(--space-2)">Charcoal — text and structure</p><div class="sg__swatches"><div class="sg__swatch"><div class="sg__chip" style="background:#14171D"></div><div class="sg__meta"><span>charcoal.900</span><span>16.6</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#1E222A"></div><div class="sg__meta"><span>charcoal.800</span><span>14.8</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#2B303A"></div><div class="sg__meta"><span>charcoal.700</span><span>12.3</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#3E4553"></div><div class="sg__meta"><span>charcoal.600</span><span>8.9</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#5A6273"></div><div class="sg__meta"><span>charcoal.500</span><span>5.7</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#7C8494"></div><div class="sg__meta"><span>charcoal.400</span><span>3.5</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#A6ACB8"></div><div class="sg__meta"><span>charcoal.300</span><span>2.1</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#CDD1D9"></div><div class="sg__meta"><span>charcoal.200</span><span>1.4</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#E7E9ED"></div><div class="sg__meta"><span>charcoal.100</span><span>1.1</span></div></div></div></div><div><p class="ed-label" style="margin-block-end:var(--space-2)">Garnet — ceremonial, and error</p><div class="sg__swatches"><div class="sg__swatch"><div class="sg__chip" style="background:#571622"></div><div class="sg__meta"><span>garnet.800</span><span>12.6</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#6E1F2E"></div><div class="sg__meta"><span>garnet.700</span><span>10.3</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#8E2A3C"></div><div class="sg__meta"><span>garnet.600</span><span>7.7</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#A8394D"></div><div class="sg__meta"><span>garnet.500</span><span>5.8</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#C86E7E"></div><div class="sg__meta"><span>garnet.400</span><span>3.2</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#F0D8DD"></div><div class="sg__meta"><span>garnet.200</span><span>1.2</span></div></div></div></div></div></section><section class="ed-section"><div class="ed-section__head"><p class="ed-label">Typography</p><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><h2 class="ed-heading">Source Serif 4 carries identity; Inter carries work</h2><table class="sg__type" style="width:100%"><tr><td style="font-family:var(--font-display);font-size:var(--text-6xl);font-weight:600;letter-spacing:var(--tracking-tighter);">Meridian</td><td class="ed-label" style="white-space:nowrap">Hero</td><td class="ed-quiet" style="font-family:var(--font-mono);font-size:var(--text-3xs);white-space:nowrap">--text-6xl</td></tr><tr><td style="font-family:var(--font-display);font-size:var(--text-4xl);font-weight:600;letter-spacing:var(--tracking-tighter);">Academic Transcript</td><td class="ed-label" style="white-space:nowrap">Page title</td><td class="ed-quiet" style="font-family:var(--font-mono);font-size:var(--text-3xs);white-space:nowrap">--text-4xl</td></tr><tr><td style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:600;letter-spacing:var(--tracking-tighter);">Autumn Term results</td><td class="ed-label" style="white-space:nowrap">Section title</td><td class="ed-quiet" style="font-family:var(--font-mono);font-size:var(--text-3xs);white-space:nowrap">--text-2xl</td></tr><tr><td style="font-family:var(--font-display);font-size:var(--text-lg);font-weight:600;letter-spacing:var(--tracking-tighter);">Ada Nwosu</td><td class="ed-label" style="white-space:nowrap">Record heading</td><td class="ed-quiet" style="font-family:var(--font-mono);font-size:var(--text-3xs);white-space:nowrap">--text-lg</td></tr><tr><td style="font-family:var(--font-sans);font-size:var(--text-md);">The institution defines its academic world.</td><td class="ed-label" style="white-space:nowrap">Lede</td><td class="ed-quiet" style="font-family:var(--font-mono);font-size:var(--text-3xs);white-space:nowrap">--text-md</td></tr><tr><td style="font-family:var(--font-sans);font-size:var(--text-base);">EdirasX provides the technology to represent it.</td><td class="ed-label" style="white-space:nowrap">Body</td><td class="ed-quiet" style="font-family:var(--font-mono);font-size:var(--text-3xs);white-space:nowrap">--text-base</td></tr><tr><td style="font-family:var(--font-sans);font-size:var(--text-sm);">Chemistry · Examination · 82 out of 100</td><td class="ed-label" style="white-space:nowrap">Data</td><td class="ed-quiet" style="font-family:var(--font-mono);font-size:var(--text-3xs);white-space:nowrap">--text-sm</td></tr><tr><td style="font-family:var(--font-sans);font-size:var(--text-2xs);">Issued 18 December 2026</td><td class="ed-label" style="white-space:nowrap">Meta</td><td class="ed-quiet" style="font-family:var(--font-mono);font-size:var(--text-3xs);white-space:nowrap">--text-2xs</td></tr><tr><td style="font-family:var(--font-sans);font-size:var(--text-3xs);letter-spacing:var(--tracking-widest);text-transform:uppercase;font-weight:600;">ACADEMIC RECORD</td><td class="ed-label" style="white-space:nowrap">Micro-label</td><td class="ed-quiet" style="font-family:var(--font-mono);font-size:var(--text-3xs);white-space:nowrap">--text-3xs</td></tr></table></section><section class="ed-section"><div class="ed-section__head"><p class="ed-label">Arabic</p><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><h2 class="ed-heading">A first-class family, not a fallback</h2><div class="ed-grid ed-grid--2"><div><p class="ed-arabic" style="font-size:var(--text-2xl);margin:0">الدراسة — طلب العلم</p><p class="ed-arabic" style="margin-block-start:var(--space-3)">تُعرّف المؤسسة عالمها الأكاديمي، وتوفّر إدراس إكس التقنية اللازمة لتمثيله.</p></div><p class="ed-lede" style="font-size:var(--text-sm)">Amiri, set at 1.15× with its own line height so it sits level with the Latin rather than beneath it. Arabic is a family in this system, not a fallback the Latin stack falls through to.</p></div></section><section class="ed-section"><div class="ed-section__head"><p class="ed-label">Actions</p><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><h2 class="ed-heading">Gold is earned by consequence, not by prominence</h2><div class="sg__stack"><div class="sg__row"><button class="ed-btn ed-btn--primary" type="button">Save changes</button><button class="ed-btn ed-btn--ceremonial" type="button">Issue transcript</button><button class="ed-btn" type="button">Cancel</button><button class="ed-btn ed-btn--danger" type="button">Remove</button><button class="ed-btn ed-btn--quiet" type="button">Learn more</button></div><div class="sg__row"><button class="ed-btn ed-btn--primary" type="button" disabled>Disabled</button><button class="ed-btn" type="button">Disabled</button><button class="ed-btn ed-btn--primary" type="button" data-loading="true">Publishing<svg class="ed-spinner" width="16" height="16" viewBox="0 0 16 16" role="status" aria-label="Loading"><path d="M 10.755 1.348 L 11.897 4.103 L 14.652 5.245 L 13.511 8.000 L 14.652 10.755 L 11.897 11.897 L 10.755 14.652 L 8.000 13.511 L 5.245 14.652 L 4.103 11.897 L 1.348 10.755 L 2.489 8.000 L 1.348 5.245 L 4.103 4.103 L 5.245 1.348 L 8.000 2.489 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.9" opacity="0.3"/><path d="M 1.794 6.374 L 2.073 7.047 L 2.746 7.326 L 2.467 8.000 L 2.746 8.674 L 2.073 8.953 L 1.794 9.626 L 1.120 9.347 L 0.446 9.626 L 0.167 8.953 L -0.506 8.674 L -0.227 8.000 L -0.506 7.326 L 0.167 7.047 L 0.446 6.374 L 1.120 6.653 Z" fill="var(--accent-metal)"/></svg></button><button class="ed-btn ed-btn--sm" type="button">Small</button><button class="ed-btn ed-btn--primary ed-btn--sm" type="button">Small primary</button></div><p>An ordinary sentence containing <a class="ed-link" href="#">a link</a> so its weight against body text can be judged.</p></div></section><section class="ed-section"><div class="ed-section__head"><p class="ed-label">Fields</p><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><h2 class="ed-heading">Every state, declared rather than discovered</h2><div class="ed-grid ed-grid--3"><div class="ed-field"><label class="ed-field__label">Student name</label><input class="ed-input" type="text" value="Ada Nwosu"></div><div class="ed-field"><label class="ed-field__label">Admission number</label><input class="ed-input" type="text" placeholder="e.g. S-001"><p class="ed-field__hint">The institution&#x27;s own identifier.</p></div><div class="ed-field"><label class="ed-field__label">Academic year</label><select class="ed-select"><option value="2026" selected>2026/27</option><option value="2025">2025/26</option></select></div><div class="ed-field"><label class="ed-field__label">Date of birth</label><input class="ed-input" type="text" value="2011-04-02" aria-invalid="true"><p class="ed-field__error">This date is in the future.</p></div><div class="ed-field"><label class="ed-field__label">Locked</label><input class="ed-input" type="text" value="Cannot be changed" disabled></div><div class="ed-field"><label class="ed-field__label">Comment</label><textarea class="ed-textarea" placeholder="A remark for the report card…"></textarea></div></div><div class="ed-choices" style="margin-block-start:var(--space-5)"><label class="ed-check"><input type="checkbox" checked><span class="ed-check__box"></span><span>Receives reports</span></label><label class="ed-check"><input type="checkbox"><span class="ed-check__box"></span><span>Emergency contact</span></label><label class="ed-check"><input type="checkbox" disabled><span class="ed-check__box"></span><span>Unavailable</span></label><label class="ed-check"><input type="radio" checked name="g"><span class="ed-check__box ed-check__box--round"></span><span>Primary guardian</span></label><label class="ed-check"><input type="radio" name="g"><span class="ed-check__box ed-check__box--round"></span><span>Secondary</span></label><label class="ed-switch"><input type="checkbox" checked><span class="ed-switch__track"><span class="ed-switch__thumb"></span></span><span>Publish to families</span></label><label class="ed-switch"><input type="checkbox" disabled><span class="ed-switch__track"><span class="ed-switch__thumb"></span></span><span>Locked</span></label></div></section><section class="ed-section"><div class="ed-section__head"><p class="ed-label">Status</p><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><h2 class="ed-heading">Badges, avatars, alerts</h2><div class="sg__row"><span class="ed-badge ed-badge--success">Enrolled</span><span class="ed-badge ed-badge--accent">Published</span><span class="ed-badge ed-badge--gold">Distinction</span><span class="ed-badge ed-badge--warning">Pending review</span><span class="ed-badge ed-badge--danger">Withdrawn</span><span class="ed-badge ed-badge--neutral">Draft</span><span class="ed-avatar" role="img" aria-label="Ada Nwosu">AN</span><span class="ed-avatar ed-avatar--lg" role="img" aria-label="Nadia Rahman">NR</span></div><div class="ed-grid ed-grid--2" style="margin-block-start:var(--space-5)"><div class="ed-alert ed-alert--warning" role="status"><div><p class="ed-alert__title">Not ready to publish</p><p>Two marks are missing for children who have since left. You may publish over this with a reason.</p></div></div><div class="ed-alert ed-alert--success" role="status"><div><p class="ed-alert__title">Published</p><p>The autumn term results were published on 18 December.</p></div></div></div></section><section class="ed-section"><div class="ed-section__head"><p class="ed-label">Figures</p><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><h2 class="ed-heading">Separated by rules, not boxed in cards</h2><div class="ed-figures"><div class="ed-figures__item"><p class="ed-label">On roll</p><span class="ed-figure">412</span><p class="ed-figures__delta ed-figures__delta--up">▲ +18 this term</p></div><div class="ed-figures__item"><p class="ed-label">Attendance</p><span class="ed-figure">96.4<span class="ed-figure__unit">%</span></span><p class="ed-figures__delta ed-figures__delta--down">▼ −0.8</p></div><div class="ed-figures__item"><p class="ed-label">Results published</p><span class="ed-figure">7<span class="ed-figure__unit">of 9</span></span><p class="ed-figures__delta ed-quiet">Two awaiting the board</p></div><div class="ed-figures__item"><p class="ed-label">Documents issued</p><span class="ed-figure">1,284</span><p class="ed-figures__delta ed-figures__delta--up">▲ +96</p></div></div></section><section class="ed-section"><div class="ed-section__head"><p class="ed-label">Data</p><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><h2 class="ed-heading">Four data shapes, four small-screen answers</h2><p class="ed-lede" style="font-size:var(--text-sm);margin-block-end:var(--space-4)">Each table declares what kind of data it holds, and its small-screen composition follows from that. Narrow this window to see four different answers.</p><table class='ed-table ed-data' data-shape='matrix'><thead><tr><th>Course</th><th>Assessment</th><th class='num'>Grade</th><th></th></tr></thead><tbody><tr><td data-role="subject" class="ed-table__primary">Chemistry</td><td data-role="detail"><span data-label="Mark">82 / 100</span><span data-label="Assessment">Examination</span></td><td data-role="grade" class="num">A</td><td data-role="note">Practical write-ups are the strongest in the set.</td></tr><tr><td data-role="subject" class="ed-table__primary">History</td><td data-role="detail"><span data-label="Mark">64 / 100</span><span data-label="Assessment">Examination</span></td><td data-role="grade" class="num">B</td><td data-role="note"></td></tr><tr><td data-role="subject" class="ed-table__primary">Mathematics</td><td data-role="detail"><span data-label="Mark">78 / 100</span><span data-label="Assessment">Coursework</span></td><td data-role="grade" class="num">A</td><td data-role="note"></td></tr></tbody></table><div style="margin-block-start:var(--space-6)"><div class="ed-data__scroll"><table class="ed-table ed-data" data-shape="ledger"><thead><tr><th class="" scope="col">Year</th><th class="" scope="col">Programme</th><th class="" scope="col">From</th><th class="" scope="col">To</th><th class="" scope="col">Outcome</th></tr></thead><tbody><tr><td class="" data-label="Year">2026/27</td><td class="" data-label="Programme">BSc Computer Science</td><td class="" data-label="From">21 Sep 2026</td><td class="" data-label="To">—</td><td class="" data-label="Outcome"><span class="ed-badge ed-badge--success">Active</span></td></tr><tr><td class="" data-label="Year">2025/26</td><td class="" data-label="Programme">Foundation Year</td><td class="" data-label="From">22 Sep 2025</td><td class="" data-label="To">12 Jun 2026</td><td class="" data-label="Outcome"><span class="ed-badge ed-badge--neutral">Progressed</span></td></tr></tbody></table></div></div><div style="display:flex;align-items:center;gap:var(--space-4);justify-content:space-between;padding-block-start:var(--space-4)"><p class="ed-label">412 records</p><div class="ed-pager"><a class="ed-pager__item" href="#" aria-current="page">1</a><a class="ed-pager__item" href="#">2</a><a class="ed-pager__item" href="#">3</a><a class="ed-pager__item" href="#">4</a><a class="ed-pager__item" href="#">5</a><span class="ed-pager__item ed-quiet">…</span><a class="ed-pager__item" href="#">9</a></div></div></section><section class="ed-section"><div class="ed-section__head"><p class="ed-label">Waiting and nothing</p><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><h2 class="ed-heading">An empty state says what a place is for</h2><div class="ed-grid ed-grid--2"><div class="ed-panel"><div aria-busy="true" aria-live="polite"><div class="ed-skeleton" style="width:100%;margin-block-end:var(--space-3)"></div><div class="ed-skeleton" style="width:84%;margin-block-end:var(--space-3)"></div><div class="ed-skeleton" style="width:62%;margin-block-end:var(--space-3)"></div><div class="ed-skeleton" style="width:92%;margin-block-end:var(--space-3)"></div></div><p class="ed-label" style="margin-block-start:var(--space-4)">Loading</p></div><div class="ed-panel ed-panel--quiet"><div class="ed-empty"><span class="ed-empty__mark"><svg class="ed-node" width="44" height="44" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path d="M 30.419 1.675 L 33.906 10.094 L 42.325 13.581 L 38.838 22.000 L 42.325 30.419 L 33.906 33.906 L 30.419 42.325 L 22.000 38.838 L 13.581 42.325 L 10.094 33.906 L 1.675 30.419 L 5.162 22.000 L 1.675 13.581 L 10.094 10.094 L 13.581 1.675 L 22.000 5.162 Z" fill="var(--accent-metal)"/></svg></span><h3 class="ed-empty__title">No programmes yet</h3><p class="ed-empty__body">A programme is what a student is admitted to — a degree, a diploma, a curriculum. Create one and levels can sit inside it.</p><div><button class="ed-btn ed-btn--primary ed-btn--sm" type="button">Create a programme</button></div></div></div></div><div style="margin-block-start:var(--space-5);max-width:24rem"><div><div style="display:flex;justify-content:space-between;margin-block-end:var(--space-2)"><p class="ed-label">Importing 412 students</p><p class="ed-label ed-numeric">68%</p></div><div class="ed-progress" role="progressbar" aria-valuenow="68" aria-valuemin="0" aria-valuemax="100"><div class="ed-progress__bar" style="width:68.0%"></div></div></div></div></section><section class="ed-section"><div class="ed-section__head"><p class="ed-label">Accessibility</p><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><h2 class="ed-heading">Meets the standard, with 4 pairings worth improving.</h2><p class="ed-lede" style="font-size:var(--text-sm);margin-block-end:var(--space-4)">Every pairing that decides whether a parent can read a grade on a phone, checked against WCAG 2.2. An institution changing its colours is judged by the same eleven and told what to do about a failure — not silently corrected.</p><div class="sg__verdict"><span>Body text on the page</span><span class="sg__ratio sg__ok">16.65:1</span></div><div class="sg__verdict"><span>Body text on a panel</span><span class="sg__ratio sg__ok">17.66:1</span></div><div class="sg__verdict"><span>Secondary text</span><span class="sg__ratio sg__warn">5.68:1</span></div><div class="sg__verdict"><span>Link and action text</span><span class="sg__ratio sg__ok">11.16:1</span></div><div class="sg__verdict"><span>Gold text</span><span class="sg__ratio sg__warn">5.14:1</span></div><div class="sg__verdict"><span>Text on a primary button</span><span class="sg__ratio sg__ok">9.39:1</span></div><div class="sg__verdict"><span>Error text</span><span class="sg__ratio sg__ok">10.26:1</span></div><div class="sg__verdict"><span>Success text</span><span class="sg__ratio sg__ok">8.26:1</span></div><div class="sg__verdict"><span>Input and control borders</span><span class="sg__ratio sg__warn">3.7:1</span></div><div class="sg__verdict"><span>Input borders on the page</span><span class="sg__ratio sg__warn">3.49:1</span></div><div class="sg__verdict"><span>Focus and selection</span><span class="sg__ratio sg__ok">8.86:1</span></div></section></div></body></html>
+</style></head><body><main id="main"><div class="sg"><header class="sg__masthead"><svg class="ed-monogram" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="EdirasX" fill="none"><path d="M 43.511 4.210 L 48.279 15.721 L 59.790 20.489 L 55.022 32.000 L 59.790 43.511 L 48.279 48.279 L 43.511 59.790 L 32.000 55.022 L 20.489 59.790 L 15.721 48.279 L 4.210 43.511 L 8.978 32.000 L 4.210 20.489 L 15.721 15.721 L 20.489 4.210 L 32.000 8.978 Z" stroke="var(--accent-metal)" stroke-width="3.20" stroke-linejoin="miter"/><path d="M 48.279 15.721 L 15.721 48.279" stroke="var(--text-primary)" stroke-width="5.44" stroke-linecap="butt"/><path d="M 48.279 48.279 L 15.721 15.721" stroke="var(--text-primary)" stroke-width="5.44" stroke-linecap="butt"/></svg><div><h1 class="sg__title">EdirasX</h1><p class="sg__sub">The design system. Royal institution, rendered by a precision instrument.</p></div></header><section class="ed-section"><div class="ed-section__head"><h2 class="ed-label">Identity</h2><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><h3 class="ed-heading">One construction, at five scales</h3><div class="ed-grid ed-grid--3" style="align-items:center"><div><svg class="ed-monogram" width="120" height="120" viewBox="0 0 120 120" role="img" aria-label="EdirasX" fill="none"><path d="M 81.583 7.893 L 90.523 29.477 L 112.107 38.417 L 103.167 60.000 L 112.107 81.583 L 90.523 90.523 L 81.583 112.107 L 60.000 103.167 L 38.417 112.107 L 29.477 90.523 L 7.893 81.583 L 16.833 60.000 L 7.893 38.417 L 29.477 29.477 L 38.417 7.893 L 60.000 16.833 Z" stroke="var(--accent-metal)" stroke-width="6.00" stroke-linejoin="miter"/><path d="M 90.523 29.477 L 29.477 90.523" stroke="var(--text-primary)" stroke-width="10.20" stroke-linecap="butt"/><path d="M 90.523 90.523 L 29.477 29.477" stroke="var(--text-primary)" stroke-width="10.20" stroke-linecap="butt"/></svg><p class="ed-lede" style="margin-block-start:var(--space-4);font-size:var(--text-sm)">The seal — two squares at 45° — with the X held in its centre as void. The Latin letterform is produced by the Arabic geometry rather than placed beside it.</p></div><div style="display:grid;gap:var(--space-4);justify-items:start"><div><svg class="ed-node" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M 6.913 0.381 L 7.706 2.294 L 9.619 3.087 L 8.827 5.000 L 9.619 6.913 L 7.706 7.706 L 6.913 9.619 L 5.000 8.827 L 3.087 9.619 L 2.294 7.706 L 0.381 6.913 L 1.173 5.000 L 0.381 3.087 L 2.294 2.294 L 3.087 0.381 L 5.000 1.173 Z" fill="currentColor"/></svg></div><div style="width:100%"><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><div><svg class="ed-corner" width="48" height="48" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M 1.5 29.76 L 1.5 1.5 L 29.76 1.5" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/><path d="M 32.607 22.886 L 33.786 25.734 L 36.634 26.913 L 35.454 29.760 L 36.634 32.607 L 33.786 33.786 L 32.607 36.634 L 29.760 35.454 L 26.913 36.634 L 25.734 33.786 L 22.886 32.607 L 24.066 29.760 L 22.886 26.913 L 25.734 25.734 L 26.913 22.886 L 29.760 24.066 Z" fill="var(--accent-metal)"/><path d="M 1.5 29.76 L 22.32 22.32" fill="none" stroke="var(--accent-metal)" stroke-width="0.75" opacity="0.5"/></svg></div><div><svg class="ed-spinner" width="28" height="28" viewBox="0 0 28 28" role="status" aria-label="Loading"><path d="M 18.822 2.359 L 20.819 7.181 L 25.641 9.178 L 23.644 14.000 L 25.641 18.822 L 20.819 20.819 L 18.822 25.641 L 14.000 23.644 L 9.178 25.641 L 7.181 20.819 L 2.359 18.822 L 4.356 14.000 L 2.359 9.178 L 7.181 7.181 L 9.178 2.359 L 14.000 4.356 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.9" opacity="0.3"/><path d="M 3.139 11.154 L 3.627 12.333 L 4.806 12.821 L 4.317 14.000 L 4.806 15.179 L 3.627 15.667 L 3.139 16.846 L 1.960 16.357 L 0.781 16.846 L 0.293 15.667 L -0.886 15.179 L -0.397 14.000 L -0.886 12.821 L 0.293 12.333 L 0.781 11.154 L 1.960 11.643 Z" fill="var(--accent-metal)"/></svg></div><p class="ed-label">Node · rule · corner · progress</p></div><div style="position:relative;height:12rem;background:var(--midnight-800);border-radius:var(--radius-md);overflow:hidden"><div style="position:absolute;inset:0;opacity:.12;color:var(--gold-500)"><svg class="ed-lattice" aria-hidden="true" focusable="false" width="100%" height="100%"><defs><pattern id="ed-seal" width="58" height="58" patternUnits="userSpaceOnUse"><path d="M 33.661 17.747 L 35.592 22.408 L 40.253 24.339 L 38.322 29.000 L 40.253 33.661 L 35.592 35.592 L 33.661 40.253 L 29.000 38.322 L 24.339 40.253 L 22.408 35.592 L 17.747 33.661 L 19.678 29.000 L 17.747 24.339 L 22.408 22.408 L 24.339 17.747 L 29.000 19.678 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/><path d="M 4.661 -11.253 L 6.592 -6.592 L 11.253 -4.661 L 9.322 0.000 L 11.253 4.661 L 6.592 6.592 L 4.661 11.253 L 0.000 9.322 L -4.661 11.253 L -6.592 6.592 L -11.253 4.661 L -9.322 0.000 L -11.253 -4.661 L -6.592 -6.592 L -4.661 -11.253 L -0.000 -9.322 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/><path d="M 62.661 -11.253 L 64.592 -6.592 L 69.253 -4.661 L 67.322 0.000 L 69.253 4.661 L 64.592 6.592 L 62.661 11.253 L 58.000 9.322 L 53.339 11.253 L 51.408 6.592 L 46.747 4.661 L 48.678 0.000 L 46.747 -4.661 L 51.408 -6.592 L 53.339 -11.253 L 58.000 -9.322 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/><path d="M 4.661 46.747 L 6.592 51.408 L 11.253 53.339 L 9.322 58.000 L 11.253 62.661 L 6.592 64.592 L 4.661 69.253 L 0.000 67.322 L -4.661 69.253 L -6.592 64.592 L -11.253 62.661 L -9.322 58.000 L -11.253 53.339 L -6.592 51.408 L -4.661 46.747 L -0.000 48.678 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/><path d="M 62.661 46.747 L 64.592 51.408 L 69.253 53.339 L 67.322 58.000 L 69.253 62.661 L 64.592 64.592 L 62.661 69.253 L 58.000 67.322 L 53.339 69.253 L 51.408 64.592 L 46.747 62.661 L 48.678 58.000 L 46.747 53.339 L 51.408 51.408 L 53.339 46.747 L 58.000 48.678 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.8"/></pattern></defs><rect width="100%" height="100%" fill="url(#ed-seal)"/></svg></div><p class="ed-label" style="position:absolute;bottom:var(--space-4);left:var(--space-4);color:var(--gold-500)">Lattice · ceremonial ground</p></div></div></section><section class="ed-section"><div class="ed-section__head"><h2 class="ed-label">Palette</h2><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><h3 class="ed-heading">Six ramps. The number beside each step is its contrast on ivory.</h3><div class="sg__stack"><div><p class="ed-label" style="margin-block-end:var(--space-2)">Midnight — the institutional ground</p><div class="sg__swatches"><div class="sg__swatch"><div class="sg__chip" style="background:#060A12"></div><div class="sg__meta"><span>midnight.900</span><span>18.4</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#0A101C"></div><div class="sg__meta"><span>midnight.800</span><span>17.6</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#0F1728"></div><div class="sg__meta"><span>midnight.700</span><span>16.6</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#152036"></div><div class="sg__meta"><span>midnight.600</span><span>15.1</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#1C2A45"></div><div class="sg__meta"><span>midnight.500</span><span>13.3</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#2A3B5C"></div><div class="sg__meta"><span>midnight.400</span><span>10.4</span></div></div></div></div><div><p class="ed-label" style="margin-block-end:var(--space-2)">Royal — authority, and the interactive colour</p><div class="sg__swatches"><div class="sg__swatch"><div class="sg__chip" style="background:#12294F"></div><div class="sg__meta"><span>royal.800</span><span>13.4</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#1A3566"></div><div class="sg__meta"><span>royal.700</span><span>11.2</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#204480"></div><div class="sg__meta"><span>royal.600</span><span>8.9</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#2A579E"></div><div class="sg__meta"><span>royal.500</span><span>6.6</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#4A7BC8"></div><div class="sg__meta"><span>royal.400</span><span>3.9</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#88AADD"></div><div class="sg__meta"><span>royal.300</span><span>2.2</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#C3D6F0"></div><div class="sg__meta"><span>royal.200</span><span>1.4</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#E6EEF9"></div><div class="sg__meta"><span>royal.100</span><span>1.1</span></div></div></div></div><div><p class="ed-label" style="margin-block-end:var(--space-2)">Champagne — jewellery, never a background</p><div class="sg__swatches"><div class="sg__swatch"><div class="sg__chip" style="background:#5E4A21"></div><div class="sg__meta"><span>gold.800</span><span>7.9</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#7E6530"></div><div class="sg__meta"><span>gold.700</span><span>5.1</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#9C7E3E"></div><div class="sg__meta"><span>gold.600</span><span>3.6</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#C9A961"></div><div class="sg__meta"><span>gold.500</span><span>2.1</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#DCC48A"></div><div class="sg__meta"><span>gold.400</span><span>1.6</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#EBDCB6"></div><div class="sg__meta"><span>gold.300</span><span>1.3</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#F5EDD9"></div><div class="sg__meta"><span>gold.200</span><span>1.1</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#FBF7EC"></div><div class="sg__meta"><span>gold.100</span><span>1.0</span></div></div></div></div><div><p class="ed-label" style="margin-block-end:var(--space-2)">Ivory — the page</p><div class="sg__swatches"><div class="sg__swatch"><div class="sg__chip" style="background:#FFFDF8"></div><div class="sg__meta"><span>ivory.50</span><span>1.1</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#FAF6EE"></div><div class="sg__meta"><span>ivory.100</span><span>1.0</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#F3EDE1"></div><div class="sg__meta"><span>ivory.200</span><span>1.1</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#E8DFCE"></div><div class="sg__meta"><span>ivory.300</span><span>1.2</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#D8CCB4"></div><div class="sg__meta"><span>ivory.400</span><span>1.5</span></div></div></div></div><div><p class="ed-label" style="margin-block-end:var(--space-2)">Charcoal — text and structure</p><div class="sg__swatches"><div class="sg__swatch"><div class="sg__chip" style="background:#14171D"></div><div class="sg__meta"><span>charcoal.900</span><span>16.6</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#1E222A"></div><div class="sg__meta"><span>charcoal.800</span><span>14.8</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#2B303A"></div><div class="sg__meta"><span>charcoal.700</span><span>12.3</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#3E4553"></div><div class="sg__meta"><span>charcoal.600</span><span>8.9</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#5A6273"></div><div class="sg__meta"><span>charcoal.500</span><span>5.7</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#7C8494"></div><div class="sg__meta"><span>charcoal.400</span><span>3.5</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#A6ACB8"></div><div class="sg__meta"><span>charcoal.300</span><span>2.1</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#CDD1D9"></div><div class="sg__meta"><span>charcoal.200</span><span>1.4</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#E7E9ED"></div><div class="sg__meta"><span>charcoal.100</span><span>1.1</span></div></div></div></div><div><p class="ed-label" style="margin-block-end:var(--space-2)">Garnet — ceremonial, and error</p><div class="sg__swatches"><div class="sg__swatch"><div class="sg__chip" style="background:#571622"></div><div class="sg__meta"><span>garnet.800</span><span>12.6</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#6E1F2E"></div><div class="sg__meta"><span>garnet.700</span><span>10.3</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#8E2A3C"></div><div class="sg__meta"><span>garnet.600</span><span>7.7</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#A8394D"></div><div class="sg__meta"><span>garnet.500</span><span>5.8</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#C86E7E"></div><div class="sg__meta"><span>garnet.400</span><span>3.2</span></div></div><div class="sg__swatch"><div class="sg__chip" style="background:#F0D8DD"></div><div class="sg__meta"><span>garnet.200</span><span>1.2</span></div></div></div></div></div></section><section class="ed-section"><div class="ed-section__head"><h2 class="ed-label">Typography</h2><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><h3 class="ed-heading">Source Serif 4 carries identity; Inter carries work</h3><table class="sg__type" style="width:100%"><tr><td style="font-family:var(--font-display);font-size:var(--text-6xl);font-weight:600;letter-spacing:var(--tracking-tighter);">Meridian</td><td class="ed-label" style="white-space:nowrap">Hero</td><td class="ed-quiet" style="font-family:var(--font-mono);font-size:var(--text-3xs);white-space:nowrap">--text-6xl</td></tr><tr><td style="font-family:var(--font-display);font-size:var(--text-4xl);font-weight:600;letter-spacing:var(--tracking-tighter);">Academic Transcript</td><td class="ed-label" style="white-space:nowrap">Page title</td><td class="ed-quiet" style="font-family:var(--font-mono);font-size:var(--text-3xs);white-space:nowrap">--text-4xl</td></tr><tr><td style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:600;letter-spacing:var(--tracking-tighter);">Autumn Term results</td><td class="ed-label" style="white-space:nowrap">Section title</td><td class="ed-quiet" style="font-family:var(--font-mono);font-size:var(--text-3xs);white-space:nowrap">--text-2xl</td></tr><tr><td style="font-family:var(--font-display);font-size:var(--text-lg);font-weight:600;letter-spacing:var(--tracking-tighter);">Ada Nwosu</td><td class="ed-label" style="white-space:nowrap">Record heading</td><td class="ed-quiet" style="font-family:var(--font-mono);font-size:var(--text-3xs);white-space:nowrap">--text-lg</td></tr><tr><td style="font-family:var(--font-sans);font-size:var(--text-md);">The institution defines its academic world.</td><td class="ed-label" style="white-space:nowrap">Lede</td><td class="ed-quiet" style="font-family:var(--font-mono);font-size:var(--text-3xs);white-space:nowrap">--text-md</td></tr><tr><td style="font-family:var(--font-sans);font-size:var(--text-base);">EdirasX provides the technology to represent it.</td><td class="ed-label" style="white-space:nowrap">Body</td><td class="ed-quiet" style="font-family:var(--font-mono);font-size:var(--text-3xs);white-space:nowrap">--text-base</td></tr><tr><td style="font-family:var(--font-sans);font-size:var(--text-sm);">Chemistry · Examination · 82 out of 100</td><td class="ed-label" style="white-space:nowrap">Data</td><td class="ed-quiet" style="font-family:var(--font-mono);font-size:var(--text-3xs);white-space:nowrap">--text-sm</td></tr><tr><td style="font-family:var(--font-sans);font-size:var(--text-2xs);">Issued 18 December 2026</td><td class="ed-label" style="white-space:nowrap">Meta</td><td class="ed-quiet" style="font-family:var(--font-mono);font-size:var(--text-3xs);white-space:nowrap">--text-2xs</td></tr><tr><td style="font-family:var(--font-sans);font-size:var(--text-3xs);letter-spacing:var(--tracking-widest);text-transform:uppercase;font-weight:600;">ACADEMIC RECORD</td><td class="ed-label" style="white-space:nowrap">Micro-label</td><td class="ed-quiet" style="font-family:var(--font-mono);font-size:var(--text-3xs);white-space:nowrap">--text-3xs</td></tr></table></section><section class="ed-section"><div class="ed-section__head"><h2 class="ed-label">Arabic</h2><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><h3 class="ed-heading">A first-class family, not a fallback</h3><div class="ed-grid ed-grid--2"><div><p class="ed-arabic" style="font-size:var(--text-2xl);margin:0">الدراسة — طلب العلم</p><p class="ed-arabic" style="margin-block-start:var(--space-3)">تُعرّف المؤسسة عالمها الأكاديمي، وتوفّر إدراس إكس التقنية اللازمة لتمثيله.</p></div><p class="ed-lede" style="font-size:var(--text-sm)">Amiri, set at 1.15× with its own line height so it sits level with the Latin rather than beneath it. Arabic is a family in this system, not a fallback the Latin stack falls through to.</p></div></section><section class="ed-section"><div class="ed-section__head"><h2 class="ed-label">Actions</h2><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><h3 class="ed-heading">Gold is earned by consequence, not by prominence</h3><div class="sg__stack"><div class="sg__row"><button class="ed-btn ed-btn--primary" type="button">Save changes</button><button class="ed-btn ed-btn--ceremonial" type="button">Issue transcript</button><button class="ed-btn" type="button">Cancel</button><button class="ed-btn ed-btn--danger" type="button">Remove</button><button class="ed-btn ed-btn--quiet" type="button">Learn more</button></div><div class="sg__row"><button class="ed-btn ed-btn--primary" type="button" disabled>Disabled</button><button class="ed-btn" type="button">Disabled</button><button class="ed-btn ed-btn--primary" type="button" data-loading="true">Publishing<svg class="ed-spinner" width="16" height="16" viewBox="0 0 16 16" role="status" aria-label="Loading"><path d="M 10.755 1.348 L 11.897 4.103 L 14.652 5.245 L 13.511 8.000 L 14.652 10.755 L 11.897 11.897 L 10.755 14.652 L 8.000 13.511 L 5.245 14.652 L 4.103 11.897 L 1.348 10.755 L 2.489 8.000 L 1.348 5.245 L 4.103 4.103 L 5.245 1.348 L 8.000 2.489 Z" fill="none" stroke="var(--accent-metal)" stroke-width="0.9" opacity="0.3"/><path d="M 1.794 6.374 L 2.073 7.047 L 2.746 7.326 L 2.467 8.000 L 2.746 8.674 L 2.073 8.953 L 1.794 9.626 L 1.120 9.347 L 0.446 9.626 L 0.167 8.953 L -0.506 8.674 L -0.227 8.000 L -0.506 7.326 L 0.167 7.047 L 0.446 6.374 L 1.120 6.653 Z" fill="var(--accent-metal)"/></svg></button><button class="ed-btn ed-btn--sm" type="button">Small</button><button class="ed-btn ed-btn--primary ed-btn--sm" type="button">Small primary</button></div><p>An ordinary sentence containing <a class="ed-link" href="#">a link</a> so its weight against body text can be judged.</p></div></section><section class="ed-section"><div class="ed-section__head"><h2 class="ed-label">Fields</h2><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><h3 class="ed-heading">Every state, declared rather than discovered</h3><div class="ed-grid ed-grid--3"><div class="ed-field"><label class="ed-field__label">Student name<input class="ed-input" type="text" value="Ada Nwosu"></label></div><div class="ed-field"><label class="ed-field__label">Admission number<input class="ed-input" type="text" placeholder="e.g. S-001"></label><p class="ed-field__hint">The institution&#x27;s own identifier.</p></div><div class="ed-field"><label class="ed-field__label">Academic year<select class="ed-select"><option value="2026" selected>2026/27</option><option value="2025">2025/26</option></select></label></div><div class="ed-field"><label class="ed-field__label">Date of birth<input class="ed-input" type="text" value="2011-04-02" aria-invalid="true"></label><p class="ed-field__error">This date is in the future.</p></div><div class="ed-field"><label class="ed-field__label">Locked<input class="ed-input" type="text" value="Cannot be changed" disabled></label></div><div class="ed-field"><label class="ed-field__label">Comment<textarea class="ed-textarea" placeholder="A remark for the report card…"></textarea></label></div></div><div class="ed-choices" style="margin-block-start:var(--space-5)"><label class="ed-check"><input type="checkbox" checked><span class="ed-check__box"></span><span>Receives reports</span></label><label class="ed-check"><input type="checkbox"><span class="ed-check__box"></span><span>Emergency contact</span></label><label class="ed-check"><input type="checkbox" disabled><span class="ed-check__box"></span><span>Unavailable</span></label><label class="ed-check"><input type="radio" checked name="g"><span class="ed-check__box ed-check__box--round"></span><span>Primary guardian</span></label><label class="ed-check"><input type="radio" name="g"><span class="ed-check__box ed-check__box--round"></span><span>Secondary</span></label><label class="ed-switch"><input type="checkbox" checked><span class="ed-switch__track"><span class="ed-switch__thumb"></span></span><span>Publish to families</span></label><label class="ed-switch"><input type="checkbox" disabled><span class="ed-switch__track"><span class="ed-switch__thumb"></span></span><span>Locked</span></label></div></section><section class="ed-section"><div class="ed-section__head"><h2 class="ed-label">Status</h2><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><h3 class="ed-heading">Badges, avatars, alerts</h3><div class="sg__row"><span class="ed-badge ed-badge--success">Enrolled</span><span class="ed-badge ed-badge--accent">Published</span><span class="ed-badge ed-badge--gold">Distinction</span><span class="ed-badge ed-badge--warning">Pending review</span><span class="ed-badge ed-badge--danger">Withdrawn</span><span class="ed-badge ed-badge--neutral">Draft</span><span class="ed-avatar" role="img" aria-label="Ada Nwosu">AN</span><span class="ed-avatar ed-avatar--lg" role="img" aria-label="Nadia Rahman">NR</span></div><div class="ed-grid ed-grid--2" style="margin-block-start:var(--space-5)"><div class="ed-alert ed-alert--warning" role="status"><div><p class="ed-alert__title">Not ready to publish</p><p>Two marks are missing for children who have since left. You may publish over this with a reason.</p></div></div><div class="ed-alert ed-alert--success" role="status"><div><p class="ed-alert__title">Published</p><p>The autumn term results were published on 18 December.</p></div></div></div></section><section class="ed-section"><div class="ed-section__head"><h2 class="ed-label">Figures</h2><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><h3 class="ed-heading">Separated by rules, not boxed in cards</h3><div class="ed-figures"><div class="ed-figures__item"><p class="ed-label">On roll</p><span class="ed-figure">412</span><p class="ed-figures__delta ed-figures__delta--up">▲ +18 this term</p></div><div class="ed-figures__item"><p class="ed-label">Attendance</p><span class="ed-figure">96.4<span class="ed-figure__unit">%</span></span><p class="ed-figures__delta ed-figures__delta--down">▼ −0.8</p></div><div class="ed-figures__item"><p class="ed-label">Results published</p><span class="ed-figure">7<span class="ed-figure__unit">of 9</span></span><p class="ed-figures__delta ed-quiet">Two awaiting the board</p></div><div class="ed-figures__item"><p class="ed-label">Documents issued</p><span class="ed-figure">1,284</span><p class="ed-figures__delta ed-figures__delta--up">▲ +96</p></div></div></section><section class="ed-section"><div class="ed-section__head"><h2 class="ed-label">Data</h2><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><h3 class="ed-heading">Four data shapes, four small-screen answers</h3><p class="ed-lede" style="font-size:var(--text-sm);margin-block-end:var(--space-4)">Each table declares what kind of data it holds, and its small-screen composition follows from that. Narrow this window to see four different answers.</p><table class='ed-table ed-data' data-shape='matrix'><thead><tr><th>Course</th><th>Assessment</th><th class='num'>Grade</th><th>Note</th></tr></thead><tbody><tr><td data-role="subject" class="ed-table__primary">Chemistry</td><td data-role="detail"><span class="ed-detail"><span data-label="Mark">82 / 100</span><span data-label="Assessment">Examination</span></span></td><td data-role="grade" class="num">A</td><td data-role="note">Practical write-ups are the strongest in the set.</td></tr><tr><td data-role="subject" class="ed-table__primary">History</td><td data-role="detail"><span class="ed-detail"><span data-label="Mark">64 / 100</span><span data-label="Assessment">Examination</span></span></td><td data-role="grade" class="num">B</td><td data-role="note"></td></tr><tr><td data-role="subject" class="ed-table__primary">Mathematics</td><td data-role="detail"><span class="ed-detail"><span data-label="Mark">78 / 100</span><span data-label="Assessment">Coursework</span></span></td><td data-role="grade" class="num">A</td><td data-role="note"></td></tr></tbody></table><div style="margin-block-start:var(--space-6)"><div class="ed-data__scroll"><table class="ed-table ed-data" data-shape="ledger"><thead><tr><th class="" scope="col">Year</th><th class="" scope="col">Programme</th><th class="" scope="col">From</th><th class="" scope="col">To</th><th class="" scope="col">Outcome</th></tr></thead><tbody><tr><td class="" data-label="Year">2026/27</td><td class="" data-label="Programme">BSc Computer Science</td><td class="" data-label="From">21 Sep 2026</td><td class="" data-label="To">—</td><td class="" data-label="Outcome"><span class="ed-badge ed-badge--success">Active</span></td></tr><tr><td class="" data-label="Year">2025/26</td><td class="" data-label="Programme">Foundation Year</td><td class="" data-label="From">22 Sep 2025</td><td class="" data-label="To">12 Jun 2026</td><td class="" data-label="Outcome"><span class="ed-badge ed-badge--neutral">Progressed</span></td></tr></tbody></table></div></div><div style="display:flex;align-items:center;gap:var(--space-4);justify-content:space-between;padding-block-start:var(--space-4)"><p class="ed-label">412 records</p><div class="ed-pager"><a class="ed-pager__item" href="#" aria-current="page">1</a><a class="ed-pager__item" href="#">2</a><a class="ed-pager__item" href="#">3</a><a class="ed-pager__item" href="#">4</a><a class="ed-pager__item" href="#">5</a><span class="ed-pager__item ed-quiet">…</span><a class="ed-pager__item" href="#">9</a></div></div></section><section class="ed-section"><div class="ed-section__head"><h2 class="ed-label">Waiting and nothing</h2><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><h3 class="ed-heading">An empty state says what a place is for</h3><div class="ed-grid ed-grid--2"><div class="ed-panel"><div aria-busy="true" aria-live="polite"><div class="ed-skeleton" style="width:100%;margin-block-end:var(--space-3)"></div><div class="ed-skeleton" style="width:84%;margin-block-end:var(--space-3)"></div><div class="ed-skeleton" style="width:62%;margin-block-end:var(--space-3)"></div><div class="ed-skeleton" style="width:92%;margin-block-end:var(--space-3)"></div></div><p class="ed-label" style="margin-block-start:var(--space-4)">Loading</p></div><div class="ed-panel ed-panel--quiet"><div class="ed-empty"><span class="ed-empty__mark"><svg class="ed-node" width="44" height="44" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path d="M 30.419 1.675 L 33.906 10.094 L 42.325 13.581 L 38.838 22.000 L 42.325 30.419 L 33.906 33.906 L 30.419 42.325 L 22.000 38.838 L 13.581 42.325 L 10.094 33.906 L 1.675 30.419 L 5.162 22.000 L 1.675 13.581 L 10.094 10.094 L 13.581 1.675 L 22.000 5.162 Z" fill="var(--accent-metal)"/></svg></span><h3 class="ed-empty__title">No programmes yet</h3><p class="ed-empty__body">A programme is what a student is admitted to — a degree, a diploma, a curriculum. Create one and levels can sit inside it.</p><div><button class="ed-btn ed-btn--primary ed-btn--sm" type="button">Create a programme</button></div></div></div></div><div style="margin-block-start:var(--space-5);max-width:24rem"><div><div style="display:flex;justify-content:space-between;margin-block-end:var(--space-2)"><p class="ed-label">Importing 412 students</p><p class="ed-label ed-numeric">68%</p></div><div class="ed-progress" role="progressbar" aria-valuenow="68" aria-valuemin="0" aria-valuemax="100" aria-label="Importing 412 students"><div class="ed-progress__bar" style="width:68.0%"></div></div></div></div></section><section class="ed-section"><div class="ed-section__head"><h2 class="ed-label">Accessibility</h2><div class="ed-rule" style="--rule-width:100%"><svg class="ed-node" width="7" height="7" viewBox="0 0 7 7" aria-hidden="true" focusable="false"><path d="M 4.839 0.266 L 5.394 1.606 L 6.734 2.161 L 6.179 3.500 L 6.734 4.839 L 5.394 5.394 L 4.839 6.734 L 3.500 6.179 L 2.161 6.734 L 1.606 5.394 L 0.266 4.839 L 0.821 3.500 L 0.266 2.161 L 1.606 1.606 L 2.161 0.266 L 3.500 0.821 Z" fill="var(--accent-metal)"/></svg><span class="ed-rule__line"></span></div></div><h3 class="ed-heading">Meets the standard, with 5 pairings worth improving.</h3><p class="ed-lede" style="font-size:var(--text-sm);margin-block-end:var(--space-4)">Every pairing that decides whether a parent can read a grade on a phone, checked against WCAG 2.2. An institution changing its colours is judged by the same eleven and told what to do about a failure — not silently corrected.</p><div class="sg__verdict"><span>Body text on the page</span><span class="sg__ratio sg__ok">16.65:1</span></div><div class="sg__verdict"><span>Body text on a panel</span><span class="sg__ratio sg__ok">17.66:1</span></div><div class="sg__verdict"><span>Secondary text</span><span class="sg__ratio sg__ok">8.93:1</span></div><div class="sg__verdict"><span>Incidental text</span><span class="sg__ratio sg__warn">5.68:1</span></div><div class="sg__verdict"><span>Incidental text on a panel</span><span class="sg__ratio sg__warn">6.02:1</span></div><div class="sg__verdict"><span>Link and action text</span><span class="sg__ratio sg__ok">11.16:1</span></div><div class="sg__verdict"><span>Gold text</span><span class="sg__ratio sg__warn">5.14:1</span></div><div class="sg__verdict"><span>Text on a primary button</span><span class="sg__ratio sg__ok">9.39:1</span></div><div class="sg__verdict"><span>Error text</span><span class="sg__ratio sg__ok">10.26:1</span></div><div class="sg__verdict"><span>Success text</span><span class="sg__ratio sg__ok">8.26:1</span></div><div class="sg__verdict"><span>Input and control borders</span><span class="sg__ratio sg__warn">3.7:1</span></div><div class="sg__verdict"><span>Input borders on the page</span><span class="sg__ratio sg__warn">3.49:1</span></div><div class="sg__verdict"><span>Focus ring on the page</span><span class="sg__ratio sg__ok">6.59:1</span></div><div class="sg__verdict"><span>Focus ring on a panel</span><span class="sg__ratio sg__ok">6.99:1</span></div></section></div></main></body></html>

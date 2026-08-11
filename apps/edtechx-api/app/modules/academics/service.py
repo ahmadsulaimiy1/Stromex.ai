@@ -57,6 +57,7 @@ __all__ = [
     "programme_ids_under",
     "qualification",
     "resolve_placement",
+    "student_ids_supervised_by",
     "year",
 ]
 
@@ -273,6 +274,23 @@ def class_group_ids_taught_by(membership_id):
     return select(TeachingAllocation.class_group_id).where(
         TeachingAllocation.membership_id == membership_id,
         TeachingAllocation.ends_on.is_(None),
+    )
+
+
+def student_ids_supervised_by(staff_relationship_ids):
+    """The researchers these staff records currently supervise.
+
+    Open supervisions only, for the same reason `class_group_ids_taught_by`
+    takes open allocations: a supervisor who handed a candidate to a colleague
+    in 2027 should not still be reading their thesis milestones in 2031. The
+    closed rows remain, and the programme and unit scopes exist to answer
+    "who supervised her, and when?".
+    """
+    from app.modules.academics.research import Supervision
+
+    return select(Supervision.student_relationship_id).where(
+        Supervision.staff_relationship_id.in_(staff_relationship_ids),
+        Supervision.ended_on.is_(None),
     )
 
 

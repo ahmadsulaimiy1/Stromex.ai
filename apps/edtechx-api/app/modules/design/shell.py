@@ -29,7 +29,7 @@ from app.modules.design.foundation import FOUNDATION, page_css
 from app.modules.design.theme import Theme, stylesheet
 from app.modules.design.typeface import font_face_css
 
-__all__ = ["GROUP_LABELS", "document", "navigation", "shell"]
+__all__ = ["GROUP_LABELS", "document", "href_for", "navigation", "shell"]
 
 
 #: The institution's own words name the *items*; these name the groups, which
@@ -76,6 +76,17 @@ def group_label(group: str, role_shape: str = "") -> str:
     )
 
 
+def href_for(key: str) -> str:
+    """A rail item points at a page, not at a fragment of this one.
+
+    It used to emit `#capability.key`, which is an anchor to an id no document
+    contains — an audit reported it 248 times across the rendered journeys, and
+    it was right twice over: a screen reader announces an in-page link, and
+    following it moves nobody anywhere.
+    """
+    return "/" + key.replace(".", "/")
+
+
 def navigation(experience, *, current: str = "") -> str:
     """The rail's links, derived rather than declared.
 
@@ -94,7 +105,7 @@ def navigation(experience, *, current: str = "") -> str:
             if capability.upgrade_from:
                 trailing = '<span class="ed-nav__upgrade">Upgrade</span>'
             items.append(
-                f'<a class="ed-nav__item" href="#{ui.e(capability.key)}"{active}>'
+                f'<a class="ed-nav__item" href="{ui.e(href_for(capability.key))}"{active}>'
                 f"{ornament.node(7, colour='var(--gold-500)')}"
                 f"<span>{ui.e(capability.label_plural)}</span>"
                 f"{trailing}</a>"
@@ -124,7 +135,7 @@ def _identity(experience, branding) -> str:
 def _account(name: str, role: str) -> str:
     return (
         '<div class="ed-rail__foot">'
-        f'<a class="ed-account" href="#account">{ui.avatar(name)}'
+        f'<a class="ed-account" href="/account">{ui.avatar(name)}'
         f'<span><p class="ed-account__name">{ui.e(name)}</p>'
         f'<p class="ed-account__role">{ui.e(role)}</p></span></a>'
         "</div>"
@@ -132,6 +143,12 @@ def _account(name: str, role: str) -> str:
 
 
 def _topbar(*, search_hint: str, notifications: int, actions: str = "") -> str:
+    """The bar above the page. A `<header>`, because it is a landmark.
+
+    It was a `<div>`, which left the search field and the notification bell
+    outside every landmark on the page — content a screen-reader user reaches
+    only by walking the whole document.
+    """
     bell = (
         '<span class="ed-bell">'
         + ui.button(
@@ -149,7 +166,7 @@ def _topbar(*, search_hint: str, notifications: int, actions: str = "") -> str:
         + "</span>"
     )
     return (
-        '<div class="ed-topbar">'
+        '<header class="ed-topbar">'
         + ui.button(
             "",
             variant="quiet",
@@ -158,6 +175,8 @@ def _topbar(*, search_hint: str, notifications: int, actions: str = "") -> str:
             '<path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.3"/></svg>',
             aria_label="Open navigation",
             class_="ed-mobile-only",
+            aria_expanded="false",
+            aria_controls="ed-rail",
         )
         + '<div class="ed-search" role="search">'
         + '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">'
@@ -165,7 +184,7 @@ def _topbar(*, search_hint: str, notifications: int, actions: str = "") -> str:
           '<path d="M10.4 10.4 14 14" stroke="currentColor" stroke-width="1.3"/></svg>'
         + f"<span>{ui.e(search_hint)}</span><kbd>⌘K</kbd></div>"
         + f'<div class="ed-topbar__actions">{actions}{bell}</div>'
-        + "</div>"
+        + "</header>"
     )
 
 
@@ -202,7 +221,7 @@ def shell(
         + "</style></head><body>"
         + '<a class="ed-skip" href="#main">Skip to content</a>'
         + '<div class="ed-app">'
-        + '<aside class="ed-rail">'
+        + '<aside class="ed-rail" id="ed-rail" aria-label="Institution">'
         + f'<div class="ed-rail__ground">{ornament.lattice(cell=64)}</div>'
         + _identity(experience, branding)
         + navigation(experience, current=current)
@@ -239,7 +258,10 @@ def document(
         + page_css()
         + extra_css
         + "</style></head><body>"
-        + body
+        # Even a bare page needs its one main landmark. Without it every heading
+        # and paragraph on the styleguide sat outside any region, which an audit
+        # counted 53 times on one page.
+        + f'<main id="main">{body}</main>'
         + "</body></html>"
     )
 

@@ -247,7 +247,11 @@ def _results_table(columns: list[str], rows: list[dict], terms: dict) -> str:
     return (
         '<table data-shape="matrix">'
         f"<thead><tr><th>{_e(heading)}</th><th>Detail</th>"
-        f'<th class="num">{_e(grade_heading)}</th><th></th></tr></thead>'
+        # The fourth column carries the teacher's remark. Named, even where it
+        # is usually empty: an unnamed column header is a cell a screen reader
+        # announces as nothing at all, on every row.
+        f'<th class="num">{_e(grade_heading)}</th>'
+        '<th class="ed-doc__remark-head">Remark</th></tr></thead>'
         f"<tbody>{''.join(body)}</tbody></table>"
     )
 
@@ -494,7 +498,11 @@ def render_html(
         f"<title>{_e(payload.get('title'))} — "
         f"{_e((payload.get('subject') or {}).get('full_name'))}</title>"
         f"<style>{_fonts()}{_styles(branding, page)}</style></head>"
-        '<body class="ed-doc"><article class="ed-sheet">'
+        # `<main>` around the sheet: a document opened in a browser is still a
+        # web page, and without one every line of an issued transcript sat
+        # outside any landmark. An audit counted it fifty-one times on one
+        # report card.
+        '<body class="ed-doc"><main><article class="ed-sheet">'
         f'<div class="ed-sheet__ground">{ornament.lattice(cell=132)}</div>'
         f'<span class="ed-sheet__corner ed-sheet__corner--bl">{ornament.corner(26)}</span>'
         f'<span class="ed-sheet__corner ed-sheet__corner--br">{ornament.corner(26)}</span>'
@@ -502,7 +510,7 @@ def render_html(
         f'<h1 class="ed-doc__title">{_e(payload.get("title"))}</h1>'
         + (f'<p class="ed-doc__context">{_e(subtitle)}</p>' if subtitle
            else '<div style="height:var(--space-7)"></div>')
-        + f"{body}{footer}</article></body></html>"
+        + f"{body}{footer}</article></main></body></html>"
     )
 
 

@@ -932,6 +932,30 @@ def student(db: Session, student_id: uuid.UUID) -> StudentRelationship | None:
     return db.get(StudentRelationship, student_id)
 
 
+def staff(db: Session, staff_id: uuid.UUID) -> StaffRelationship | None:
+    return db.get(StaffRelationship, staff_id)
+
+
+def staff_for_user(db: Session, user_id: uuid.UUID | None) -> StaffRelationship | None:
+    """This institution's current staff record for a signed-in person.
+
+    Through `Person`, because a membership is an account and a staff record is
+    a fact about employment; the same human at another institution is a
+    different `Person` and a different record (ADR-027).
+    """
+    if user_id is None:
+        return None
+    return db.execute(
+        select(StaffRelationship)
+        .join(Person, Person.id == StaffRelationship.person_id)
+        .where(
+            Person.user_id == user_id,
+            Person.deleted_at.is_(None),
+            StaffRelationship.ended_on.is_(None),
+        )
+    ).scalars().first()
+
+
 def enrolment(db: Session, enrolment_id: uuid.UUID) -> Enrolment | None:
     return db.get(Enrolment, enrolment_id)
 

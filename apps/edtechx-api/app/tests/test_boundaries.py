@@ -209,6 +209,13 @@ SCOPED_MODELS = {
     "Person",
     "GuardianRelationship",
     "QualificationAward",
+    # A candidature is one person's, and the record of who supervises whom is
+    # among the most sensitive things a graduate school holds. Added when the
+    # tables were, rather than the first time somebody wrote a handler over
+    # them — which is the only moment at which adding it is free.
+    "Supervision",
+    "SupervisionMeeting",
+    "Milestone",
 }
 
 # Where an unscoped `select()` over those models is legitimate, and why.
@@ -217,6 +224,11 @@ UNSCOPED_SELECT_ALLOWED = {
     # on, and its callers are responsible for the scope.
     "app/modules/people/service.py",
     "app/modules/people/scopes.py",
+    # Owns the research tables, on the same terms. Every *read* a person
+    # performs here goes through `scoped_select`; what is left unscoped is the
+    # administrative write path, whose caller holds the permission.
+    "app/modules/academics/supervision.py",
+    "app/modules/academics/scopes.py",
     # Builds the predicates themselves.
     "app/modules/authz/predicates.py",
 }

@@ -81,6 +81,15 @@ CATALOGUE: Final[frozenset[str]] = frozenset(
     | _perms("assessment", "assessment", READ, CREATE, WRITE, DELETE)
     | _perms("assessment", "score", READ, WRITE, EXPORT)
     | _perms("assessment", "result", READ, APPROVE, PUBLISH, EXPORT)
+    # research
+    # Separate from `academics` because supervising a candidate is not the same
+    # authority as configuring a programme, and a graduate school routinely
+    # gives one to people it would never give the other. `milestone` carries
+    # APPROVE for the same reason `result` does: passing an upgrade viva is a
+    # decision somebody is accountable for, not an edit.
+    | _perms("research", "supervision", READ, CREATE, WRITE, MANAGE)
+    | _perms("research", "milestone", READ, WRITE, APPROVE)
+    | _perms("research", "meeting", READ, CREATE)
     # reporting
     # Three document resources rather than one, because a school that lets a
     # form tutor print report cards has not thereby let them print transcripts,

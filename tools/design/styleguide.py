@@ -246,13 +246,13 @@ def build() -> str:
         "composition follows from that. Narrow this window to see four different "
         "answers.</p>"
         + ui.data_table(
-            [("Course", "text"), ("Detail", "text"), ("Grade", "num"), ("", "text")],
+            [("Course", "text"), ("Detail", "text"), ("Grade", "num"), ("Note", "text")],
             [],
             shape="matrix",
             empty_state="".join([
                 "<table class='ed-table ed-data' data-shape='matrix'>"
                 "<thead><tr><th>Course</th><th>Assessment</th><th class='num'>Grade</th>"
-                "<th></th></tr></thead><tbody>",
+                "<th>Note</th></tr></thead><tbody>",
                 ui.matrix_row(subject="Chemistry", grade="A",
                               details=[("Mark", "82 / 100"), ("Assessment", "Examination")],
                               note="Practical write-ups are the strongest in the set."),

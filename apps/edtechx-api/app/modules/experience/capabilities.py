@@ -70,6 +70,16 @@ class Capability:
     # The permission required to see it. A capability with none is visible to
     # anybody who got this far, which is true of very little.
     permission: str | None = None
+    # The scope kinds that make this capability *yours*, for the handful of
+    # screens where the permission is not the distinction. A supervisor and a
+    # candidate both read milestones; only one of them has a candidature, and
+    # what separates them is that the candidate holds the permission at `self`
+    # and the supervisor at `supervised_by_self`. Empty means the scope is
+    # irrelevant and any reach at all is enough — which is nearly everything.
+    #
+    # This narrows access, so it belongs here rather than in a role shape: a
+    # shape orders and promotes, it never hides.
+    scopes: tuple[str, ...] = ()
     # The plan feature required. `None` means it is part of the product rather
     # than part of a plan.
     feature: str | None = None
@@ -238,7 +248,10 @@ CAPABILITIES: Final[tuple[Capability, ...]] = (
         term="supervisor",
         group="academics",
         layers=("supervision",),
-        permission="people.student.read",
+        # Programme configuration, like every other capability in this group.
+        # It was `people.student.read`, which put the institution's supervision
+        # *vocabulary* in the rail of every supervisor who uses it.
+        permission="academics.level.manage",
         empty_action="Name the {term} roles this institution uses",
     ),
     Capability(
@@ -246,14 +259,52 @@ CAPABILITIES: Final[tuple[Capability, ...]] = (
         term="milestone",
         group="academics",
         layers=("milestones",),
-        permission="people.student.read",
+        permission="academics.level.manage",
         empty_action="Define the {term}s a research student passes",
+    ),
+    # The two screens research education actually runs on, as distinct from the
+    # two above, which configure the vocabulary. A candidate has a candidature;
+    # a supervisor has a caseload; neither is a view of a supervision role.
+    Capability(
+        key="research.candidature",
+        term=None,
+        name="Candidature",
+        group="today",
+        layers=("milestones",),
+        permission="research.milestone.read",
+        # And the mirror of the caseload's: a supervisor reads milestones too,
+        # and putting "Candidature" in their rail offered them a page about a
+        # doctorate they are not doing.
+        scopes=("self",),
+        empty_action="",
+        description="Your milestones, your supervisors, and how long is left.",
+    ),
+    Capability(
+        key="research.caseload",
+        term=None,
+        name="Your researchers",
+        group="people",
+        layers=("supervision",),
+        permission="research.supervision.read",
+        # A candidate holds that permission too, so their own page can name
+        # their supervisors; gating on the permission alone put "Your
+        # researchers" in a first-year candidate's rail. What makes a caseload
+        # a caseload is the reach.
+        scopes=("supervised_by_self",),
+        empty_action="",
+        description="The candidates you supervise, ordered by who needs you.",
     ),
     # --- operations: gated by entitlement, not by academic shape ---
     Capability(
         key="operations.attendance",
         term="attendance",
         group="operations",
+        # Attendance is taken against a class or a course. An institution with
+        # neither runs no registers, and a research candidate shown an
+        # Attendance item is being offered a screen that can only ever be
+        # empty. Found by rendering a doctoral researcher's rail and reading
+        # it: the first item, marked as the current page, was Attendance.
+        layers=("classes", "courses"),
         permission="attendance.mark.read",
         feature="core.attendance",
         empty_action="Take your first register",
@@ -382,6 +433,8 @@ CAPABILITIES: Final[tuple[Capability, ...]] = (
         term="course",
         name="Course content",
         group="operations",
+        # Same argument as attendance: course content is content *of a course*.
+        layers=("courses",),
         permission="learning.course.read",
         feature="learning.courses",
         empty_action="Build your first {term}",
@@ -390,6 +443,7 @@ CAPABILITIES: Final[tuple[Capability, ...]] = (
         key="learning.assignments",
         term=None,
         group="operations",
+        layers=("courses",),
         permission="learning.assignment.read",
         feature="learning.courses",
         empty_action="Set your first assignment",
@@ -532,6 +586,11 @@ ROLE_SHAPES: Final[dict[str, RoleShape]] = {
         "student",
         ("today", "operations", "communication"),
         primary=("learning.assignments", "operations.results", "operations.attendance"),
+    ),
+    "supervisor": RoleShape(
+        "supervisor",
+        ("people", "today", "academics", "communication"),
+        primary=("research.caseload", "research.milestones"),
     ),
     "guardian": RoleShape(
         "guardian",

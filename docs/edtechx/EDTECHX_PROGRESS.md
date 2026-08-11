@@ -470,8 +470,10 @@ Nothing is blocked. Items awaiting external input, none of which stop Phase 2:
 | 3 | ~~Scopes are parsed and unioned but not compiled~~ | — | **Resolved** — ADR-029. The union was itself a widening defect and is gone |
 | 4 | `starlette.testclient` deprecation warning from FastAPI 0.141 | Trivial | Upstream; revisit on the next FastAPI bump |
 | 5 | `_IncludedRouter` traversal in `test_boundaries.py` reaches into a FastAPI internal | Low | Written to accept both routing shapes so it degrades to the public shape rather than silently checking nothing |
-| 6 | No frontend yet | Expected | Phase 4 — next |
+| 6 | No frontend yet | Expected | Phase 4 — the design system, the shell and fifteen rendered journeys exist as server-rendered HTML; no client script yet, which is why the drawer and the palette have correct markup and no focus behaviour |
 | 7 | Assessment and documents ship service-first, with no HTTP endpoints | Expected | Deliberate: routes are written alongside the screens that call them, in Phase 4, so the API shape is decided by a real caller rather than guessed |
+| 8 | No screen-reader verification | Medium | None is installed here and none can be driven headlessly. axe-core and a keyboard walk are clean; a NVDA/VoiceOver pass over the register, the candidature and the parent's page is outstanding and is **not** claimed as done (ADR-038) |
+| 9 | Dialog and palette focus behaviour unimplemented | Medium | The markup is correct — `role="dialog"`, `aria-modal`, labelled — and there is no script to trap focus, restore it on close, or wire Escape. Reported as absent by the audit rather than passing as present |
 
 ---
 
@@ -487,4 +489,23 @@ Nothing is blocked. Items awaiting external input, none of which stop Phase 2:
 - **Before gating a capability:** ask which question you mean. `RequirePermission` is what this person may do; `RequireEntitlement` is what this institution has bought; `billing.require_meter` is how much is left this period. They are three calls because they are three questions, and a route needing two declares both.
 - **Before recording where somebody is:** it is an `Enrolment` row with a start and an end, never a column on a person or a relationship. If a screen needs "the current class", ask for the open enrolment. Two tests exist specifically to fail the shortcut.
 - **Before adding a permission:** add it to `CATALOGUE` first. Roles referencing unknown permissions fail the boot.
+- **Before adding a capability to the rail:** ask the four questions the
+  catalogue asks, and then a fifth if the permission is not the distinction.
+  Attendance needs a class or a course to exist; a candidature and a caseload
+  are told apart by *scope*, not by permission, because a supervisor and a
+  candidate hold the same two. `Capability.scopes` narrows access and is
+  therefore in the catalogue, never in a role shape — a shape orders and
+  promotes, it never hides.
+- **Before shipping a screen to a new audience:** render it, open it, and read
+  the rail as well as the page. Six of the last nine defects were things no
+  test could see and every one was visible in four seconds of looking: a
+  hamburger at 1440px, five duplicate rail labels, Attendance offered to a
+  doctoral researcher, "Student" printed under a person the institution calls a
+  researcher, a date rendered twice on a phone, and a table that had stopped
+  being a table on an iPad.
+- **Before claiming an accessibility property:** run
+  `python tools/design/audit.py --axe <path to axe.min.js>`. axe-core is not
+  vendored; fetch it with `npm pack axe-core@4.10.2`. The first run found 697
+  violations in code written to be accessible, which is the whole argument for
+  the rule.
 - **Never** connect the request path as `edtechx_migrator`. It owns the tables, and `FORCE RLS` is bypassed for owners. The production guard refuses this; development would not notice.

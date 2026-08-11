@@ -771,3 +771,77 @@ The gap became obvious on studying the credential architecture in `ahmadsulaimiy
 **Enforcement.** Seven tests in `test_documents.py`: the signature is not derivable without the key; editing the stored record is detected and is *not* reported as a deployment gap; a rotated key keeps an earlier era verifying and a missing one accuses nothing; a retired key refuses to sign; issuing without a key is refused; a number checks itself and its suffix cannot be transplanted; a verifier's address is hashed. The pinned disclosure-surface test caught the three new fields and forced the decision about the revocation note.
 
 **What was studied and is not yet built**, named rather than quietly dropped: never-fabricate signatory and seal registries with a vacancy as a first-class state; a verification log table; guilloché generated from a closed formula at render time; microprint on a real path; and the template-family taxonomy that would let a design library scale. Each is a real idea from that architecture and each is its own increment.
+
+---
+
+## ADR-037 — Research supervision belongs to the universal academic model
+
+**Status:** Accepted
+
+**Context.** `structure.py` had declared the *vocabulary* of research education since the baseline: a programme may be a research programme, an institution names its own supervision roles, a programme requires a proposal at month six and a viva at month forty-eight. What it deliberately deferred was every record. Nothing said which supervisor supervised whom, whether a candidate's proposal had actually happened, or when anybody last sat down together. A doctoral institute could be provisioned and configured and then had nowhere to put a candidature.
+
+The temptation at that point is a research module: its own tables, its own service, its own screens. That is how a product acquires a second academic model that drifts from the first.
+
+**Decision.** Three tables, in `academics`, on the same terms as everything else there. A taught school has none of them and never learns they exist; a university with final-year dissertations uses the same three for a supervisor and a submission deadline.
+
+**Supervision is a placement, not a pointer.** The tempting column is `student.supervisor_id`. It is one join shorter and it erases who supervised the first two years — the fact a thesis examiner, an appeal, and a funder all ask about. A supervision is a row with a beginning and an end, for the same reason an enrolment is (ADR-011).
+
+**Overdue is computed, never stored.** A milestone's `state` records what the institution decided; whether it is late is arithmetic on today's date against `due_on`. A stored flag needs a nightly job, is wrong between midnight and the job, and is wrong all weekend when the job fails. Further, `expected` is the only state lateness can hold in: a viva with a date in the diary is not overdue because the diary date is in December, and a thesis sitting with examiners is not overdue because the candidate has done their part. Flagging either red is how a research office learns to ignore the flag.
+
+**`referred` is a state of its own.** The panel neither passed nor failed the candidate; it asked for the work again. Collapsing it into `failed` turns a routine second attempt into a permanent mark on somebody's record.
+
+**A meeting is a fact; the gap between meetings is the signal.** Research degrees rarely fail because a supervision meeting went badly. They fail because the meetings quietly stopped and nobody noticed for eleven months. `SupervisionMeeting` exists so that absence is measurable.
+
+**Supervision is a scope, not a role with a filter.** `ScopeKind.supervised_by_self` joins the vocabulary beside `taught_by_self`, and a supervisor's authority is compiled into the SQL like everybody else's. It follows the *open* supervision: a supervisor who hands a candidate to a colleague stops reading their record, and the history of who supervised whom is reachable by the programme and unit scopes that exist for exactly that question.
+
+**Three scope kinds are absent from the research plans on purpose.** `taught_by_self`, because a lecturer teaching a candidate's taught component has no claim on their thesis milestones — two different relationships with the same person. `own_children`, because a supervision record is a working relationship between two adults and a guardianship recorded at admission is not a licence to read it. And `tenant` alone does not make a caseload: `caseload()` additionally narrows to the caller's own staff record, so a registrar reading it gets nothing rather than the whole graduate school. That list exists; it is a different question and a different screen.
+
+**Approving a milestone is the institution's act.** A supervisor holds `research.milestone.write` and moves a milestone through its states; `research.milestone.approve` sits with the registrar. A supervisor does not rule on their own candidate's viva.
+
+**Enforcement.** Twenty-three tests in `test_research.py`, most of them attacks rather than demonstrations: a supervisor reading a candidate who is not theirs, a supervisor still reading a candidate they handed over, a candidate reading another candidate, a teacher scope and a guardian scope reaching a candidature, a co-supervised candidate appearing twice on one list, a decision predating the submission it ruled on, a milestone that is late by stored flag rather than by calendar, and a programme edit silently moving a date somebody has been working towards.
+
+---
+
+## ADR-038 — Accessibility is audited with a tool, or it is not claimed
+
+**Status:** Accepted · **Constitutional**
+
+**Context.** EdirasX had *implemented* accessibility: landmarks, `aria-current`, `aria-pressed`, labelled controls, a skip link, an `.ed-sr` class, a focus ring, contrast guardrails in the theme with a review that produced remedies. None of that was evidence, and the design system's own documentation was close to claiming it as such.
+
+Running axe-core over the nineteen rendered pages at two widths reported **697 violations**. Not one of them was a surprise in hindsight and not one had been found by reading the code.
+
+**Decision.** An accessibility claim requires a run. `tools/design/audit.py` executes axe-core against every rendered journey at desktop and phone width and walks the keyboard order in a real browser, recording where focus lands and whether the browser paints anything when it gets there.
+
+**What the audit found, and what each was really about:**
+
+*The palette failed its own standard.* `text.tertiary` measured 3.49:1 on the ivory canvas — below AA for normal text — and it is the token behind `.ed-quiet`, the search placeholder, every notification timestamp and every unit label. The theme's own `review()` had not caught it because `text.tertiary` was missing from `_PAIRINGS`. Both the colour and the gap in the guardrail are fixed, and the review now runs on **both** modes: it had only ever been run on ivory, and midnight was failing three of its own pairings, including a focus ring at 2.68:1.
+
+*The focus ring was a fixed translucent royal in the primitives*, so it did not change with the mode and was all but invisible on midnight. A ring and a button fill are different jobs — one must be light enough to see against the chrome, the other dark enough to carry ivory text — and one token was doing both. `border.focus` is now its own semantic role.
+
+*Two hundred and forty-eight navigation links pointed at `#capability.key`*, an anchor to an id no document contains.
+
+*The topbar was a `<div>`*, leaving the search field and the notification bell outside every landmark, and the bare `document()` page had no `<main>` at all.
+
+*A section's micro-label was a paragraph*, so five journeys went from `<h1>` straight to the `<h3>` inside a panel.
+
+*A `<label>` sat beside its input rather than around it*, which labels nothing.
+
+**What the audit does not establish, stated rather than buried.** It is not a screen-reader test: no screen reader is installed in this environment and none can be driven headlessly here, so a NVDA or VoiceOver pass remains outstanding. Behaviour needing JavaScript is unverifiable from static pages: the drawer and the command palette are rendered *open*, and there is no client script to trap focus, restore it on close, or wire Escape — the markup is right and the behaviour is unimplemented, which the audit reports as absent rather than as passing. And axe finds roughly a third of real barriers; a clean run means no machine-detectable violation, not an accessible product.
+
+**Enforcement.** The audit itself, plus eleven tests in `test_design.py` and `test_experience.py` pinning each finding — because a checklist is a thing somebody remembers and a test is a thing nobody has to.
+
+---
+
+## ADR-039 — A tablet is not a small desktop or a large phone
+
+**Status:** Accepted
+
+**Context.** The journeys had been captured at three widths for weeks and read at two. Reading the 834px captures found defects that were invisible at both of the widths anybody had looked at.
+
+**Decision.** The rail's collapse and the decomposition of data are different questions and no longer share a breakpoint.
+
+At 960px the rail becomes a drawer, because there is no longer room for a fixed 248px column beside the work. That is right, and it was also — in the same block — turning every table into stacked label-value pairs. An iPad has 780px of page and carries a six-column register comfortably; it was showing four students in the space that fits twenty. Table decomposition and two-up figures now belong to 736px and below, and between the two breakpoints a wide table scrolls inside the wrapper that has always existed for it.
+
+Three smaller things came out of the same reading: a primary action stretched to 780px is a banner rather than a button, so full-width belongs to the phone; an alert sat flush on the rule beneath a row of figures and read as part of them; and a `<td>` with `display: flex` is no longer a table-cell, so `border-collapse` stopped governing it and one hairline floated under one column on the last row of every results matrix.
+
+**The rule this establishes.** A width that is captured and not read is not reviewed. Every future design pass reads all three.

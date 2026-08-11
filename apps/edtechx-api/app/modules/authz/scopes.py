@@ -31,6 +31,12 @@ class ScopeKind(str, enum.Enum):
     klass = "class"
     subject = "subject"
     taught_by_self = "taught_by_self"
+    # Research supervision, which is not teaching. A supervisor's authority
+    # follows the people they supervise rather than a room they stand in, and
+    # the two are separate kinds because a person routinely holds one and not
+    # the other — a professor who supervises four candidates and teaches
+    # nobody, a demonstrator who teaches two hundred and supervises none.
+    supervised_by_self = "supervised_by_self"
     own_children = "own_children"
     self_only = "self"
 

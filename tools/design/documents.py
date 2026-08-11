@@ -22,12 +22,30 @@ sys.path.insert(0, str(ROOT / "apps" / "edtechx-api"))
 OUT = ROOT / "docs" / "edtechx" / "design"
 
 
+def _seed_plans() -> None:
+    from app.db.session import bind_tenant, get_session_factory
+    from app.modules.billing import service as billing
+    from app.modules.billing.plans import PLANS
+
+    session = get_session_factory()()
+    bind_tenant(session, None)
+    try:
+        billing.seed_plans(session, PLANS)
+        session.commit()
+    finally:
+        session.close()
+
+
 def main() -> None:
     from app.modules.customization import branding as branding_module
     from app.modules.documents import service as documents
     from app.modules.people import service as people
     from app.tests import test_documents as suite
 
+    # The suite seeds plans from a fixture, which nothing invokes when this
+    # file is run on its own. Without it the first `subscribe` fails and the
+    # samples are silently the ones from the last run.
+    _seed_plans()
     school = suite._build_school(f"sample-school-{uuid.uuid4().hex[:6]}")
     suite._publish_marks(
         school, course_id=school.chemistry_id, period_id=school.autumn_id,
