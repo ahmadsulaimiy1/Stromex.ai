@@ -213,6 +213,55 @@ body.ed-doc {
   margin: 2px 0 0; font-family: var(--font-mono); font-size: var(--text-2xs);
   word-break: break-all;
 }
+/* --- authority ------------------------------------------------------------
+   The signature block, and the restraint the whole visual direction depends
+   on. There is no gold here, no flourish and no box. A signature is made
+   authoritative by *space* — a generous clear area, a hairline the width of a
+   name, and two lines of small caps beneath it — which is how every serious
+   institutional document in the world does it and why a certificate that
+   surrounds its signatures with ornament reads as a certificate somebody
+   bought. The seal is the one mark allowed to be an image, at a size that says
+   it is a seal and not a logo. */
+
+.ed-doc__authority {
+  margin-block-start: var(--space-10);
+  display: flex; align-items: flex-end; gap: var(--space-8);
+  break-inside: avoid;
+}
+.ed-doc__seal { flex: none; }
+.ed-doc__seal img {
+  display: block; inline-size: 26mm; block-size: auto;
+  /* Never scaled up past its own resolution: a seal that is visibly
+     interpolated is worse than a seal printed small. */
+  max-inline-size: 26mm;
+}
+.ed-signs {
+  flex: 1; display: flex; gap: var(--space-8); align-items: flex-end;
+  justify-content: flex-end;
+}
+.ed-sign { flex: 1; max-inline-size: 62mm; text-align: center; }
+/* The clear area. Fixed rather than content-driven, so two signatures on one
+   page sit on the same line whether one is an image and the other typeset. */
+.ed-sign__space {
+  block-size: 16mm; display: flex; align-items: flex-end;
+  justify-content: center; padding-block-end: 1mm;
+}
+.ed-sign__mark { max-block-size: 15mm; max-inline-size: 100%; display: block; }
+.ed-sign__typeset {
+  font-family: var(--font-display); font-size: var(--text-lg);
+  color: var(--text-primary); line-height: 1;
+}
+.ed-sign__rule { block-size: 1px; background: var(--text-primary); }
+.ed-sign__name {
+  margin: var(--space-2) 0 0; font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+}
+.ed-sign__title {
+  margin: 1px 0 0; font-size: var(--text-3xs);
+  letter-spacing: var(--tracking-wider); text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
 .ed-doc__foot {
   margin-block-start: var(--space-6); padding-block-start: var(--space-3);
   border-block-start: 1px solid var(--border-hairline);
@@ -230,6 +279,10 @@ body.ed-doc {
    thing that never happens is a sideways scroll. */
 
 @media (max-width: 46rem) {
+  .ed-doc__authority { flex-direction: column; align-items: center; gap: var(--space-6); }
+  .ed-signs { flex-direction: column; inline-size: 100%; }
+  .ed-sign { max-inline-size: 100%; inline-size: 100%; }
+
   body.ed-doc { padding: 0; background: var(--surface-raised); }
   .ed-sheet { border: 0; padding: var(--space-6) var(--space-4) var(--space-8); }
   .ed-sheet__corner { display: none; }

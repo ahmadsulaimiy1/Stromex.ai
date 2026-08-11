@@ -39,7 +39,7 @@ from sqlalchemy.orm import Session
 
 from app.modules.audit.service import AuditAction, record
 from app.modules.customization import branding as branding_module
-from app.modules.documents import integrity
+from app.modules.documents import integrity, signatories
 from app.modules.documents import sections as catalogue
 from app.modules.documents.compose import ComposeError, Composition, compose
 from app.modules.documents.models import (
@@ -214,6 +214,7 @@ def publish_template(
             "that produced it."
         )
     _refuse_conflicting_series(db, draft)
+    _refuse_unknown_offices(db, draft)
 
     previous = db.execute(
         select(DocumentTemplate).where(
@@ -236,6 +237,34 @@ def publish_template(
         actor_membership_id=membership_id,
     )
     return draft
+
+
+def _refuse_unknown_offices(db: Session, draft: DocumentTemplate) -> None:
+    """A template may not require a signature from an office nobody has defined.
+
+    Caught here rather than at issue, because a template naming an office this
+    institution has never created will fail *every* issuance, and the moment to
+    discover that is while somebody is designing the document — not at four
+    o'clock on results day with four hundred transcripts queued.
+    """
+    from app.modules.documents.authority import SignatoryOffice
+
+    declared = [code for code, _required in signatories.template_offices(draft)]
+    if not declared:
+        return
+    known = {
+        row.code
+        for row in db.execute(
+            select(SignatoryOffice).where(SignatoryOffice.code.in_(declared))
+        ).scalars()
+    }
+    unknown = sorted(set(declared) - known)
+    if unknown:
+        raise DocumentError(
+            "This template requires a signature from an office this institution "
+            f"has not defined: {', '.join(unknown)}. Create the office first, or "
+            "remove it from the template."
+        )
 
 
 def _refuse_conflicting_series(db: Session, draft: DocumentTemplate) -> None:
@@ -429,6 +458,12 @@ def issue(
     billing.require(db, "core.report_cards")
 
     when = issued_on or date.today()
+    # Authority before composition. A document that cannot be signed is not a
+    # document with a blank rule at the bottom — it is a document that does not
+    # exist, and finding that out before numbering it means the sequence is not
+    # burned on a failure.
+    blocks = signatories.resolve(db, template, on=when)
+    seal = signatories.seal_for(db, template, on=when)
     identity = branding_module.resolve(db)
     code = _verification_code()
     number, sequence = _next_number(db, template, when=when)
@@ -441,6 +476,12 @@ def issue(
         number=number,
         verification_code=code,
         verification_url=identity.verification_url(code),
+        authority=[block.as_dict() for block in blocks],
+        seal=(
+            {"code": seal.code, "name": seal.name, "digest": seal.digest,
+             "content": seal.content}
+            if seal else None
+        ),
         **options,
     )
 
@@ -448,6 +489,19 @@ def issue(
         _refuse_unpublished(composition)
 
     payload = composition.as_payload()
+    # Inside the payload as well as on the row, and *before* the digest is
+    # computed. The signature block is something the document says, so it is
+    # frozen with everything else it says and covered by the same tamper
+    # evidence — a forger who edits the certifying officer changes the checksum
+    # exactly as if they had edited a grade.
+    payload["authority"] = {
+        "signatures": [block.as_dict() for block in blocks],
+        "seal": (
+            {"code": seal.code, "name": seal.name, "digest": seal.digest,
+             "content": seal.content}
+            if seal else None
+        ),
+    }
     signature = integrity.compute(_signed_fields(number, code, payload))
     now = datetime.now(UTC)
     periods = composition.context.get("periods") or []
@@ -478,6 +532,9 @@ def issue(
         checksum=signature.digest,
         hash_key_version=signature.key_version,
         verification_code=code,
+        signatures=[block.as_dict() for block in blocks],
+        seal_id=seal.id if seal else None,
+        seal_digest=seal.digest if seal else None,
     )
     db.add(document)
     if supersedes is not None:

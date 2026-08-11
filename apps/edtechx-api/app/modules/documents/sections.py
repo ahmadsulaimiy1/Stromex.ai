@@ -229,8 +229,16 @@ CATALOGUE: Final[tuple[Section, ...]] = (
         key="signatures",
         default_title="Signed",
         omit_when_empty=False,
-        default_options=_frozen({"signatories": (), "per_row": 2}),
-        description="Who stands behind the document.",
+        # Layout only. `signatories` used to be here — a list of
+        # `{title, name, image_url}` typed into the template — which meant
+        # anybody who could edit a template could put any name and any picture
+        # on a transcript. Who signs now comes from the signatory registry and
+        # is not configurable from the design (ADR-040).
+        default_options=_frozen({"per_row": 2}),
+        description=(
+            "Who certified the document, resolved from the institution's "
+            "signatory registry at issue and frozen."
+        ),
     ),
     Section(
         key="verification",
@@ -332,14 +340,16 @@ def _validate_options(key: str, options: dict) -> None:
             f"Section {key!r} asks for an unknown aggregation {aggregate!r}. "
             "One of: " + ", ".join(sorted(AGGREGATIONS))
         )
-    signatories = options.get("signatories")
-    if signatories:
-        for signatory in signatories:
-            if not str(signatory.get("title") or "").strip():
-                raise UnknownSection(
-                    f"Section {key!r} has a signatory with no title. A blank line "
-                    "over a signature tells the reader nothing."
-                )
+    if key == "signatures" and options.get("signatories"):
+        # Refused rather than ignored. A template carrying its own list of
+        # signatory names is a template written against the old model, and
+        # silently dropping the list would print a document signed by somebody
+        # other than whom its author intended — which is worse than refusing.
+        raise UnknownSection(
+            "Signatories are no longer configured on a template. Who signs comes "
+            "from the institution's signatory registry; list the offices this "
+            "document requires in the template's `signatories` setting instead."
+        )
 
 
 def validate_catalogue() -> None:

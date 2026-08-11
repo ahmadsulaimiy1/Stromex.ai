@@ -424,16 +424,24 @@ def _render_section(block: dict, terms: dict, branding: Branding) -> str:
             + "</div>"
         )
     elif key == "signatures":
-        blocks = "".join(
-            "<div>"
-            + (f'<img src="{_e(s["image_url"])}" alt="" style="height:2.2rem">'
-               if s.get("image_url") else '<div style="height:2.2rem"></div>')
-            + f'<div class="ed-doc__sign-line">{_e(s.get("name") or "")}</div>'
-            f'<div class="ed-doc__sign-title">{_e(s.get("title"))}</div>'
-            "</div>"
-            for s in content.get("signatories") or []
-        )
-        return f'<div class="ed-doc__signatures">{blocks}</div>' if blocks else ""
+        # Drawn from the registry-resolved block, through the same markup the
+        # foot-of-page version uses. The old shape here rendered an empty
+        # `<div style="height:2.2rem">` when no image was configured — a blank
+        # space above a printed name, which is exactly the claim that somebody
+        # signed and did not.
+        return _authority({
+            "seal": content.get("seal"),
+            "signatures": [
+                {
+                    "office_code": row.get("key"),
+                    "person_name": row.get("name"),
+                    "printed_title": row.get("title"),
+                    "asset_kind": row.get("kind") or "typeset",
+                    "asset_content": row.get("mark") or None,
+                }
+                for row in content.get("signatories") or []
+            ],
+        })
     elif key == "verification":
         pairs = [("Document number", content.get("number")),
                  ("Issued", content.get("issued_on")),
@@ -490,6 +498,13 @@ def render_html(
         f'<p class="ed-doc__foot">{_e(branding.footer_note)}</p>'
         if branding.footer_note else ""
     )
+    # The signature block belongs in the document's flow when the template
+    # placed one there, and at the foot when it did not. Never both.
+    has_section = any(
+        (block or {}).get("key") == "signatures"
+        for block in payload.get("sections") or []
+    )
+    authority = "" if has_section else _authority(payload.get("authority") or {})
     stamp = f'<div class="ed-doc__void">{_e(watermark)}</div>' if watermark else ""
 
     return (
@@ -510,7 +525,64 @@ def render_html(
         f'<h1 class="ed-doc__title">{_e(payload.get("title"))}</h1>'
         + (f'<p class="ed-doc__context">{_e(subtitle)}</p>' if subtitle
            else '<div style="height:var(--space-7)"></div>')
-        + f"{body}{footer}</article></main></body></html>"
+        + f"{body}{authority}{footer}</article></main></body></html>"
+    )
+
+
+def _authority(block: dict) -> str:
+    """The signature blocks and the seal, drawn from what was frozen.
+
+    Nothing here reads the registry. A document reprinted in 2038 draws the
+    officer who signed it in 2028 and the seal in force that year, because both
+    are in the payload — and if the payload has neither, the page has neither.
+    There is no fallback, no placeholder rule, and no "signature on file"
+    caption standing in for a signature: a blank rule above a printed name is a
+    claim that somebody signed, and this renderer does not make claims the
+    record does not support.
+    """
+    signatures = block.get("signatures") or []
+    seal = block.get("seal")
+    if not signatures and not seal:
+        return ""
+
+    marks = []
+    for entry in signatures:
+        if entry.get("asset_kind") == "image" and entry.get("asset_content"):
+            mark = (
+                f'<img class="ed-sign__mark" src="{_e(entry["asset_content"])}" '
+                f'alt="Signature of {_e(entry.get("person_name"))}">'
+            )
+        else:
+            # A typeset signature is set in the display face at the size a
+            # written one would occupy. It is not an image pretending to be
+            # handwriting; it is the institution's name for its own officer.
+            mark = (
+                f'<span class="ed-sign__typeset">{_e(entry.get("person_name"))}</span>'
+            )
+        # The name goes above the rule or below it, never both. The first
+        # render printed "Mr K. Balogun" twice, six millimetres apart, which
+        # reads as a mistake because it is one.
+        typeset = entry.get("asset_kind") != "image"
+        marks.append(
+            '<div class="ed-sign">'
+            + f'<div class="ed-sign__space">{mark}</div>'
+            + '<div class="ed-sign__rule"></div>'
+            + ("" if typeset else
+               f'<p class="ed-sign__name">{_e(entry.get("person_name"))}</p>')
+            + f'<p class="ed-sign__title">{_e(entry.get("printed_title"))}</p>'
+            + "</div>"
+        )
+
+    sealed = (
+        f'<div class="ed-doc__seal"><img src="{_e(seal["content"])}" '
+        f'alt="{_e(seal.get("name") or "Institutional seal")}"></div>'
+        if seal and seal.get("content") else ""
+    )
+    return (
+        '<section class="ed-doc__authority">'
+        + sealed
+        + f'<div class="ed-signs">{"".join(marks)}</div>'
+        + "</section>"
     )
 
 

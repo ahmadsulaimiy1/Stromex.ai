@@ -240,6 +240,19 @@ class Document(UUIDPrimaryKey, Timestamped, TenantOwned, Base):
     # confirms a document is genuine; it does not disclose the grades.
     verification_code: Mapped[str] = mapped_column(String(32), nullable=False)
 
+    # --- authority, frozen at issue ---
+    #
+    # Who certified this, under whose seal, as it stood on the day. Copies
+    # rather than references for the same reason `payload` is: a registrar who
+    # leaves in 2029 must not invalidate the four thousand transcripts they
+    # signed in 2028, and a seal redesigned in 2031 must not appear on a
+    # reprint of a 2027 certificate. See `documents/authority.py`.
+    signatures: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
+    seal_id: Mapped[uuid.UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("seals.id", ondelete="RESTRICT")
+    )
+    seal_digest: Mapped[str | None] = mapped_column(String(64))
+
 
 __all__ = [
     "Document",

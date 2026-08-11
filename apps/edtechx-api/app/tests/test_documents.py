@@ -251,26 +251,50 @@ REPORT_CARD_SECTIONS = [
     {"key": "attendance"},
     {"key": "comments", "options": {"slots": ("class_teacher", "head")}},
     {"key": "grading_key"},
-    {
-        "key": "signatures",
-        "options": {
-            "signatories": (
-                {"key": "tutor", "title": "Class Teacher"},
-                {"key": "head", "title": "Head Teacher"},
-            )
-        },
-    },
+    {"key": "signatures"},
     {"key": "verification"},
 ]
 
 
+def _offices(session) -> None:
+    """A class teacher and a head, appointed with approved signatures.
+
+    In the fixture rather than in one test, because every report card this
+    suite issues should be one a real school could hand to a parent — and a
+    report card nobody signed is not that. Costs two rows and makes the whole
+    file evidence for the registry rather than for a path around it.
+    """
+    from app.modules.documents import signatories
+
+    for code, name, holder in (
+        ("tutor", "Class Teacher", "Ms O. Adeyemi"),
+        ("head", "Head Teacher", "Dr N. Achebe"),
+    ):
+        office = signatories.declare_office(session, code=code, name=name)
+        if signatories.live_appointment(session, office) is not None:
+            continue
+        person = people.record_person(session, full_name=holder)
+        asset = signatories.record_asset(
+            session, person_id=person.id, typeset_name=holder
+        )
+        signatories.approve_asset(session, asset, on=date(2020, 1, 1))
+        signatories.appoint(
+            session, office=office, person_id=person.id,
+            on=date(2020, 1, 1), signature_asset_id=asset.id,
+        )
+
+
 def _report_card_template(session, **overrides):
+    _offices(session)
+    custom = dict(overrides.pop("custom", {}) or {})
+    custom.setdefault("signatories", ["tutor", "head"])
     draft = documents.define_template(
         session,
         code=overrides.pop("code", "report-card"),
         name="Termly Report Card",
         purpose_label=overrides.pop("purpose_label", "Report Card"),
         purpose="report_card",
+        custom=custom,
         sections=overrides.pop("sections", REPORT_CARD_SECTIONS),
         numbering=overrides.pop(
             "numbering",
@@ -426,7 +450,6 @@ def test_the_school_report_card_carries_what_a_school_report_card_carries(
             session, template=template, student=student, permissions=REGISTRAR,
             period_ids=[school.autumn_id],
             comments={"class_teacher": "A thoughtful term's work."},
-            signatories={"head": "Dr N. Achebe"},
         )
         blocks = {b["key"]: b for b in issued.payload["sections"]}
 
@@ -441,8 +464,11 @@ def test_the_school_report_card_carries_what_a_school_report_card_carries(
         assert blocks["comments"]["content"]["entries"][0]["text"] == (
             "A thoughtful term's work."
         )
+        # Signed by the officers the institution appointed, not by names typed
+        # into the template — see `test_authority.py`.
         signed = {s["key"]: s for s in blocks["signatures"]["content"]["signatories"]}
         assert signed["head"]["name"] == "Dr N. Achebe"
+        assert signed["head"]["title"] == "Head Teacher"
         assert blocks["verification"]["content"]["number"].startswith("RC/")
     finally:
         session.rollback()
@@ -467,9 +493,7 @@ def test_a_certificate_is_the_same_engine_with_different_rows(school: World) -> 
                         )
                     },
                 },
-                {"key": "signatures", "options": {
-                    "signatories": ({"key": "registrar", "title": "Registrar"},)
-                }},
+                {"key": "signatures"},
                 {"key": "verification"},
             ],
             numbering={"format": "{prefix}-{sequence:03d}", "prefix": "CERT",

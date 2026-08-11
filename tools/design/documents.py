@@ -22,6 +22,50 @@ sys.path.insert(0, str(ROOT / "apps" / "edtechx-api"))
 OUT = ROOT / "docs" / "edtechx" / "design"
 
 
+# A modest seal, drawn rather than fetched: eight points on two squares, the
+# same construction as the interface mark, so the sample looks like EdirasX
+# rather than like a stock crest. An institution supplies its own.
+SAMPLE_SEAL = (
+    "data:image/svg+xml;utf8,"
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'>"
+    "<circle cx='60' cy='60' r='56' fill='none' stroke='%23223B6B' stroke-width='1.5'/>"
+    "<circle cx='60' cy='60' r='50' fill='none' stroke='%23C9A961' stroke-width='0.8'/>"
+    "<rect x='26' y='26' width='68' height='68' fill='none' stroke='%23223B6B'"
+    " stroke-width='1'/>"
+    "<rect x='26' y='26' width='68' height='68' fill='none' stroke='%23223B6B'"
+    " stroke-width='1' transform='rotate(45 60 60)'/>"
+    "<text x='60' y='66' text-anchor='middle' font-family='serif' font-size='15'"
+    " fill='%23223B6B'>SIGILLUM</text></svg>"
+)
+
+
+def _registrar_and_seal(session) -> None:
+    """The authority a certificate needs before it can exist at all."""
+    from datetime import date as _date
+
+    from app.modules.documents import signatories
+    from app.modules.documents.authority import Seal, SealStatus, digest_of
+    from app.modules.people import service as people
+
+    office = signatories.declare_office(session, code="registrar", name="Registrar")
+    if signatories.live_appointment(session, office) is None:
+        person = people.record_person(session, full_name="Mr K. Balogun")
+        asset = signatories.record_asset(
+            session, person_id=person.id, typeset_name="K. Balogun"
+        )
+        signatories.approve_asset(session, asset, on=_date(2020, 1, 1))
+        signatories.appoint(
+            session, office=office, person_id=person.id,
+            on=_date(2020, 1, 1), signature_asset_id=asset.id,
+        )
+    session.add(Seal(
+        code="common", name="The Common Seal", content=SAMPLE_SEAL,
+        digest=digest_of(SAMPLE_SEAL), status=SealStatus.approved,
+        in_force_from=_date(2020, 1, 1), approved_on=_date(2020, 1, 1),
+    ))
+    session.flush()
+
+
 def _seed_plans() -> None:
     from app.db.session import bind_tenant, get_session_factory
     from app.modules.billing import service as billing
@@ -85,10 +129,10 @@ def main() -> None:
                                  "practical write-ups are the strongest in the set.",
                 "head": "A pleasing report. Well done.",
             },
-            signatories={"tutor": "Miss O. Adeyemi", "head": "Dr N. Achebe"},
         )
         (OUT / "01-school-report-card.html").write_text(documents.render(session, card))
 
+        _registrar_and_seal(session)
         cert_template = documents.define_template(
             session, code="sample-certificate", name="Certificate of Enrolment",
             purpose_label="Certificate of Enrolment", purpose="document",
@@ -101,20 +145,18 @@ def main() -> None:
                     "This certificate is issued at the request of the student's "
                     "family and may be verified using the code below."}},
                 {"key": "placement", "title": "Current placement"},
-                {"key": "signatures", "options": {"signatories": (
-                    {"key": "registrar", "title": "Registrar"},
-                )}},
+                {"key": "signatures"},
                 {"key": "verification"},
             ],
             numbering={"format": "{prefix}-{sequence:04d}", "prefix": "CERT",
                        "scope": "institution"},
+            custom={"signatories": ["registrar"], "seal": "common"},
         )
         documents.publish_template(session, cert_template)
         certificate = documents.issue(
             session, template=cert_template,
             student=people.student(session, school.students["Bilal Haddad"]),
             permissions=suite.REGISTRAR, issued_on=date(2027, 3, 2),
-            signatories={"registrar": "Mr K. Balogun"},
         )
         (OUT / "03-certificate.html").write_text(documents.render(session, certificate))
         session.commit()

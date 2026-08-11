@@ -686,19 +686,36 @@ def _section_narrative(db, data, options, ctx) -> dict:
 
 
 def _section_signatures(db, data, options, ctx) -> dict:
-    overrides = ctx.get("signatories") or {}
-    rows = []
-    for signatory in options.get("signatories") or ():
-        key = str(signatory.get("key") or signatory.get("title"))
-        rows.append(
-            {
-                "key": key,
-                "title": str(signatory.get("title") or ""),
-                "name": str(overrides.get(key, signatory.get("name") or "")),
-                "image_url": signatory.get("image_url") or "",
-            }
-        )
-    return {"signatories": rows, "per_row": int(options.get("per_row") or 2)}
+    """Who certified this — from the registry, never from the template.
+
+    This section used to read `{title, name, image_url}` typed into the template
+    and a per-issue override of the name. That is precisely the thing the
+    signatory registry exists to replace: anybody who could edit a template
+    could put any name and any picture on a transcript, and the document
+    asserted an authority nothing had established. The names now come from
+    `documents.signatories.resolve`, which has already refused to issue at all
+    if the required office cannot sign (ADR-040).
+
+    What remains configurable is layout. `per_row` is a design decision; who
+    signs is not.
+    """
+    blocks = ctx.get("authority") or ()
+    rows = [
+        {
+            "key": block["office_code"],
+            "title": block["printed_title"],
+            "name": block["person_name"],
+            "kind": block["asset_kind"],
+            "mark": block.get("asset_content") or "",
+            "digest": block["asset_digest"],
+        }
+        for block in blocks
+    ]
+    return {
+        "signatories": rows,
+        "seal": ctx.get("seal"),
+        "per_row": int(options.get("per_row") or 2),
+    }
 
 
 def _section_verification(db, data, options, ctx) -> dict:
@@ -777,7 +794,8 @@ def compose(
     period_ids: Sequence[uuid.UUID] | None = None,
     academic_year_id: uuid.UUID | None = None,
     comments: dict[str, str] | None = None,
-    signatories: dict[str, str] | None = None,
+    authority: tuple | list = (),
+    seal: dict | None = None,
     issued_on: date | None = None,
     number: str = "",
     verification_code: str = "",
@@ -805,7 +823,8 @@ def compose(
 
     ctx = {
         "comments": comments or {},
-        "signatories": signatories or {},
+        "authority": list(authority),
+        "seal": seal,
         "issued_on": issued_on,
         "number": number,
         "verification_code": verification_code,

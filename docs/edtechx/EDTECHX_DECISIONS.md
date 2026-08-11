@@ -845,3 +845,37 @@ At 960px the rail becomes a drawer, because there is no longer room for a fixed 
 Three smaller things came out of the same reading: a primary action stretched to 780px is a banner rather than a button, so full-width belongs to the phone; an alert sat flush on the rule beneath a row of figures and read as part of them; and a `<td>` with `display: flex` is no longer a table-cell, so `border-collapse` stopped governing it and one hairline floated under one column on the last row of every results matrix.
 
 **The rule this establishes.** A width that is captured and not read is not reviewed. Every future design pass reads all three.
+
+---
+
+## ADR-040 — Authority is a chain of records, and vacancy stops issuance
+
+**Status:** Accepted · **Constitutional**
+
+**Context.** EdirasX could already produce a document that named a signatory. It did so from three free-text fields typed into a template — `{title, name, image_url}` — with an optional override of the name supplied at issue. Anybody who could edit a template could put any name and any picture on a transcript, and the document asserted an authority nothing had established. `BrandingProfile.signature_image_url` sat beside it as a second, looser version of the same idea.
+
+That is the shape almost every school system has, and it is security theatre: the strongest claim on the page was the one nothing protected.
+
+**Decision.** Authority is a chain, and each link is a separate row because each answers a different question and changes on its own schedule.
+
+**Office → Appointment → Asset.** The *office* is the institution's post — "Registrar", "Shaykh al-Ma'had" — and outlives every holder. The *appointment* is a person holding that office from a date until a date, carrying its status and the document categories it covers. The *asset* is the mark that appears on the page, approved separately, replaceable without a new appointment, and digested so a document records which specimen it used. A signature image alone establishes nothing, which is why it is the last link rather than the only one.
+
+**Recording a signature is not approving it.** "Somebody uploaded a picture" and "the institution accepted it as this officer's signature" are different events with different actors, and a registry that conflates them cannot answer who approved a signature that later turns out to be wrong.
+
+**Vacancy is a state, and it stops issuance.** If a template requires an office and no appointment can sign on the issue date, `SignatoryVacancyError` is raised and the document does not exist. There is no code path that prints an empty rule, borrows the previous officer, promotes a colleague, or draws a signature nobody made. Eight distinct failures — vacant, not yet started, suspended, revoked, wrong category, no asset, unapproved asset, withdrawn asset, retired office — all produce the same behaviour, and the uniformity is tested as a property rather than case by case, because a registry with seven refusals and one silent substitution has one hole and that hole is what somebody finds.
+
+**Authority is checked before the number is drawn.** Otherwise a school with a vacant registrarship tears a hole in its own numbering every time somebody presses Issue, and a transcript series with gaps is a series an auditor asks about.
+
+**The refusal names the office, never the person.** "The Registrar's office is vacant" is what the operator needs; who left, and why, is not the operator's business and is nobody else's either.
+
+**An optional office that cannot sign is dropped, not printed blank.** A rule above a printed name is a claim that somebody signed.
+
+**A validly signed document stays validly signed.** The block is frozen into the document — office, holder, title, asset digest — and *inside* the payload, so it is covered by the same HMAC as the grades (ADR-036): a forger who leaves the marks alone and changes who certified them changes the checksum. Verification and reprinting read the frozen block and never the registry, so a registrar who leaves in 2029 does not invalidate the four thousand transcripts they signed in 2028.
+
+**A seal is a controlled asset, not a crest.** `BrandingProfile.crest_url` is presentation, changeable by whoever manages the brand; a seal on a degree certificate is a governance decision with a date attached. They are deliberately different rows, and the issuance path reads only the second. A template that asks to be sealed and finds no approved seal in force is refused — never a placeholder, never last year's, never another institution's. The seal in force is recorded on the document, so a reprint of a 2027 certificate carries the 2027 seal.
+
+**A template cannot be published requiring an office the institution has not defined.** A template naming a non-existent office fails *every* issuance, and the moment to discover that is while somebody is designing the document, not at four o'clock on results day with four hundred transcripts queued.
+
+**Enforcement.** 29 tests in `test_authority.py`, and the document suite's own fixture now appoints a class teacher and a head — so every report card it issues is one a real school could hand to a parent, and the whole file is evidence for the registry rather than for a path around it. The old template-typed signatory list is **refused** rather than ignored on validation: silently dropping it would print a document signed by somebody other than whom its author intended, which is worse than refusing.
+
+**What this does not claim.** It does not make a rendered page unforgeable — nothing does. It guarantees that a document EdirasX issued was certified by an officer the institution had authorised to certify it, on the day it was issued, and says so permanently.

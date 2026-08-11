@@ -68,6 +68,12 @@ from app.modules.billing.models import (
     UsageRecord,
 )
 from app.modules.customization.models import BrandingProfile, TerminologySet
+from app.modules.documents.authority import (
+    Seal,
+    SignatoryAppointment,
+    SignatoryOffice,
+    SignatureAsset,
+)
 from app.modules.documents.models import (
     Document,
     DocumentSequence,
@@ -142,7 +148,11 @@ __all__ = [
     "ResultSet",
     "Role",
     "RolePermission",
+    "Seal",
     "SecurityEvent",
+    "SignatoryAppointment",
+    "SignatoryOffice",
+    "SignatureAsset",
     "StaffRelationship",
     "StudentRelationship",
     "Subscription",
