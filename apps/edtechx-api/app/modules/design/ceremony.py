@@ -34,7 +34,7 @@ reading, which this file now enforces:
                         honour. Exceptional craftsmanship: the whole vocabulary
                         is available — corner blocks with inset medallions,
                         crested frames, multiple guilloché systems, dense
-                        geometric registers, radiant fields, microtext, a
+                        geometric registers, radiant fields, serial-bearing fine text, a
                         deterministic security substrate, two metals. It should
                         be capable of looking extraordinary, because what it
                         certifies is.
@@ -186,7 +186,7 @@ LEVELS: Final[tuple[Budget, ...]] = (
             "rule", "khatam", "spreader", "corner", "lattice", "arabesque",
             "tessellation", "cartouche", "guilloche", "rosette", "seal",
             "girih", "medallion", "mandala", "spine", "arch",
-            "corner_block", "cresting", "radiant", "microtext", "fibres",
+            "corner_block", "cresting", "radiant", "finetext", "fibres",
             "screen", "squares", "emboss", "foil",
         }),
         frame=(5.5, 9.5, 15.0, 21.0),
@@ -204,7 +204,7 @@ LEVELS: Final[tuple[Budget, ...]] = (
         notes=(
             "Exceptional. Corner blocks with inset medallions, a crested "
             "frame, two guilloché systems, a dense geometric register, "
-            "microtext carrying the document's own serial, a deterministic "
+            "fine text carrying the document's own serial, a deterministic "
             "substrate and a second metal. The question at this level is not "
             "whether there is too much; it is whether every expensive-looking "
             "element has been designed well enough to deserve its place.",

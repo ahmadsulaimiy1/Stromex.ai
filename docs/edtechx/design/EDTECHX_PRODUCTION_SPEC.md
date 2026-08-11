@@ -76,7 +76,7 @@ cheap is rarely the ornament; it is the fourth colour.
 
 | Element | Weight | Rule |
 |---|---|---|
-| Hairline / microtexture | 0.07–0.09 mm | Never below 0.07mm; never screened |
+| Hairline / fine texture | 0.07–0.09 mm | Never below 0.07mm; never screened |
 | Fine register | 0.10–0.20 mm | Flat ink only |
 | Engraved rule | 0.30–0.75 mm | Three flat strokes: highlight, face, shadow |
 | Frame register | 0.45–0.85 mm | Weights step *up* inwards |
@@ -98,7 +98,7 @@ or `geometry.blend()` (dark grounds).
 | Blind emboss | Institutional seal, central mark | Yes — male/female pair |
 | Deboss | Cartouche panels, optional | Yes |
 | Letterpress / intaglio | Recipient's name, optional flagship | Yes |
-| Serial numbering | Verification band and microtext ring | Numbering box |
+| Serial numbering | Verification band and fine-text ring | Numbering box |
 | Die-cut | Not used | — |
 
 The blind emboss is the recommendation to argue hardest for. It requires a die
@@ -150,9 +150,16 @@ Reproduced verbatim from `gilding.SIMULATION`:
 - **Guilloché** — a genuine closed epitrochoid construction, expensive to
   reproduce without the generating parameters. It is a deterrent, not a
   guarantee.
-- **Microtext** — real vector text at 0.56–0.62mm carrying the document's own
-  serial. Whether a given press or printer holds it at that size **has not been
-  measured**, and no claim is made until it has.
+- **Fine text** — real vector text at 0.58mm carrying the document's own serial.
+  **Not microprint, and now measured rather than assumed.** Rasterised from the
+  artwork: at 300 DPI it is 6.85 px per em (≈0.41mm cap height) and *illegible*
+  — the register reads as grey texture; at 600 DPI it is 13.7 px per em and the
+  serial and verification code read back. Security microprint means a cap height
+  at or below about 0.25mm, chosen so a loupe resolves it and a copier cannot;
+  this is well above that and does not have the property. The feature is named
+  `fine_text_ring` throughout for that reason. No press test has been run, so
+  whether paper holds it is still unknown. A 300 DPI edition must not be
+  described as carrying readable data in this register.
 
 ## 7. Ceremonial level and edition
 

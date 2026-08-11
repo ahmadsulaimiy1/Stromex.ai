@@ -32,7 +32,7 @@ def _every_drawing() -> dict[str, str]:
         "fibres": g.fibres(SHEET, seed="TR/2027/0001"),
         "screen": g.line_screen("s", degrees=8, pitch=0.42, width=0.07,
                                 ink="#C9A961", strength=0.4),
-        "microtext": g.microtext_ring(FIELD, identifier="m", text="TR/2027/0001 · ",
+        "finetext": g.fine_text_ring(FIELD, identifier="m", text="TR/2027/0001 · ",
                                       ink="#0A101C"),
     }
 
@@ -108,9 +108,9 @@ def test_a_plate_is_deterministic_and_keyed_to_its_own_document() -> None:
     assert first != g.fibres(SHEET, seed="TR/2027/0002")
 
 
-def test_microtext_carries_the_documents_own_serial() -> None:
+def test_fine_text_carries_the_documents_own_serial() -> None:
     """A ring repeating the institution's name distinguishes nothing."""
-    ring = g.microtext_ring(FIELD, identifier="m", text="TR/2027/0044 · ",
+    ring = g.fine_text_ring(FIELD, identifier="m", text="TR/2027/0044 · ",
                             ink="#0A101C")
     assert ring.count("TR/2027/0044") > 20
     assert "<textPath" in ring

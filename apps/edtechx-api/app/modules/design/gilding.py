@@ -35,14 +35,17 @@ from typing import Final
 
 __all__ = [
     "METALS",
+    "SCHEMES",
     "SIMULATION",
     "Metal",
+    "Scheme",
     "emboss",
     "engraved_metal_rule",
     "foil_gradient",
     "metal_for",
     "production_note",
     "raised_type_css",
+    "scheme_for",
 ]
 
 
@@ -297,3 +300,93 @@ def _recolour(figure: str, colour: str) -> str:
 
     figure = re.sub(r'stroke="(?!none)[^"]*"', f'stroke="{colour}"', figure)
     return re.sub(r'fill="(?!none)[^"]*"', f'fill="{colour}"', figure)
+
+
+# --- gold as a compositional system ------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class Scheme:
+    """Five gold *roles*, so a plate never asks for "gold".
+
+    Colouring existing lines gold produces yellow graphics. What produces metal
+    is a hierarchy: one metal carries the ceremonial architecture and is the
+    only one allowed to be large; a second carries the fine ornamental
+    registers; a third is only ever a shadow or a relief wall; a fourth is
+    reserved for the security ruling, where it must be pale enough to read as
+    substrate rather than as decoration; a fifth carries heritage elements where
+    a plate wants an older metal than its primary.
+
+    Every drawing call in a masterpiece plate names a role. That is what makes
+    the metals a system instead of a palette, and it is what stops the fine
+    registers competing with the architecture — they are *different metals*, not
+    the same metal at a different weight.
+    """
+
+    key: str
+    #: The ceremonial architecture. Frame rules, cresting, seal rim, title mark.
+    primary: Metal
+    #: Fine ornamental registers. Interlace, spines, corner filigree.
+    secondary: Metal
+    #: Engraved shadow and relief. Never used as a face; only as a wall.
+    engraved: Metal
+    #: The security ruling and fine text. Pale by requirement, not by taste.
+    security: Metal
+    #: Heritage and ornament where the plate wants an older metal.
+    heritage: Metal
+
+    def role(self, name: str) -> Metal:
+        try:
+            return getattr(self, name)
+        except AttributeError:
+            raise ValueError(
+                f"{name!r} is not a gold role. One of: primary, secondary, "
+                "engraved, security, heritage"
+            ) from None
+
+
+#: The schemes the four finalists are built from. Each is a real decision about
+#: how many foils a job buys and which surfaces get them, not a colourway.
+SCHEMES: Final[dict[str, Scheme]] = {
+    # Ivory and midnight. Royal gold does the architecture; champagne keeps the
+    # fine registers from competing with it; deep gold is the wall.
+    "imperial": Scheme(
+        key="imperial",
+        primary=METALS["royal"], secondary=METALS["champagne"],
+        engraved=METALS["deep"], security=METALS["pale"],
+        heritage=METALS["antique"],
+    ),
+    # Crimson mass. The primary has to hold against a saturated ground, so it is
+    # deep rather than royal, and the security ruling goes pale to stay legible
+    # as substrate on a dark field.
+    "crimson": Scheme(
+        key="crimson",
+        primary=METALS["deep"], secondary=METALS["royal"],
+        engraved=METALS["antique"], security=METALS["pale"],
+        heritage=METALS["copper"],
+    ),
+    # The house scheme: royal gold against silver. Two metals that are not two
+    # golds is what makes a two-pass job look like a two-pass job.
+    "signature": Scheme(
+        key="signature",
+        primary=METALS["royal"], secondary=METALS["silver"],
+        engraved=METALS["deep"], security=METALS["champagne"],
+        heritage=METALS["antique"],
+    ),
+    # Navy and ivory, warmer throughout: antique carries the ornament so the
+    # plate reads as an older instrument than the imperial scheme.
+    "palace": Scheme(
+        key="palace",
+        primary=METALS["royal"], secondary=METALS["antique"],
+        engraved=METALS["deep"], security=METALS["champagne"],
+        heritage=METALS["brushed"],
+    ),
+}
+
+
+def scheme_for(key: str) -> Scheme:
+    if key not in SCHEMES:
+        raise ValueError(
+            f"{key!r} is not a gilding scheme. One of: " + ", ".join(sorted(SCHEMES))
+        )
+    return SCHEMES[key]

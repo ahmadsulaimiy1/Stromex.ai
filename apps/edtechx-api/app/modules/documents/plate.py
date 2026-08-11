@@ -229,14 +229,14 @@ def build(
                                  strength=0.62)
             )
 
-    # --- microtext, carrying this document's own serial ---
-    if "microtext" in budget.permits and serial:
+    # --- fine text, carrying this document's own serial ---
+    if "finetext" in budget.permits and serial:
         text = f"{institution.upper()} · {serial} · " if institution else f"{serial} · "
         layers.append(
-            geo.microtext_ring(
+            geo.fine_text_ring(
                 sheet.rect.inset(outermost - 1.6), identifier="edge",
                 # Quiet. Microtext that is legible as a texture at arm's
-                # length is not microtext, it is a grey band along the edge of
+                # length is not a security register, it is a grey band along
                 # the sheet — which is what the first flagship render produced.
                 text=text, ink=ink, size=0.58, strength=0.26,
             )

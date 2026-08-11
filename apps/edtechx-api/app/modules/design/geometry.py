@@ -68,12 +68,12 @@ __all__ = [
     "engraved_rule",
     "epitrochoid",
     "fibres",
+    "fine_text_ring",
     "guilloche_band",
     "interlocking_squares",
     "khatam",
     "lattice_field",
     "line_screen",
-    "microtext_ring",
     "rosette",
     "seal_ring",
     "star_polygon",
@@ -182,25 +182,37 @@ def _gcd(a: int, b: int) -> int:
 # --- the curves -------------------------------------------------------------
 
 
-def epitrochoid(cx: float, cy: float, big: float, small: float, pen: float,
-                *, steps: int | None = None) -> str:
+def epitrochoid(cx: float, cy: float, big: int, small: int, pen: float,
+                *, steps: int | None = None, scale: float = 1.0) -> str:
     """One lathe pass, as an SVG path.
 
     `big` is the fixed wheel, `small` the rolling wheel, `pen` the pen offset —
     the three numbers on a rose engine. The step count is derived from the lobe
     count rather than fixed: at a flat 1440 steps a 61-lobe figure gets
     twenty-three points per petal and prints faceted.
+
+    **Scale with `scale`, never by pre-multiplying the wheels.** The figure
+    closes only after `r / gcd(R, r)` turns and has `R / gcd(R, r)` lobes, and
+    both are integer properties of the *specification*. Passing `R × s` and
+    `r × s` destroys them: the gcd of two arbitrary scaled floats is almost
+    always 1, so a 50-lobe figure asked for at a tenth scale ran 3.6 turns
+    instead of 7, drew half its petals, and closed with a chord straight across
+    the middle — which is exactly what the first motif proof sheet showed. Both
+    callers in this package had that shape, so every rosette on every plate was
+    an unclosed, mis-specified curve that happened to look dense enough to pass
+    as lathe work.
     """
-    lobes = big / _gcd(round(big), round(small)) if small else 1
-    count = steps or max(720, round(lobes * 28))
+    divisor = _gcd(big, small) if small else 1
+    lobes = big // divisor if small else 1
+    turns = small // divisor if small else 1
+    count = steps or max(720, lobes * 28)
     ratio = (big + small) / small if small else 1
-    turns = small / _gcd(round(big), round(small)) if small else 1
 
     parts: list[str] = []
     for index in range(count + 1):
         t = (index / count) * math.tau * turns
-        x = (big + small) * math.cos(t) - pen * math.cos(ratio * t)
-        y = (big + small) * math.sin(t) - pen * math.sin(ratio * t)
+        x = ((big + small) * math.cos(t) - pen * math.cos(ratio * t)) * scale
+        y = ((big + small) * math.sin(t) - pen * math.sin(ratio * t)) * scale
         parts.append(f"{'L' if index else 'M'}{cx + x:.2f} {cy + y:.2f}")
     return "".join(parts) + "Z"
 
@@ -225,9 +237,13 @@ def rosette(cx: float, cy: float, radius: float, *, ink: str, width: float,
         spec = LATHE[max(0, min(len(LATHE) - 1, base - index))]
         big, small, pen = spec
         scale = radius / (big + small + pen)
-        rotation = (index * 360) / (passes * 7)
+        # A fraction of the lobe period, so the passes interleave instead of
+        # beating: a fixed 1/7 turn offsets a 50-lobe figure by 1.7 lobes and
+        # lays a moiré lens across the middle of the rosette.
+        lobes = spec[0] // math.gcd(spec[0], spec[1])
+        rotation = (index * 360) / (lobes * passes)
         out.append(
-            f'<path d="{epitrochoid(cx, cy, big * scale, small * scale, pen * scale)}"'
+            f'<path d="{epitrochoid(cx, cy, big, small, pen, scale=scale)}"'
             f' fill="none" stroke="{stroke}" stroke-width="{width:.3f}"'
             f' transform="rotate({rotation:.2f} {cx:.2f} {cy:.2f})"/>'
         )
@@ -559,16 +575,31 @@ def line_screen(identifier: str, *, degrees: float, pitch: float,
     )
 
 
-def microtext_ring(rect: Rect, *, identifier: str, text: str, ink: str,
+def fine_text_ring(rect: Rect, *, identifier: str, text: str, ink: str,
                    size: float = 0.62, strength: float = 0.55) -> str:
-    """Real vector text on the perimeter, carrying the live serial.
+    """Serial-bearing text on a circular path. **Not microprint.**
 
-    Text rather than a texture, and the document's *own* serial rather than the
-    institution's name, because a ring that repeats the same string on every
-    sheet distinguishes nothing. Whether it survives a particular printer is a
-    question about that printer; this module guarantees only that the character
-    data is there at the specified size, and the assessment lives in
-    `EDTECHX_DOCUMENT_SECURITY.md`.
+    Measured rather than claimed. At the 0.58mm size these plates use, rendered
+    from this artwork:
+
+        300 DPI   6.85 px per em, ≈0.41mm cap height, ≈4.8 px — **illegible**.
+                  The raster breaks the strokes; the register reads as a grey
+                  texture and nothing can be read back from it.
+        600 DPI   13.7 px per em — **legible**. The serial and the verification
+                  code can be read off the crop.
+
+    Two conclusions follow, and both are binding. First, this is *fine text*,
+    not microprint: security microprint means a cap height at or below about
+    0.25mm, chosen so a loupe resolves it and a photocopier cannot. At 0.41mm
+    this is well above that threshold and does not have that property. Second,
+    any edition rendered at 300 DPI must not describe this register as carrying
+    readable data, because at 300 DPI it does not.
+
+    What it *is* remains worth having: a serial-bearing register that ties the
+    sheet to the record, is tedious to reproduce by hand, and resolves under
+    magnification on any 600 DPI or better output — which includes every
+    offset, intaglio and die-stamped edition. Whether a specific press holds it
+    has still not been tested on paper; see the production specification.
     """
     path_id = f"micro-{identifier}"
     perimeter = 2 * (rect.w + rect.h)

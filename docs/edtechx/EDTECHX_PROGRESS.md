@@ -642,6 +642,60 @@ Islamic and F·R6 Future Royal are not yet built. C has not been started.
 
 ---
 
+## The masterpiece pass: the ornament becomes the document's own
+
+Four finalists — Imperial Islamic, Crimson Imperial, EdirasX Signature, Royal
+Palace — developed individually at full resolution, each with eight standalone
+separations and a production specification generated from the same plate as the
+artwork. Written up in `docs/edtechx/design/EDTECHX_MASTERPIECE_PASS.md`.
+
+`design/signature.py` is the substantive addition. A **Motif** is a geometric
+family derived from an institution and a document type, appearing at six scales
+on one sheet: the border lattice, the corner medallion, the seal device, the
+institutional mark, the ground figure and the guilloché. For this institution's
+doctoral award it is {10/3} with a 50-lobe lathe — fifty being five times ten,
+so the lathe work and the star work are one hand at two frequencies.
+
+Two generalisations made it possible. `INNER_RATIO` was √(2−√2) treated as a
+constant; it is the (8,2) member of `cos(kπ/n)/cos((k−1)π/n)`, and writing the
+family down lets ten- and twelve-fold documents be constructed rather than
+drawn. `density_for` then picks the k that holds *sharpness* constant across
+orders, so plates of different orders are recognisably from one house.
+
+`gilding.Scheme` turns gold into five roles — primary, secondary, engraved,
+security, heritage — and every drawing call names a role. That is what stops the
+fine registers competing with the architecture: they are different metals, not
+one metal at two weights.
+
+**A defect in the shared lathe primitive that had been affecting every plate.**
+`epitrochoid` derived its closure turn count by rounding the values passed to
+it, and both callers pre-multiplied the wheels by a scale — so a 50-lobe figure
+at a tenth scale ran 3.6 turns instead of 7, drew half its petals and closed
+with a chord straight across the middle. Every rosette on every plate had been
+an unclosed, mis-specified curve that happened to look dense enough to pass as
+lathe work. Fixed with a `scale=` keyword; turns and lobes now come from the
+integer specification, which is where they live.
+
+Also fixed by looking rather than by testing: the star construction degenerated
+for every even order ({10/2} is two pentagons); the lathe passes beat against
+the lobe period and laid a moiré lens across the rosette; the kites read as
+spikes; ornament ran through the signatories' authority lines; the first fix for
+that made it worse because two even-odd subpaths overlapped and flipped the
+middle back to filled; a two-line office pushed its engraved rule out of line
+with the other two; and M11's execution band overflowed its panel so the
+architrave cut through "Board of Examiners".
+
+**The fine text is not microprint, and now that is measured.** At 0.58mm
+(≈0.41mm cap height) it is illegible at 300 DPI and legible at 600. Security
+microprint means 0.25mm or below. `microtext_ring` is renamed `fine_text_ring`
+throughout and the ceremonial permit is `finetext`.
+
+**Nothing has been printed.** No press, no paper, no foil, no loupe in this
+environment, so the physical validation is not claimed: foil register on cotton,
+emboss depth, whether any press holds the 0.07mm hairlines, how the metals read
+under raking light. Getting a proof made needs a vendor, not more code.
+
+
 ## Art direction reset: royal maximalism, and twelve luxury concepts
 
 The restraint reading was withdrawn. The previous flagship work had interpreted

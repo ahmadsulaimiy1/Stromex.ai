@@ -343,7 +343,7 @@ def c01(c: Concept) -> str:
     layers += arch.cresting(SHEET_W / 2, inner.y, 62, 13.0, metal=m)
     layers += arch.spreader(inner.y + 15.0, inner.x + 16, SHEET_W / 2 - 26, metal=m)
     layers += arch.spreader(inner.y + 15.0, SHEET_W / 2 + 26, inner.x + inner.w - 16, metal=m)
-    layers += geo.microtext_ring(sheet.inset(8.4), identifier="c01",
+    layers += geo.fine_text_ring(sheet.inset(8.4), identifier="c01",
                                  text=f"{INSTITUTION.upper()} · {SERIAL} · ",
                                  ink=p.ink, size=0.58, strength=0.26)
 
@@ -435,7 +435,7 @@ def c02(c: Concept) -> str:
         )
     layers += arch.mandala(SHEET_W / 2, SHEET_H * 0.52, 54, ink=p.accent,
                            strength=0.025, rings=5)
-    layers += geo.microtext_ring(sheet.inset(8.4), identifier="c02",
+    layers += geo.fine_text_ring(sheet.inset(8.4), identifier="c02",
                                  text=f"{SERIAL} · {INSTITUTION.upper()} · ",
                                  ink=p.accent, size=0.58, strength=0.30)
 
@@ -636,7 +636,7 @@ def c04(c: Concept) -> str:
                            strength=0.025, rings=5)
     layers += arch.spreader(SHEET_H * 0.815, niche.x + 26, niche.x + niche.w - 26,
                             metal=m, stops=4)
-    layers += geo.microtext_ring(sheet.inset(8.4), identifier="c04",
+    layers += geo.fine_text_ring(sheet.inset(8.4), identifier="c04",
                                  text=f"{SERIAL} · ", ink=m.highlight,
                                  size=0.58, strength=0.85)
 
@@ -809,7 +809,7 @@ def c06(c: Concept) -> str:
                                 (70.0, 0.34, m.face), (68.6, 0.14, m.shadow)):
         layers += (f'<circle cx="{cx}" cy="{cy}" r="{radius}" fill="none"'
                    f' stroke="{ink}" stroke-width="{weight}"/>')
-    layers += geo.microtext_ring(geo.Rect(cx - 88, cy - 88, 176, 176),
+    layers += geo.fine_text_ring(geo.Rect(cx - 88, cy - 88, 176, 176),
                                  identifier="c06",
                                  text=f"{INSTITUTION.upper()} · {SERIAL} · ",
                                  ink=p.ink, size=0.62, strength=0.30)
@@ -901,7 +901,7 @@ def c07(c: Concept) -> str:
                              identifier=SERIAL)
     layers += arch.mandala(SHEET_W * 0.36, SHEET_H * 0.50, 52, ink=p.accent,
                            strength=0.025, rings=5)
-    layers += geo.microtext_ring(sheet.inset(8.4), identifier="c07",
+    layers += geo.fine_text_ring(sheet.inset(8.4), identifier="c07",
                                  text=f"{SERIAL} · {CODE} · ", ink=p.ink,
                                  size=0.56, strength=0.30)
 
@@ -996,7 +996,7 @@ def c08(c: Concept) -> str:
         layers += arch.medallion(cx, SHEET_H / 2, 7.0, metal=m, ink=p.ink)
     layers += arch.mandala(SHEET_W / 2, SHEET_H * 0.50, 52, ink=m.shadow,
                            strength=0.025, rings=5)
-    layers += geo.microtext_ring(text_block.inset(-2.6), identifier="c08",
+    layers += geo.fine_text_ring(text_block.inset(-2.6), identifier="c08",
                                  text=f"{SERIAL} · ", ink=m.highlight,
                                  size=0.58, strength=0.9)
 
@@ -1084,7 +1084,7 @@ def c09(c: Concept) -> str:
     layers += arch._perimeter_rule(sheet.inset(5.0), metal=m, weight=0.42)
     layers += arch.mandala(SHEET_W * 0.31, SHEET_H * 0.50, 60, ink=p.accent,
                            strength=0.025, rings=5)
-    layers += geo.microtext_ring(sheet.inset(8.4), identifier="c09",
+    layers += geo.fine_text_ring(sheet.inset(8.4), identifier="c09",
                                  text=f"{SERIAL} · ", ink=p.accent, size=0.56,
                                  strength=0.28)
 
@@ -1191,7 +1191,7 @@ def c10(c: Concept) -> str:
     layers += arch.mandala(SHEET_W / 2, SHEET_H * 0.50, 46, ink=p.accent,
                            strength=0.025, rings=5)
     layers += arch.cresting(SHEET_W / 2, plaque.y, 54, 11.5, metal=m)
-    layers += geo.microtext_ring(sheet.inset(8.4), identifier="c10",
+    layers += geo.fine_text_ring(sheet.inset(8.4), identifier="c10",
                                  text=f"{SERIAL} · {CODE} · ", ink=m.core,
                                  size=0.56, strength=1.0)
 
@@ -1280,7 +1280,7 @@ def c11(c: Concept) -> str:
     layers += arch.mandala(SHEET_W / 2, SHEET_H * 0.52, 52, ink=p.accent,
                            strength=0.025, rings=5)
     layers += arch.cresting(SHEET_W / 2, inner.y, 58, 12.5, metal=m)
-    layers += geo.microtext_ring(sheet.inset(8.4), identifier="c11",
+    layers += geo.fine_text_ring(sheet.inset(8.4), identifier="c11",
                                  text=f"{INSTITUTION.upper()} · {SERIAL} · ",
                                  ink=m.highlight, size=0.56, strength=0.8)
 
@@ -1391,7 +1391,7 @@ def c12(c: Concept) -> str:
         + geo.khatam(SHEET_W / 2, 32.0, 4.0, ink=m2.core, width=0.30)
     )
     layers += emboss(mark, depth=0.24, light=m.highlight, dark=m.shadow)
-    layers += geo.microtext_ring(sheet.inset(8.4), identifier="c12",
+    layers += geo.fine_text_ring(sheet.inset(8.4), identifier="c12",
                                  text=f"EDIRASX · {SERIAL} · {CODE} · ",
                                  ink=p.ink, size=0.56, strength=0.32)
 
