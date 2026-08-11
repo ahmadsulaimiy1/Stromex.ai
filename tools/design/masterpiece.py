@@ -49,6 +49,8 @@ OUT = ROOT / "docs" / "edtechx" / "design" / "masterpieces"
 
 from app.modules.design import architecture as arch  # noqa: E402
 from app.modules.design import geometry as geo  # noqa: E402
+from app.modules.design import interior  # noqa: E402
+from app.modules.design.ceremony import Budget, budget_for  # noqa: E402
 from app.modules.design.gilding import Scheme, scheme_for  # noqa: E402
 from app.modules.design.language import (  # noqa: E402
     Architecture,
@@ -148,6 +150,11 @@ class Plate:
     #: decision recorded on the template — never inferred, never defaulted.
     language: Architecture = field(
         default_factory=lambda: architecture_for("peer"))
+    #: How much of the vocabulary this document may spend. A doctorate is
+    #: allowed to be spectacular; a completion certificate is allowed to be
+    #: elegant. The interior architecture is gated on this, so a Level I plate
+    #: cannot acquire a cartouche because somebody copied a template.
+    budget: Budget = field(default_factory=lambda: budget_for(4))
     paper: str = "#F7F2E6"
     layers: dict[str, list[str]] = field(default_factory=dict)
     defs: list[str] = field(default_factory=list)
@@ -354,6 +361,66 @@ def institutional_mark(plate: Plate, cx: float, cy: float,
                        dark=s.engraved.shadow)
 
 
+def dress_field(plate: Plate, rect: geo.Rect) -> None:
+    """The ceremonial field's own architecture: ground, then corners.
+
+    Two layers, on two separations, because they are made by two processes: the
+    lathe ground is part of the security underprint and the brackets are foil.
+    Both are gated on the ceremonial level and both return nothing at Level I,
+    which is what makes "elegant" and "spectacular" different documents rather
+    than the same document with a dial on it.
+    """
+    plate.add("security", interior.field_ground(
+        rect, motif=MOTIF, scheme=plate.scheme, budget=plate.budget,
+        ink=plate.accent))
+    plate.add("foil-secondary", interior.interior_corners(
+        rect, motif=MOTIF, scheme=plate.scheme, budget=plate.budget))
+
+
+def titled(plate: Plate, phrase: Phrase, *, base: float, cls: str,
+           width: float, height: float) -> str:
+    """A line set *into* an engraved register rather than onto blank paper.
+
+    The band is drawn in its own millimetre box and the words sit on top of it,
+    so the register stays in step with a line that wraps instead of being pinned
+    to a coordinate the words are free to leave.
+    """
+    band = interior.title_register(width, height, motif=MOTIF,
+                                   scheme=plate.scheme, budget=plate.budget)
+    body = slot(plate, phrase, base=base, cls=cls, face="ui", lead_only=True)
+    if not body:
+        return ""
+    if not band:
+        return body
+    return (
+        f'<div class="titlewrap" style="width:{width}mm;height:{height}mm">'
+        f"{band}{body}</div>"
+    )
+
+
+def enshrined(plate: Plate, *, base: float, width: float, height: float) -> str:
+    """The peak, mounted in an engraved cartouche.
+
+    The recipient's name is the one element on the sheet that is about a person.
+    Mounting it rather than printing it is the oldest way a document says so —
+    and at Level I the cartouche is not permitted, so the name is simply set
+    well, which is the correct answer for a statement of results.
+    """
+    rect = geo.Rect(2.0, 2.0, width - 4.0, height - 4.0)
+    panel = interior.name_cartouche_path(
+        rect, motif=MOTIF, scheme=plate.scheme, budget=plate.budget,
+        paper=plate.paper)
+    body = slot(plate, RECIPIENT, base=base, cls="name", hyphen=True)
+    if not panel:
+        return body
+    return (
+        f'<div class="namewrap" style="min-height:{height}mm">'
+        f'<svg class="cart" viewBox="0 0 {width:.1f} {height:.1f}"'
+        f' preserveAspectRatio="none">{panel}</svg>'
+        f'<div class="nameinner">{body}</div></div>'
+    )
+
+
 def divider(plate: Plate, *, width: float = 44.0) -> str:
     m = plate.scheme.secondary
     return (
@@ -486,8 +553,26 @@ html, body { margin: 0; padding: 0; background: #221F1B; }
 .lk--latin { letter-spacing: 0.12em; text-transform: uppercase; }
 .lk--arabic { font-weight: 700; }
 .nameinner { position: relative; }
+.titlewrap { position: relative; flex: none; display: flex;
+  align-items: center; justify-content: center; }
+.titleband { position: absolute; inset: 0; width: 100%; height: 100%; }
+.titlewrap .conf, .titlewrap .dist { position: relative; margin: 0; }
+.namewrap { position: relative; flex: none; width: 106%;
+  display: flex; align-items: center; justify-content: center; }
+.cart { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* The panel has to contain the descenders, not brush them. Found at 200% in
+   the zone review: the Arabic run's ب and م crossed the cartouche's own bottom
+   rule, which at a metre looks like nothing and at arm's length looks like a
+   printing fault. The padding is asymmetric because Arabic descends further
+   than Latin and the panel is drawn around both. */
+.nameinner { padding: 3.6mm 9mm 6.4mm; }
+.namewrap .name { margin-top: 0; }
+.namewrap .name.is-sub { margin-top: 1.4mm; }
+.execrulewrap { flex: none; width: 100%; display: flex;
+  justify-content: center; margin-top: 2.0mm; }
+.execrule { display: block; width: 100%; height: 7mm; }
 .lockup { display: flex; align-items: center; justify-content: center;
-  gap: 6mm; flex: none; width: 124%; margin: 0 -12%; }
+  gap: 6mm; flex: none; width: 108%; margin: 0 -4%; }
 .lockup .mark { flex: none; width: 15mm; }
 .lockup .mark svg { display: block; width: 100%; height: auto; }
 .lockup .en { text-align: right; flex: 1 1 0; }
@@ -611,7 +696,7 @@ def m02(*, language: Architecture | None = None) -> tuple[Plate, str, str]:
     band = sheet.inset(6.0)
     plate.add("process", f'<rect {band.attrs()} fill="{plate.accent}"/>')
     # The border is the document's own family, not a pattern applied to it.
-    panel_gap = min(22.0, max(12.0, 22.0 - 9.0 * (
+    panel_gap = min(22.0, max(8.0, 22.0 - 9.0 * (
         (sum(r.scale for r in plate.language.resolve(RECIPIENT)) or 1.0) - 1.0
     ))) + 7.0
     plate.add("foil-primary", MOTIF.field(
@@ -645,9 +730,17 @@ def m02(*, language: Architecture | None = None) -> tuple[Plate, str, str]:
     runs = plate.language.resolve(RECIPIENT)
     load = sum(run.scale for run in runs) or 1.0
     scripts = max(1, len(runs))
-    panel = band.inset(min(22.0, max(12.0, 22.0 - 9.0 * (load - 1.0))))
-    field_side = min(45.0, max(32.0, 45.0 - 9.0 * (load - 1.0)))
-    field_end = min(33.0, max(15.0, 33.0 - 15.0 * (load - 1.0)))
+    # **The field is derived from the panel, never sized independently.** The
+    # overflow audit measures whether the content fits its field; it says
+    # nothing about whether the field fits the ivory. Tuning the two separately
+    # is how the masthead ended up clipped by the border and the verification
+    # code cut in half by the panel edge — every individual measurement passed.
+    # So: the panel opens as the load rises, and the field is the panel less a
+    # fixed clearance. One number moves.
+    panel_inset = min(22.0, max(8.0, 22.0 - 9.0 * (load - 1.0)))
+    panel = band.inset(panel_inset)
+    clearance = 6.0
+    field_side = field_end = 6.0 + panel_inset + clearance
     plate.add("process", (
         f'<path d="{arch.stepped_rect_path(panel, cut=13.0)}"'
         f' fill="{plate.ground}"/>'
@@ -671,11 +764,13 @@ def m02(*, language: Architecture | None = None) -> tuple[Plate, str, str]:
             0, 0, 4.4, ink=s.secondary.face, width=0.16) + "</g>")
 
     ground_figure(plate, W / 2, H * 0.50, 52, strength=0.026)
+    dress_field(plate, content_field(field_side, field_side,
+                                     field_end, field_end).inset(-3.0))
     fine_text(plate, sheet.inset(9.0), "m02")
 
     css = f"""
-.field {{ left: {field_side}mm; right: {field_side}mm;
-  top: {field_end}mm; bottom: {field_end}mm; align-items: center;
+.field {{ left: {field_side:.1f}mm; right: {field_side:.1f}mm;
+  top: {field_end:.1f}mm; bottom: {field_end:.1f}mm; align-items: center;
   text-align: center; }}
 .lockup .en {{ letter-spacing: 0.11em; text-transform: uppercase;
   color: {plate.accent}; font-weight: 600; line-height: 1.24; }}
@@ -708,8 +803,8 @@ def m02(*, language: Architecture | None = None) -> tuple[Plate, str, str]:
 <div class="field">
   {lockup(plate, base=3.7)}
   <div class="spacer"></div>
-  {slot(plate, CONFERRAL, base=2.45, cls="conf", face="ui", lead_only=True)}
-  {slot(plate, RECIPIENT, base=12.4, cls="name", hyphen=True)}
+  {titled(plate, CONFERRAL, base=2.45, cls="conf", width=118, height=7.4)}
+  {enshrined(plate, base=12.2, width=196, height=30)}
   {slot(plate, DEGREE, base=6.6, cls="deg", inline=True)}
   {slot(plate, STUDY, base=4.0, cls="study")}
   {slot(plate, STATEMENT, base=2.9, cls="stmt", face="body", lead_only=True)}
@@ -751,10 +846,10 @@ def m11() -> tuple[Plate, str, str]:
     plate.add("process", f'<rect {band.attrs()} fill="{plate.accent}"/>')
     plate.add("foil-secondary", MOTIF.field(
         band, cell=8.8, ink=s.secondary.highlight, strength=0.80, width=0.11,
-        hollow=15.0))
+        hollow=6.0))
     plate.add("foil-primary", arch._perimeter_rule(band, metal=s.primary,
                                                    weight=0.62))
-    inner = band.inset(15.0)
+    inner = band.inset(6.0)
     plate.add("process", (
         f'<path d="{arch.stepped_rect_path(inner, cut=11.0, step=2.4)}"'
         f' fill="{plate.ground}"/>'
@@ -767,24 +862,14 @@ def m11() -> tuple[Plate, str, str]:
     ))
     corner_architecture(plate, 5.5, 26.0,
                         mass=geo.blend(plate.ink, plate.accent, 0.60))
-    for cx in (band.x + 9.5, band.x + band.w - 9.5):
-        plate.add("foil-secondary", arch.vertical_spine(
-            cx, band.y + 36, band.y + band.h - 36, metal=s.secondary, nodes=3))
     plate.add("foil-primary", arch.cresting(W / 2, inner.y, 58, 12.5,
                                             metal=s.primary))
     ground_figure(plate, W / 2, H * 0.52, 50, strength=0.028)
+    dress_field(plate, content_field(22, 22, 15, 13).inset(-4.0))
     fine_text(plate, sheet.inset(8.4), "m11")
 
-    cart = geo.Rect(3.0, 3.0, 170.0, 19.0)
-    plaque = (
-        '<svg class="cart" viewBox="0 0 176 28" preserveAspectRatio="none">'
-        f'<path d="{arch.cartouche_path(cart, arch=3.6, cut=7.0)}"'
-        f' fill="{plate.paper}" stroke="{s.primary.face}" stroke-width="0.6"/>'
-        f'<path d="{arch.cartouche_path(cart.inset(1.5), arch=3.2, cut=6.2)}"'
-        f' fill="none" stroke="{s.engraved.shadow}" stroke-width="0.2"/></svg>'
-    )
     css = f"""
-.field {{ left: 38mm; right: 38mm; top: 22mm; bottom: 18mm; align-items: center;
+.field {{ left: 22mm; right: 22mm; top: 15mm; bottom: 13mm; align-items: center;
   text-align: center; }}
 .lockup .en {{ letter-spacing: 0.13em; text-transform: uppercase;
   color: {plate.accent}; font-weight: 600; line-height: 1.24; }}
@@ -819,10 +904,8 @@ def m11() -> tuple[Plate, str, str]:
 <div class="field">
   {lockup(plate, base=3.9)}
   <div class="spacer"></div>
-  {slot(plate, CONFERRAL, base=2.45, cls="conf", face="ui", lead_only=True)}
-  <div class="namewrap">{plaque}
-    <div class="nameinner">{slot(plate, RECIPIENT, base=12.0, cls="name", hyphen=True)}</div>
-  </div>
+  {titled(plate, CONFERRAL, base=2.45, cls="conf", width=118, height=7.4)}
+  {enshrined(plate, base=12.0, width=200, height=30)}
   {slot(plate, DEGREE, base=6.6, cls="deg", inline=True)}
   {slot(plate, STUDY, base=4.0, cls="study")}
   {slot(plate, DISTINCTION, base=2.3, cls="dist", face="ui", lead_only=True)}
@@ -865,7 +948,7 @@ def m12() -> tuple[Plate, str, str]:
     # Four densities. The value range is what makes the dissolve legible; when
     # the bands sat within a factor of six of each other the frame read as one
     # even lattice and the concept did not appear at all.
-    field = content_field(43, 43, 28, 23)
+    field = content_field(40, 40, 24, 18)
     for inset, cell, strength, width, metal in (
         (5.0, 7.0, 1.000, 0.20, s.primary),
         (15.0, 12.0, 0.460, 0.13, s.primary),
@@ -883,10 +966,11 @@ def m12() -> tuple[Plate, str, str]:
                                                      weight=0.28))
     corner_architecture(plate, 5.0, 23.0)
     ground_figure(plate, W / 2, H * 0.47, 54, strength=0.028)
+    dress_field(plate, field.inset(-4.0))
     fine_text(plate, sheet.inset(9.6), "m12")
 
     css = f"""
-.field {{ left: 43mm; right: 43mm; top: 28mm; bottom: 23mm; align-items: center;
+.field {{ left: 40mm; right: 40mm; top: 24mm; bottom: 18mm; align-items: center;
   text-align: center; }}
 .lockup .en {{ letter-spacing: 0.14em; text-transform: uppercase;
   color: {plate.accent}; font-weight: 700; line-height: 1.26;
@@ -919,8 +1003,8 @@ def m12() -> tuple[Plate, str, str]:
 <div class="field">
   {lockup(plate, base=3.7, mark_radius=7.4)}
   <div class="spacer"></div>
-  {slot(plate, CONFERRAL, base=2.45, cls="conf", face="ui", lead_only=True)}
-  {slot(plate, RECIPIENT, base=12.4, cls="name", hyphen=True)}
+  {titled(plate, CONFERRAL, base=2.45, cls="conf", width=118, height=7.4)}
+  {enshrined(plate, base=12.2, width=196, height=30)}
   {slot(plate, DEGREE, base=6.6, cls="deg", inline=True)}
   {slot(plate, STUDY, base=4.0, cls="study")}
   {slot(plate, STATEMENT, base=2.9, cls="stmt", face="body", lead_only=True)}
@@ -972,7 +1056,7 @@ def m01() -> tuple[Plate, str, str]:
     plate.add("foil-secondary", MOTIF.field(
         sheet.inset(13.1), cell=6.0, ink=s.secondary.core, strength=0.62,
         width=0.085, hollow=6.0,
-        keep_out=content_field(37, 37, 40, 30).inset(-3.0)))
+        keep_out=content_field(34, 34, 34, 25).inset(-3.0)))
 
     architrave = inner.inset(2.6)
     plate.add("foil-primary", (
@@ -990,10 +1074,11 @@ def m01() -> tuple[Plate, str, str]:
         inner.y + 17.0, W / 2 + 30, inner.x + inner.w - 18, metal=s.secondary,
         stops=3))
     ground_figure(plate, W / 2, H * 0.50, 56, strength=0.026)
+    dress_field(plate, content_field(34, 34, 34, 25).inset(-4.0))
     fine_text(plate, sheet.inset(9.0), "m01")
 
     css = f"""
-.field {{ left: 37mm; right: 37mm; top: 40mm; bottom: 30mm; align-items: center;
+.field {{ left: 34mm; right: 34mm; top: 34mm; bottom: 25mm; align-items: center;
   text-align: center; }}
 .lockup .en {{ letter-spacing: 0.12em; text-transform: uppercase;
   color: {plate.accent}; font-weight: 600; line-height: 1.24; }}
@@ -1026,11 +1111,11 @@ def m01() -> tuple[Plate, str, str]:
 <div class="field">
   {lockup(plate, base=3.8)}
   <div class="spacer"></div>
-  {slot(plate, CONFERRAL, base=2.45, cls="conf", face="ui", lead_only=True)}
-  {slot(plate, RECIPIENT, base=12.4, cls="name", hyphen=True)}
+  {titled(plate, CONFERRAL, base=2.45, cls="conf", width=118, height=7.4)}
+  {enshrined(plate, base=12.2, width=196, height=30)}
   {slot(plate, DEGREE, base=6.6, cls="deg", inline=True)}
   {slot(plate, STUDY, base=4.0, cls="study")}
-  {slot(plate, DISTINCTION, base=2.3, cls="dist", face="ui", lead_only=True)}
+  {titled(plate, DISTINCTION, base=2.3, cls="dist", width=104, height=6.6)}
   {slot(plate, STATEMENT, base=2.9, cls="stmt", face="body", lead_only=True)}
   <div class="spacer"></div>
   {divider(plate) if len(plate.language.order) == 1 else ''}

@@ -80,17 +80,21 @@ Every stroke in the supplied separations, by width:
 
 | Width | Count |
 |---|---|
-| **0.070 mm** | 1584 |
+| **0.048 mm** | 8 |
+| **0.056 mm** | 8 |
+| **0.070 mm** | 1589 |
 | **0.085 mm** | 1584 |
-| **0.088 mm** | 4 |
+| **0.088 mm** | 12 |
 | **0.090 mm** | 176 |
 | **0.099 mm** | 40 |
 | **0.100 mm** | 50 |
 | **0.102 mm** | 2 |
+| **0.104 mm** | 8 |
 | **0.120 mm** | 2 |
+| **0.140 mm** | 8 |
 | **0.143 mm** | 1 |
 | **0.153 mm** | 4 |
-| **0.160 mm** | 6 |
+| **0.160 mm** | 10 |
 | **0.165 mm** | 4 |
 | **0.168 mm** | 1 |
 | **0.170 mm** | 4 |
@@ -99,7 +103,7 @@ Every stroke in the supplied separations, by width:
 | **0.200 mm** | 7 |
 | **0.220 mm** | 3 |
 | **0.238 mm** | 4 |
-| **0.260 mm** | 3 |
+| **0.260 mm** | 11 |
 | **0.280 mm** | 4 |
 | **0.300 mm** | 8 |
 | **0.340 mm** | 3 |
@@ -109,7 +113,7 @@ Every stroke in the supplied separations, by width:
 | **0.620 mm** | 2 |
 | **0.700 mm** | 4 |
 
-**The floor in this artwork is 0.070 mm.** That is stated so you can act on
+**The floor in this artwork is 0.048 mm.** That is stated so you can act on
 it: confirm your reproduction floor and anything underneath it will be raised,
 rather than being left to drop out or fill in. Nothing here uses a "hairline"
 keyword — every stroke is an explicit width in millimetres.

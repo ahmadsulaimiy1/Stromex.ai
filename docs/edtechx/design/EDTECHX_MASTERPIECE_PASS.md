@@ -236,7 +236,56 @@ which ICC output profile, which PDF/X part (and specifically whether X-4 is
 acceptable, because X-1a and X-3 force a flatten that turns every guilloché line
 into a raster), and the TAC limit with whether pure black must stay 100 % K.
 
-## 10 · Still to do
+## 10 · The interior pass — first iteration
+
+The language pass was approved; the artwork was not, and the diagnosis was
+right: **the dark border was doing all the luxury work and the cream field was
+a stack of centred prose on blank paper.** Everything built until now happened
+at the perimeter, which is where a plate is easiest to make impressive.
+
+`design/interior.py` is the inside of the frame. Five constructions, every one
+gated on the ceremonial level so a completion certificate gets an elegant field
+and a doctorate gets all of it:
+
+* **`field_ground`** — a lathe field beneath the content at a fraction of the
+  level's ink ceiling. The difference between cream paper and a security
+  substrate that happens to be cream. Draws nothing at Level I.
+* **`interior_corners`** — engraved brackets at the *content field's* own
+  corners, struck from the same family as the corner blocks at the trim. The
+  corner-to-centre relationship, made explicit.
+* **`title_register`** — the band a conferral is set *into*. A letterspaced line
+  on blank paper is a caption; the same words between two engraved rules with
+  the family's rosette at each terminal is a register.
+* **`name_cartouche_path`** — the peak, mounted rather than printed: cut panel,
+  double rule in two metals, a member of the family at each cut.
+* **`execution_rule`** — a spanning engraved rule with the family on its axis,
+  so the signatures hang from an architecture instead of sitting above three
+  short lines.
+
+**A zone review instrument, because a contact sheet cannot judge this.**
+`tools/design/zoom.py` renders one plate at 300 DPI and cuts it into the ten
+zones a document is actually examined in — ceremonial centre, title register,
+border, corners, seal, signatures, serial, fine text, security field — each at
+100 %, 200 % and 400 %. It found, on its first run, that the Arabic run's
+descenders crossed the cartouche's own bottom rule: invisible at a metre, a
+printing fault at arm's length.
+
+**What this iteration cost, stated plainly.** The panels had to open to hold the
+new interior, and they opened at the border's expense: M11's crimson band is
+noticeably narrower than it was, M12's dissolve is compressed, M01's navy
+register is squeezed. The interior is right and the trade is not — the next move
+is to take the room back from the *content* (the conferral statement is long,
+and the field-of-study line is set twice in bilingual arrangements) rather than
+from the frame. This is a first interior iteration, not a finished one.
+
+**One instrument gap the same work exposed.** The overflow audit measures
+whether content fits its field; it says nothing about whether the *field* fits
+the panel. Tuning those two separately clipped a masthead against the border and
+cut a verification code in half — and every individual measurement passed. The
+field is now derived from the panel so one number moves, but the audit should
+learn to check the containment too.
+
+## 11 · Still to do
 
 * The `zoned` and `integrated` arrangements are defined but no plate opts into
   them yet — integrated text is drawn rather than laid out, so it needs a plate
