@@ -591,3 +591,30 @@ Two cases derivation cannot cover, and one small table (`interface_profiles`) th
 Four sabotages caught: showing every concept the database supports, rendering unpermitted capabilities as disabled rows, advertising upgrades to everybody, and letting an institution hide a layer full of its own records.
 
 **A defect the suite found on its first run.** A registrar could not see academic units — the capability requires `institution.department.read` and the role template never had it, so a registrar who places students into departments could not find their own institution's structure. The role gained the permission; the test was not weakened. It is a small illustration of why the experience layer earns its acceptance suite: the backend was correct, every isolation test was green, and the product was unusable for one of its most important roles.
+
+---
+
+## ADR-032 — A register is evidence, and it has thirty seconds
+
+**Status:** Accepted
+
+**Context.** Attendance is the reason a teacher opens the product, and it is also the record most likely to be quoted years later — in a safeguarding referral, an exclusion appeal, a funding audit, a court. The two facts pull in opposite directions, and most systems resolve them by picking one: a fast checkbox grid nobody can audit, or an auditable form nobody has time to fill in. A teacher who cannot mark a room in thirty seconds takes the register at lunchtime from memory, and *that* record is worth nothing — so speed is not a nicety, it is what makes the evidence real.
+
+**Decision.**
+
+1. **The register arrives complete.** One call returns everybody in the room, in order, with their marks, the school's codes, and the default. Membership is *derived* from the open enrolments in the group on the day (ADR-027), never stored: a child who transferred in on Monday is on Monday's register with nobody rebuilding anything, and last March's register still shows last March's class.
+2. **Marking is one write.** The whole register goes in a single request and a single transaction. A full register is three round trips — open, mark, submit — and that number is asserted, because round trips are what a school's network multiplies.
+3. **`open` is a state, not a draft.** A fire alarm at 09:04 must not lose the eleven marks already taken.
+4. **A correction is an addition.** `attendance_amendments` joins the append-only tables. A mark changes all the time and legitimately — the child who arrived at half past nine *was* absent at nine — but the change records who, when, and why, and the application role holds no UPDATE or DELETE on the ledger. Correcting a *submitted* register additionally requires a reason: the first correction finishes the job, the second changes a record that has been relied on.
+
+**The codes are the school's; the category is not.** Present, Absent, Late, Authorised, Educational visit, Religious observance — every institution has its own list and its own letters. What is platform-fixed is `category`, because a percentage-present figure has to know which marks count, and no amount of configuration makes that an arbitrary choice. `counts_as_present` is deliberately a *separate* column from the category: a school that counts an educational visit as present and one that does not both use `other` and disagree about the flag.
+
+**Two refusals, both about what the record would mean.** A register will not submit while somebody is unmarked — an incomplete register says nothing about the people missing from it — or while a code demanding an explanation has none. That second is the whole absence workflow, and it is one boolean on a row the school owns.
+
+**No attendance is not zero attendance.** `rate` returns `None` for a student with no sessions, not `0.0`. A progression rule reading zero would hold a child back for having no record, and `academics.progression` already treats missing data as missing rather than as failure (ADR-022). The two had to agree.
+
+**A guardian reaches marks; nobody reaches a register they do not teach.** The sessions plan has no `own_children` clause at all, because a register *is* a list of other people's children. The marks plan composes the people module's own clause rather than writing its own, so a parent's reach over attendance cannot drift from their reach over the child.
+
+**Enforcement.** `test_attendance.py` — 22 tests. Four sabotages caught: silently changing a submitted register, corrections leaving no trace, submitting an unexplained absence, and membership taken from everyone-ever rather than from the enrolments covering the day.
+
+**A defect the boundary test caught, in the right place.** The attendance scope plan reached for `people.models` to build a guardian's clause. The exception list stayed empty and `people.scopes` gained a published `student_ids_where`, which is the better answer for a reason beyond tidiness: a parent's reach over attendance must be the *same* reach they have over the child, and two copies of it drift.

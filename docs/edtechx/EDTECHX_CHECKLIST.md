@@ -82,7 +82,7 @@ Legend: ✅ done · 🔨 in progress · ⬜ not started
 - ✅ Core-layering test
 - ✅ Provider-SDK confinement test
 - ✅ Route coverage test — **proven load-bearing**
-- ✅ 534 tests passing; ruff clean
+- ✅ 573 tests passing; ruff clean
 - ✅ Alembic baseline migration with an RLS gate · ⬜ CI pipeline
 
 ## Phase 2 — Institution 🔨
@@ -112,10 +112,20 @@ strictly apart (ADR-030)
 
 ⬜ custom fields · ⬜ journey 9.
 
-## Phase 3 — Operations ⬜
+## Phase 3 — Operations 🔨
 
-Attendance (configurable model, school-defined codes, corrections, absence
-workflow) · assessment and results with an explicit publish step · report cards ·
+✅ **Attendance** — school-defined codes with platform-fixed categories,
+registers derived from enrolments, whole-register marking in one write,
+append-only amendments, the absence workflow, scope plans for sessions and
+marks, three endpoints · ✅ **journey 1**
+
+⬜ Assessment and results with an explicit publish step · ⬜ report cards ·
+⬜ announcements and the notification port · ⬜ fees, invoices, payments,
+receipts, money invariants · ⬜ payment port with sandbox adapter ·
+⬜ journeys 4, 5, 6, 7.
+
+Superseded plan: attendance (configurable model, school-defined codes,
+corrections, absence workflow) · assessment and results with an explicit publish step · report cards ·
 announcements and the notification port · fees, invoices, payments, receipts,
 money invariants · payment port with sandbox adapter · journeys 1, 4, 5, 6, 7.
 

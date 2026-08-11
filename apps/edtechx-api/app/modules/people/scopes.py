@@ -34,7 +34,14 @@ from app.modules.authz.scopes import ScopeKind
 from app.modules.people.enrolment import Enrolment
 from app.modules.people.models import GuardianRelationship, Person, StudentRelationship
 
-__all__ = ["ENROLMENTS", "PEOPLE", "STUDENT_RELATIONSHIPS"]
+__all__ = [
+    "ENROLMENTS",
+    "PEOPLE",
+    "STUDENT_RELATIONSHIPS",
+    "own_children_clause",
+    "student_ids_where",
+    "student_self_clause",
+]
 
 
 # --- building blocks -------------------------------------------------------
@@ -272,3 +279,21 @@ ENROLMENTS = ScopePlan(
         ScopeKind.self_only: _enrolments_of(_student_self),
     },
 )
+
+
+# Published deliberately. Another module composing a guardian's reach over
+# attendance must use *this* clause rather than write its own, or the two drift
+# and one of them is wrong about whose child a parent may read.
+own_children_clause = _own_children
+student_self_clause = _student_self
+
+
+def student_ids_where(clause):
+    """The student-relationship ids a people-clause reaches, as a `Select`.
+
+    Published so another module can compose a reach over its own rows without
+    importing this module's tables — the boundary rule with no exception carved
+    out for the caller that finds it inconvenient. A `Select` rather than a list
+    of ids for the reason ADR-029 exists: the boundary has to be *in* the query.
+    """
+    return select(StudentRelationship.id).where(clause)

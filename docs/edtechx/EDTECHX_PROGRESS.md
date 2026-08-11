@@ -26,9 +26,9 @@ cross-tenant *reference* hole in the isolation spine has been found and closed
 compile to SQL predicates resolved per permission and failing closed (ADR-029).
 Entitlement is separated from authorization in both directions (ADR-030), and
 the experience layer now resolves each institution's world from its own
-configuration so a nursery never meets the academic engine (ADR-031). 534 tests
-pass; ruff is clean. Nothing is stubbed or faked. Phase 3 (daily operations) and
-the rest of Phase 4 are next.
+configuration so a nursery never meets the academic engine (ADR-031), and
+Phase 3 has begun with attendance — journey 1, end to end, in three requests
+(ADR-032). 573 tests pass; ruff is clean. Nothing is stubbed or faked.
 
 ---
 
@@ -300,6 +300,35 @@ units: the capability requires `institution.department.read` and the role
 template never had it. The backend was correct and every isolation test was
 green, and the product was unusable for one of its most important roles. That is
 what the experience acceptance suite is for.
+
+**Attendance** (`modules/attendance/`). Journey 1, and the first operational
+feature. A register arrives complete — everybody in the room, in order, with the
+school's codes and the default — and goes back in one write. Three requests for
+a full register, asserted as a count, because round trips are what a school's
+network multiplies.
+
+Membership is derived from the enrolments covering the day rather than stored, so
+a child who transferred in on Monday is on Monday's register and last March's
+register still shows last March's class.
+
+The codes are the school's; the `category` is not, because a percentage-present
+figure has to know which marks count. `counts_as_present` is a separate column
+from the category, so a school that counts an educational visit as present and
+one that does not can both be right.
+
+Corrections are additions: `attendance_amendments` is append-only at the
+database, and changing a *submitted* register needs a reason. A register will not
+submit while somebody is unmarked or while a code demanding an explanation has
+none — the absence workflow, as one boolean on a row the school owns.
+
+`rate` returns `None` rather than zero for a student with no sessions, because a
+progression rule reading zero would hold a child back for having no record.
+
+Twenty-two tests, four sabotages caught. The module-boundary test caught a fifth
+problem in the right place: the attendance scope plan reached for `people.models`
+to build a guardian's clause. The exception list stayed empty and `people.scopes`
+gained a published selectable — the better answer, because a parent's reach over
+attendance must be the same reach they have over the child.
 
 ---
 

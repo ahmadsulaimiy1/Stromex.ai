@@ -38,6 +38,7 @@ APPEND_ONLY_TABLES: tuple[str, ...] = (
     "audit_events",
     "security_events",
     "enrolment_events",
+    "attendance_amendments",
 )
 
 # Rows that may be corrected but never erased.

@@ -1,6 +1,6 @@
 # EdirasX Test Strategy and Status
 
-**Version:** 1.7 · **Status as of:** session 5 — **534 passing, 0 failing**
+**Version:** 1.8 · **Status as of:** session 5 — **573 passing, 0 failing**
 
 ---
 
@@ -51,6 +51,7 @@ A release does not go out with any of these red. They are not "known failures".
 | `test_scope_predicates.py` | Nobody learns anything they were not granted — by any route, count, total, search or aggregate |
 | `test_entitlements.py` | What a person may do and what the institution has bought stay separate in both directions |
 | `test_experience.py` | No institution is shown complexity it does not use |
+| `test_attendance.py` | A register is fast enough to be taken, and solid enough to be quoted |
 | `test_boundaries.py` | Boundaries hold; no route is unguarded |
 | `test_authz.py` | Permissions cannot leak across resources |
 | `test_security.py` | Credentials, tokens, and production configuration |
@@ -426,6 +427,10 @@ driver names; oversized bodies rejected at the edge.
 | Unpermitted capabilities are absent, not disabled | The permission gate removed | Two tests failed |
 | An upgrade is shown only to somebody who could buy | Offered to everybody | Flagged: a teacher was handed a padlock |
 | An institution cannot hide data it is using | Suppression made absolute | Flagged |
+| A submitted register cannot change silently | The reason requirement removed | Flagged |
+| Corrections leave a trace | The amendment write skipped | Flagged |
+| An unexplained absence holds the register | The check removed | Flagged |
+| Register membership is derived from the day | Made to list everyone ever in the group | Flagged — a register from before a child joined had her in it |
 | **Routes cannot query a scoped table directly** | `from sqlalchemy import select as _select` in a handler | **Not caught.** The check listed unsafe call *names*, and a rename walked past it. Now inverted: every call taking a scoped model is suspect unless it is one of the four helpers that carry a predicate by construction. Re-sabotaged; caught |
 
 ---
@@ -434,7 +439,7 @@ driver names; oversized bodies rejected at the edge.
 
 | # | Journey | Status |
 |---|---|---|
-| 1 | Teacher marks attendance | Phase 3 |
+| 1 | Teacher marks attendance | ✅ **Covered — three requests, end to end** |
 | 2 | Student submits an assignment | Phase 6 |
 | 3 | Teacher grades a submission | Phase 6 |
 | 4 | Admin publishes results | Phase 3 |

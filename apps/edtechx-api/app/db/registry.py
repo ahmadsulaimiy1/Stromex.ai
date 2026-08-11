@@ -23,6 +23,12 @@ from app.modules.academics.models import (
     ProgressionRule,
     TeachingAllocation,
 )
+from app.modules.attendance.models import (
+    AttendanceAmendment,
+    AttendanceCode,
+    AttendanceMark,
+    AttendanceSession,
+)
 from app.modules.audit.models import AuditEvent, SecurityEvent
 from app.modules.authz.models import (
     MembershipRole,
@@ -63,6 +69,10 @@ __all__ = [
     "TENANT_OWNED_MODELS",
     "AcademicStage",
     "AcademicYear",
+    "AttendanceAmendment",
+    "AttendanceCode",
+    "AttendanceMark",
+    "AttendanceSession",
     "AuditEvent",
     "Base",
     "ClassGroup",

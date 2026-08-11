@@ -984,3 +984,43 @@ def people_by_ids(db: Session, ids) -> dict[uuid.UUID, Person]:
         return {}
     rows = db.execute(select(Person).where(Person.id.in_(wanted))).scalars().all()
     return {person.id: person for person in rows}
+
+
+def students_in_class(
+    db: Session, class_group_id: uuid.UUID | None, *, on: date
+) -> list[tuple[StudentRelationship, Person]]:
+    """Who was in this group on this date, from the enrolments themselves.
+
+    Derived rather than stored, which is the whole reason enrolment is a row
+    with a beginning and an end (ADR-027). A child who transferred in on Monday
+    is on Monday's register without anybody rebuilding a list, and last March's
+    register still shows last March's class.
+
+    The date is the question rather than a filter on today, so a register
+    reopened in July still lists the people who were actually there in March.
+    """
+    if class_group_id is None:
+        return []
+    placements = db.execute(
+        select(Enrolment).where(
+            Enrolment.class_group_id == class_group_id,
+            Enrolment.started_on <= on,
+            (Enrolment.ended_on.is_(None)) | (Enrolment.ended_on >= on),
+        )
+    ).scalars().all()
+    if not placements:
+        return []
+    students = {
+        row.id: row
+        for row in db.execute(
+            select(StudentRelationship).where(
+                StudentRelationship.id.in_([p.student_relationship_id for p in placements])
+            )
+        ).scalars().all()
+    }
+    found = people_by_ids(db, [s.person_id for s in students.values()])
+    return [
+        (student, found[student.person_id])
+        for student in students.values()
+        if student.person_id in found
+    ]
