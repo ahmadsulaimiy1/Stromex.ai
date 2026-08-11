@@ -477,6 +477,53 @@ Nothing is blocked. Items awaiting external input, none of which stop Phase 2:
 
 ---
 
+## The flagship plate: my own review of the first render
+
+Recorded here rather than in a commit message because the next increment starts
+from this list. Rendered at `docs/edtechx/design/plates/01-doctorate-flagship.png`,
+A4 landscape, Level IV, against deliberately hostile data — *Muhammad
+Abdulrahman Ibrahim Abdulwahid Al-Sulaimiy*, *Doctor of Philosophy in
+Educational Leadership and Institutional Development*, Arabic alongside Latin.
+
+**Fixed between the first and second render**, all found by looking:
+
+1. The sheet-scale lathe field read as a visible oval smudge — a sheet field
+   must have neither a shape nor a visible presence. Widened past the short
+   side so the trim crops its envelope, and dropped from 0.045 to 0.030 ink.
+2. The microtext ring read as a grey band of noise along the top and bottom
+   edges at arm's length. Microtext legible as a texture is not microtext.
+   0.48 → 0.26 strength.
+3. The rule beneath the name was drawn *through* the Arabic descenders.
+4. The seal was a small stamp rather than the institution presiding; enlarged
+   from 13mm to 19mm radius and lifted into the execution row properly.
+5. Signature rules were pure black at 0.35mm — heavier than the frame's own
+   innermost engraved rule, so they read as form fields.
+
+**Not yet fixed, and the reason this is not called finished:**
+
+1. **The vertical composition is still a strip.** Two dead bands remain — one
+   between the authority rule and the conferral line, one between the statement
+   and the execution row — because zones are positioned by arithmetic from a
+   single anchor rather than distributed across the field. This is the central
+   defect.
+2. **The frame is four nested rectangles.** It decorates the edge; it does not
+   relate to the content it frames. The reference implementation names exactly
+   this failure, and quoting it did not prevent committing it.
+3. **The centred stack.** Conferral, name, qualification, distinction and
+   statement are five centred lines of decreasing weight. That is the
+   composition every generic certificate uses.
+4. **The peak's type scale is crude** — field width over name length, capped by
+   field height. It is a formula, not a designed scale, and a short name and a
+   long one do not sit in the composition the same way.
+5. **The seal passes behind the footline serial.** A collision.
+
+Honest assessment against the standard set for this work: the geometry and the
+budget system are sound; the composition is not yet something an institution
+would be proud to issue. It is not a rendering problem — the plate does what it
+is told — it is that the arrangement has not yet been designed.
+
+---
+
 ## Working notes for the next session
 
 - **Start here:** `apps/edtechx-api/README.md`, then this file, then `EDTECHX_ROADMAP.md` Phase 2.

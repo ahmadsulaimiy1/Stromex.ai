@@ -909,3 +909,17 @@ That reference is a benchmark for *quality*, not a template to copy. EdirasX's p
 **Enforcement.** 35 tests in `test_geometry.py`, every one a property a printer or a forger would care about rather than a rendering that happened.
 
 **What is not yet built**, named rather than implied: the ceremonial levels (I standard → IV flagship) that govern how much of this vocabulary a given document may spend; the family taxonomy; the plate compositions themselves; and the honest microprint assessment, which needs a real rasterisation at 300 DPI before anything is claimed.
+
+---
+
+## ADR-042 — Ceremonial levels are a budget the code enforces
+
+**Status:** Accepted
+
+**Context.** Having built fourteen geometric constructions, the immediate risk is putting all fourteen on every page. Every certificate system that owns an ornament library eventually does.
+
+**Decision.** Four levels — Institutional, Premium, Ceremonial, Flagship — each a `Budget` naming which constructions may be drawn, the frame insets, the ink ceiling inside the content field, the whitespace floor, and how much larger the single peak must be than the next element. The gate is a set membership in the rendering path, not a note in a style guide: a report card cannot acquire guilloché, because the name is not in the Level I set and the branch does not run.
+
+**What increases with the level is architecture, not decoration.** Level IV's additions sit at the *edge* of the sheet and in the substrate — microtext carrying the document's own serial, deterministic fibres, an anti-copy ruling, the interlocking-squares construction shown rather than resolved. Its field ink ceiling is not higher than Level III's and its peak ratio is stricter. A person reads the same page at III and IV; a loupe reads a different one.
+
+**And an honest note on where this has got to.** The plate architecture and the levels are built and behave correctly. The *composition* is not yet good enough, and the flagship render is recorded in `docs/edtechx/design/plates/` with its defects named in `EDTECHX_PROGRESS.md` rather than described as finished. The specific failure is that zones are positioned by arithmetic from one anchor, which leaves two dead bands and a horizontal strip of content — and a frame of four nested rectangles that decorates the edge without relating to what it frames. That is the next increment, and it is a design problem rather than an engineering one.
