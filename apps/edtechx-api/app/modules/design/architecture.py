@@ -502,40 +502,40 @@ def legend_ring(cx: float, cy: float, radius: float, *, metal: Metal,
 
 def cresting(cx: float, y: float, width: float, height: float, *,
              metal: Metal) -> str:
-    """The ornament that sits above a frame and breaks its top line.
+    """The ornament that crowns a frame on its axis: a medallion with wings.
 
-    A palmette: a central lobe rising to a finial, two counter-scrolled wings,
-    and a base rule. It exists to stop the frame's top edge from being the
-    highest thing on the sheet — which is the difference between a document that
-    is framed and one that is *crowned*.
+    Two silhouettes were tried and both failed by eye, which is the reason this
+    docstring names the form precisely. A stroked palmette read as a tent
+    pitched on the frame. A *filled* palmette read as an anvil, and then — with
+    the shoulders pulled in — as a traffic cone: a solid triangle of metal is a
+    triangle of metal whatever its control points say.
+
+    What the finest plates actually do at this position is different in kind. A
+    small struck medallion sits **on** the frame's rule, straddling it, and two
+    low scroll wings run outward along the rule and stop in lozenges. The
+    medallion is the event; the wings tie it to the architecture; the rule
+    passes behind. There is no large filled silhouette anywhere in it, which is
+    why it does not collapse into a shape at a distance.
     """
     half = width / 2
-    # Filled, not stroked. A stroked outline at this size reads as a tent
-    # pitched on the frame; a palmette is a *shape*, and its silhouette against
-    # the paper is the whole effect.
-    body = (
-        f"M{cx - half:.2f} {y:.2f} "
-        f"C{cx - half * 0.72:.2f} {y - height * 0.14:.2f} "
-        f"{cx - half * 0.58:.2f} {y - height * 0.46:.2f} "
-        f"{cx - half * 0.34:.2f} {y - height * 0.40:.2f} "
-        f"C{cx - half * 0.22:.2f} {y - height * 0.38:.2f} "
-        f"{cx - half * 0.16:.2f} {y - height * 0.72:.2f} {cx:.2f} {y - height:.2f} "
-        f"C{cx + half * 0.16:.2f} {y - height * 0.72:.2f} "
-        f"{cx + half * 0.22:.2f} {y - height * 0.38:.2f} "
-        f"{cx + half * 0.34:.2f} {y - height * 0.40:.2f} "
-        f"C{cx + half * 0.58:.2f} {y - height * 0.46:.2f} "
-        f"{cx + half * 0.72:.2f} {y - height * 0.14:.2f} {cx + half:.2f} {y:.2f} Z"
-    )
-    return (
-        f'<path d="{body}" fill="{metal.face}" stroke="{metal.shadow}"'
-        ' stroke-width="0.22" stroke-linejoin="round"/>'
-        f'<path d="M{cx:.2f} {y - height * 0.10:.2f} V{y - height * 0.82:.2f}"'
-        f' stroke="{metal.shadow}" stroke-width="0.18"/>'
-        + geo.khatam(cx, y - height * 1.24, height * 0.26, ink=metal.face,
-                     width=0.36)
-        + engraved_metal_rule(cx - half, y, cx + half, y, metal=metal,
-                              weight=0.42)
-    )
+    radius = height * 0.62
+    out = [engraved_metal_rule(cx - half, y, cx + half, y, metal=metal,
+                               weight=0.42)]
+    for sign in (-1, 1):
+        start = cx + sign * radius * 1.05
+        end = cx + sign * half
+        out.append(
+            f'<path d="M{start:.2f} {y:.2f} '
+            f'Q{(start + end) / 2:.2f} {y - height * 0.62:.2f} {end:.2f} {y:.2f}"'
+            f' fill="none" stroke="{metal.face}" stroke-width="0.42"/>'
+            f'<path d="M{start:.2f} {y:.2f} '
+            f'Q{(start + end) / 2:.2f} {y - height * 0.40:.2f} {end:.2f} {y:.2f}"'
+            f' fill="none" stroke="{metal.shadow}" stroke-width="0.16"/>'
+            f'<path d="{geo.star_polygon(end, y, 4, 1.35, 0.45)}"'
+            f' fill="{metal.face}" stroke="{metal.shadow}" stroke-width="0.10"/>'
+        )
+    out.append(medallion(cx, y, radius, metal=metal, ink=metal.shadow))
+    return "".join(out)
 
 
 def spreader(y: float, x1: float, x2: float, *, metal: Metal,

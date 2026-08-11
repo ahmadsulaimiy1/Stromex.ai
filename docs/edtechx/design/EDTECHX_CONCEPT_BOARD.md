@@ -99,14 +99,17 @@ and royal gold. It reads as a doorcase, which is exactly the ambition.
 
 ### The rest, honestly
 
-**4 · 12 EdirasX Signature** — strategically the most important and not yet the
-best executed. One construction for frame and field: the khatam lattice
-dissolving from a 7mm cell at the trim to a 26mm cell at the centre, so the
-frame does not end, it thins. Two metals, and the credential band designed as a
-visible architectural register rather than a footnote. *The dissolve does not
-yet read* — the four density bands are too close in value, and at arm's length
-it looks like one even lattice. This is the one to fix, because it is the one
-that could become unmistakably EdirasX.
+**4 · 12 EdirasX Signature — and after the refinement pass, arguably third.**
+One construction for frame and field: the khatam lattice dissolving from a
+6.5mm cell at full strength at the trim to a 34mm cell at 8.5% at the centre, so
+the frame does not end, it thins. Two metals, a blind-embossed institutional
+mark on the axis, and the credential band designed as a visible architectural
+register rather than a footnote. In the first pass the dissolve did not read —
+the four density bands were too close in value and it looked like one even
+lattice. Widening the value range to 1.00 / 0.46 / 0.20 / 0.085 made the concept
+appear, and it is now the most *ownable* plate on the board: no other
+institution's certificate looks like this, and the construction is EdirasX's
+own.
 
 **5 · 08 Heritage Manuscript** — genuinely beautiful and the only plate where
 Arabic is the text and the Latin is the gloss. Parchment ground, an illuminated
@@ -162,6 +165,8 @@ Every one of these was invisible in the code and obvious in the render.
 | The crest read as a circus tent | 01, 10, 11 | A filled palmette at 26 × 11mm rather than a stroked outline at 42 × 7mm. |
 | Microtext sat 2.6mm from the trim, inside the knife | most | Moved to 8.4mm, outside the ±1.5mm cutting tolerance with margin. |
 | The ground mandala was legible as a figure at arm's length | all | Held at 2.5% above the paper. A field is noticed on the second look. |
+| The crest failed twice by eye: a stroked palmette read as a tent, a filled one as a traffic cone | 01, 10, 11 | Rebuilt as the form the reference actually uses — a struck medallion straddling the frame rule with two low scroll wings ending in lozenges. No large filled silhouette, so it does not collapse into a shape at a distance. |
+| The ceremonial pause between the statement and the execution row read as a layout that ran out of content | 01, 02, 11 | A lozenge-stopped rule placed *in the flow* between two flexible spacers, so it centres itself in whatever space the content leaves. |
 
 ---
 

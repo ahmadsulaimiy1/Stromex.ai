@@ -237,7 +237,29 @@ def execution(metal: Metal, ink: str, *, ground: str | None = None,
     return f'<div class="exec">{order}</div>'
 
 
+def divider(metal: Metal, *, width: float = 46.0, stops: int = 4) -> str:
+    """A spreader rule placed between two spacers — the ceremonial pause, given
+    a reason to exist.
+
+    The gap between the conferring statement and the execution row is the
+    largest void on a ceremonial sheet and it is deliberate: it is the pause
+    before the signatures. Left entirely blank it reads as a layout that ran out
+    of content. A lozenge-stopped rule floating in the middle of it reads as
+    what it is.
+
+    In the flow, between two flexible spacers, so it stays centred in the void
+    whatever the recipient's name does above it.
+    """
+    return (
+        f'<svg class="divider" style="width:{width}%" viewBox="0 0 100 4"'
+        ' preserveAspectRatio="none">'
+        + arch.spreader(2.0, 1.0, 99.0, metal=metal, stops=stops)
+        + "</svg>"
+    )
+
+
 EXEC_CSS = """
+.divider { display: block; flex: none; height: 3mm; }
 .exec { display: flex; align-items: flex-end; gap: 8mm; width: 100%; flex: none; }
 .sigrow { flex: 1 1 auto; display: flex; align-items: flex-end; gap: 7mm; }
 .sealbox { flex: none; width: 31mm; }
@@ -318,17 +340,16 @@ def c01(c: Concept) -> str:
                                     mass=geo.blend(p.ink, p.accent, 0.55), metal=m, ink=p.ink)
     layers += arch.mandala(SHEET_W / 2, SHEET_H * 0.50, 62, ink=p.accent,
                            strength=0.025, rings=5)
-    layers += arch.cresting(SHEET_W / 2, inner.y + 2.6, 27, 11.0, metal=m)
+    layers += arch.cresting(SHEET_W / 2, inner.y, 62, 13.0, metal=m)
     layers += arch.spreader(inner.y + 15.0, inner.x + 16, SHEET_W / 2 - 26, metal=m)
     layers += arch.spreader(inner.y + 15.0, SHEET_W / 2 + 26, inner.x + inner.w - 16, metal=m)
-    layers += arch.medallion(SHEET_W / 2, inner.y + 15.0, 11.5, metal=m, ink=p.ink)
     layers += geo.microtext_ring(sheet.inset(8.4), identifier="c01",
                                  text=f"{INSTITUTION.upper()} · {SERIAL} · ",
                                  ink=p.ink, size=0.58, strength=0.26)
 
     name_size = fit(RECIPIENT, 196, cap=13.0, floor=8.6)
     css = EXEC_CSS + f"""
-.field {{ left: 36mm; right: 36mm; top: 48mm; bottom: 30mm; align-items: center;
+.field {{ left: 36mm; right: 36mm; top: 47mm; bottom: 39mm; align-items: center;
   text-align: center; }}
 .inst {{ font-size: 5.0mm; letter-spacing: 0.16em; color: {p.accent};
   font-weight: 600; text-transform: uppercase; flex: none; }}
@@ -365,6 +386,8 @@ def c01(c: Concept) -> str:
   <div class="disp study">{STUDY}</div>
   <div class="lab dist">{DISTINCTION}</div>
   <div class="stmt">{STATEMENT}</div>
+  <div class="spacer"></div>
+  {divider(m)}
   <div class="spacer"></div>
   {execution(m, p.ink)}
   {verify_band(ink=p.ink)}
@@ -424,8 +447,8 @@ def c02(c: Concept) -> str:
   width: 100%; flex: none; gap: 6mm; }}
 .crown .ar {{ font-size: 4.7mm; font-weight: 700; color: {p.accent};
   white-space: nowrap; }}
-.crown .en {{ font-size: 3.4mm; letter-spacing: 0.13em; text-transform: uppercase;
-  color: {p.accent}; font-weight: 600; text-align: left; line-height: 1.35; }}
+.crown .en {{ font-size: 3.0mm; letter-spacing: 0.12em; text-transform: uppercase;
+  color: {p.accent}; font-weight: 600; text-align: left; white-space: nowrap; }}
 .conf {{ font-size: 2.5mm; letter-spacing: 0.36em; color: {geo.tint(p.ink, 0.60)};
   flex: none; }}
 .name {{ font-size: {mm(name_size)}; line-height: 1.06; font-weight: 700;
@@ -462,6 +485,8 @@ def c02(c: Concept) -> str:
   </div>
   <div class="disp study">{STUDY}</div>
   <div class="stmt">{STATEMENT}</div>
+  <div class="spacer"></div>
+  {divider(m)}
   <div class="spacer"></div>
   {execution(m, p.ink)}
   {verify_band(ink=p.ink)}
@@ -559,6 +584,8 @@ def c03(c: Concept) -> str:
   <div class="lab dist">{DISTINCTION}</div>
   <div class="stmt">{STATEMENT}</div>
   <div class="spacer"></div>
+  {divider(m)}
+  <div class="spacer"></div>
   {execution(m, p.ink)}
   {verify_band(ink=p.ink)}
 </div>
@@ -649,6 +676,8 @@ def c04(c: Concept) -> str:
   <div class="disp deg">{DEGREE}</div>
   <div class="disp study">{STUDY}</div>
   <div class="stmt">{STATEMENT}</div>
+  <div class="spacer"></div>
+  {divider(m)}
   <div class="spacer"></div>
   {execution(m, p.ink)}
   {verify_band(ink=p.ink)}
@@ -746,6 +775,8 @@ def c05(c: Concept) -> str:
   <div class="lab dist">{DISTINCTION}</div>
   <div class="stmt">{STATEMENT}</div>
   <div class="spacer"></div>
+  {divider(m)}
+  <div class="spacer"></div>
   {execution(m, p.ink)}
   {verify_band(ink=p.ink)}
 </div>
@@ -827,6 +858,8 @@ def c06(c: Concept) -> str:
   <div class="disp deg">{DEGREE}</div>
   <div class="disp study">{STUDY}</div>
   <div class="stmt">{STATEMENT}</div>
+  <div class="spacer"></div>
+  {divider(m)}
   <div class="spacer"></div>
   {execution(m, p.ink)}
   {verify_band(ink=p.ink)}
@@ -917,6 +950,8 @@ def c07(c: Concept) -> str:
   <div class="disp study">{STUDY}</div>
   <div class="stmt">{STATEMENT}</div>
   <div class="spacer"></div>
+  {divider(m)}
+  <div class="spacer"></div>
   {execution(m, p.ink)}
   {verify_band(ink=p.ink)}
 </div>
@@ -1004,6 +1039,8 @@ def c08(c: Concept) -> str:
   <div class="disp deg">{DEGREE}</div>
   <div class="disp study">{STUDY}</div>
   <div class="stmt">{STATEMENT}</div>
+  <div class="spacer"></div>
+  {divider(m)}
   <div class="spacer"></div>
   {execution(m, p.ink)}
   {verify_band(ink=p.ink)}
@@ -1098,6 +1135,8 @@ def c09(c: Concept) -> str:
   <div class="lab dist">{DISTINCTION}</div>
   <div class="stmt">{STATEMENT}</div>
   <div class="spacer"></div>
+  {divider(m)}
+  <div class="spacer"></div>
   {execution(m, p.ink)}
   {verify_band(ink=p.ink)}
 </div>
@@ -1151,7 +1190,7 @@ def c10(c: Concept) -> str:
     )
     layers += arch.mandala(SHEET_W / 2, SHEET_H * 0.50, 46, ink=p.accent,
                            strength=0.025, rings=5)
-    layers += arch.cresting(SHEET_W / 2, plaque.y - 1.0, 25, 10.0, metal=m)
+    layers += arch.cresting(SHEET_W / 2, plaque.y, 54, 11.5, metal=m)
     layers += geo.microtext_ring(sheet.inset(8.4), identifier="c10",
                                  text=f"{SERIAL} · {CODE} · ", ink=m.core,
                                  size=0.56, strength=1.0)
@@ -1193,6 +1232,8 @@ def c10(c: Concept) -> str:
   <div class="disp deg">{DEGREE}</div>
   <div class="disp study">{STUDY}</div>
   <div class="stmt">{STATEMENT}</div>
+  <div class="spacer"></div>
+  {divider(m)}
   <div class="spacer"></div>
   {execution(m, p.ink)}
 </div>
@@ -1238,7 +1279,7 @@ def c11(c: Concept) -> str:
                                       metal=m, nodes=3)
     layers += arch.mandala(SHEET_W / 2, SHEET_H * 0.52, 52, ink=p.accent,
                            strength=0.025, rings=5)
-    layers += arch.cresting(SHEET_W / 2, inner.y + 0.5, 26, 10.6, metal=m)
+    layers += arch.cresting(SHEET_W / 2, inner.y, 58, 12.5, metal=m)
     layers += geo.microtext_ring(sheet.inset(8.4), identifier="c11",
                                  text=f"{INSTITUTION.upper()} · {SERIAL} · ",
                                  ink=m.highlight, size=0.56, strength=0.8)
@@ -1294,6 +1335,8 @@ def c11(c: Concept) -> str:
   <div class="lab dist">{DISTINCTION}</div>
   <div class="stmt">{STATEMENT}</div>
   <div class="spacer"></div>
+  {divider(m)}
+  <div class="spacer"></div>
   {execution(m, p.ink)}
   {verify_band(ink=p.ink)}
 </div>
@@ -1321,10 +1364,10 @@ def c12(c: Concept) -> str:
     # ink than the one outside it. This is the concept — a frame that does not
     # end, it dissolves.
     for inset, cell, strength, width in (
-        (5.0, 7.0, 1.00, 0.13),
-        (16.0, 11.0, 0.62, 0.11),
-        (28.0, 17.0, 0.34, 0.09),
-        (42.0, 26.0, 0.16, 0.08),
+        (5.0, 6.5, 1.00, 0.20),
+        (15.0, 11.5, 0.46, 0.13),
+        (27.0, 20.0, 0.20, 0.09),
+        (41.0, 34.0, 0.085, 0.075),
     ):
         layers += arch.tessellation_field(
             sheet.inset(inset), cell=cell, ink=m.core, strength=strength,
@@ -1348,7 +1391,6 @@ def c12(c: Concept) -> str:
         + geo.khatam(SHEET_W / 2, 32.0, 4.0, ink=m2.core, width=0.30)
     )
     layers += emboss(mark, depth=0.24, light=m.highlight, dark=m.shadow)
-    layers += arch.spreader(SHEET_H * 0.735, 52, SHEET_W - 52, metal=m2, stops=6)
     layers += geo.microtext_ring(sheet.inset(8.4), identifier="c12",
                                  text=f"EDIRASX · {SERIAL} · {CODE} · ",
                                  ink=p.ink, size=0.56, strength=0.32)
@@ -1400,6 +1442,8 @@ def c12(c: Concept) -> str:
   <div class="disp deg">{DEGREE}</div>
   <div class="disp study">{STUDY}</div>
   <div class="stmt">{STATEMENT}</div>
+  <div class="spacer"></div>
+  {divider(m)}
   <div class="spacer"></div>
   {execution(m, p.ink)}
   <div class="credential">
