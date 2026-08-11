@@ -32,8 +32,8 @@ from app.modules.design.typeface import font_face_css
 __all__ = ["GROUP_LABELS", "document", "navigation", "shell"]
 
 
-#: The institution's own words are used for the *items*; these name the
-#: groups, which are the platform's structure rather than the institution's.
+#: The institution's own words name the *items*; these name the groups, which
+#: are the platform's structure rather than the institution's.
 GROUP_LABELS: dict[str, str] = {
     "today": "Today",
     "people": "People",
@@ -45,6 +45,36 @@ GROUP_LABELS: dict[str, str] = {
     "configuration": "Configuration",
 }
 
+#: And for the two audiences who are not staff, different words for the same
+#: groups. A parent should never be shown a section called "Operations": that is
+#: the platform's own architecture, and a family is not required to learn it to
+#: find out how their child is doing. Found by rendering a parent's screen and
+#: reading the rail — every item was correctly scoped and every heading was
+#: written for somebody who works at the school.
+AUDIENCE_LABELS: dict[str, dict[str, str]] = {
+    "guardian": {
+        "today": "Today",
+        "people": "Your children",
+        "operations": "School",
+        "finance": "Fees",
+        "communication": "Messages",
+        "insight": "Progress",
+    },
+    "student": {
+        "today": "Today",
+        "operations": "Your work",
+        "communication": "Messages",
+        "insight": "Progress",
+        "academics": "Your course",
+    },
+}
+
+
+def group_label(group: str, role_shape: str = "") -> str:
+    return AUDIENCE_LABELS.get(role_shape, {}).get(
+        group, GROUP_LABELS.get(group, group.title())
+    )
+
 
 def navigation(experience, *, current: str = "") -> str:
     """The rail's links, derived rather than declared.
@@ -54,6 +84,7 @@ def navigation(experience, *, current: str = "") -> str:
     advertisement placed in somebody's way, and an offer shown only to the
     person who could accept it is information.
     """
+    shape = getattr(experience, "role_shape", "")
     groups = []
     for group, capabilities in experience.grouped().items():
         items = []
@@ -70,7 +101,7 @@ def navigation(experience, *, current: str = "") -> str:
             )
         groups.append(
             '<div class="ed-nav__group">'
-            f'<p class="ed-nav__label">{ui.e(GROUP_LABELS.get(group, group.title()))}</p>'
+            f'<p class="ed-nav__label">{ui.e(group_label(group, shape))}</p>'
             f"{''.join(items)}"
             "</div>"
         )

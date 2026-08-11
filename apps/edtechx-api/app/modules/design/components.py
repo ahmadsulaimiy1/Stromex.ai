@@ -33,17 +33,22 @@ __all__ = [
     "breadcrumbs",
     "button",
     "checkbox",
+    "command_palette",
     "data_table",
     "dialog",
+    "drawer",
     "empty",
+    "error_state",
     "field",
     "figure",
     "figures",
     "list_item",
+    "notification",
     "page_header",
     "pagination",
     "panel",
     "progress",
+    "register_row",
     "section",
     "skeleton",
     "switch",
@@ -539,4 +544,186 @@ def matrix_row(
         f'<td data-role="grade" class="num">{e(grade)}</td>'
         + (f'<td data-role="note">{e(note)}</td>' if note else '<td data-role="note"></td>')
         + "</tr>"
+    )
+
+
+# --- workflows --------------------------------------------------------------
+#
+# The components below exist because a journey needed them, not because a
+# component library ought to have them. Each one is used in `tools/design`.
+
+
+def command_palette(
+    query: str,
+    groups: Sequence[tuple[str, Sequence[tuple[str, str, str]]]],
+    *,
+    selected: tuple[int, int] = (0, 0),
+    hint: str = "Search people, classes, documents and actions",
+) -> str:
+    """The acceleration layer, and never an authorization bypass.
+
+    What it finds is whatever the caller's own scoped queries returned. That is
+    not a convention this component can enforce — but it is why the caller
+    passes *results* rather than a query: there is no path here that reaches a
+    table, so there is no path here that reaches past a scope.
+
+    `groups` is `[(label, [(title, meta, href), …]), …]`, already in the order
+    the person is most likely to want.
+    """
+    if not any(items for _label, items in groups):
+        body = empty(
+            "Nothing matches that",
+            "Try a name, a class code, or the beginning of a document number. "
+            "Only what you have access to appears here.",
+        )
+    else:
+        blocks = []
+        for group_index, (label, items) in enumerate(groups):
+            if not items:
+                continue
+            rows = "".join(
+                f'<a class="ed-palette__item" href="{e(href)}" role="option" '
+                f'aria-selected="{"true" if (group_index, row) == selected else "false"}">'
+                + ornament.node(6, colour="var(--accent-metal)")
+                + f"<span>{e(title)}</span>"
+                + (f'<span class="ed-palette__meta">{e(meta)}</span>' if meta else "")
+                + "</a>"
+                for row, (title, meta, href) in enumerate(items)
+            )
+            blocks.append(
+                '<div class="ed-palette__group">'
+                f'<p class="ed-palette__label">{e(label)}</p>{rows}</div>'
+            )
+        body = "".join(blocks)
+
+    return (
+        '<div class="ed-palette__scrim">'
+        '<div class="ed-palette" role="dialog" aria-modal="true" aria-label="Search">'
+        '<div class="ed-palette__field">'
+        '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">'
+        '<circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.3"/>'
+        '<path d="M10.4 10.4 14 14" stroke="currentColor" stroke-width="1.3"/></svg>'
+        f'<input class="ed-palette__input" value="{e(query)}" '
+        f'placeholder="{e(hint)}" aria-label="{e(hint)}" role="combobox" '
+        'aria-expanded="true" aria-controls="ed-palette-results">'
+        "</div>"
+        f'<div class="ed-palette__results" id="ed-palette-results" role="listbox">{body}</div>'
+        '<div class="ed-palette__foot">'
+        "<span><kbd>&uarr;</kbd><kbd>&darr;</kbd> to move</span>"
+        "<span><kbd>&crarr;</kbd> to open</span>"
+        "<span><kbd>esc</kbd> to close</span>"
+        "</div></div></div>"
+    )
+
+
+def notification(
+    title: str,
+    body: str,
+    when: str,
+    *,
+    priority: Literal["urgent", "important", "informational"] = "informational",
+    category: str = "",
+    unread: bool = False,
+    href: str = "#",
+) -> str:
+    """One notification.
+
+    Priority is carried by a rule, a marker *and* a word. Colour alone excludes
+    a reader who cannot distinguish it, and fails again the moment somebody
+    prints the page.
+    """
+    label = ""
+    if priority != "informational":
+        label = badge(priority, tone="danger" if priority == "urgent" else "gold")
+    return (
+        f'<a class="ed-notice" href="{e(href)}" data-priority="{priority}" '
+        f'data-unread="{"true" if unread else "false"}">'
+        '<span class="ed-notice__dot" aria-hidden="true"></span>'
+        "<span>"
+        + (f"{label} " if label else "")
+        + (f'<span class="ed-label">{e(category)}</span>' if category else "")
+        + f'<p class="ed-notice__title">{e(title)}</p>'
+        + f'<p class="ed-notice__body">{e(body)}</p>'
+        + "</span>"
+        + f'<span class="ed-notice__when"><span class="ed-sr">Received </span>{e(when)}</span>'
+        + "</a>"
+    )
+
+
+def drawer(title: str, body: str, *, meta: str = "", actions: str = "") -> str:
+    """Contextual inspection and lightweight editing.
+
+    A complex workflow does not belong in one. Neither does it belong in a
+    dialog, which is the mistake this component exists to make unnecessary.
+    """
+    return (
+        '<div class="ed-drawer__scrim">'
+        '<aside class="ed-drawer" role="dialog" aria-modal="true" '
+        'aria-labelledby="ed-drawer-title">'
+        '<header class="ed-drawer__head"><div>'
+        f'<h2 class="ed-title" id="ed-drawer-title">{e(title)}</h2>'
+        + (f'<p class="ed-list__meta">{e(meta)}</p>' if meta else "")
+        + "</div>"
+        + button(
+            "", variant="quiet", size="sm", aria_label="Close",
+            icon='<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">'
+            '<path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.4"/></svg>',
+            style="margin-inline-start:auto",
+        )
+        + "</header>"
+        + f'<div class="ed-drawer__body">{body}</div>'
+        + (f'<div class="ed-drawer__foot">{actions}</div>' if actions else "")
+        + "</aside></div>"
+    )
+
+
+def error_state(
+    title: str, body: str, *, action: str = "", reference: str = ""
+) -> str:
+    """Understandable, actionable, calm — and saying nothing protected.
+
+    An authorization failure in particular never explains what sits behind it.
+    "You do not have access to this class" tells somebody the class exists;
+    "This is not available to you" does not, and is the same sentence for a
+    record that is out of scope and one that never existed (ADR-004).
+    """
+    return (
+        '<div class="ed-error" role="alert">'
+        f'<span class="ed-error__mark">{ornament.node(40, colour="currentColor")}</span>'
+        f'<h2 class="ed-error__title">{e(title)}</h2>'
+        f'<p class="ed-error__body">{e(body)}</p>'
+        + (f"<div>{action}</div>" if action else "")
+        + (
+            f'<p class="ed-error__ref">Reference {e(reference)} &mdash; quote this if '
+            "you contact your institution.</p>"
+            if reference else ""
+        )
+        + "</div>"
+    )
+
+
+def register_row(
+    name: str, *, meta: str, codes: Sequence[tuple[str, str, bool]]
+) -> str:
+    """One child in a register.
+
+    The marks are 40px targets on a desktop and 44px on a phone, because this is
+    the screen a teacher taps thirty times in ninety seconds while standing up,
+    and a 24px target is why registers get taken later "properly" and then not
+    at all (ADR-032).
+    """
+    marks = "".join(
+        f'<button type="button" class="ed-mark" data-code="{e(code)}" '
+        f'aria-pressed="{"true" if on else "false"}" aria-label="{e(label)}">'
+        f"{e(code)}</button>"
+        for code, label, on in codes
+    )
+    return (
+        '<div class="ed-register__row">'
+        + avatar(name)
+        + f'<div><p class="ed-register__name">{e(name)}</p>'
+        f'<p class="ed-register__meta">{e(meta)}</p></div>'
+        + f'<div class="ed-marks" role="group" aria-label="Attendance for {e(name)}">'
+        + marks
+        + "</div></div>"
     )

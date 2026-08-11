@@ -138,6 +138,8 @@ body {
 /* A section: micro-label, rule, content. Repeated everywhere, which is what
    makes twelve unrelated screens feel like one product. */
 .ed-section { margin-block-end: var(--space-8); }
+.ed-grid + .ed-section, .ed-panel + .ed-section,
+.ed-figures + .ed-section { margin-block-start: var(--space-8); }
 .ed-section__head {
   display: flex;
   align-items: baseline;
@@ -553,6 +555,204 @@ body {
   max-width: 32rem; width: 100%;
 }
 .ed-scrim { position: fixed; inset: 0; background: rgba(6, 10, 18, 0.52); }
+
+/* --- command palette -----------------------------------------------------
+   An acceleration layer, never an authorization bypass: what it can find is
+   whatever `experience.resolve` and the scope predicates already permit. The
+   visual job is to get out of the way — it sits high on the page rather than
+   centred, because a person typing is looking at what they typed. */
+
+.ed-palette__scrim {
+  position: fixed; inset: 0; background: rgba(6, 10, 18, 0.52);
+  display: flex; justify-content: center; align-items: flex-start;
+  padding: 12vh var(--space-4) var(--space-4);
+  z-index: var(--layer-overlay);
+}
+.ed-palette {
+  width: 100%; max-width: 40rem;
+  background: var(--surface-overlay);
+  border: 1px solid var(--border-hairline);
+  border-top: var(--border-thick) solid var(--accent-metal);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-overlay);
+  overflow: hidden;
+}
+.ed-palette__field {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-block-end: 1px solid var(--border-hairline);
+}
+.ed-palette__input {
+  flex: 1; border: 0; background: none; font: inherit;
+  font-size: var(--text-md); color: var(--text-primary); outline: none;
+}
+.ed-palette__results { max-height: 26rem; overflow-y: auto; padding: var(--space-2); }
+.ed-palette__group + .ed-palette__group { margin-block-start: var(--space-3); }
+.ed-palette__label {
+  font-size: var(--text-3xs); letter-spacing: var(--tracking-widest);
+  text-transform: uppercase; color: var(--text-tertiary);
+  padding: var(--space-2) var(--space-3) var(--space-1);
+  margin: 0;
+}
+.ed-palette__item {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm); text-decoration: none;
+  color: var(--text-primary); font-size: var(--text-sm);
+}
+.ed-palette__item[aria-selected="true"] { background: var(--surface-selected); }
+.ed-palette__item[aria-selected="true"] .ed-node { opacity: 1; }
+.ed-palette__item .ed-node { opacity: 0; flex: none; }
+.ed-palette__meta { margin-inline-start: auto; font-size: var(--text-2xs);
+  color: var(--text-tertiary); }
+.ed-palette__foot {
+  display: flex; gap: var(--space-4); padding: var(--space-2) var(--space-5);
+  border-block-start: 1px solid var(--border-hairline);
+  background: var(--surface-sunken);
+  font-size: var(--text-3xs); color: var(--text-tertiary);
+}
+.ed-palette__foot kbd {
+  font-family: var(--font-mono); border: 1px solid var(--border-hairline);
+  border-radius: 2px; padding: 0 3px;
+}
+
+/* --- notifications -------------------------------------------------------
+   Priority is carried by more than colour: an urgent item has a garnet rule, a
+   filled marker AND the word. Colour alone fails for a reader who cannot see
+   the difference, and it fails again in a photocopy. */
+
+.ed-notice {
+  display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-4) var(--space-3);
+  border-block-end: 1px solid var(--border-hairline);
+  border-inline-start: var(--border-rule) solid transparent;
+  text-decoration: none; color: inherit;
+}
+.ed-notice:hover { background: var(--surface-sunken); }
+.ed-notice[data-priority="urgent"] { border-inline-start-color: var(--state-danger); }
+.ed-notice[data-priority="important"] { border-inline-start-color: var(--accent-metal); }
+.ed-notice[data-unread="true"] { background: var(--surface-selected); }
+.ed-notice__dot {
+  width: 7px; height: 7px; border-radius: var(--radius-full);
+  background: var(--accent-metal); margin-block-start: 0.42rem;
+}
+.ed-notice[data-unread="false"] .ed-notice__dot { background: transparent; }
+.ed-notice__title { margin: 0; font-size: var(--text-sm); font-weight: var(--weight-medium); }
+.ed-notice__body { margin: 2px 0 0; font-size: var(--text-2xs); color: var(--text-secondary); }
+.ed-notice__when {
+  font-size: var(--text-3xs); color: var(--text-tertiary); white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- drawer --------------------------------------------------------------
+   For contextual inspection and lightweight editing. A complex workflow does
+   not belong in one, and neither does it belong in a dialog. */
+
+.ed-drawer__scrim {
+  position: fixed; inset: 0; background: rgba(6, 10, 18, 0.4);
+  display: flex; justify-content: flex-end; z-index: var(--layer-drawer);
+}
+.ed-drawer {
+  width: min(30rem, 100%); background: var(--surface-raised);
+  border-inline-start: 1px solid var(--border-hairline);
+  display: flex; flex-direction: column;
+  box-shadow: var(--shadow-overlay);
+}
+.ed-drawer__head {
+  display: flex; align-items: flex-start; gap: var(--space-4);
+  padding: var(--space-6) var(--space-6) var(--space-4);
+  border-block-end: 1px solid var(--border-hairline);
+}
+.ed-drawer__body { padding: var(--space-6); overflow-y: auto; flex: 1; }
+.ed-drawer__foot {
+  display: flex; gap: var(--space-2); justify-content: flex-end;
+  padding: var(--space-4) var(--space-6);
+  border-block-start: 1px solid var(--border-hairline);
+  background: var(--surface-sunken);
+}
+@media (max-width: 46rem) {
+  .ed-drawer__scrim { align-items: flex-end; }
+  .ed-drawer {
+    width: 100%; max-height: 88vh;
+    border-inline-start: 0; border-block-start: var(--border-thick) solid var(--accent-metal);
+    border-start-start-radius: var(--radius-lg); border-start-end-radius: var(--radius-lg);
+  }
+}
+
+/* --- error ---------------------------------------------------------------
+   Calm, actionable, and saying nothing a person is not entitled to know. An
+   authorization failure never explains what exists behind it. */
+
+.ed-error {
+  display: grid; justify-items: center; gap: var(--space-3);
+  padding: var(--space-11) var(--space-6); text-align: center;
+}
+.ed-error__mark { color: var(--state-danger); opacity: 0.5; }
+.ed-error__title { font-family: var(--font-display); font-size: var(--text-xl); margin: 0; }
+.ed-error__body { color: var(--text-secondary); max-width: 44ch; margin: 0;
+  font-size: var(--text-sm); }
+.ed-error__ref {
+  font-family: var(--font-mono); font-size: var(--text-3xs);
+  color: var(--text-tertiary); margin: var(--space-2) 0 0;
+}
+
+/* --- the register: the teacher's most repeated screen -------------------- */
+
+.ed-register { border-block-start: 1px solid var(--border-hairline); }
+.ed-register__row {
+  display: grid; grid-template-columns: auto 1fr auto;
+  gap: var(--space-4); align-items: center;
+  padding: var(--space-3) 0;
+  border-block-end: 1px solid var(--border-hairline);
+}
+.ed-register__name { font-size: var(--text-md); font-family: var(--font-display);
+  font-weight: var(--weight-semibold); margin: 0; }
+.ed-register__meta { font-size: var(--text-2xs); color: var(--text-secondary); margin: 2px 0 0; }
+.ed-marks { display: flex; gap: var(--space-1); }
+.ed-mark {
+  min-width: 2.5rem; min-height: 2.5rem;
+  display: grid; place-items: center;
+  border: 1px solid var(--border-control); border-radius: var(--radius-sm);
+  background: var(--surface-raised); color: var(--text-secondary);
+  font-size: var(--text-sm); font-weight: var(--weight-semibold);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--easing-standard);
+}
+.ed-mark:hover { border-color: var(--text-tertiary); }
+.ed-mark:focus-visible { outline: none; box-shadow: var(--shadow-ring); }
+.ed-mark[aria-pressed="true"] {
+  background: var(--accent-strong); border-color: var(--accent-strong);
+  color: var(--text-on-accent);
+}
+.ed-mark[aria-pressed="true"][data-code="A"] {
+  background: var(--state-danger); border-color: var(--state-danger);
+}
+.ed-mark[aria-pressed="true"][data-code="L"] {
+  background: var(--state-warning); border-color: var(--state-warning);
+}
+/* A submit bar that stays reachable while a teacher works down a long class. */
+.ed-sticky-bar {
+  position: sticky; bottom: 0;
+  display: flex; align-items: center; gap: var(--space-4);
+  padding: var(--space-4) 0;
+  background: var(--surface-canvas);
+  border-block-start: 1px solid var(--border-hairline);
+}
+.ed-sticky-bar .ed-btn { margin-inline-start: auto; }
+@media (max-width: 46rem) {
+  .ed-register__row { grid-template-columns: 1fr auto; }
+  .ed-register__row .ed-avatar { display: none; }
+  .ed-mark { min-width: 2.75rem; min-height: 2.75rem; }
+  .ed-sticky-bar {
+    margin-inline: calc(var(--space-4) * -1);
+    padding-inline: var(--space-4);
+    flex-wrap: wrap;
+  }
+  /* The tally wrapped onto two lines and shoved the button sideways. It is
+     supporting information: it gets its own line above the action. */
+  .ed-sticky-bar .ed-label { flex: 1 0 100%; }
+  .ed-sticky-bar .ed-btn { flex: 1; margin-inline-start: 0; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

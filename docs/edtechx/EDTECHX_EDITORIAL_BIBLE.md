@@ -524,6 +524,39 @@ Therefore:
 
 ---
 
+### 9.1 Assert, prove, endure
+
+Adopted from the credential architecture studied in `ahmadsulaimiy1/Sultan-`,
+because it is a better frame than the one this document had. Every EdirasX
+artefact that an institution puts its name to does three things, in this order:
+
+**Assert.** The instant a human looks at it, before reading a word, it must
+communicate that a serious institution issued it. This happens below the level
+of conscious reading — weight, restraint, generosity of margin, the confidence
+of the type.
+
+**Prove.** It must survive an adversarial or simply careful reader: an
+immigration officer, a foreign registrar, an employer's HR department. The
+security architecture is designed *as* the layout, never bolted onto a finished
+one.
+
+**Endure.** It must look correct in 2026 and still look correct, not dated, in
+2076. Which rules out anything trend-driven — and is most of the argument for
+the restraint the design system enforces.
+
+And the discipline that governs all three:
+
+> **Never claim a security property the implementation does not actually
+> provide.**
+
+A plain digest presented as tamper-evidence, tiny text described as microprint,
+a watermark called screenshot-proof, an invisible-ink layer a rendering pipeline
+cannot specify — each is a claim the product cannot keep, and a reader who
+discovers one stops believing the ones that are true. Where a property is real,
+say exactly what it defeats. Where it is a deterrent, call it a deterrent. Where
+it needs infrastructure that is not built, name it as unbuilt rather than
+letting it read as shipped.
+
 ## 10. Non-negotiables
 
 The following are grounds to block a release, regardless of schedule:
@@ -544,6 +577,8 @@ The following are grounds to block a release, regardless of schedule:
 11. An institutional customization that is published despite failing the
     accessibility guardrails, or one that is silently corrected instead of
     being explained.
+12. A security property claimed in an interface, a document, or a specification
+    that the implementation does not actually provide.
 
 ---
 
