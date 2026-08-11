@@ -12,7 +12,6 @@ a classroom, and 390 is the phone a parent reads a report card on in a car park.
 from __future__ import annotations
 
 import pathlib
-import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]

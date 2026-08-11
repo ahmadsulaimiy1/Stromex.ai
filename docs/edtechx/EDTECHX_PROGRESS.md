@@ -524,6 +524,44 @@ is told — it is that the arrangement has not yet been designed.
 
 ---
 
+## The composition review: six architectures, ranked
+
+`tools/design/compositions.py` renders six *architecturally* different
+arrangements of one certificate — identical data, palette and geometry budget,
+so the comparison is about composition and nothing else. Contact sheet at
+`docs/edtechx/design/plates/contact-sheet.png`.
+
+**One bug, appearing six times.** The recipient name wraps to two lines under
+hostile data, and every zone beneath it is pinned at a fixed offset from the
+name's *top*. So the Arabic name, the degree and the field of study overlap each
+other in A, C, D, E and F. This is the single most useful thing the exercise
+produced: absolute positioning against variable-height content is a defect the
+short-name version of this data would never have shown. The fix is structural —
+zones flow within a band, or the name is optically fitted to one line — and it
+is the first thing the next increment does.
+
+**The ranking, by architecture rather than by finish:**
+
+| | Composition | Grade | Why |
+|---|---|---|---|
+| **F** | Institutional rule | **A** | No enclosing frame at all: two full-width rules, a left-aligned hierarchy, a wide margin, the seal as a right-hand counterweight. Reads as institutionally important before a word is read, and has none of the border-template feeling. The asymmetry is real and has a reason. |
+| **C** | Administrative edge | **A−** | The passport-page column genuinely works. Document identity is legible and clearly subordinate; the ceremonial field is calm because the apparatus has left it. |
+| **D** | Heraldic lintel | **B+** | Seal between the two institutional names, carried on a full-width rule, with the degree in a khatam-bounded cartouche. A real architecture; slightly conventional. |
+| **B** | Ceremonial band | **B−** | Good idea, wrong proportions. The band is too tall and too pale — it reads as a grey box rather than a register, and it leaves dead field above and below. |
+| **A** | Architectural axis | **C+** | The spine is nearly invisible at 0.24mm and the frame openings read as accidental gaps rather than as a deliberate interruption. |
+| **E** | Geometric field | **C** | The construction is drawn but reads as a diagram *behind* text rather than as the architecture *of* it. |
+
+**What the ranking says.** The two strongest compositions are the two that
+abandon or subordinate the enclosing frame. That is the answer to the first
+plate's central defect: four nested rectangles were not a weak frame, they were
+the wrong idea. F and C both establish authority through alignment, margin and
+one counterweight rather than through enclosure.
+
+Next: fix the wrap defect structurally, then develop F and C to finish — and
+only then the remaining fourteen certificates and five transcripts.
+
+---
+
 ## Working notes for the next session
 
 - **Start here:** `apps/edtechx-api/README.md`, then this file, then `EDTECHX_ROADMAP.md` Phase 2.
