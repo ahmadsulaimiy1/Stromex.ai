@@ -87,14 +87,15 @@ band, one field, all from the same geometry.
 **2 · 11 Crimson Imperial.** The frankest expression of imperial weight. Crimson
 mass on all four sides at 8.6mm tiling pitch, mitred corner brackets in a deeper
 crimson carrying gold medallions, vertical spines down the left and right
-registers, a filled gold palmette cresting the inner frame, and one bright
+registers, a cresting medallion straddling the inner frame, and one bright
 ceremonial centre — an ivory cartouche carrying the recipient's name. The colour
 does most of the work and the architecture keeps it from shouting.
 
 **3 · 01 Royal Palace.** The most complete *architecture* of the twelve: a navy
 field register, a micro-tessellation register, a stepped ceremonial architrave
 with shouldered corners, mitred corner blocks, a crest medallion on the axis
-with spreader rules running left and right, and a cresting above. Ivory, navy
+with spreader rules running left and right, and a cresting medallion
+straddling the architrave. Ivory, navy
 and royal gold. It reads as a doorcase, which is exactly the ambition.
 
 ### The rest, honestly
