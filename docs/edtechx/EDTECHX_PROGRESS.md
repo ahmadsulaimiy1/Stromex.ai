@@ -562,6 +562,48 @@ only then the remaining fourteen certificates and five transcripts.
 
 ---
 
+## Flagship F: flow, and the hostile set
+
+`tools/design/flagship.py`. Contact sheet at `plates/f-hostile-contact.png`.
+
+**The variable-height defect is fixed structurally.** The field is one flex
+column; bands are its children; two flexible spacers absorb the difference.
+There is no fixed vertical offset anywhere in the composition, so overlap is not
+avoided — it is unrepresentable. A name that takes three lines pushes what
+follows down. No shrink-to-fit: the recipient is sized within a stated range
+(12.4mm → 8.2mm) and wraps beyond it, because reducing the peak until the
+longest possible name fits on one line makes every ordinary name look timid to
+protect an extraordinary one.
+
+Verified across four variants — hostile baseline, an ordinary short name, a long
+institution with three signatories, and the minimal case (no Arabic, no
+distinction, no seal, one signatory). **No collisions in any of them.**
+
+**Three defects found by looking and fixed:** the Level I plate was still
+drawing one engraved register, which appeared as a gold rectangle inside F's own
+two rules — a frame F had specifically been chosen for not having, so `build()`
+gained `frameless`; the signature cells were shrink-to-content and therefore
+unequal; and the seal legend truncated mid-word, reading "MERIDIAN INSTITUTE FOR
+ADVANCE", a typo the institution did not make.
+
+**Still open on F:**
+
+1. **Without the seal the composition leans left.** The seal is the right-hand
+   counterweight, and the minimal variant has nothing in its place — the right
+   half of the lower sheet is empty. The composition needs a defined fallback
+   counterweight, not a smaller margin.
+2. **The short-name variant leaves the Arabic detached** — it aligns right
+   against the Arabic institutional name, which is correct, but with a short
+   Latin name the gap between them reads as a hole rather than as a diagonal.
+3. The statement's 56% measure leaves the right half quiet, which works with the
+   seal present and is part of defect 1 without it.
+
+Not yet done on F: print review at 200%, greyscale hierarchy check beyond the
+single capture, and the A4-portrait and Letter compositions. C has not been
+started.
+
+---
+
 ## Working notes for the next session
 
 - **Start here:** `apps/edtechx-api/README.md`, then this file, then `EDTECHX_ROADMAP.md` Phase 2.

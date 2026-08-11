@@ -140,6 +140,7 @@ def build(
     gold: str = "#B08D57",
     serial: str = "",
     institution: str = "",
+    frameless: bool = False,
 ) -> Plate:
     """Generate the plate for one sheet at one ceremonial level.
 
@@ -191,7 +192,11 @@ def build(
         )
 
     # --- the frame registers ---
-    layers.append(_frame_registers(sheet, budget, ink, gold))
+    # A composition may decline them. F establishes its edge with two full-width
+    # rules and a wide margin, and an engraved register drawn inside those is
+    # the enclosure it was chosen for not having.
+    if not frameless:
+        layers.append(_frame_registers(sheet, budget, ink, gold))
 
     # --- lathe work between the registers ---
     if "guilloche" in budget.permits and len(budget.frame) >= 3:
