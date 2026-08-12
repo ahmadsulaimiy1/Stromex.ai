@@ -989,6 +989,44 @@ build output rather than history — the size matrix alone is 1.4GB of HTML with
 embedded fonts — so the repository keeps the inventory, the refused-size ledger
 and one contact sheet, and `tools/design/library.py` regenerates the rest.
 
+## Full audit: what the green suite was not saying
+
+Three findings, and the first one invalidates how the other work had been
+reported.
+
+**PostgreSQL was not running, and the suite did not say so.** It reported 619
+passed and looked healthy. It had silently skipped **593 tests** — every
+row-level-security test, every tenant-isolation test, auth, documents, imports,
+entitlements, scope predicates. Started the database and ran it properly:
+**1,214 passed, 1 skipped, 0 failed.** A green summary that skips half of itself
+proves the pure-Python layer and nothing else, and it announces that only in the
+skip reasons, which nobody reads.
+
+**With the database up, one test failed, and it was right.** The product had
+decided which education system it serves: *Diploma Supplement, Ibtidāʼiyyah,
+Junior Secondary* in the template library; *doctorate, masters, bachelor,
+diploma* in the prompt vocabulary — all in executed code. Both moved to
+`app/data/*.toml`. The architecture stayed in Python; the content left. That is
+also exactly what "imported here for their quick edit" asked for, and a tenant
+shipping its own file is now exercised by a test rather than asserted.
+
+**Four documents had never been looked at.** Every composition had passed the
+machine audit; rendering four found six defects it could not see — a custom
+property that never reached the stylesheet, so the seal rendered at 79mm instead
+of 22 on every sheet in the library; a foot that did not grow with the sheet;
+inline rows that pushed instead of wrapping; an Arabic overprint laid out
+left-to-right; a supplement carrying the transcript's course list. The audit now
+measures horizontal overflow, which it did not before.
+
+**State of the project, measured:** 14 modules, 68 tables with 61 under RLS, 12
+migrations, ~51,000 lines, 1,214 tests, 42 ADRs, no stubs, lint clean — behind
+**16 HTTP operations**. The engine is built and the doors are not. Full account,
+with the phases behind and ahead, in
+`docs/edtechx/EDTECHX_STATE_OF_THE_PROJECT.md`.
+
+**The three things between here and a school using this:** an API surface, a
+browser that responds, and one real school.
+
 
 ## Working notes for the next session
 
