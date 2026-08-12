@@ -32,6 +32,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "apps" / "edtechx-api"))
 
 from app.modules.design import geometry as geo
+from app.modules.design.architecture import cartouche_path
 from app.modules.design.gilding import SCHEMES, foil_gradient
 from app.modules.design.personality import PERSONALITIES, Personality
 from app.modules.design.press import Press
@@ -300,174 +301,197 @@ def _chancery(person: Personality) -> tuple[Press, str, str]:
     return press, body, css
 
 
+def _head_device(motif: Motif, rect: geo.Rect, ink: str, metal: str,
+                 face: str) -> tuple[str, str]:
+    """The head device: a shaped cartouche. Returns (knockout, ornament).
+
+    Two attempts at this, and the second is here because the first was worse
+    than what it replaced. The diagnosis was right — six near-identical discs
+    on one sheet is what an algorithm produces — but the replacement was a
+    loose lobed ribbon knocked out of the band by a hard white **rectangle**,
+    which sliced the border rather than interrupting it.
+
+    A device set into a band knocks out its **own silhouette**. So the
+    knockout is the cartouche path itself, and the ornament sits inside it: a
+    shaped panel with cut corners and arched ends, wider than tall, carrying
+    the monogram. Same family geometry, a fourth silhouette, and the band
+    closes around it instead of being cut by a box.
+    """
+    path = cartouche_path(rect, arch=5.0, cut=4.2)
+    knockout = f'<path d="{path}" fill="{{paper}}"/>'
+    cx, cy = rect.cx, rect.cy
+    ornament = (
+        f'<path d="{path}" fill="none" stroke="{metal}" stroke-width="0.95"/>'
+        f'<path d="{cartouche_path(rect.inset(1.9), arch=4.2, cut=3.6)}"'
+        f' fill="none" stroke="{face}" stroke-width="0.30"/>'
+        + motif.star(cx, cy, rect.h * 0.34, ink=metal, width=0.60)
+        + motif.rosette(cx, cy, rect.h * 0.22, ink=ink, width=0.13)
+        + "".join(
+            motif.star(cx + offset, cy, rect.h * 0.16, ink=face, width=0.26)
+            for offset in (-rect.w * 0.31, rect.w * 0.31)
+        )
+    )
+    return knockout, ornament
+
+
 def _court(person: Personality) -> tuple[Press, str, str]:
-    """The illuminated page: a dark bordered mass with a luminous panel set in.
+    """A chancery page: hierarchy, rhythm, and one axis deliberately broken.
 
-    **Redesigned, not tweaked.** The first version failed all three distances
-    and it is worth naming why, because the failures are the ordinary ones.
+    **Third architecture, not a third adjustment.** The second one had a
+    silhouette and still read as software, and the mechanism was namable: six
+    near-identical discs, one ornament tile repeated without pause, and every
+    single element on the centre line. Three replacements follow from that.
 
-    *At three metres* it had no silhouette: every part of the sheet was the same
-    tan, so there was no mass anywhere and it read as a downloadable award. The
-    fix is not more ornament — it is **tone**. A royal manuscript page is dark
-    and dense at its edge and luminous at its centre, and that contrast is the
-    whole silhouette. The border here is now a deep ground carrying the
-    illumination, and the text sits on clean paper reserved out of it.
+    *The head is a cartouche, not a disc.* A lobed horizontal tughra carrying
+    the monogram — same geometry as the family, different silhouette. The
+    circle is now spent once, on the seal, which is why the seal reads as *the*
+    seal.
 
-    *At one metre* the text box was a rounded rectangle floating in the middle,
-    centred because centring was easy, and the medallion hovered above the frame
-    touching nothing. In a manuscript the medallion is **set into** the band and
-    the band mitres around it, and the text block is a **reserved panel**, not a
-    box on top of a pattern. Both are now true.
+    *The border has expansion joints.* The strapwork run is interrupted at each
+    side's midpoint by a lozenge and at each corner by a fan, with a plain pause
+    either side of every interruption. The eye travels the frame instead of
+    scanning a tile. Major register, minor register, hairline: three weights,
+    three scales, one family.
 
-    *At twenty centimetres* there was nothing to find: one pattern at one
-    strength and three parallel rules. The band now carries four registers at
-    four scales, and the same figure recurs at four sizes — the head medallion,
-    the four corner quarters, the strapwork rosettes, and the fine ring on the
-    seal — so the closer it is looked at, the more of one geometry there is.
+    *The apparatus is off-axis.* The ceremonial centre — title, name, citation —
+    stays on the axis, because a certificate about one person may not wander.
+    Everything administrative is deliberately not: the seal sits right of
+    centre, the signatures weight the left, the reference sits at the lower
+    left. That is the tension a hand-composed page has and a centred one never
+    does.
     """
     press, motif, _field, m = _frame(person)
     ink = person.ink
     paper = person.paper
-    band_ground = geo.blend(ink, "#6B4A12", 0.34)
+    mass = geo.blend(ink, "#6B4A12", 0.30)
+    metal = SCHEMES[person.scheme].role("primary")
 
-    # --- 1. the illuminated band: tonal mass, which is the silhouette --------
     outer = geo.Rect(7, 7, W - 14, H - 14)
-    inner = outer.inset(27.5)
+    band = 26.0
+    inner = outer.inset(band)
+
+    # --- the major register: mass, which is the whole silhouette ------------
     press.mark("process",
                f'<path fill-rule="evenodd" d="M{outer.x} {outer.y} '
                f'h{outer.w} v{outer.h} h-{outer.w} Z '
                f'M{inner.x} {inner.y} h{inner.w} v{inner.h} h-{inner.w} Z" '
-               f'fill="{band_ground}"/>', tonal=True)
+               f'fill="{mass}"/>', tonal=True)
 
-    # --- 2. four registers in the band, at four scales -----------------------
-    # Outermost: a hairline pair that stops the mass bleeding to the trim.
+    # --- rhythm: strapwork in runs, with pauses at every interruption -------
+    # Four runs, each stopping short of the corners and parting at the midpoint.
+    # The gaps are the design: an unbroken run is wallpaper however fine it is.
+    joint, corner_stop = 21.0, 30.0
+    runs: list[geo.Rect] = []
+    for horizontal in (outer.y + 3.0, outer.y + outer.h - band + 3.0):
+        left = outer.x + corner_stop
+        span = (outer.w - corner_stop * 2 - joint) / 2
+        runs += [geo.Rect(left, horizontal, span, band - 6.0),
+                 geo.Rect(left + span + joint, horizontal, span, band - 6.0)]
+    for vertical in (outer.x + 3.0, outer.x + outer.w - band + 3.0):
+        top = outer.y + corner_stop
+        span = (outer.h - corner_stop * 2 - joint) / 2
+        runs += [geo.Rect(vertical, top, band - 6.0, span),
+                 geo.Rect(vertical, top + span + joint, band - 6.0, span)]
+    for run in runs:
+        press.mark("foil_second",
+                   motif.field(run, cell=7.6, ink=metal.face, width=0.13,
+                               strength=1.0), stroke=0.26)
+
+    # --- the minor register: a finer grain, inside the major ---------------
+    press.mark("guilloche",
+               geo.guilloche_band(inner.inset(-3.2), ink=metal.core,
+                                  width=0.085, strength=0.9, amplitude=0.9,
+                                  waves=int(W / 1.7)), stroke=0.085)
+    press.mark("foil_primary",
+               f'<rect {inner.inset(-5.4).attrs()} fill="none"'
+               f' stroke="{metal.core}" stroke-width="0.95"/>'
+               f'<rect {inner.inset(-1.2).attrs()} fill="none"'
+               f' stroke="{metal.face}" stroke-width="0.36"/>', stroke=0.36)
     press.mark("line",
                f'<rect {outer.attrs()} fill="none"'
-               f' stroke="{geo.blend(ink, band_ground, 0.5)}"'
-               ' stroke-width="0.30"/>'
-               f'<rect {outer.inset(1.5).attrs()} fill="none"'
-               f' stroke="{m["primary"]}" stroke-width="0.18"/>', stroke=0.18)
-    # The strapwork register — the band's own ornament, in gold on the mass.
-    strap = outer.inset(6.5)
-    press.mark("foil_second",
-               motif.field(strap, cell=8.4, ink=m["second"], width=0.13,
-                           strength=1.0, hollow=0.0,
-                           keep_out=inner.inset(-6.0)), stroke=0.26)
-    # A guilloché register beneath it, finer, so the band has two grains.
-    press.mark("guilloche",
-               geo.guilloche_band(outer.inset(3.4), ink=m["primary"],
-                                  width=0.09, strength=0.85, amplitude=1.15,
-                                  waves=int(W / 2.1)), stroke=0.09)
-    # The inner engraved rule: three flat strokes, the panel's own edge.
-    press.mark("foil_primary",
-               f'<rect {inner.inset(-2.6).attrs()} fill="none"'
-               f' stroke="{m["primary"]}" stroke-width="0.9"/>'
-               f'<rect {inner.inset(-1.1).attrs()} fill="none"'
-               f' stroke="{m["face"]}" stroke-width="0.34"/>', stroke=0.34)
+               f' stroke="{geo.blend(ink, mass, 0.55)}" stroke-width="0.28"/>'
+               f'<rect {outer.inset(1.4).attrs()} fill="none"'
+               f' stroke="{metal.core}" stroke-width="0.16"/>', stroke=0.16)
 
-    # --- 3. the reserved panel: clean paper, so the type has air -------------
+    # --- the reserved panel: clean paper, so the type has air --------------
     press.mark("process", f'<rect {inner.attrs()} fill="{paper}"/>', tonal=True)
     press.mark("guilloche",
-               motif.field(inner, cell=21.0, ink=ink, width=0.07,
-                           strength=0.13), stroke=0.07)
-    press.mark("line",
-               f'<rect {inner.attrs()} fill="none"'
-               f' stroke="{geo.tint(ink, 0.34)}" stroke-width="0.16"/>',
-               stroke=0.16)
+               motif.field(inner, cell=23.0, ink=ink, width=0.07,
+                           strength=0.11), stroke=0.07)
 
-    # --- 4. the shamsa, SET INTO the head of the band ------------------------
-    # It interrupts the band rather than hovering over it: the mass is cut away
-    # behind it and the medallion sits in the hole. That single change is most
-    # of the difference between illumination and a badge on a frame.
-    # On the band's MIDLINE, not its outer edge. The first version centred it
-    # on `outer.y` with a 20.4mm radius, which put thirteen millimetres of the
-    # medallion past the trim — it was struck through the knife on every copy.
-    # A medallion set into a band sits *in* the band.
-    band_mid = outer.y + 13.75
-    head_r = 11.4
-    press.mark("process",
-               f'<circle cx="{W / 2:.1f}" cy="{band_mid:.1f}"'
-               f' r="{head_r + 2.6:.1f}" fill="{paper}"/>', tonal=True)
-    press.mark("foil_primary",
-               f'<circle cx="{W / 2:.1f}" cy="{band_mid:.1f}"'
-               f' r="{head_r + 2.6:.1f}" fill="none" stroke="{m["primary"]}"'
-               ' stroke-width="0.7"/>', stroke=0.70)
-    press.mark("foil_primary",
-               shamsa(motif, W / 2, band_mid, head_r, geo.tint(ink, 0.55),
-                      m["primary"]), stroke=0.30)
+    # --- the head: a cartouche. The family's geometry, not its silhouette --
+    head = geo.Rect(W / 2 - 31, outer.y + 3.4, 62, band - 6.8)
+    knockout, ornament = _head_device(motif, head, geo.tint(ink, 0.5),
+                                      metal.core, metal.face)
+    press.mark("process", knockout.replace("{paper}", paper), tonal=True)
+    press.mark("foil_primary", ornament, stroke=0.30)
     press.mark("emboss",
-               motif.polygram(W / 2, band_mid, head_r * 0.66, ink="#000",
-                              width=0.9), stroke=0.90)
+               motif.star(head.cx, head.cy, 5.2, ink="#000",
+                          width=0.85), stroke=0.85)
 
-    # --- 5. corners: the same figure at 40%, mitring the band ---------------
-    # Also on the band's diagonal midline, for the same reason.
-    inset = 13.75
-    for cx, cy in ((outer.x + inset, outer.y + inset),
-                   (outer.x + outer.w - inset, outer.y + inset),
-                   (outer.x + inset, outer.y + outer.h - inset),
-                   (outer.x + outer.w - inset, outer.y + outer.h - inset)):
-        press.mark("process",
-                   f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="11.4"'
-                   f' fill="{paper}"/>', tonal=True)
-        # The ring and the star are struck; the rosette inside them is
-        # *printed* in a metal ink. That is the real division of labour on a
-        # press — foil carries mass, litho carries fineness — and the press
-        # refused the 0.14mm rosette on the foil plate until it was moved,
-        # which is the module earning its place.
-        quadrant = (0 if cx < W / 2 else 1) + (0 if cy < H / 2 else 2)
+    # --- corners: fans. Third silhouette in the family. --------------------
+    for quadrant, (cx, cy) in enumerate((
+        (outer.x, outer.y), (outer.x + outer.w, outer.y),
+        (outer.x, outer.y + outer.h), (outer.x + outer.w, outer.y + outer.h),
+    )):
+        rotation = {0: 0, 1: 90, 2: 270, 3: 180}[quadrant]
         press.mark("foil_primary",
-                   f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="11.4" fill="none"'
-                   f' stroke="{m["primary"]}" stroke-width="0.5"/>'
-                   + f'<g transform="rotate({quadrant * 90} {cx:.1f} {cy:.1f})">'
-                   + geo.corner_frame(cx - 7.6, cy - 7.6, 15.2,
-                                      ink=m["primary"], quadrant=0,
-                                      strength=1.0, arcs=4)
+                   f'<g transform="translate({cx:.1f} {cy:.1f})'
+                   f' rotate({rotation})">'
+                   + geo.corner_frame(2.6, 2.6, 21.0, ink=metal.core,
+                                      quadrant=0, strength=1.0, arcs=5)
                    + "</g>", stroke=0.42)
-        press.mark("line",
-                   motif.star(cx, cy, 4.4, ink=m["second"], width=0.20),
-                   stroke=0.20)
 
-    # --- 6. the seal, struck into the panel's foot --------------------------
-    seal_cx, seal_cy = inner.cx, inner.y + inner.h * 0.665
-    seal_r = 15.4
-    # The field first: turned, warm, and dense enough that the seal reads as a
-    # struck object at three metres rather than as a pale ring.
+    # --- mid-side lozenges: fourth silhouette, and the expansion joints ----
+    for cx, cy in ((W / 2, outer.y + outer.h - band / 2),
+                   (outer.x + band / 2, H / 2),
+                   (outer.x + outer.w - band / 2, H / 2)):
+        press.mark("foil_primary",
+                   f'<g transform="rotate(45 {cx:.1f} {cy:.1f})">'
+                   f'<rect x="{cx - 6.4:.1f}" y="{cy - 6.4:.1f}" width="12.8"'
+                   f' height="12.8" fill="none" stroke="{metal.core}"'
+                   ' stroke-width="0.62"/></g>'
+                   + motif.star(cx, cy, 4.6, ink=metal.face, width=0.30),
+                   stroke=0.30)
+
+    # --- the seal: the ONLY disc on the sheet, and off the axis ------------
+    seal_cx = inner.x + inner.w * 0.775
+    seal_cy = inner.y + inner.h * 0.685
+    seal_r = 16.2
     press.mark("guilloche",
-               motif.guilloche(seal_cx, seal_cy, seal_r * 0.86, ink=ink,
-                               width=0.085, strength=0.42, passes=3),
+               motif.guilloche(seal_cx, seal_cy, seal_r * 0.84, ink=ink,
+                               width=0.085, strength=0.46, passes=3),
                stroke=0.085)
     press.mark("foil_primary",
                f'<circle cx="{seal_cx:.1f}" cy="{seal_cy:.1f}"'
-               f' r="{seal_r:.1f}" fill="none" stroke="{m["primary"]}"'
-               ' stroke-width="1.25"/>'
+               f' r="{seal_r:.1f}" fill="none" stroke="{metal.core}"'
+               ' stroke-width="1.35"/>'
                f'<circle cx="{seal_cx:.1f}" cy="{seal_cy:.1f}"'
-               f' r="{seal_r - 2.1:.1f}" fill="none" stroke="{m["face"]}"'
-               ' stroke-width="0.42"/>'
-               + motif.star(seal_cx, seal_cy, seal_r * 0.52,
-                            ink=m["primary"], width=0.62), stroke=0.42)
+               f' r="{seal_r - 2.2:.1f}" fill="none" stroke="{metal.face}"'
+               ' stroke-width="0.44"/>'
+               + motif.star(seal_cx, seal_cy, seal_r * 0.50, ink=metal.core,
+                            width=0.66), stroke=0.44)
     press.mark("line",
-               motif.medallion_ring(seal_cx, seal_cy, seal_r * 0.74,
-                                    ink=m["second"], width=0.16), stroke=0.16)
-    # The emboss now *supports* the metal instead of standing in for it: a
-    # relief wall at the rim only, which is what a struck seal actually is.
+               motif.medallion_ring(seal_cx, seal_cy, seal_r * 0.73,
+                                    ink=metal.face, width=0.16), stroke=0.16)
     press.mark("emboss",
                f'<circle cx="{seal_cx:.1f}" cy="{seal_cy:.1f}"'
                f' r="{seal_r:.1f}" fill="none" stroke="#000"'
-               ' stroke-width="1.25"/>', stroke=1.25)
+               ' stroke-width="1.35"/>', stroke=1.35)
 
-    # --- 7. the fine registers, for twenty centimetres ----------------------
+    # --- the fine registers, for twenty centimetres ------------------------
     press.mark("microtext",
-               geo.fine_text_ring(inner.inset(-2.2), identifier="crt",
+               geo.fine_text_ring(inner.inset(-2.4), identifier="crt",
                                   text=f"{INSTITUTION.upper()} · {SERIAL} · ",
-                                  ink=m["primary"], size=0.64, strength=0.62),
+                                  ink=metal.core, size=0.64, strength=0.66),
                stroke=0.066)
     press.mark("uv", motif.rosette(inner.cx, inner.cy, 52, ink="#000",
                                    width=0.4), stroke=0.40)
     press.defs.append(geo.line_screen("crt", degrees=8, pitch=0.44,
-                                      width=0.07, ink=ink, strength=0.13))
+                                      width=0.07, ink=ink, strength=0.12))
     press.mark("antipathy", f'<rect {inner.attrs()} fill="url(#crt)"/>')
 
-    text = inner.inset(13)
+    text = inner.inset(12)
     body = f'''
     <div class="crt">
       <div class="ar-ttl" dir="rtl">شهادة إتمام المرحلة الجامعية</div>
@@ -481,37 +505,42 @@ def _court(person: Personality) -> tuple[Press, str, str]:
         <div class="sig"><span></span>رئيس المدرسة · Principal</div>
         <div class="sig"><span></span>رئيس مجلس الإدارة · Chairman</div>
       </div>
-      <div class="ref">{esc(SERIAL)} · 14 March 2026 · Ikorodu, Lagos</div>
+      <div class="ref">{esc(SERIAL)}<br>14 March 2026 · Ikorodu, Lagos</div>
     </div>'''
     css = f'''
     .crt {{ position:absolute; left:{text.x:.1f}mm; top:{text.y:.1f}mm;
       width:{text.w:.1f}mm; height:{text.h:.1f}mm; color:{ink};
       text-align:center; display:flex; flex-direction:column;
       align-items:center; font-family:'Cormorant Garamond',serif; }}
-    .crt .ar-ttl {{ font-family:'Amiri',serif; font-size:8.6mm; line-height:1.4;
+    .crt .ar-ttl {{ font-family:'Amiri',serif; font-size:8.8mm; line-height:1.4;
       color:{m["engraved"]}; }}
     .crt .la-ttl {{ font-size:3.0mm; letter-spacing:0.30em;
-      text-transform:uppercase; color:{m["primary"]}; margin-top:1.5mm; }}
-    .crt .lede {{ font-size:3.2mm; font-style:italic; margin-top:7mm;
+      text-transform:uppercase; color:{metal.core}; margin-top:1.2mm; }}
+    .crt .lede {{ font-size:3.2mm; font-style:italic; margin-top:8mm;
       color:{geo.tint(ink, 0.66)}; }}
-    .crt .peak {{ font-size:9.8mm; font-weight:600; margin-top:2.5mm;
-      letter-spacing:-0.005em; }}
-    .crt .rule {{ display:flex; align-items:center; gap:2mm; width:62%;
+    .crt .peak {{ font-size:10.2mm; font-weight:600; margin-top:2.5mm;
+      letter-spacing:-0.006em; }}
+    .crt .rule {{ display:flex; align-items:center; gap:2mm; width:58%;
       margin-top:3.5mm; }}
-    .crt .rule i {{ flex:1; height:0.26mm; background:{m["primary"]}; }}
+    .crt .rule i {{ flex:1; height:0.26mm; background:{metal.core}; }}
     .crt .rule b {{ width:3mm; height:3mm; transform:rotate(45deg);
-      border:0.26mm solid {m["primary"]}; }}
+      border:0.26mm solid {metal.core}; }}
     .crt .ar-body {{ font-family:'Amiri',serif; font-size:3.5mm;
-      line-height:1.95; max-width:80%; margin-top:4mm;
+      line-height:1.95; max-width:74%; margin-top:4.5mm;
       color:{geo.tint(ink, 0.84)}; }}
-    .crt .foot {{ margin-top:auto; width:100%; display:flex; align-items:flex-end;
-      justify-content:space-between; gap:34mm; }}
-    .crt .sig {{ flex:1 1 0; font-family:'Amiri',serif; font-size:2.7mm;
-      color:{geo.tint(ink, 0.62)}; }}
-    .crt .sig span {{ display:block; width:82%; margin:0 auto 1.4mm;
-      border-top:0.24mm solid {m["primary"]}; }}
-    .crt .ref {{ margin-top:3mm; font-family:'IBM Plex Mono',monospace;
-      font-size:2.1mm; letter-spacing:0.10em; color:{geo.tint(ink, 0.48)}; }}'''
+    /* Deliberately not centred. The ceremonial column above is on the axis
+       because a certificate about one person may not wander; the apparatus
+       below is weighted left against the seal on the right, which is the
+       tension a hand-composed page has. */
+    .crt .foot {{ margin-top:auto; width:60%; margin-right:auto; display:flex;
+      flex-direction:column; align-items:flex-start; gap:7mm; }}
+    .crt .sig {{ width:74%; font-family:'Amiri',serif; font-size:2.7mm;
+      text-align:left; color:{geo.tint(ink, 0.62)}; }}
+    .crt .sig span {{ display:block; width:100%; margin-bottom:1.4mm;
+      border-top:0.24mm solid {metal.core}; }}
+    .crt .ref {{ align-self:flex-start; margin-top:5mm; text-align:left;
+      font-family:'IBM Plex Mono',monospace; font-size:2.1mm; line-height:1.7;
+      letter-spacing:0.08em; color:{geo.tint(ink, 0.46)}; }}'''
     return press, body, css
 
 
