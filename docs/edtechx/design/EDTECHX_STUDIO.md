@@ -106,3 +106,91 @@ every Level I and II design, because every gilding scheme names five metal roles
 Whether a plate is separated onto one foil or two is a decision with a price at
 the printer, so it is now an explicit `second_metal` field, checked against the
 level.
+
+
+---
+
+# Simple prompts — and no route to a cheap design
+
+An institution types *"royal, midnight blue and gold, Arabic first, for our
+PhD"* and gets a finished premium design. `design/prompt.py` is the vocabulary
+that makes that work, and it is deliberately **not a model**: a table of terms a
+real registrar would type, each mapping to a patch on a brief, resolved
+deterministically.
+
+Three reasons a table rather than a model, and the third is the one that matters:
+
+*It works offline.* No key, no network, no per-request cost. An institution
+onboarding at 2am gets the same studio as one onboarding in a demo.
+
+*It is repeatable.* The same words give the same brief, forever. A model gives a
+different design on Tuesday, and an institution that approved one on Monday
+would not recognise it.
+
+*It cannot fail downward.* **Every term in the table lands on a premium
+construction, because there are no others in it.** A person can type "simple",
+"clean", "minimal", "plain" or "modern" and what they get is the most
+*restrained premium* register — laid paper, one metal, engraved rules, real
+typography. Never a flat sheet, because a flat sheet is not in the vocabulary
+and no code path reaches one. The product rule is structural rather than
+advisory: **the cheap option does not exist to be chosen.**
+
+An assistant sits on top of this and does the same job better for unusual
+requests, but it is an accelerator, never a dependency, and it returns the same
+`Brief`.
+
+## Six axes
+
+`character` (royal, imperial, crimson, heritage, emerald, midnight, executive,
+scholarly) · `metal` · `ground` · `language` · `level` · `geometry`. One term per
+axis wins — **the last one typed**, so "midnight blue, actually crimson" does
+what a person means.
+
+The **purpose decides the level** when the words do not: a certificate asked for
+in crimson is a Level III document in crimson, not a doctorate in crimson. A
+stated level beats the purpose. And Level I never carries ink behind the words,
+whatever ground a character term chose.
+
+Unrecognised design words are **reported, not swallowed** — an institution that
+typed "letterpress" is told it was ignored — while stopwords are filtered so the
+real finding is visible.
+
+Guarded by tests that check *every term* and *every pair of terms* renders, and
+that asking for "simple" still returns level ≥ II with a real metal and a real
+ground.
+
+## Signature preparation
+
+`design/signature_asset.py` lifts an officer's ink off the paper it was
+photographed on. A phone capture is dark strokes on a field that is not white —
+a shadow down one side, a colour cast, JPEG noise — and dropping that onto an
+ivory certificate puts a grey rectangle on it.
+
+The method is deliberately explainable, because a registrar has to look at the
+result and agree with it: estimate the paper from a high percentile; measure
+each pixel's distance *below* the paper rather than its absolute darkness, so a
+signature on grey card and one on white both work; ramp the alpha across a band
+rather than stepping, so the pen's antialiasing survives and the stroke stays a
+stroke; recolour to the document's ink, because a blue biro on a midnight-set
+certificate is wrong twice over; and trim to the strokes, so a signature
+photographed in the middle of an A4 sheet does not render at 4mm in a 60mm box.
+
+`assess()` refuses a bad capture **at upload, while the officer is still there**,
+and every problem is phrased as something to do: "sign again in black on white
+paper", "photograph it again in brighter light", "crop closer to the strokes",
+"the capture is 300px wide and needs 710px for 300 DPI".
+
+Stated plainly: it does not vectorise, it does not repair a bad capture, and it
+does not authenticate anything. Whether the officer holding that pen was in
+office on the day is the authority chain's question.
+
+## Two implementation bugs the tests caught
+
+**"The last term wins" was false.** The resolver iterated the vocabulary table
+and overwrote per axis, so the last row *in the file* won rather than the last
+word *typed* — "midnight blue, actually crimson" produced midnight, the opposite
+of the documented behaviour.
+
+**The signature softness parameter was inverted against its own docstring.**
+`spread × (1 − softness)` meant asking for a hard edge produced the softest
+possible ramp. The width is now `softness × spread`.
