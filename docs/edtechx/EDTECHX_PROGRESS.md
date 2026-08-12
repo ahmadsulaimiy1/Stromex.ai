@@ -815,6 +815,82 @@ raised type are simulations and are labelled as such. Microtext at 0.56–0.62mm
 has not been measured on any press. Greyscale, 200% inspection, and the
 portrait and Letter compositions have not been done for any of the twelve.
 
+## The benchmark press, imported: fifteen editable templates
+
+The ask was to bring the benchmark institution's certificates and examination
+documents into EdirasX **exactly**, so an institution can edit one quickly —
+all of them, verifying, with generic names but the same layout and the same
+background.
+
+Delivered: fifteen templates in three families, each an editable `Template`
+(`app/modules/documents/library.py`), each rendered through the EdirasX engine
+by `library_sheet.py`, each wired to the one verification architecture that
+already existed. Four stage certificates, five college awards, six records
+including the graduation register. Full account in
+`docs/edtechx/EDTECHX_TEMPLATE_IMPORT.md`; field-by-field inventory and proofs
+in `docs/edtechx/design/library/`.
+
+**The background is redrawn, not copied, and that is the honest answer to
+"including the background".** The benchmark's master artwork is 92 DPI over an
+A4 sheet — a quarter of what a press needs, and nothing an upscale can recover
+without manufacturing ornament that was never in the file. So
+`app/modules/design/heritage.py` rebuilds the plate's seven-band architecture as
+constructed geometry: epitrochoid lathe work, parametric rosettes, an embossed
+khatam watermark, engraved rules in three flat strokes, real text on a path. It
+has no resolution and is re-cut for any sheet rather than scaled.
+
+**Three categories, kept apart.** Transcribed exactly: layout, sheet, band
+architecture, zone order, and the institutional sentences character for
+character in both scripts. Generic by design: every personal, institutional and
+office name, as a slot with a placeholder default — a real principal's
+attestation may not travel into a multi-tenant library. Not carried: the raster.
+
+**The editorial rules came across with the layouts**, because importing a sheet
+without its reasoning imports the sheet and loses what made it lawful. A school
+award may not borrow a national examination board's name; the two memorisation
+awards are separate templates so neither is reachable from the other by a
+default; the primary citation states no year count because the published figure
+is an age range; a testimonial's Arabic half is empty rather than
+machine-translated. The first two are tests, not comments.
+
+**What the machine audit found**, in order — `tools/design/library.py` renders
+all fifteen against specimen and hostile data and measures both content-against-
+field and field-against-sheet:
+
+1. A 34mm overflow on every stage sheet, 54mm on every college sheet: the field
+   was inset a second time on top of a border already spending 17 % of the short
+   side. Nothing had been looked at yet.
+2. A verification panel printing its archive reference through its own void
+   notice — given 17mm where its internals need 25.6. A collision *inside* an
+   SVG is invisible to any audit that measures boxes, so the guard now lives in
+   `verification_cartouche`, which refuses a rect too short for it.
+3. The college award set twice, at 7.8mm of a 132mm field to say the same words
+   at two sizes.
+4. The register composed as though it were about a person — one graduand's name
+   at peak size over a list of four. Templates now name their own peak; the
+   register's is the session and it carries no recipient slots at all.
+5. A barcode raised on a document with no identity number. `barcode_digits` now
+   returns nothing and the panel draws nothing, rather than encoding an empty
+   payload.
+
+**Verified:** 112 tests in `test_library.py` — every sentence names a slot that
+exists, no filled template leaves an unresolved token, a missing required slot
+refuses rather than printing a blank, an unknown slot is refused rather than
+silently ignored, the two memorisation awards cannot collapse into one, no
+college award borrows a national board's name, the register is not about a
+person, the band architecture is re-cut per sheet and never crosses itself, the
+ground holds the 0.07mm hairline floor, the panel refuses to be too short, a
+signatory with no prepared ink gets no synthesised signature, the QR bay is
+reserved rather than drawn, and the renderer contains no test for any particular
+script. Thirty sheets — fifteen specimen, fifteen hostile — fit with zero
+millimetres over. Suite green, ruff clean.
+
+**Implemented but not verified:** still nothing printed. The fine-text rails are
+fine text at roughly 0.41mm cap height, not microprint; the anti-copy rulings
+are screens, not a latent image; the fibres are cosmetic. Only A4 has been
+composed — Letter and A3 will be re-cut, not scaled — and no imported template
+yet opts into the `zoned` or `integrated` language arrangements.
+
 
 ## Working notes for the next session
 

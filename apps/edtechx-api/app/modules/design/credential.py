@@ -85,6 +85,12 @@ class Credential:
         value is zero-padded on the left, which preserves it numerically.
         """
         digits = "".join(c for c in self.identity_number if c.isdigit())
+        if not digits:
+            # Not every document is about a person. A register has no identity
+            # number, and the honest answer there is no symbol at all rather
+            # than a symbol encoding nothing — a scanner that reads a barcode
+            # and gets an empty payload has been told a lie by the sheet.
+            return ""
         return digits if len(digits) % 2 == 0 else "0" + digits
 
 
@@ -109,6 +115,14 @@ _C128: Final[tuple[str, ...]] = (
     "411311", "113141", "114131", "311141", "411131", "211412", "211214",
     "211232", "2331112",
 )
+
+#: The shortest a verification cartouche may be, in millimetres. Derived from
+#: the panel's own internal offsets, not chosen: the barcode ends 21.7mm down
+#: and the footer rule sits 3.9mm up from the bottom edge, so anything under
+#: 25.6 puts the void notice through the bars. 27 is that number with a
+#: millimetre and a half of air, because a symbol touching a rule is a symbol a
+#: scanner reads as a wider bar.
+_PANEL_MIN_HEIGHT: Final[float] = 27.0
 
 _START_C: Final[int] = 105
 _STOP: Final[int] = 106
@@ -217,6 +231,21 @@ def verification_cartouche(rect: geo.Rect, credential: Credential, *,
     space available and the panel refuses to draw a symbol it would have to
     squeeze, because a squeezed Code 128 does not scan.
     """
+    # The panel's internals are laid out from its own top edge at fixed
+    # offsets — masthead at 4.4, grid rows at 7.8 and 13.8, barcode at 18.2
+    # over 3.5, footer rule 3.9 up from the bottom — so it has a real minimum
+    # height and a caller who hands it less does not get a smaller panel, they
+    # get the archive reference printed through the void notice. That is what a
+    # 17mm panel produced on the first proof of the imported library, and
+    # nothing outside this function could have caught it: a collision inside an
+    # SVG is invisible to a layout audit that measures boxes.
+    if rect.h < _PANEL_MIN_HEIGHT:
+        raise ValueError(
+            f"A verification cartouche needs at least {_PANEL_MIN_HEIGHT:g}mm "
+            f"of height and was given {rect.h:.1f}mm. Give the panel its "
+            "height rather than letting its rows overprint each other — a "
+            "verification instrument that cannot be read is not one."
+        )
     metal = scheme.secondary
     label = geo.tint(ink, 0.52)
     body = geo.tint(ink, 0.92)
@@ -244,12 +273,19 @@ def verification_cartouche(rect: geo.Rect, credential: Credential, *,
     )
 
     # --- the 2 x 2 identifier grid ---
-    cells = (
-        ("DOCUMENT ID", credential.document_id),
-        ("VERIFICATION CODE", credential.verification_code),
-        ("ARCHIVE REFERENCE", credential.archive_reference),
-        ("STUDENT IDENTITY NO.", credential.identity_number),
-    )
+    # Empty identifiers are dropped rather than printed as a label over a
+    # blank. A blank beside "ARCHIVE REFERENCE" reads as a reference the
+    # institution failed to record, which is a worse statement than the honest
+    # one: this class of document does not carry that identifier.
+    cells = tuple(
+        (name, value) for name, value in (
+            ("DOCUMENT ID", credential.document_id),
+            ("VERIFICATION CODE", credential.verification_code),
+            ("ARCHIVE REFERENCE", credential.archive_reference),
+            ("STUDENT IDENTITY NO.", credential.identity_number),
+            ("CERTIFICATE NUMBER", credential.certificate_number),
+        ) if str(value).strip()
+    )[:4]
     col = (rect.w - 5.0) / 2
     for index, (name, value) in enumerate(cells):
         cx = rect.x + 2.6 + (index % 2) * (col + 2.4)
@@ -266,8 +302,13 @@ def verification_cartouche(rect: geo.Rect, credential: Credential, *,
     # --- the barcode, sized to the panel rather than squeezed into it ---
     digits = credential.barcode_digits
     available = rect.w - 6.0
-    module = min(0.40, available / max(1.0, code128c_width(digits, module=1.0)))
-    if module >= 0.33:
+    module = (
+        min(0.40, available / max(1.0, code128c_width(digits, module=1.0)))
+        if digits else 0.0
+    )
+    if not digits:
+        pass  # nothing numeric to encode; see Credential.barcode_digits
+    elif module >= 0.33:
         symbol = code128c_width(digits, module=module)
         out.append(code128c(digits, x=rect.cx - symbol / 2,
                             y=rect.y + 18.2, height=3.5, module=module))
