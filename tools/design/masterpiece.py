@@ -49,8 +49,14 @@ OUT = ROOT / "docs" / "edtechx" / "design" / "masterpieces"
 
 from app.modules.design import architecture as arch  # noqa: E402
 from app.modules.design import geometry as geo  # noqa: E402
-from app.modules.design import interior  # noqa: E402
+from app.modules.design import grounds, interior  # noqa: E402
 from app.modules.design.ceremony import Budget, budget_for  # noqa: E402
+from app.modules.design.credential import (  # noqa: E402
+    Credential,
+    number_cartouche,
+    qr_bay,
+    verification_cartouche,
+)
 from app.modules.design.gilding import Scheme, scheme_for  # noqa: E402
 from app.modules.design.language import (  # noqa: E402
     Architecture,
@@ -91,13 +97,11 @@ STATEMENT = Phrase({
     "latin": (
         "having pursued the prescribed programme of research, submitted a "
         "thesis examined and approved by the Board of Examiners, and satisfied "
-        "the Senate in the oral examination held on the fourteenth day of "
-        "March, two thousand and thirty-one."
+        "the Senate in the oral examination."
     ),
     "arabic": (
         "بعد إتمام برنامج البحث المقرر، وتقديم أطروحة فحصها وأقرها مجلس "
-        "الممتحنين، واجتياز المناقشة الشفوية المنعقدة في الرابع عشر من مارس "
-        "لعام ألفين وواحد وثلاثين."
+        "الممتحنين، واجتياز المناقشة الشفوية."
     ),
 })
 DISTINCTION = Phrase({
@@ -113,6 +117,28 @@ SERIAL = "PHD/2031/0007"
 CODE = "BFJ7-DRNM-8VZ9"
 ISSUED = "14 March 2031"
 SEAL_LEGEND = "MERIDIAN INSTITUTE"
+
+#: Five identifiers, not one. The benchmark sheets carry five and each answers a
+#: different question; EdirasX carried two and neither was labelled.
+CREDENTIAL = Credential(
+    document_id="DID-2031-PHD-0000007",
+    verification_code=CODE,
+    archive_reference="ARCH/PHD/2031/000007",
+    identity_number="712878764389035",
+    certificate_number="EDX-CERT-PHD-000007-BFJ7",
+    verify_url="edirasx.com/verify",
+)
+
+#: The labelled data register. A reader looking for the date of award should
+#: find a *field*, not a clause in a sentence — which is most of what separates
+#: a record from a piece of prose.
+REGISTER: tuple[tuple[Phrase, str], ...] = (
+    (Phrase({"latin": "Academic session", "arabic": "العام الدراسي"}),
+     "2030 – 2031"),
+    (Phrase({"latin": "Date of award", "arabic": "تاريخ المنح"}), ISSUED),
+    (Phrase({"latin": "Place of issue", "arabic": "مكان الإصدار"}),
+     "Ikorodu, Lagos, Nigeria"),
+)
 
 #: The document's own geometry. One family for every doctoral award this
 #: institution issues; the security layer is what varies per sheet.
@@ -271,6 +297,44 @@ def content_field(left: float, right: float, top: float, bottom: float) -> geo.R
     return geo.Rect(left, top, W - left - right, H - top - bottom)
 
 
+def security_ground(plate: Plate) -> None:
+    """The whole sheet, not just the border — what the blank substrate shows.
+
+    Seeing the benchmark's *unprinted* plate settled an argument. Its security
+    work is not a frame with a quiet middle: an engine-turned wave field runs
+    edge to edge under everything, a very large crest is blind-embossed at the
+    centre, and small stars are powdered across the field. The frame sits *on
+    top of* that ground rather than containing it.
+
+    EdirasX had it the other way round — a worked perimeter and a cream field —
+    which is most of why the interiors read as blank. Three layers, all on the
+    security separation, all far below the content-ink ceiling:
+
+        wave lathe   the substrate itself, edge to edge
+        crest        one very large blind-embossed mark on the axis
+        stars        a powdered scatter, deterministic on the serial
+    """
+    sheet = geo.Rect(0, 0, W, H)
+    s = plate.scheme
+    plate.add("security", grounds.wave_lathe(
+        sheet, ink=plate.accent, strength=0.024, scale=1.5))
+    plate.add("security", grounds.starfield(
+        sheet.inset(14), ink=s.security.core, strength=0.10, scale=1.35,
+        seed=SERIAL))
+    # The embossed crest: ~45% of the sheet's height, which is far larger than
+    # anything EdirasX had put in a field, and is exactly what makes the
+    # benchmark's middle look worked rather than empty.
+    crest = (
+        MOTIF.rosette(W / 2, H * 0.46, H * 0.185,
+                      ink=geo.tint(plate.accent, 0.017), width=0.22)
+        + MOTIF.polygram(W / 2, H * 0.46, H * 0.135,
+                         ink=geo.tint(plate.accent, 0.014), width=0.18)
+    )
+    plate.add("security", arch.emboss(
+        crest, depth=0.22, light="#FFFFFF",
+        dark=geo.tint(plate.accent, 0.026)))
+
+
 def ground_figure(plate: Plate, cx: float, cy: float, radius: float,
                   *, strength: float = 0.030) -> None:
     """The family, at the optical centre, at the threshold of visibility.
@@ -377,6 +441,33 @@ def dress_field(plate: Plate, rect: geo.Rect) -> None:
         rect, motif=MOTIF, scheme=plate.scheme, budget=plate.budget))
 
 
+def leader(plate: Plate, width: float, height: float = 5.0) -> str:
+    """A rule running in from each side, terminating in a lozenge at the title.
+
+    The cheapest device on the benchmark sheets and one of the most effective:
+    a title with leaders reads as a *plate*, a title alone reads as a heading.
+    Drawn in its own box so it stays in step with a title that wraps.
+    """
+    metal = plate.scheme.primary
+    reach = width * 0.30
+    mid = height / 2
+    parts = []
+    for x0, x1 in ((0.0, reach), (width - reach, width)):
+        parts.append(arch.engraved_metal_rule(x0, mid, x1, mid, metal=metal,
+                                              weight=0.30))
+        tip = x1 if x0 == 0.0 else x0
+        parts.append(
+            f'<path d="{geo.star_polygon(tip, mid, 4, 1.5, 0.5)}"'
+            f' fill="{metal.face}" stroke="{metal.shadow}"'
+            ' stroke-width="0.10"/>'
+        )
+    return (
+        f'<svg class="leader" viewBox="0 0 {width:.1f} {height:.1f}"'
+        ' preserveAspectRatio="none" aria-hidden="true">'
+        + "".join(parts) + "</svg>"
+    )
+
+
 def titled(plate: Plate, phrase: Phrase, *, base: float, cls: str,
            width: float, height: float) -> str:
     """A line set *into* an engraved register rather than onto blank paper.
@@ -421,6 +512,70 @@ def enshrined(plate: Plate, *, base: float, width: float, height: float) -> str:
     )
 
 
+def data_register(plate: Plate) -> str:
+    """Three labelled fields across the sheet: session, date, place.
+
+    Labels in fine letterspaced caps above values, in the document's own
+    language arrangement — so an Arabic-only sheet gets Arabic labels and a peer
+    sheet gets both, from the same call. This is the element that turns the
+    conferring prose into a record.
+    """
+    cells = "".join(
+        '<div class="reg"><div class="reg-k">'
+        + "".join(
+            f'<span class="reg-k--{run.script.key}"'
+            f' style="direction:{run.direction};'
+            f"font-family:'{FACE[run.script.face]}',sans-serif\">{run.text}</span>"
+            # Lead script only. The values — a session, a date, a place name —
+            # are the same characters in either script, so a second label above
+            # an identical value is a line of height bought for nothing.
+            for run in plate.language.resolve(label)[:1]
+        )
+        + f'</div><div class="reg-v">{value}</div></div>'
+        for label, value in REGISTER
+    )
+    return f'<div class="register">{cells}</div>'
+
+
+#: The pinned foot: the execution band plus the administrative band. Everything
+#: in it is *administrative* — who signed, under what authority, and how to
+#: check the sheet — and a registrar looks for all of it in a fixed place. The
+#: ceremonial field above it flows; this does not, and the boundary between the
+#: two is the most consequential line on the sheet.
+FOOT_H: float = 23.0
+
+#: The administrative band's height. The sheet now has two zones — a ceremonial
+#: field that flows, and an administrative band that does not — and the boundary
+#: between them is this number. Pinning the band is the opposite of the rule for
+#: the ceremonial field, and deliberately so: a registrar looks for the
+#: verification panel in a fixed place, and it must not move because a
+#: recipient's name wrapped to three lines.
+BAND_H: float = 26.0
+
+
+def administrative_band(plate: Plate, rect: geo.Rect) -> None:
+    """The officiality layer: number cartouche, verification panel, QR bay.
+
+    Three panels across the foot of the sheet, on the sheet's own coordinates
+    rather than in the flow, because they are *administrative* — a registrar
+    looks for them in a fixed place and their position must not move when a
+    recipient's name wraps. That is the one part of the composition that should
+    be pinned, and it is the opposite of the rule for the ceremonial field.
+    """
+    s = plate.scheme
+    qr = geo.Rect(rect.x, rect.y + 1.0, 20.0, 20.0)
+    verify = geo.Rect(rect.x + rect.w - 64.0, rect.y, 64.0, BAND_H)
+    number = geo.Rect(qr.x + qr.w + 6.0, rect.y + BAND_H - 12.0,
+                      min(62.0, verify.x - (qr.x + qr.w) - 12.0), 12.0)
+    plate.add("variable", qr_bay(qr, scheme=s, ink=plate.ink))
+    plate.add("variable", number_cartouche(
+        number, CREDENTIAL.certificate_number, scheme=s, ink=plate.ink,
+        motif=MOTIF))
+    plate.add("variable", verification_cartouche(
+        verify, CREDENTIAL, scheme=s, ink=plate.ink,
+        institution=INSTITUTION.get("latin") or "", paper=plate.ground))
+
+
 def divider(plate: Plate, *, width: float = 44.0) -> str:
     m = plate.scheme.secondary
     return (
@@ -457,11 +612,7 @@ def execution(plate: Plate, *, seal_radius: float = 15.0) -> str:
         f'<div class="sealbox"><svg viewBox="0 0 {d:.1f} {d:.1f}">'
         + seal(plate, d / 2, d / 2, seal_radius) + "</svg></div>"
         f'<div class="sigrow">{cells}</div>'
-        '<div class="vpanel">'
-        f'<div class="k">Credential</div><div class="v">{SERIAL}</div>'
-        f'<div class="k">Issued</div><div class="v">{ISSUED}</div>'
-        f'<div class="k">Verify</div><div class="v">{CODE}</div>'
-        "</div></div>"
+        "</div>"
     )
 
 
@@ -497,7 +648,7 @@ html, body { margin: 0; padding: 0; background: #221F1B; }
 .plate { position: absolute; inset: 0; }
 .plate svg { display: block; width: 100%; height: 100%; }
 .field { position: absolute; display: flex; flex-direction: column; }
-.spacer { flex: 1 1 auto; min-height: 1.0mm; }
+.spacer { flex: 1 1 auto; min-height: 0.4mm; }
 .divider { display: block; flex: none; height: 3mm; }
 .mono { font-family: 'IBM Plex Mono', monospace; }
 .lab { font-family: 'Inter', sans-serif; text-transform: uppercase; font-weight: 600; }
@@ -533,19 +684,19 @@ html, body { margin: 0; padding: 0; background: #221F1B; }
 .conf { letter-spacing: 0.34em; }
 .dist { letter-spacing: 0.26em; margin-top: 1.6mm; }
 .conf--arabic, .dist--arabic { text-transform: none; letter-spacing: 0; }
-.name { font-weight: 600; letter-spacing: -0.006em; margin-top: 1.8mm;
+.name { font-weight: 600; letter-spacing: -0.006em; margin-top: 1.2mm;
   flex: none; text-wrap: balance; }
-.name.is-sub { margin-top: 1.1mm; font-weight: 600; }
+.name.is-sub { margin-top: 0.8mm; font-weight: 600; }
 .name--arabic { letter-spacing: 0; font-weight: 700; }
 .deg { text-transform: uppercase; font-weight: 600; letter-spacing: 0.15em;
-  flex: none; margin-top: 2.4mm; }
+  flex: none; margin-top: 1.6mm; }
 .deg--arabic { text-transform: none; letter-spacing: 0; font-weight: 700; }
 .deg-row { display: flex; gap: 6mm; align-items: baseline;
   justify-content: center; flex: none; margin-top: 2.4mm; }
 .deg-row .deg { margin-top: 0; }
-.study { font-style: italic; flex: none; margin-top: 1.1mm; }
+.study { font-style: italic; flex: none; margin-top: 0.8mm; }
 .study--arabic { font-style: normal; }
-.stmt { flex: none; margin-top: 2.0mm; max-width: 84%; }
+.stmt { flex: none; margin-top: 1.4mm; max-width: 94%; }
 .lockup--stack { flex-direction: column; gap: 2.2mm; width: 100%; margin: 0; }
 .lkcol { display: flex; flex-direction: column; align-items: center;
   gap: 1.3mm; }
@@ -565,15 +716,32 @@ html, body { margin: 0; padding: 0; background: #221F1B; }
    rule, which at a metre looks like nothing and at arm's length looks like a
    printing fault. The padding is asymmetric because Arabic descends further
    than Latin and the panel is drawn around both. */
-.nameinner { padding: 3.6mm 9mm 6.4mm; }
+.nameinner { padding: 2.4mm 9mm 4.6mm; }
 .namewrap .name { margin-top: 0; }
 .namewrap .name.is-sub { margin-top: 1.4mm; }
+.leader { display: block; position: absolute; left: 0; right: 0; top: 50%;
+  transform: translateY(-50%); width: 100%; height: 5mm; }
+.degwrap { position: relative; flex: none; width: 112%; margin: 1.6mm -6% 0;
+  display: flex; align-items: center; justify-content: center; }
+.degwrap .deg, .degwrap .deg-row { position: relative; margin-top: 0;
+  background: transparent; padding: 0 5mm; }
+.register { display: flex; justify-content: center; gap: 12mm; flex: none;
+  margin-top: 1.6mm; }
+.reg { text-align: center; }
+.reg-k { font-family: 'Inter', sans-serif; font-size: 1.75mm;
+  letter-spacing: 0.24em; text-transform: uppercase; font-weight: 600;
+  display: flex; flex-direction: column; gap: 0.4mm; }
+.reg-k--arabic { text-transform: none; letter-spacing: 0; font-size: 2.0mm; }
+.reg-v { font-family: 'Source Serif 4', serif; font-size: 2.9mm;
+  margin-top: 0.9mm; }
+.foot { position: absolute; display: flex; flex-direction: column;
+  justify-content: flex-end; }
 .execrulewrap { flex: none; width: 100%; display: flex;
   justify-content: center; margin-top: 2.0mm; }
 .execrule { display: block; width: 100%; height: 7mm; }
 .lockup { display: flex; align-items: center; justify-content: center;
-  gap: 6mm; flex: none; width: 108%; margin: 0 -4%; }
-.lockup .mark { flex: none; width: 15mm; }
+  gap: 5mm; flex: none; width: 112%; margin: 0 -6%; }
+.lockup .mark { flex: none; width: 13mm; }
 .lockup .mark svg { display: block; width: 100%; height: auto; }
 .lockup .en { text-align: right; flex: 1 1 0; }
 .lockup .ar { text-align: left; flex: 1 1 0; direction: rtl; }
@@ -599,9 +767,9 @@ def palette_css(plate: Plate) -> str:
 .study {{ color: {geo.tint(plate.ink, 0.84)}; }}
 .dist {{ color: {plate.accent}; }}
 .stmt {{ color: {geo.tint(plate.ink, 0.78)}; }}
-.sig .nm, .vpanel .v {{ color: {plate.ink}; }}
+.sig .nm, .reg-v {{ color: {plate.ink}; }}
 .sig .of {{ color: {geo.tint(plate.accent, 0.93)}; }}
-.sig .auth, .vpanel .k {{ color: {geo.tint(plate.ink, 0.52)}; }}
+.sig .auth, .reg-k {{ color: {geo.tint(plate.ink, 0.52)}; }}
 """
 
 
@@ -692,13 +860,17 @@ def m02(*, language: Architecture | None = None) -> tuple[Plate, str, str]:
     s = plate.scheme
     sheet = geo.Rect(0, 0, W, H)
     substrate(plate)
+    security_ground(plate)
 
     band = sheet.inset(6.0)
     plate.add("process", f'<rect {band.attrs()} fill="{plate.accent}"/>')
     # The border is the document's own family, not a pattern applied to it.
-    panel_gap = min(22.0, max(8.0, 22.0 - 9.0 * (
-        (sum(r.scale for r in plate.language.resolve(RECIPIENT)) or 1.0) - 1.0
-    ))) + 7.0
+    _runs = plate.language.resolve(RECIPIENT)
+    _load = (sum(r.scale for r in _runs) or 1.0) + (
+        next((r.scale for r in _runs if r.lead), 1.0) * 0.45
+        if len(_runs) > 1 else 0.0
+    )
+    panel_gap = min(22.0, max(8.0, 22.0 - 7.0 * (_load - 1.0))) + 7.0
     plate.add("foil-primary", MOTIF.field(
         band, cell=11.5, ink=s.primary.face, strength=1.0, width=0.17,
         hollow=panel_gap))
@@ -729,7 +901,9 @@ def m02(*, language: Architecture | None = None) -> tuple[Plate, str, str]:
     # gives it 0.52, and counting scripts treats those as the same document.
     runs = plate.language.resolve(RECIPIENT)
     load = sum(run.scale for run in runs) or 1.0
-    scripts = max(1, len(runs))
+    lead = next((run.scale for run in runs if run.lead), 1.0)
+    if len(runs) > 1:
+        load += lead * 0.45
     # **The field is derived from the panel, never sized independently.** The
     # overflow audit measures whether the content fits its field; it says
     # nothing about whether the field fits the ivory. Tuning the two separately
@@ -737,9 +911,9 @@ def m02(*, language: Architecture | None = None) -> tuple[Plate, str, str]:
     # code cut in half by the panel edge — every individual measurement passed.
     # So: the panel opens as the load rises, and the field is the panel less a
     # fixed clearance. One number moves.
-    panel_inset = min(22.0, max(8.0, 22.0 - 9.0 * (load - 1.0)))
+    panel_inset = min(22.0, max(8.0, 22.0 - 7.0 * (load - 1.0)))
     panel = band.inset(panel_inset)
-    clearance = 6.0
+    clearance = 4.0
     field_side = field_end = 6.0 + panel_inset + clearance
     plate.add("process", (
         f'<path d="{arch.stepped_rect_path(panel, cut=13.0)}"'
@@ -764,13 +938,19 @@ def m02(*, language: Architecture | None = None) -> tuple[Plate, str, str]:
             0, 0, 4.4, ink=s.secondary.face, width=0.16) + "</g>")
 
     ground_figure(plate, W / 2, H * 0.50, 52, strength=0.026)
+    field_foot = field_end + BAND_H + FOOT_H + 2.0
     dress_field(plate, content_field(field_side, field_side,
-                                     field_end, field_end).inset(-3.0))
+                                     field_end, field_foot).inset(-3.0))
+    administrative_band(plate, geo.Rect(
+        field_side, H - field_end - BAND_H, W - field_side * 2, BAND_H))
     fine_text(plate, sheet.inset(9.0), "m02")
 
     css = f"""
 .field {{ left: {field_side:.1f}mm; right: {field_side:.1f}mm;
-  top: {field_end:.1f}mm; bottom: {field_end:.1f}mm; align-items: center;
+  top: {field_end:.1f}mm; bottom: {field_foot:.1f}mm; align-items: center;
+  text-align: center; }}
+.foot {{ left: {field_side:.1f}mm; right: {field_side:.1f}mm;
+  bottom: {field_end + BAND_H:.1f}mm; height: {FOOT_H:.1f}mm;
   text-align: center; }}
 .lockup .en {{ letter-spacing: 0.11em; text-transform: uppercase;
   color: {plate.accent}; font-weight: 600; line-height: 1.24; }}
@@ -795,24 +975,23 @@ def m02(*, language: Architecture | None = None) -> tuple[Plate, str, str]:
   line-height: 1.68; max-width: 74%; color: {geo.tint(plate.ink, 0.78)};
   flex: none; margin-top: 3.0mm; }}
 .exec {{ margin-top: 3mm; }}
-.sig .nm, .vpanel .v {{ color: {plate.ink}; }}
+.sig .nm, .reg-v {{ color: {plate.ink}; }}
 .sig .of {{ color: {geo.tint(plate.accent, 0.95)}; }}
-.sig .auth, .vpanel .k {{ color: {geo.tint(plate.ink, 0.52)}; }}
+.sig .auth, .reg-k {{ color: {geo.tint(plate.ink, 0.52)}; }}
 """
     body = f"""
 <div class="field">
   {lockup(plate, base=3.7)}
   <div class="spacer"></div>
-  {titled(plate, CONFERRAL, base=2.45, cls="conf", width=118, height=7.4)}
-  {enshrined(plate, base=12.2, width=196, height=30)}
-  {slot(plate, DEGREE, base=6.6, cls="deg", inline=True)}
-  {slot(plate, STUDY, base=4.0, cls="study")}
-  {slot(plate, STATEMENT, base=2.9, cls="stmt", face="body", lead_only=True)}
-  <div class="spacer"></div>
-  {divider(plate) if scripts == 1 else ""}
-  <div class="spacer"></div>
-  {execution(plate)}
+  {titled(plate, CONFERRAL, base=2.30, cls="conf", width=112, height=6.4)}
+  {enshrined(plate, base=11.4, width=196, height=23)}
+  <div class="degwrap">{leader(plate, 176)}
+    {slot(plate, DEGREE, base=6.0, cls="deg", inline=True)}</div>
+  {slot(plate, STUDY, base=3.6, cls="study", lead_only=True)}
+  {data_register(plate)}
+  {slot(plate, STATEMENT, base=2.7, cls="stmt", face="body", lead_only=True)}
 </div>
+<div class="foot">{execution(plate)}</div>
 """
     return plate, body, css
 
@@ -841,6 +1020,7 @@ def m11() -> tuple[Plate, str, str]:
     s = plate.scheme
     sheet = geo.Rect(0, 0, W, H)
     substrate(plate, screen=False)
+    security_ground(plate)
 
     band = sheet.inset(5.5)
     plate.add("process", f'<rect {band.attrs()} fill="{plate.accent}"/>')
@@ -865,11 +1045,17 @@ def m11() -> tuple[Plate, str, str]:
     plate.add("foil-primary", arch.cresting(W / 2, inner.y, 58, 12.5,
                                             metal=s.primary))
     ground_figure(plate, W / 2, H * 0.52, 50, strength=0.028)
-    dress_field(plate, content_field(22, 22, 15, 13).inset(-4.0))
+    dress_field(plate, content_field(22, 22, 15,
+                                     13 + BAND_H + FOOT_H + 2).inset(-4.0))
+    administrative_band(plate, geo.Rect(
+        22, H - 13 - BAND_H, W - 22 * 2, BAND_H))
     fine_text(plate, sheet.inset(8.4), "m11")
 
     css = f"""
-.field {{ left: 22mm; right: 22mm; top: 15mm; bottom: 13mm; align-items: center;
+.foot {{ left: 22mm; right: 22mm;
+  bottom: 39mm; height: 23mm; }}
+.field {{ left: 22mm; right: 22mm; top: 15mm;
+  bottom: 64mm; align-items: center;
   text-align: center; }}
 .lockup .en {{ letter-spacing: 0.13em; text-transform: uppercase;
   color: {plate.accent}; font-weight: 600; line-height: 1.24; }}
@@ -896,25 +1082,24 @@ def m11() -> tuple[Plate, str, str]:
   line-height: 1.66; max-width: 92%; color: {geo.tint(plate.ink, 0.76)};
   flex: none; margin-top: 2.4mm; }}
 .exec {{ margin-top: 3mm; }}
-.sig .nm, .vpanel .v {{ color: {plate.ink}; }}
+.sig .nm, .reg-v {{ color: {plate.ink}; }}
 .sig .of {{ color: {geo.tint(plate.accent, 0.92)}; }}
-.sig .auth, .vpanel .k {{ color: {geo.tint(plate.ink, 0.52)}; }}
+.sig .auth, .reg-k {{ color: {geo.tint(plate.ink, 0.52)}; }}
 """
     body = f"""
 <div class="field">
   {lockup(plate, base=3.9)}
   <div class="spacer"></div>
-  {titled(plate, CONFERRAL, base=2.45, cls="conf", width=118, height=7.4)}
-  {enshrined(plate, base=12.0, width=200, height=30)}
-  {slot(plate, DEGREE, base=6.6, cls="deg", inline=True)}
-  {slot(plate, STUDY, base=4.0, cls="study")}
+  {titled(plate, CONFERRAL, base=2.30, cls="conf", width=112, height=6.4)}
+  {enshrined(plate, base=11.2, width=200, height=23)}
+  <div class="degwrap">{leader(plate, 176)}
+    {slot(plate, DEGREE, base=6.0, cls="deg", inline=True)}</div>
+  {slot(plate, STUDY, base=3.6, cls="study", lead_only=True)}
+  {data_register(plate)}
   {slot(plate, DISTINCTION, base=2.3, cls="dist", face="ui", lead_only=True)}
-  {slot(plate, STATEMENT, base=2.9, cls="stmt", face="body", lead_only=True)}
-  <div class="spacer"></div>
-  {divider(plate) if len(plate.language.order) == 1 else ''}
-  <div class="spacer"></div>
-  {execution(plate)}
+  {slot(plate, STATEMENT, base=2.7, cls="stmt", face="body", lead_only=True)}
 </div>
+<div class="foot">{execution(plate)}</div>
 """
     return plate, body, css
 
@@ -944,6 +1129,7 @@ def m12() -> tuple[Plate, str, str]:
     s = plate.scheme
     sheet = geo.Rect(0, 0, W, H)
     substrate(plate)
+    security_ground(plate)
 
     # Four densities. The value range is what makes the dissolve legible; when
     # the bands sat within a factor of six of each other the frame read as one
@@ -967,10 +1153,14 @@ def m12() -> tuple[Plate, str, str]:
     corner_architecture(plate, 5.0, 23.0)
     ground_figure(plate, W / 2, H * 0.47, 54, strength=0.028)
     dress_field(plate, field.inset(-4.0))
+    administrative_band(plate, field.inset(-4.0))
     fine_text(plate, sheet.inset(9.6), "m12")
 
     css = f"""
-.field {{ left: 40mm; right: 40mm; top: 24mm; bottom: 18mm; align-items: center;
+.foot {{ left: 40mm; right: 40mm;
+  bottom: 44mm; height: 23mm; }}
+.field {{ left: 40mm; right: 40mm; top: 24mm;
+  bottom: 69mm; align-items: center;
   text-align: center; }}
 .lockup .en {{ letter-spacing: 0.14em; text-transform: uppercase;
   color: {plate.accent}; font-weight: 700; line-height: 1.26;
@@ -995,24 +1185,23 @@ def m12() -> tuple[Plate, str, str]:
   flex: none; margin-top: 2.8mm; }}
 .exec {{ margin-top: 3mm; padding-top: 2.4mm;
   border-top: 0.28mm solid {s.secondary.face}; }}
-.sig .nm, .vpanel .v {{ color: {plate.ink}; }}
+.sig .nm, .reg-v {{ color: {plate.ink}; }}
 .sig .of {{ color: {geo.tint(plate.accent, 0.92)}; }}
-.sig .auth, .vpanel .k {{ color: {geo.tint(plate.ink, 0.52)}; }}
+.sig .auth, .reg-k {{ color: {geo.tint(plate.ink, 0.52)}; }}
 """
     body = f"""
 <div class="field">
   {lockup(plate, base=3.7, mark_radius=7.4)}
   <div class="spacer"></div>
-  {titled(plate, CONFERRAL, base=2.45, cls="conf", width=118, height=7.4)}
-  {enshrined(plate, base=12.2, width=196, height=30)}
-  {slot(plate, DEGREE, base=6.6, cls="deg", inline=True)}
-  {slot(plate, STUDY, base=4.0, cls="study")}
-  {slot(plate, STATEMENT, base=2.9, cls="stmt", face="body", lead_only=True)}
-  <div class="spacer"></div>
-  {divider(plate) if len(plate.language.order) == 1 else ''}
-  <div class="spacer"></div>
-  {execution(plate)}
+  {titled(plate, CONFERRAL, base=2.30, cls="conf", width=112, height=6.4)}
+  {enshrined(plate, base=11.4, width=196, height=23)}
+  <div class="degwrap">{leader(plate, 176)}
+    {slot(plate, DEGREE, base=6.0, cls="deg", inline=True)}</div>
+  {slot(plate, STUDY, base=3.6, cls="study", lead_only=True)}
+  {data_register(plate)}
+  {slot(plate, STATEMENT, base=2.7, cls="stmt", face="body", lead_only=True)}
 </div>
+<div class="foot">{execution(plate)}</div>
 """
     return plate, body, css
 
@@ -1043,6 +1232,7 @@ def m01() -> tuple[Plate, str, str]:
     s = plate.scheme
     sheet = geo.Rect(0, 0, W, H)
     substrate(plate)
+    security_ground(plate)
 
     stack, inner = arch.register_stack(
         sheet.inset(5.5),
@@ -1074,11 +1264,17 @@ def m01() -> tuple[Plate, str, str]:
         inner.y + 17.0, W / 2 + 30, inner.x + inner.w - 18, metal=s.secondary,
         stops=3))
     ground_figure(plate, W / 2, H * 0.50, 56, strength=0.026)
-    dress_field(plate, content_field(34, 34, 34, 25).inset(-4.0))
+    dress_field(plate, content_field(34, 34, 34,
+                                     25 + BAND_H + FOOT_H + 2).inset(-4.0))
+    administrative_band(plate, geo.Rect(
+        34, H - 25 - BAND_H, W - 34 * 2, BAND_H))
     fine_text(plate, sheet.inset(9.0), "m01")
 
     css = f"""
-.field {{ left: 34mm; right: 34mm; top: 34mm; bottom: 25mm; align-items: center;
+.foot {{ left: 34mm; right: 34mm;
+  bottom: 51mm; height: 23mm; }}
+.field {{ left: 34mm; right: 34mm; top: 34mm;
+  bottom: 76mm; align-items: center;
   text-align: center; }}
 .lockup .en {{ letter-spacing: 0.12em; text-transform: uppercase;
   color: {plate.accent}; font-weight: 600; line-height: 1.24; }}
@@ -1103,25 +1299,24 @@ def m01() -> tuple[Plate, str, str]:
   line-height: 1.68; max-width: 72%; color: {geo.tint(plate.ink, 0.80)};
   flex: none; margin-top: 3.0mm; }}
 .exec {{ margin-top: 3.5mm; }}
-.sig .nm, .vpanel .v {{ color: {plate.ink}; }}
+.sig .nm, .reg-v {{ color: {plate.ink}; }}
 .sig .of {{ color: {geo.tint(plate.accent, 0.92)}; }}
-.sig .auth, .vpanel .k {{ color: {geo.tint(plate.ink, 0.52)}; }}
+.sig .auth, .reg-k {{ color: {geo.tint(plate.ink, 0.52)}; }}
 """
     body = f"""
 <div class="field">
   {lockup(plate, base=3.8)}
   <div class="spacer"></div>
-  {titled(plate, CONFERRAL, base=2.45, cls="conf", width=118, height=7.4)}
-  {enshrined(plate, base=12.2, width=196, height=30)}
-  {slot(plate, DEGREE, base=6.6, cls="deg", inline=True)}
-  {slot(plate, STUDY, base=4.0, cls="study")}
+  {titled(plate, CONFERRAL, base=2.30, cls="conf", width=112, height=6.4)}
+  {enshrined(plate, base=11.4, width=196, height=23)}
+  <div class="degwrap">{leader(plate, 176)}
+    {slot(plate, DEGREE, base=6.0, cls="deg", inline=True)}</div>
+  {slot(plate, STUDY, base=3.6, cls="study", lead_only=True)}
+  {data_register(plate)}
   {titled(plate, DISTINCTION, base=2.3, cls="dist", width=104, height=6.6)}
-  {slot(plate, STATEMENT, base=2.9, cls="stmt", face="body", lead_only=True)}
-  <div class="spacer"></div>
-  {divider(plate) if len(plate.language.order) == 1 else ''}
-  <div class="spacer"></div>
-  {execution(plate)}
+  {slot(plate, STATEMENT, base=2.7, cls="stmt", face="body", lead_only=True)}
 </div>
+<div class="foot">{execution(plate)}</div>
 """
     return plate, body, css
 
@@ -1446,7 +1641,11 @@ def language_proof() -> None:
         target = out / f"lang-{key}.html"
         target.write_text(page(plate, body, css), encoding="utf-8")
         over = audit_overflow(target)
-        flag = "OK " if over <= 0.05 else f"OVERFLOW {over:5.1f}mm"
+        # 0.4mm is one and a half CSS pixels: `scrollHeight` and `clientHeight`
+        # are integers, so a field whose content ends on a fractional pixel
+        # reports a rounding artefact rather than an overflow. Anything above
+        # this is real.
+        flag = "OK " if over <= 0.4 else f"OVERFLOW {over:5.1f}mm"
         print(f"  {key:16s} {flag}")
     print(f"language proof: {len(LANGUAGE_PROOF)} arrangements")
 
@@ -1478,7 +1677,7 @@ def main() -> int:
             specification(plate), encoding="utf-8")
         made = [n for n, _ in SEPARATIONS if plate.layers.get(n)]
         over = audit_overflow(page_path)
-        flag = "fits" if over <= 0.05 else f"OVERFLOWS by {over:.1f}mm"
+        flag = "fits" if over <= 0.4 else f"OVERFLOWS by {over:.1f}mm"
         print(f"{slug:32s} {len(made)} separations + spec · {flag}")
     language_proof()
     return 0
