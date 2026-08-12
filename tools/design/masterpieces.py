@@ -79,8 +79,8 @@ def arms(motif: Motif, cx: float, cy: float, r: float, ink: str) -> str:
         f'<path d="{shield}" fill="none" stroke="{ink}" stroke-width="0.5"/>',
         # A chief, and the motif's own star on it — the charge is derived,
         # never chosen.
-        f'<path d="M{cx - width / 2:.2f} {top + r * 0.34:.2f} '
-        f'H{cx + width / 2:.2f}" stroke="{ink}" stroke-width="0.32"/>',
+        (f'<path d="M{cx - width / 2:.2f} {top + r * 0.34:.2f} '
+         f'H{cx + width / 2:.2f}" stroke="{ink}" stroke-width="0.32"/>'),
         motif.star(cx, top + r * 0.17, r * 0.14, ink=ink, width=0.26),
         motif.rosette(cx, cy + r * 0.18, r * 0.62, ink=ink, width=0.13),
     ]
@@ -91,10 +91,10 @@ def shamsa(motif: Motif, cx: float, cy: float, r: float, ink: str,
            metal: str) -> str:
     """A sun medallion: the motif's polygram inside its own ring of stars."""
     parts = [
-        f'<circle cx="{cx:.2f}" cy="{cy:.2f}" r="{r:.2f}" fill="none"'
-        f' stroke="{metal}" stroke-width="0.55"/>',
-        f'<circle cx="{cx:.2f}" cy="{cy:.2f}" r="{r * 0.88:.2f}" fill="none"'
-        f' stroke="{ink}" stroke-width="0.16"/>',
+        (f'<circle cx="{cx:.2f}" cy="{cy:.2f}" r="{r:.2f}" fill="none"'
+         f' stroke="{metal}" stroke-width="0.55"/>'),
+        (f'<circle cx="{cx:.2f}" cy="{cy:.2f}" r="{r * 0.88:.2f}"'
+         f' fill="none" stroke="{ink}" stroke-width="0.16"/>'),
         motif.polygram(cx, cy, r * 0.80, ink=metal, width=0.30),
         motif.rosette(cx, cy, r * 0.58, ink=ink, width=0.12),
         motif.star(cx, cy, r * 0.26, ink=metal, width=0.34),
@@ -301,63 +301,223 @@ def _chancery(person: Personality) -> tuple[Press, str, str]:
 
 
 def _court(person: Personality) -> tuple[Press, str, str]:
-    """The frame is the document; the text is what it encloses."""
-    press, motif, field, m = _frame(person)
-    ink = person.ink
-    press.mark("guilloche",
-               motif.field(geo.Rect(0, 0, W, H), cell=17.0, ink=ink,
-                           width=0.07, strength=0.16), stroke=0.07)
-    press.mark("foil_primary",
-               illuminated_border(motif, geo.Rect(6, 6, W - 12, H - 12),
-                                  geo.tint(ink, 0.5), m["primary"], m["second"]),
-               stroke=0.36)
-    press.mark("foil_second",
-               shamsa(motif, W / 2, 27, 15.5, geo.tint(ink, 0.6), m["second"]),
-               stroke=0.30)
-    inner = geo.Rect(field.x + 6, field.y + 32, field.w - 12, field.h - 48)
-    press.mark("line",
-               f'<rect {inner.attrs()} rx="4" fill="none"'
-               f' stroke="{m["engraved"]}" stroke-width="0.3"/>', stroke=0.30)
-    press.mark("emboss", motif.polygram(W / 2, 27, 11, ink="#000", width=0.7),
-               stroke=0.70)
-    press.mark("uv", motif.star(W / 2, H - 22, 7, ink="#000", width=0.4),
-               stroke=0.40)
-    press.mark("microtext",
-               geo.fine_text_ring(geo.Rect(11, 11, W - 22, H - 22),
-                                  identifier="crt",
-                                  text=f"{INSTITUTION.upper()} · {SERIAL} · ",
-                                  ink=ink, size=0.64, strength=0.40),
-               stroke=0.066)
+    """The illuminated page: a dark bordered mass with a luminous panel set in.
 
+    **Redesigned, not tweaked.** The first version failed all three distances
+    and it is worth naming why, because the failures are the ordinary ones.
+
+    *At three metres* it had no silhouette: every part of the sheet was the same
+    tan, so there was no mass anywhere and it read as a downloadable award. The
+    fix is not more ornament — it is **tone**. A royal manuscript page is dark
+    and dense at its edge and luminous at its centre, and that contrast is the
+    whole silhouette. The border here is now a deep ground carrying the
+    illumination, and the text sits on clean paper reserved out of it.
+
+    *At one metre* the text box was a rounded rectangle floating in the middle,
+    centred because centring was easy, and the medallion hovered above the frame
+    touching nothing. In a manuscript the medallion is **set into** the band and
+    the band mitres around it, and the text block is a **reserved panel**, not a
+    box on top of a pattern. Both are now true.
+
+    *At twenty centimetres* there was nothing to find: one pattern at one
+    strength and three parallel rules. The band now carries four registers at
+    four scales, and the same figure recurs at four sizes — the head medallion,
+    the four corner quarters, the strapwork rosettes, and the fine ring on the
+    seal — so the closer it is looked at, the more of one geometry there is.
+    """
+    press, motif, _field, m = _frame(person)
+    ink = person.ink
+    paper = person.paper
+    band_ground = geo.blend(ink, "#6B4A12", 0.34)
+
+    # --- 1. the illuminated band: tonal mass, which is the silhouette --------
+    outer = geo.Rect(7, 7, W - 14, H - 14)
+    inner = outer.inset(27.5)
+    press.mark("process",
+               f'<path fill-rule="evenodd" d="M{outer.x} {outer.y} '
+               f'h{outer.w} v{outer.h} h-{outer.w} Z '
+               f'M{inner.x} {inner.y} h{inner.w} v{inner.h} h-{inner.w} Z" '
+               f'fill="{band_ground}"/>', tonal=True)
+
+    # --- 2. four registers in the band, at four scales -----------------------
+    # Outermost: a hairline pair that stops the mass bleeding to the trim.
+    press.mark("line",
+               f'<rect {outer.attrs()} fill="none"'
+               f' stroke="{geo.blend(ink, band_ground, 0.5)}"'
+               ' stroke-width="0.30"/>'
+               f'<rect {outer.inset(1.5).attrs()} fill="none"'
+               f' stroke="{m["primary"]}" stroke-width="0.18"/>', stroke=0.18)
+    # The strapwork register — the band's own ornament, in gold on the mass.
+    strap = outer.inset(6.5)
+    press.mark("foil_second",
+               motif.field(strap, cell=8.4, ink=m["second"], width=0.13,
+                           strength=1.0, hollow=0.0,
+                           keep_out=inner.inset(-6.0)), stroke=0.26)
+    # A guilloché register beneath it, finer, so the band has two grains.
+    press.mark("guilloche",
+               geo.guilloche_band(outer.inset(3.4), ink=m["primary"],
+                                  width=0.09, strength=0.85, amplitude=1.15,
+                                  waves=int(W / 2.1)), stroke=0.09)
+    # The inner engraved rule: three flat strokes, the panel's own edge.
+    press.mark("foil_primary",
+               f'<rect {inner.inset(-2.6).attrs()} fill="none"'
+               f' stroke="{m["primary"]}" stroke-width="0.9"/>'
+               f'<rect {inner.inset(-1.1).attrs()} fill="none"'
+               f' stroke="{m["face"]}" stroke-width="0.34"/>', stroke=0.34)
+
+    # --- 3. the reserved panel: clean paper, so the type has air -------------
+    press.mark("process", f'<rect {inner.attrs()} fill="{paper}"/>', tonal=True)
+    press.mark("guilloche",
+               motif.field(inner, cell=21.0, ink=ink, width=0.07,
+                           strength=0.13), stroke=0.07)
+    press.mark("line",
+               f'<rect {inner.attrs()} fill="none"'
+               f' stroke="{geo.tint(ink, 0.34)}" stroke-width="0.16"/>',
+               stroke=0.16)
+
+    # --- 4. the shamsa, SET INTO the head of the band ------------------------
+    # It interrupts the band rather than hovering over it: the mass is cut away
+    # behind it and the medallion sits in the hole. That single change is most
+    # of the difference between illumination and a badge on a frame.
+    # On the band's MIDLINE, not its outer edge. The first version centred it
+    # on `outer.y` with a 20.4mm radius, which put thirteen millimetres of the
+    # medallion past the trim — it was struck through the knife on every copy.
+    # A medallion set into a band sits *in* the band.
+    band_mid = outer.y + 13.75
+    head_r = 11.4
+    press.mark("process",
+               f'<circle cx="{W / 2:.1f}" cy="{band_mid:.1f}"'
+               f' r="{head_r + 2.6:.1f}" fill="{paper}"/>', tonal=True)
+    press.mark("foil_primary",
+               f'<circle cx="{W / 2:.1f}" cy="{band_mid:.1f}"'
+               f' r="{head_r + 2.6:.1f}" fill="none" stroke="{m["primary"]}"'
+               ' stroke-width="0.7"/>', stroke=0.70)
+    press.mark("foil_primary",
+               shamsa(motif, W / 2, band_mid, head_r, geo.tint(ink, 0.55),
+                      m["primary"]), stroke=0.30)
+    press.mark("emboss",
+               motif.polygram(W / 2, band_mid, head_r * 0.66, ink="#000",
+                              width=0.9), stroke=0.90)
+
+    # --- 5. corners: the same figure at 40%, mitring the band ---------------
+    # Also on the band's diagonal midline, for the same reason.
+    inset = 13.75
+    for cx, cy in ((outer.x + inset, outer.y + inset),
+                   (outer.x + outer.w - inset, outer.y + inset),
+                   (outer.x + inset, outer.y + outer.h - inset),
+                   (outer.x + outer.w - inset, outer.y + outer.h - inset)):
+        press.mark("process",
+                   f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="11.4"'
+                   f' fill="{paper}"/>', tonal=True)
+        # The ring and the star are struck; the rosette inside them is
+        # *printed* in a metal ink. That is the real division of labour on a
+        # press — foil carries mass, litho carries fineness — and the press
+        # refused the 0.14mm rosette on the foil plate until it was moved,
+        # which is the module earning its place.
+        quadrant = (0 if cx < W / 2 else 1) + (0 if cy < H / 2 else 2)
+        press.mark("foil_primary",
+                   f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="11.4" fill="none"'
+                   f' stroke="{m["primary"]}" stroke-width="0.5"/>'
+                   + f'<g transform="rotate({quadrant * 90} {cx:.1f} {cy:.1f})">'
+                   + geo.corner_frame(cx - 7.6, cy - 7.6, 15.2,
+                                      ink=m["primary"], quadrant=0,
+                                      strength=1.0, arcs=4)
+                   + "</g>", stroke=0.42)
+        press.mark("line",
+                   motif.star(cx, cy, 4.4, ink=m["second"], width=0.20),
+                   stroke=0.20)
+
+    # --- 6. the seal, struck into the panel's foot --------------------------
+    seal_cx, seal_cy = inner.cx, inner.y + inner.h * 0.665
+    seal_r = 15.4
+    # The field first: turned, warm, and dense enough that the seal reads as a
+    # struck object at three metres rather than as a pale ring.
+    press.mark("guilloche",
+               motif.guilloche(seal_cx, seal_cy, seal_r * 0.86, ink=ink,
+                               width=0.085, strength=0.42, passes=3),
+               stroke=0.085)
+    press.mark("foil_primary",
+               f'<circle cx="{seal_cx:.1f}" cy="{seal_cy:.1f}"'
+               f' r="{seal_r:.1f}" fill="none" stroke="{m["primary"]}"'
+               ' stroke-width="1.25"/>'
+               f'<circle cx="{seal_cx:.1f}" cy="{seal_cy:.1f}"'
+               f' r="{seal_r - 2.1:.1f}" fill="none" stroke="{m["face"]}"'
+               ' stroke-width="0.42"/>'
+               + motif.star(seal_cx, seal_cy, seal_r * 0.52,
+                            ink=m["primary"], width=0.62), stroke=0.42)
+    press.mark("line",
+               motif.medallion_ring(seal_cx, seal_cy, seal_r * 0.74,
+                                    ink=m["second"], width=0.16), stroke=0.16)
+    # The emboss now *supports* the metal instead of standing in for it: a
+    # relief wall at the rim only, which is what a struck seal actually is.
+    press.mark("emboss",
+               f'<circle cx="{seal_cx:.1f}" cy="{seal_cy:.1f}"'
+               f' r="{seal_r:.1f}" fill="none" stroke="#000"'
+               ' stroke-width="1.25"/>', stroke=1.25)
+
+    # --- 7. the fine registers, for twenty centimetres ----------------------
+    press.mark("microtext",
+               geo.fine_text_ring(inner.inset(-2.2), identifier="crt",
+                                  text=f"{INSTITUTION.upper()} · {SERIAL} · ",
+                                  ink=m["primary"], size=0.64, strength=0.62),
+               stroke=0.066)
+    press.mark("uv", motif.rosette(inner.cx, inner.cy, 52, ink="#000",
+                                   width=0.4), stroke=0.40)
+    press.defs.append(geo.line_screen("crt", degrees=8, pitch=0.44,
+                                      width=0.07, ink=ink, strength=0.13))
+    press.mark("antipathy", f'<rect {inner.attrs()} fill="url(#crt)"/>')
+
+    text = inner.inset(13)
     body = f'''
     <div class="crt">
-      <div class="ar" dir="rtl">شهادة إتمام المرحلة الجامعية</div>
-      <div class="ttl">Certificate of Completion</div>
+      <div class="ar-ttl" dir="rtl">شهادة إتمام المرحلة الجامعية</div>
+      <div class="la-ttl">Certificate of Completion</div>
+      <div class="lede">The Board of Governors certifies that</div>
       <div class="peak">{esc(RECIPIENT)}</div>
-      <div class="rule"></div>
-      <div class="ar sm" dir="rtl">قد أتمّ بنجاحٍ متطلبات البرنامج الدراسي
-        وفقًا للمناهج المعتمدة والمعايير الأكاديمية المعمول بها.</div>
+      <div class="rule"><i></i><b></b><i></i></div>
+      <div class="ar-body" dir="rtl">قد أتمّ بنجاحٍ متطلبات البرنامج الدراسي
+        وفقًا للمناهج المعتمدة والمعايير الأكاديمية المعمول بها في المدرسة.</div>
+      <div class="foot">
+        <div class="sig"><span></span>رئيس المدرسة · Principal</div>
+        <div class="sig"><span></span>رئيس مجلس الإدارة · Chairman</div>
+      </div>
+      <div class="ref">{esc(SERIAL)} · 14 March 2026 · Ikorodu, Lagos</div>
     </div>'''
     css = f'''
-    .crt {{ position:absolute; left:{inner.x:.1f}mm; top:{inner.y:.1f}mm;
-      width:{inner.w:.1f}mm; height:{inner.h:.1f}mm; color:{ink};
+    .crt {{ position:absolute; left:{text.x:.1f}mm; top:{text.y:.1f}mm;
+      width:{text.w:.1f}mm; height:{text.h:.1f}mm; color:{ink};
       text-align:center; display:flex; flex-direction:column;
-      align-items:center; justify-content:center;
-      font-family:'Cormorant Garamond',serif; }}
-    .crt .ar {{ font-family:'Amiri',serif; font-size:7.4mm; line-height:1.5; }}
-    .crt .ar.sm {{ font-size:3.2mm; line-height:1.9; max-width:76%;
-      color:{geo.tint(ink, 0.8)}; margin-top:5mm; }}
-    .crt .ttl {{ font-size:4.6mm; letter-spacing:0.24em; text-transform:uppercase;
-      color:{m["engraved"]}; margin:3mm 0 6mm; }}
-    .crt .peak {{ font-size:8.4mm; font-weight:600; }}
-    .crt .rule {{ width:52%; height:0.3mm; background:{m["primary"]};
-      margin-top:4mm; }}'''
+      align-items:center; font-family:'Cormorant Garamond',serif; }}
+    .crt .ar-ttl {{ font-family:'Amiri',serif; font-size:8.6mm; line-height:1.4;
+      color:{m["engraved"]}; }}
+    .crt .la-ttl {{ font-size:3.0mm; letter-spacing:0.30em;
+      text-transform:uppercase; color:{m["primary"]}; margin-top:1.5mm; }}
+    .crt .lede {{ font-size:3.2mm; font-style:italic; margin-top:7mm;
+      color:{geo.tint(ink, 0.66)}; }}
+    .crt .peak {{ font-size:9.8mm; font-weight:600; margin-top:2.5mm;
+      letter-spacing:-0.005em; }}
+    .crt .rule {{ display:flex; align-items:center; gap:2mm; width:62%;
+      margin-top:3.5mm; }}
+    .crt .rule i {{ flex:1; height:0.26mm; background:{m["primary"]}; }}
+    .crt .rule b {{ width:3mm; height:3mm; transform:rotate(45deg);
+      border:0.26mm solid {m["primary"]}; }}
+    .crt .ar-body {{ font-family:'Amiri',serif; font-size:3.5mm;
+      line-height:1.95; max-width:80%; margin-top:4mm;
+      color:{geo.tint(ink, 0.84)}; }}
+    .crt .foot {{ margin-top:auto; width:100%; display:flex; align-items:flex-end;
+      justify-content:space-between; gap:34mm; }}
+    .crt .sig {{ flex:1 1 0; font-family:'Amiri',serif; font-size:2.7mm;
+      color:{geo.tint(ink, 0.62)}; }}
+    .crt .sig span {{ display:block; width:82%; margin:0 auto 1.4mm;
+      border-top:0.24mm solid {m["primary"]}; }}
+    .crt .ref {{ margin-top:3mm; font-family:'IBM Plex Mono',monospace;
+      font-size:2.1mm; letter-spacing:0.10em; color:{geo.tint(ink, 0.48)}; }}'''
     return press, body, css
 
 
 def _intaglio(person: Personality) -> tuple[Press, str, str]:
     """The lathe work is in front; the type sits in panels cut out of it."""
-    press, motif, field, m = _frame(person)
+    press, motif, field, _m = _frame(person)
     ink = person.ink
     press.mark("guilloche", engine_field(motif, geo.Rect(0, 0, W, H), ink),
                stroke=0.075)
