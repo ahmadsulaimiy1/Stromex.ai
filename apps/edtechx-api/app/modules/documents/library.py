@@ -843,6 +843,7 @@ def _record_template(*, key: str, name: str, name_ar: str, level: int,
 def _ledger_template(*, key: str, name: str, name_ar: str, code: str,
                      lede_en: str, lede_ar: str, body_en: str, body_ar: str,
                      columns: tuple[Wording, ...], rows_note: str,
+                     rows_default: str = "",
                      extra: tuple[Slot, ...] = (), level: int = 3,
                      banner: Wording | None = None,
                      signatory: tuple[str, str, str] = (
@@ -867,7 +868,7 @@ def _ledger_template(*, key: str, name: str, name_ar: str, code: str,
             *_institution(), *_recipient(), *_particulars(), *_credential(),
             Slot("programme", "Programme of study", "البرنامج الدراسي", "text",
                  default="Programme Name"),
-            Slot("rows", "Rows", "الصفوف", "table", default="",
+            Slot("rows", "Rows", "الصفوف", "table", default=rows_default,
                  note=rows_note),
             Slot("grading_key", "Grading scale", "سلّم الدرجات", "paragraph",
                  default="A 80–100 Distinction · B 70–79 Very Good · "
@@ -1405,6 +1406,29 @@ def _build() -> dict[str, Template]:
                 "results, its function, additional information, the "
                 "certification of the supplement itself, and a factual "
                 "description of the institution's own education system."
+            ),
+            # The eight sections are the document, so they are the default
+            # rather than an empty table an institution has to know to fill.
+            # A supplement shipped with a course list in it — which is what the
+            # first proof rendered, because it inherited the transcript's rows —
+            # is a supplement that explains nothing.
+            rows_default=(
+                "1. The holder|Named above, with the identity number recorded "
+                "against this institution's own register.\n"
+                "2. The qualification|As named on the accompanying "
+                "certificate, awarded by this institution in its own right.\n"
+                "3. Level|The stage of study the qualification completes "
+                "within this institution's published progression.\n"
+                "4. Programme and results|Set out in full on the accompanying "
+                "Transcript, which this supplement does not repeat.\n"
+                "5. Function|What the qualification entitles the holder to "
+                "within this institution: admission to the next stage.\n"
+                "6. Additional information|Any distinction, medium of "
+                "instruction, or attendance mode the institution records.\n"
+                "7. Certification|Signed and sealed below by the office named, "
+                "and verifiable at the address printed on this sheet.\n"
+                "8. The education system|The institution's own curriculum "
+                "structure and the grading scale printed below."
             ),
             level=2,
             notes=(

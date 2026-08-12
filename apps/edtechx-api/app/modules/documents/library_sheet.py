@@ -446,6 +446,15 @@ def _ceremonial(filled: Filled, *, architecture: Architecture, scheme, ink: str,
     template = filled.template
     measure = field.w
     mark = ""
+    # A portrait ceremonial sheet is a narrower measure, and a narrower measure
+    # wants smaller type: the same citation that runs in two columns across a
+    # landscape field stacks into two full-width paragraphs here, and at the
+    # landscape optical sizes that stack ran 11.6mm to 15.9mm past the field on
+    # every college sheet and 5.8mm on every award. This is not a fudge factor —
+    # it is the type size a 145mm measure asks for against a 228mm one, and the
+    # peak still sits at 8.5mm, twice its floor.
+    if field.h > field.w:
+        scale *= 0.93
     # Optical sizes, not chosen sizes. The field a full heritage border leaves
     # on an A4 landscape sheet is 221 × 134mm, and the composition below is
     # solved against that height rather than against a look — which is why the
@@ -455,8 +464,13 @@ def _ceremonial(filled: Filled, *, architecture: Architecture, scheme, ink: str,
         _lockup(architecture, filled, base=3.3 * scale, mark=mark),
         _banner(architecture, filled, scale=scale),
         '<div class="spacer"></div>',
+        # Inline only where there is width for it. Two long peer titles side
+        # by side need a landscape measure; on a portrait sheet the pair ran
+        # 90mm past the inner rule and off the ceremonial field entirely — the
+        # same rule that makes the citation run in columns on one and stack on
+        # the other, which the title had been exempt from for no reason.
         _runs(architecture, filled, template.title, cls="ttl", base=5.8 * scale,
-              inline=architecture.mode == "peer"),
+              inline=architecture.mode == "peer" and field.w > field.h),
         # The subtitle is the stage gloss on a stage sheet. A college sheet's
         # award is set once, in the conferred-award register below, and setting
         # it here as well cost 7.8mm of a 132mm field to say the same words
@@ -514,16 +528,21 @@ def _ceremonial(filled: Filled, *, architecture: Architecture, scheme, ink: str,
     # beneath it with the seal. This is the same rule that makes the citation
     # run in columns on one and stack on the other, applied to the foot.
     tall = field.h > field.w
+    # The instruments have *floors*, not fixed sizes. Left at 46 x 14mm an A3
+    # sheet gets an A4 cartouche marooned in the corner of a much larger field
+    # — which is what the first A3 proof showed, and it is the difference
+    # between a document composed for A3 and one enlarged onto it. So they grow
+    # with the sheet and stop at the floor on the way down, never above it.
     number = _number(filled, template, scheme=scheme, ink=ink,
-                     width=46, height=14, paper=paper)
+                     width=46 * scale, height=14 * scale, paper=paper)
     signatures = (
         '<div class="sigrow">'
         + _signature_block(filled, template, scheme=scheme, ink=ink,
                            assets=assets)
         + "</div>"
     )
-    seal = _seal(filled, template, scheme=scheme, ink=ink, radius=9.2,
-                 device=device)
+    seal = _seal(filled, template, scheme=scheme, ink=ink,
+                 radius=max(9.2, 9.2 * scale), device=device)
     execution = (
         f'<div class="numrow">{number}</div>'
         f'<div class="exec">{signatures}{seal}</div>'
@@ -534,7 +553,7 @@ def _ceremonial(filled: Filled, *, architecture: Architecture, scheme, ink: str,
         execution
         + '<div class="vrow">'
         + _verification(filled, template, scheme=scheme, ink=ink, width=measure,
-                        height=27, paper=paper)
+                        height=max(27.0, 27.0 * scale), paper=paper)
         + "</div>"
     )
     return "".join(parts) + foot
@@ -552,8 +571,9 @@ def _administrative(filled: Filled, *, architecture: Architecture, scheme,
     parts = [
         _lockup(architecture, filled, base=3.2 * scale, mark=""),
         _banner(architecture, filled, scale=scale),
-        _runs(architecture, filled, template.title, cls="ttl ttl--rec", base=5.2 * scale,
-              inline=architecture.mode == "peer"),
+        _runs(architecture, filled, template.title, cls="ttl ttl--rec",
+              base=5.2 * scale,
+              inline=architecture.mode == "peer" and field.w > field.h),
         # Uneven on purpose. Two equal spacers put the block on the sheet's
         # geometric centre, which the eye reads as low — the same reason a
         # picture hung at true centre looks like it has slipped. 0.62 above and
@@ -587,12 +607,12 @@ def _administrative(filled: Filled, *, architecture: Architecture, scheme,
         + _signature_block(filled, template, scheme=scheme, ink=ink,
                            assets=assets)
         + "</div>"
-        + _seal(filled, template, scheme=scheme, ink=ink, radius=11.0,
-                device=device)
+        + _seal(filled, template, scheme=scheme, ink=ink,
+                radius=max(11.0, 11.0 * scale), device=device)
         + "</div>"
         + '<div class="vrow">'
         + _verification(filled, template, scheme=scheme, ink=ink, width=measure,
-                        height=27, paper=paper)
+                        height=max(27.0, 27.0 * scale), paper=paper)
         + "</div>"
     )
     return "".join(parts) + foot
@@ -645,8 +665,15 @@ def _overprint(filled: Filled, *, width: float, height: float, scheme) -> str:
         f'<text x="{width / 2:.1f}"'
         f' y="{height / 2 + (index - (len(lines) - 1) / 2) * size * 1.5:.1f}"'
         f' text-anchor="middle" font-size="{size * (0.62 if index else 1):.2f}"'
-        f' font-family="Inter, sans-serif" font-weight="700"'
-        f' letter-spacing="{size * 0.06:.2f}" fill="{alert}"'
+        # The Arabic line is a *second* line in a second script, and an SVG
+        # text element does not inherit a direction from anywhere. Without
+        # this the run laid out left to right and the words came out in
+        # reverse order — legible enough to look intentional, which is worse
+        # than illegible.
+        + (' direction="rtl" font-family="Amiri, serif"' if index
+           else ' font-family="Inter, sans-serif"')
+        + f' font-weight="700"'
+        f' letter-spacing="{0 if index else size * 0.06:.2f}" fill="{alert}"'
         f' fill-opacity="0.22">{_escape(line)}</text>'
         for index, line in enumerate(lines)
     )
@@ -692,7 +719,8 @@ def _ledger(filled: Filled, *, architecture: Architecture, scheme, ink: str,
         _lockup(architecture, filled, base=3.0 * scale, mark=""),
         _banner(architecture, filled, scale=scale),
         _runs(architecture, filled, template.title, cls="ttl ttl--rec",
-              base=4.8 * scale, inline=architecture.mode == "peer"),
+              base=4.8 * scale,
+              inline=architecture.mode == "peer" and field.w > field.h),
         '<div class="hairspace"></div>',
         _runs(architecture, filled, template.lede, cls="lede",
               base=2.7 * scale),
@@ -738,12 +766,12 @@ def _ledger(filled: Filled, *, architecture: Architecture, scheme, ink: str,
         + _signature_block(filled, template, scheme=scheme, ink=ink,
                            assets=assets)
         + "</div>"
-        + _seal(filled, template, scheme=scheme, ink=ink, radius=10.0,
-                device=device)
+        + _seal(filled, template, scheme=scheme, ink=ink,
+                radius=max(10.0, 10.0 * scale), device=device)
         + "</div>"
         + '<div class="vrow">'
         + _verification(filled, template, scheme=scheme, ink=ink, width=measure,
-                        height=27, paper=paper)
+                        height=max(27.0, 27.0 * scale), paper=paper)
         + "</div>"
     )
     return "".join(parts) + foot
@@ -770,8 +798,17 @@ html, body { margin: 0; padding: 0; background: #221F1B; }
 .lockup--stack .lk { flex: none; }
 .ttl { font-weight: 600; letter-spacing: 0.03em; flex: none; }
 .ttl--arabic { letter-spacing: 0; font-weight: 700; }
-.ttl-row { display: flex; gap: 7mm; align-items: baseline; justify-content: center;
-  flex: none; }
+/* An inline peer row wraps rather than pushes. Two titles set side by side
+   are 0.26mm too wide for an A4 landscape field with a long institution name,
+   and 8mm too wide on portrait — and a row that cannot wrap answers that by
+   walking off the ceremonial field. Wrapping degrades it to the stacked
+   arrangement, which is the same thing the composition does deliberately on a
+   tall sheet, rather than to a defect. */
+.ttl-row, .awd-row, .bnr-row, .endr-row {
+  display: flex; align-items: baseline; justify-content: center;
+  flex: none; flex-wrap: wrap; max-width: 100%; }
+.ttl-row > *, .awd-row > *, .bnr-row > *, .endr-row > * { min-width: 0; }
+.ttl-row { gap: 7mm; }
 .sub { font-family: 'Inter', sans-serif; text-transform: uppercase;
   letter-spacing: 0.30em; font-weight: 600; flex: none; margin-top: 1.6mm; }
 .lede { font-style: italic; flex: none; margin-top: 1.0mm; }
@@ -782,7 +819,8 @@ html, body { margin: 0; padding: 0; background: #221F1B; }
 .name--arabic { letter-spacing: 0; font-weight: 700; }
 .namerule { display: block; flex: none; height: 3mm; margin-top: 1.6mm; }
 .cite { display: flex; gap: 7mm; justify-content: center; align-items: flex-start;
-  width: 100%; flex: none; margin-top: 2.0mm; }
+  width: 100%; max-width: 100%; flex: none; margin-top: 2.0mm; }
+.cite > * { min-width: 0; }
 .cite .stmt { flex: 1 1 0; text-align: justify; text-align-last: center; }
 .cite--rec { display: block; }
 .cite--rec .stmt { text-align: center; }
@@ -790,21 +828,22 @@ html, body { margin: 0; padding: 0; background: #221F1B; }
 .awd { font-family: 'Inter', sans-serif; text-transform: uppercase;
   letter-spacing: 0.20em; font-weight: 600; }
 .awd--arabic { text-transform: none; letter-spacing: 0; font-family: 'Amiri', serif; }
-.awd-row { display: flex; gap: 6mm; align-items: baseline; justify-content: center; }
+.awd-row { gap: 6mm; }
 .band { display: flex; align-items: stretch; justify-content: space-between;
   width: 100%; flex: none; margin-top: 1.8mm; }
 .bcell { flex: 1 1 0; padding: 0 3mm; }
 .bdiv { flex: none; width: 0.2mm; align-self: stretch; }
 .bhead { display: flex; gap: 2mm; justify-content: center; }
-.bk { font-family: 'Inter', sans-serif; font-size: 1.7mm; letter-spacing: 0.16em;
-  text-transform: uppercase; font-weight: 600; }
+.bk { font-family: 'Inter', sans-serif; font-size: calc(1.7mm * var(--s));
+  letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600; }
 .bk--arabic { text-transform: none; letter-spacing: 0; font-family: 'Amiri', serif;
-  font-size: 2.0mm; }
-.bval { font-family: 'IBM Plex Mono', monospace; font-size: 2.3mm;
+  font-size: calc(2.0mm * var(--s)); }
+.bval { font-family: 'IBM Plex Mono', monospace; font-size: calc(2.3mm * var(--s));
   margin-top: 0.6mm; }
 .rows { width: 100%; border-collapse: collapse; flex: none; margin-top: 3mm;
-  font-family: 'Source Serif 4', serif; font-size: 2.5mm; }
-.rows th { font-family: 'Inter', sans-serif; font-size: 1.8mm; font-weight: 600;
+  font-family: 'Source Serif 4', serif; font-size: calc(2.5mm * var(--s)); }
+.rows th { font-family: 'Inter', sans-serif; font-size: calc(1.8mm * var(--s));
+  font-weight: 600;
   letter-spacing: 0.16em; text-transform: uppercase; padding: 1.4mm 2mm;
   border-bottom: 0.28mm solid var(--rule); }
 .rows td { padding: 1.2mm 2mm; border-bottom: 0.10mm solid var(--rule); }
@@ -813,18 +852,28 @@ html, body { margin: 0; padding: 0; background: #221F1B; }
 .exec--rec { justify-content: center; }
 .sigrow { flex: 1 1 auto; display: flex; align-items: flex-start; gap: 6mm; }
 .sig { flex: 1 1 0; text-align: center; }
-.sig .ink { display: block; width: 100%; height: 6.6mm; margin-bottom: -1.0mm;
+/* Every fixed measure in the foot is expressed against --s, the sheet's own
+   type scale, so a signature block on A3 is an A3 signature block rather than
+   an A4 one sitting in a larger field. --s is floored at 1 for these: the
+   instruments may grow with the sheet and may not shrink below the size at
+   which a name stops being readable and a rule stops being a rule. */
+.sig .ink { display: block; width: 100%; height: calc(6.6mm * var(--s));
+  margin-bottom: calc(-1.0mm * var(--s));
   object-fit: contain; object-position: center bottom; }
-.sig .nm { font-size: 3.1mm; height: 5.2mm; display: flex; align-items: flex-end;
+.sig .nm { font-size: calc(3.1mm * var(--s)); height: calc(5.2mm * var(--s));
+  display: flex; align-items: flex-end;
   justify-content: center; white-space: nowrap; }
-.sig .nm-ar { font-family: 'Amiri', serif; font-size: 3.0mm; margin-bottom: 0.4mm; }
-.sig .srule { display: block; width: 100%; height: 1.6mm; }
+.sig .nm-ar { font-family: 'Amiri', serif; font-size: calc(3.0mm * var(--s));
+  margin-bottom: 0.4mm; }
+.sig .srule { display: block; width: 100%; height: calc(1.6mm * var(--s)); }
 .sig .of { font-family: 'Inter', sans-serif; text-transform: uppercase;
-  font-weight: 600; font-size: 1.9mm; letter-spacing: 0.18em; margin-top: 1.1mm; }
-.sig .of-ar { font-family: 'Amiri', serif; font-size: 2.2mm; margin-top: 0.4mm; }
-.sealbox { flex: none; width: 22mm; }
+  font-weight: 600; font-size: calc(1.9mm * var(--s)); letter-spacing: 0.18em;
+  margin-top: calc(1.1mm * var(--s)); }
+.sig .of-ar { font-family: 'Amiri', serif; font-size: calc(2.2mm * var(--s));
+  margin-top: 0.4mm; }
+.sealbox { flex: none; width: calc(22mm * var(--s)); }
 .sealbox svg, .nbox svg, .vbox svg { display: block; width: 100%; height: auto; }
-.nbox { flex: none; width: 46mm; }
+.nbox { flex: none; width: calc(46mm * var(--s)); }
 .vrow { width: 100%; flex: none; margin-top: 2.0mm; }
 .endrule { flex: none; width: 100%; margin-top: 1.6mm; padding-top: 1.2mm;
   border-top: 0.24mm solid; display: flex; justify-content: center; }
@@ -832,7 +881,7 @@ html, body { margin: 0; padding: 0; background: #221F1B; }
   font-weight: 600; letter-spacing: 0.26em; }
 .endr--arabic { text-transform: none; letter-spacing: 0;
   font-family: 'Amiri', serif; }
-.endr-row { display: flex; gap: 4mm; align-items: baseline; }
+.endr-row { gap: 4mm; }
 .numrow { flex: none; margin-top: 2.0mm; display: flex; justify-content: center; }
 .hairspace { flex: none; height: 2.4mm; }
 /* The permanent banner sits in the flow above the title, where it is read
@@ -843,7 +892,7 @@ html, body { margin: 0; padding: 0; background: #221F1B; }
   font-weight: 700; letter-spacing: 0.24em; }
 .bnr--arabic { text-transform: none; letter-spacing: 0;
   font-family: 'Amiri', serif; }
-.bnr-row { display: flex; gap: 5mm; align-items: baseline; justify-content: center; }
+.bnr-row { gap: 5mm; }
 /* Over the ground, under nothing. A copy notice that content can obscure is a
    copy notice a forger can obscure. */
 .overprint { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
@@ -965,7 +1014,12 @@ def sheet_for_template(filled: Filled, *, sheet: str | None = None,
         f'background:{paper}">'
         f'<div class="plate">{ground.svg}</div>'
         + _overprint(filled, width=width, height=height, scheme=scheme)
-        + f'<div class="field" style="left:{field.x:.2f}mm;top:{field.y:.2f}mm;'
+        # --s is the sheet's own type scale, published once here and spent by
+        # every fixed measure in the foot. Floored at 1: the instruments may
+        # grow with the sheet and may not shrink below the size at which a name
+        # stops being readable and a rule stops being a rule.
+        + f'<div class="field" style="--s:{max(1.0, fit.type_scale):.3f};'
+        f'left:{field.x:.2f}mm;top:{field.y:.2f}mm;'
         f'width:{field.w:.2f}mm;height:{field.h:.2f}mm">{body}</div>'
         "</div>"
     )

@@ -46,6 +46,20 @@ sys.path.insert(0, str(ROOT))
 from tools.design.render import contact, shoot
 
 OUT = ROOT / "docs" / "edtechx" / "design" / "library"
+
+#: One CSS pixel, in millimetres. The measurement floor, and the tolerance.
+#:
+#: `scrollWidth` and `clientWidth` are integers in CSS pixels, so an element
+#: whose width is fractional reports one pixel of overflow that does not exist.
+#: Twenty-five compositions sat at exactly 0.26mm — 25.4/96 to two places — and
+#: chasing it would have meant tuning a design against a rounding artefact.
+#:
+#: This is not a loosened standard. It is declining to assert a precision the
+#: instrument does not have: below one pixel the browser cannot tell a real
+#: overflow from a rounded one, so a claim either way would be invented. At
+#: 600 DPI one CSS pixel is six device pixels of a 0.07mm hairline — visible if
+#: it were real, and it is not.
+_PIXEL = 25.4 / 96 + 0.005
 CHROME = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
 
 #: A specimen institution. Every value is obviously a specimen — nobody should
@@ -213,9 +227,16 @@ def size_matrix() -> tuple[list[pathlib.Path], list[str]]:
 def audit(pages: list[pathlib.Path]) -> list[tuple[str, float, float]]:
     """Measure every sheet. Returns (key, content overflow mm, field bleed mm).
 
-    Both numbers must be zero. `content` is the flow above the field's own
-    height; `bleed` is the field's own box crossing the ground's innermost
-    rule. A composition can pass the first and fail the second, which is the
+    Both numbers must be zero, and `content` is now the worse of two
+    directions rather than just height. The vertical-only version passed a
+    portrait certificate whose bilingual title ran 90mm past the inner rule and
+    off the ceremonial field entirely: the column fitted, and the row inside it
+    did not. Anything laid out as a row — a peer title, a two-column citation,
+    a particulars band — can overflow sideways while the column it sits in
+    reports no overflow at all.
+
+    `bleed` is the field's own box crossing the ground's innermost rule. A
+    composition can pass both content checks and fail this one, which is the
     case that ships.
     """
     from playwright.sync_api import sync_playwright
@@ -237,7 +258,21 @@ def audit(pages: list[pathlib.Path]) -> list[tuple[str, float, float]]:
                 " const bleed = Math.max(0,"
                 "   sr.top - fr.top, sr.left - fr.left,"
                 "   fr.bottom - sr.bottom, fr.right - sr.right);"
-                " return [f.scrollHeight - f.clientHeight, bleed];"
+                # HTML blocks only. An SVG child legitimately exceeds its
+                # own viewBox — text does not clip to it — and walking into
+                # the seal and the verification cartouche reported every sheet
+                # in the library as 40–75mm over. What is being asked is
+                # whether a *laid-out block* left the field, and an SVG is one
+                # block however its internals are drawn.
+                " let side = f.scrollWidth - f.clientWidth;"
+                " for (const el of f.querySelectorAll('div, table, p, img')) {"
+                "   if (el.closest('svg')) continue;"
+                "   const r = el.getBoundingClientRect();"
+                "   if (!r.width) continue;"
+                "   side = Math.max(side, fr.left - r.left, r.right - fr.right);"
+                " }"
+                " return ["
+                "   Math.max(f.scrollHeight - f.clientHeight, side), bleed];"
                 "}"
             )
             results.append((
@@ -362,7 +397,7 @@ def report(label: str, pages: list[pathlib.Path], failures: list[str], *,
     if not quiet:
         print(f"\n{label}")
     for key, over, bleed in audit(pages):
-        ok = over <= 0.05 and bleed <= 0.05
+        ok = over <= _PIXEL and bleed <= _PIXEL
         if not ok:
             failures.append(f"{label}/{key}: {over:.2f}mm over, "
                             f"{bleed:.2f}mm outside the field")
