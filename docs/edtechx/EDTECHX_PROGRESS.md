@@ -891,6 +891,104 @@ are screens, not a latent image; the fibres are cosmetic. Only A4 has been
 composed — Letter and A3 will be re-cut, not scaled — and no imported template
 yet opts into the `zoned` or `integrated` language arrangements.
 
+## The nine documents nobody built, and every size that will hold them
+
+The import stopped at the fifteen documents the benchmark had rendering code
+for. Its own master specification defines a **nineteen-document ecosystem** in
+three security classes, and nine of those were named, numbered, given a class,
+and never built. They are the ones an institution needs most.
+
+**Added, with their reference-number families:** the Official Academic
+Transcript (`TRAN`), the Diploma Supplement (`SUPP`), the Statement of Results
+(`SOR`), the Provisional Certificate (`PROV`), the Islamiyyah Certificate
+(`ISL`), and the four awards — general (`AWD`), Special Distinction (`DIST`),
+Board (`BRD`) and Head of Schools (`FCA`). Twenty-four templates in five
+families; `ledger` and `award` are new compositions, not variants.
+
+**Two new compositions, because they are different documents.** A ledger is not
+a certificate with a table on it: the rows *are* the document, so the peak is
+small and the grading key sits on the same sheet — a transcript read by somebody
+who has never seen this institution's conventions is otherwise a page of letters
+to guess at. Every ledger closes with an **End of record** rule, because unused
+space below the last row of a sealed transcript is where a line gets added
+afterwards; the space is left blank rather than ruled, since ruled lines invite
+an entry and a closing rule forbids one. An award carries **no academic
+session** — an award for a piece of work is not an award for a year — and
+refuses a blank citation.
+
+**Reissuance, which nothing implemented.** `CERTIFIED TRUE COPY` and
+`DUPLICATE — ORIGINAL REFERENCE No. X` as editions on any Class A or B document:
+own reference number, visible permanent overprint drawn over the ground and
+under nothing, oxblood reserved for this and one other thing so it means
+something when it appears. A duplicate with no original reference is refused
+outright — without it the sheet is indistinguishable from a second original, and
+a holder with two unmarked certificates can lend one and keep one. A Class C
+registry document cannot be reissued at all; it is regenerated from the
+register. An original renders **no stamp**: a document that has to announce it
+is genuine has already conceded the question.
+
+**Sizes: a brief, not a scale factor.** `design/sheets.py` holds every ISO A and
+B stock and every North American stock, in both orientations, and re-solves
+rather than scales — the border is re-cut from its proportions, the type moves
+on a square-root curve, and the instruments do not move at all. A Code 128
+module floor of 0.33mm, a 27mm verification cartouche and an 18mm seal are facts
+about presses, scanners and eyes, so the system can say **no**, with the
+arithmetic: *"the field is 99mm tall and this composition needs 123mm at its
+type floors — 74mm of content above a 49mm foot that may not be shrunk."*
+Landscape and portrait have different feet, not one squeezed: a tall sheet has
+not the width for a cartouche, two signature cells and a seal on one line, so it
+stacks them.
+
+**What the audit found this pass**, and the third is the one that matters most:
+
+1. **An award printing the word AWARD over the holder's identity number.** The
+   particulars band took its first label from `registers[-3]` — "Student ID" on
+   a stage sheet, "Award" on an award sheet. A label derived from a position
+   rather than named will eventually describe the wrong value.
+2. **A5 accepted for transcripts on a height check alone.** Five table columns
+   below about 26mm each stop being readable long before the page runs out of
+   height. Width is now its own constraint with its own reason per family.
+3. **23 of 320 size compositions overflowing by 0.3 to 19.6mm while the
+   arithmetic said they fitted.** The stack figures were flat constants at the
+   type floors. Correcting them took three attempts and both wrong turns are
+   worth keeping: the first over-swung and refused A4 landscape, the size the
+   certificates were designed at; the second double-counted the foot, because
+   the measured column already contains it. The third worked: 672 measurements —
+   every template on every candidate sheet, both data sets, spacers deleted,
+   natural height read back — fitted per family *and orientation* as
+   `base + slope × type_scale`. Affine, not proportional: a column is partly
+   type, which scales, and partly rules and fixed boxes, which do not.
+
+   One trap is recorded in the source because it cost a whole run: **the gate
+   has to be open while measuring.** With the old constants in place the
+   renderer refused the small sheets, so those sheets were never measured and
+   the fit came back describing only the sizes the old constants already
+   allowed. Calibrating a limit against data the limit itself selected tells you
+   nothing.
+
+4. **Four sizes that still overflow, which no linear model can predict.** A
+   citation that sets on one line at ×1.00 takes two at ×1.02 and the column
+   jumps 7mm. They are recorded as `MEASURED_OVERFLOWS` with the millimetres,
+   consulted by `Template.sheets()` and by the renderer, rather than absorbed
+   into a constant that would then refuse A4. The model predicts; the proof
+   wins.
+
+**Verified:** 618 tests, 208 of them new across `test_library.py` and
+`test_sheets.py` — every
+specified reference family exists, every template declares a real security
+class, the interim documents carry permanent banners, the Statement of Results
+does not claim completion and is signed by Examinations and Records rather than
+a principal, the Supplement claims no equivalence, a Board Award must name its
+authorising resolution, an award refuses a blank citation, a duplicate must name
+the original it replaces, a registry document cannot be reissued as a copy, the
+overprint colour is reserved, and rendering on a refused sheet raises with an
+actionable message rather than shrinking. Suite green, ruff clean.
+
+**Implemented but not verified:** still nothing printed. Rendered proofs are now
+build output rather than history — the size matrix alone is 1.4GB of HTML with
+embedded fonts — so the repository keeps the inventory, the refused-size ledger
+and one contact sheet, and `tools/design/library.py` regenerates the rest.
+
 
 ## Working notes for the next session
 

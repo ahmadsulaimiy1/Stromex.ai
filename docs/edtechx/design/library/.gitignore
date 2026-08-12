@@ -1,0 +1,12 @@
+# Rendered proofs are build output, not source.
+#
+# `tools/design/library.py` regenerates every one of them from the templates,
+# and the size matrix alone is 1.4GB of HTML with embedded fonts. What is
+# worth keeping in the history is what the proofs *established* — the
+# inventory, the refused sizes, and one contact sheet to look at — not the
+# hundreds of intermediate pages that established it.
+specimen/
+hostile/
+edition-*/
+sizes/
+shots/

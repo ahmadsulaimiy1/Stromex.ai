@@ -1,8 +1,28 @@
 # The imported template library
 
-Fifteen documents, brought across from the benchmark press and made
-editable. Every layout, every band position and every institutional
-sentence is transcribed; every name is a slot with a generic default.
+24 documents in 5 composition families, brought across from
+the benchmark press and made editable. Every layout, every band position and every
+institutional sentence is transcribed; every name is a slot with a generic default.
+
+## Reference-number families
+
+| Code | Documents | Class |
+|---|---|---|
+| `ALUM` | Alumni Registration Certificate | C |
+| `AWD` | Award Certificate | B |
+| `BRD` | Board Award | B |
+| `CERT` | Certificate of Tamhīdiyyah, Certificate of Ibtidāʼiyyah, Certificate of Iʻdādiyyah, Certificate of Thānawiyyah, Junior Secondary Graduation Certificate, Senior Secondary Graduation Certificate, Primary School Graduation Certificate, Certificate of Completion — Memorisation, Certificate of Achievement — Ten Juzʼ, Graduation Certificate | A |
+| `CHAR` | Character Certificate | B |
+| `CLR` | Graduation Clearance Certificate | B |
+| `DIST` | Special Distinction Certificate | B |
+| `FCA` | Head of Schools Award | B |
+| `ISL` | Islamiyyah Certificate | A |
+| `PROV` | Provisional Certificate | A |
+| `REG` | Graduation Register | C |
+| `SOR` | Statement of Results | A |
+| `SUPP` | Diploma Supplement | A |
+| `TEST` | Official Testimonial | B |
+| `TRAN` | Official Academic Transcript | A |
 
 ## Stage — 4 templates
 
@@ -12,11 +32,13 @@ Landscape ceremonial. One name at the optical centre, a two-column bilingual cit
 
 - **Key** `stage-preparatory`  
 - **Arabic title** شهادة إتمام المرحلة التمهيدية  
-- **Sheet** a4-landscape, 297 × 210mm  
+- **Reference family** `CERT` · security class A  
+- **Designed at** a4-landscape, 297 × 210mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, legal-landscape, a4-portrait, letter-portrait, letter-landscape  
 - **Ceremonial level** 3  
 - **Language architecture** peer  
 - **Metal scheme** imperial  
-- **Editable slots** 26  
+- **Editable slots** 27  
 - **Content field** 228.1 × 141.1mm
 
 Imported from the benchmark press's stage certificate. The stage wording, the citation sentence and the three-register particulars band are transcribed; the ground is re-cut as constructed geometry; every name is a slot.
@@ -38,11 +60,13 @@ Security registers drawn on this sheet:
 
 - **Key** `stage-primary`  
 - **Arabic title** شهادة إتمام المرحلة الابتدائية  
-- **Sheet** a4-landscape, 297 × 210mm  
+- **Reference family** `CERT` · security class A  
+- **Designed at** a4-landscape, 297 × 210mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, legal-landscape, a4-portrait, letter-portrait, letter-landscape  
 - **Ceremonial level** 3  
 - **Language architecture** peer  
 - **Metal scheme** imperial  
-- **Editable slots** 26  
+- **Editable slots** 27  
 - **Content field** 228.1 × 141.1mm
 
 Imported from the benchmark press's stage certificate. The stage wording, the citation sentence and the three-register particulars band are transcribed; the ground is re-cut as constructed geometry; every name is a slot.
@@ -64,11 +88,13 @@ Security registers drawn on this sheet:
 
 - **Key** `stage-intermediate`  
 - **Arabic title** شهادة إتمام المرحلة الإعدادية  
-- **Sheet** a4-landscape, 297 × 210mm  
+- **Reference family** `CERT` · security class A  
+- **Designed at** a4-landscape, 297 × 210mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, legal-landscape, a4-portrait, letter-portrait, letter-landscape  
 - **Ceremonial level** 3  
 - **Language architecture** peer  
 - **Metal scheme** imperial  
-- **Editable slots** 26  
+- **Editable slots** 27  
 - **Content field** 228.1 × 141.1mm
 
 Imported from the benchmark press's stage certificate. The stage wording, the citation sentence and the three-register particulars band are transcribed; the ground is re-cut as constructed geometry; every name is a slot.
@@ -90,11 +116,13 @@ Security registers drawn on this sheet:
 
 - **Key** `stage-secondary`  
 - **Arabic title** شهادة إتمام المرحلة الثانوية  
-- **Sheet** a4-landscape, 297 × 210mm  
+- **Reference family** `CERT` · security class A  
+- **Designed at** a4-landscape, 297 × 210mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, legal-landscape, a4-portrait, letter-portrait, letter-landscape  
 - **Ceremonial level** 3  
 - **Language architecture** peer  
 - **Metal scheme** imperial  
-- **Editable slots** 26  
+- **Editable slots** 27  
 - **Content field** 228.1 × 141.1mm
 
 Imported from the benchmark press's stage certificate. The stage wording, the citation sentence and the three-register particulars band are transcribed; the ground is re-cut as constructed geometry; every name is a slot.
@@ -112,7 +140,7 @@ Security registers drawn on this sheet:
 - QR verification bay
 - void notice
 
-## College — 5 templates
+## College — 6 templates
 
 Landscape ceremonial with an award line. Same architecture as the stage sheet, plus a conferred-award register between the citation and the foot — the award is a different statement from the citation and is set as one.
 
@@ -120,11 +148,13 @@ Landscape ceremonial with an award line. Same architecture as the stage sheet, p
 
 - **Key** `college-junior-secondary`  
 - **Arabic title** شهادة تخرج المرحلة الإعدادية  
-- **Sheet** a4-landscape, 297 × 210mm  
+- **Reference family** `CERT` · security class A  
+- **Designed at** a4-landscape, 297 × 210mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, legal-landscape, a4-portrait, letter-landscape  
 - **Ceremonial level** 3  
 - **Language architecture** peer  
 - **Metal scheme** imperial  
-- **Editable slots** 26  
+- **Editable slots** 27  
 - **Content field** 232.4 × 145.4mm
 
 Imported from the benchmark press's college award. The citation runs in two columns rather than two stacked paragraphs — stacked it costs 26mm of a 138mm field and makes a reader of one language wait for the other.
@@ -146,11 +176,13 @@ Security registers drawn on this sheet:
 
 - **Key** `college-senior-secondary`  
 - **Arabic title** شهادة تخرج المرحلة الثانوية  
-- **Sheet** a4-landscape, 297 × 210mm  
+- **Reference family** `CERT` · security class A  
+- **Designed at** a4-landscape, 297 × 210mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, legal-landscape, a4-portrait, letter-landscape  
 - **Ceremonial level** 3  
 - **Language architecture** peer  
 - **Metal scheme** imperial  
-- **Editable slots** 26  
+- **Editable slots** 27  
 - **Content field** 232.4 × 145.4mm
 
 Imported from the benchmark press's college award. The citation runs in two columns rather than two stacked paragraphs — stacked it costs 26mm of a 138mm field and makes a reader of one language wait for the other.
@@ -172,11 +204,13 @@ Security registers drawn on this sheet:
 
 - **Key** `college-primary`  
 - **Arabic title** شهادة تخرج المرحلة الابتدائية  
-- **Sheet** a4-landscape, 297 × 210mm  
+- **Reference family** `CERT` · security class A  
+- **Designed at** a4-landscape, 297 × 210mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, legal-landscape, letter-landscape  
 - **Ceremonial level** 2  
 - **Language architecture** peer  
 - **Metal scheme** crimson  
-- **Editable slots** 26  
+- **Editable slots** 27  
 - **Content field** 232.4 × 145.4mm
 
 Imported from the benchmark press's college award. The citation runs in two columns rather than two stacked paragraphs — stacked it costs 26mm of a 138mm field and makes a reader of one language wait for the other.
@@ -198,11 +232,13 @@ Security registers drawn on this sheet:
 
 - **Key** `college-memorisation-complete`  
 - **Arabic title** شهادة إتمام حفظ القرآن الكريم  
-- **Sheet** a4-landscape, 297 × 210mm  
+- **Reference family** `CERT` · security class A  
+- **Designed at** a4-landscape, 297 × 210mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, legal-landscape, a4-portrait  
 - **Ceremonial level** 4  
 - **Language architecture** peer  
 - **Metal scheme** palace  
-- **Editable slots** 26  
+- **Editable slots** 27  
 - **Content field** 232.4 × 145.4mm
 
 Imported from the benchmark press's college award. The citation runs in two columns rather than two stacked paragraphs — stacked it costs 26mm of a 138mm field and makes a reader of one language wait for the other.
@@ -224,11 +260,13 @@ Security registers drawn on this sheet:
 
 - **Key** `college-memorisation-ten`  
 - **Arabic title** شهادة حفظ عشرة أجزاء  
-- **Sheet** a4-landscape, 297 × 210mm  
+- **Reference family** `CERT` · security class A  
+- **Designed at** a4-landscape, 297 × 210mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, legal-landscape, a4-portrait, letter-landscape  
 - **Ceremonial level** 3  
 - **Language architecture** peer  
 - **Metal scheme** palace  
-- **Editable slots** 26  
+- **Editable slots** 27  
 - **Content field** 232.4 × 145.4mm
 
 Imported from the benchmark press's college award. The citation runs in two columns rather than two stacked paragraphs — stacked it costs 26mm of a 138mm field and makes a reader of one language wait for the other.
@@ -246,7 +284,35 @@ Security registers drawn on this sheet:
 - QR verification bay
 - void notice
 
-## Record — 6 templates
+### Islamiyyah Certificate
+
+- **Key** `college-islamiyyah`  
+- **Arabic title** شهادة الدراسات الإسلامية  
+- **Reference family** `ISL` · security class A  
+- **Designed at** a4-landscape, 297 × 210mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, legal-landscape, a4-portrait, letter-landscape  
+- **Ceremonial level** 3  
+- **Language architecture** peer  
+- **Metal scheme** palace  
+- **Editable slots** 29  
+- **Content field** 232.4 × 145.4mm
+
+Imported from the benchmark press's college award. The citation runs in two columns rather than two stacked paragraphs — stacked it costs 26mm of a 138mm field and makes a reader of one language wait for the other.
+
+> Specified in the benchmark's master document specification and never built there. The level is a slot rather than a set of templates: an institution that runs six Islamiyyah levels needs one certificate that names the level, not six certificates that drift apart at the third revision.
+
+Security registers drawn on this sheet:
+
+- constructed guilloché ground
+- anti-copy line screens at 8° and 53°
+- embossed khatam watermark
+- serial-bearing fine-text rails
+- engraved number cartouche
+- Code 128 archive symbol
+- QR verification bay
+- void notice
+
+## Record — 7 templates
 
 Portrait administrative. A masthead, an eyebrow, the name, a short body or a table, and a pinned administrative foot. The border is narrower because the field has to hold rows.
 
@@ -254,11 +320,13 @@ Portrait administrative. A masthead, an eyebrow, the name, a short body or a tab
 
 - **Key** `record-alumni-registration`  
 - **Arabic title** شهادة تسجيل الخريجين  
-- **Sheet** a4-portrait, 210 × 297mm  
+- **Reference family** `ALUM` · security class C  
+- **Designed at** a4-portrait, 210 × 297mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, legal-landscape, a4-landscape, letter-portrait, letter-landscape, b5-portrait, b5-landscape  
 - **Ceremonial level** 2  
 - **Language architecture** latin-primary  
 - **Metal scheme** signature  
-- **Editable slots** 24  
+- **Editable slots** 25  
 - **Content field** 148.3 × 235.3mm
 
 Imported from the benchmark press's document shell — the portrait register that carries its administrative records.
@@ -275,11 +343,13 @@ Security registers drawn on this sheet:
 
 - **Key** `record-testimonial`  
 - **Arabic title** شهادة توصية رسمية  
-- **Sheet** a4-portrait, 210 × 297mm  
+- **Reference family** `TEST` · security class B  
+- **Designed at** a4-portrait, 210 × 297mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, legal-landscape, a4-landscape, letter-portrait, letter-landscape, b5-portrait, b5-landscape  
 - **Ceremonial level** 2  
 - **Language architecture** latin-primary  
 - **Metal scheme** signature  
-- **Editable slots** 24  
+- **Editable slots** 25  
 - **Content field** 148.3 × 235.3mm
 
 Imported from the benchmark press's document shell — the portrait register that carries its administrative records.
@@ -298,11 +368,13 @@ Security registers drawn on this sheet:
 
 - **Key** `record-character`  
 - **Arabic title** شهادة حسن سيرة وسلوك  
-- **Sheet** a4-portrait, 210 × 297mm  
+- **Reference family** `CHAR` · security class B  
+- **Designed at** a4-portrait, 210 × 297mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, legal-landscape, a4-landscape, letter-portrait, letter-landscape, b5-portrait, b5-landscape  
 - **Ceremonial level** 2  
 - **Language architecture** latin-primary  
 - **Metal scheme** signature  
-- **Editable slots** 25  
+- **Editable slots** 26  
 - **Content field** 148.3 × 235.3mm
 
 Imported from the benchmark press's document shell — the portrait register that carries its administrative records.
@@ -321,11 +393,13 @@ Security registers drawn on this sheet:
 
 - **Key** `record-clearance`  
 - **Arabic title** شهادة إتمام إجراءات التخرج  
-- **Sheet** a4-portrait, 210 × 297mm  
+- **Reference family** `CLR` · security class B  
+- **Designed at** a4-portrait, 210 × 297mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, legal-landscape, a4-landscape, letter-portrait, letter-landscape, b5-portrait  
 - **Ceremonial level** 1  
 - **Language architecture** latin-primary  
 - **Metal scheme** signature  
-- **Editable slots** 24  
+- **Editable slots** 25  
 - **Content field** 148.3 × 235.3mm
 
 Imported from the benchmark press's document shell — the portrait register that carries its administrative records.
@@ -342,11 +416,13 @@ Security registers drawn on this sheet:
 
 - **Key** `record-graduation`  
 - **Arabic title** شهادة التخرج  
-- **Sheet** a4-portrait, 210 × 297mm  
+- **Reference family** `CERT` · security class A  
+- **Designed at** a4-portrait, 210 × 297mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, legal-landscape, a4-landscape, letter-portrait, letter-landscape, b5-portrait, b5-landscape  
 - **Ceremonial level** 3  
 - **Language architecture** latin-primary  
 - **Metal scheme** signature  
-- **Editable slots** 23  
+- **Editable slots** 24  
 - **Content field** 148.3 × 235.3mm
 
 Imported from the benchmark press's document shell — the portrait register that carries its administrative records.
@@ -363,11 +439,13 @@ Security registers drawn on this sheet:
 
 - **Key** `record-graduation-register`  
 - **Arabic title** سجل التخرج  
-- **Sheet** a4-portrait, 210 × 297mm  
+- **Reference family** `REG` · security class C  
+- **Designed at** a4-portrait, 210 × 297mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, legal-landscape, a4-landscape, letter-portrait, letter-landscape, b5-portrait  
 - **Ceremonial level** 1  
 - **Language architecture** latin-primary  
 - **Metal scheme** signature  
-- **Editable slots** 21  
+- **Editable slots** 22  
 - **Content field** 148.3 × 235.3mm
 
 Imported from the benchmark press's document shell — the portrait register that carries its administrative records.
@@ -379,5 +457,230 @@ Security registers drawn on this sheet:
 - constructed guilloché ground
 - anti-copy line screens at 8° and 53°
 - serial-bearing fine-text rails
+- QR verification bay
+- void notice
+
+### Provisional Certificate
+
+- **Key** `record-provisional`  
+- **Arabic title** شهادة مؤقتة  
+- **Reference family** `PROV` · security class A  
+- **Designed at** a4-portrait, 210 × 297mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, legal-landscape, a4-landscape, letter-portrait, letter-landscape, b5-portrait, b5-landscape  
+- **Ceremonial level** 3  
+- **Language architecture** latin-primary  
+- **Metal scheme** signature  
+- **Editable slots** 24  
+- **Content field** 148.3 × 235.3mm
+
+Imported from the benchmark press's document shell — the portrait register that carries its administrative records.
+
+> The gap between clearing every stage and the parchment being printed, sealed and signed is real and at many institutions runs to weeks. This is what a university or an embassy actually accepts in that window. It is deliberately NOT the Statement of Results, which is an academic-progress document and says the wrong thing; and its banner is permanent rather than an edition, because a provisional certificate without it reads as the certificate it is standing in for.
+
+Security registers drawn on this sheet:
+
+- constructed guilloché ground
+- anti-copy line screens at 8° and 53°
+- serial-bearing fine-text rails
+- QR verification bay
+- void notice
+
+## Ledger — 3 templates
+
+Portrait tabular. A holder block, a body of rows that is the document rather than an illustration of it, and a grading key on the same sheet — a transcript read without one is a page of letters somebody has to guess at. The peak is small because the rows are what is being certified.
+
+### Official Academic Transcript
+
+- **Key** `ledger-transcript`  
+- **Arabic title** كشف الدرجات الرسمي  
+- **Reference family** `TRAN` · security class A  
+- **Designed at** a4-portrait, 210 × 297mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, letter-portrait  
+- **Ceremonial level** 3  
+- **Language architecture** latin-primary  
+- **Metal scheme** signature  
+- **Editable slots** 27  
+- **Content field** 151.2 × 238.2mm
+
+Specified in the benchmark's own master document specification and never built there. Composed here as a ledger: a holder block, a body of rows, and a grading key on the same sheet.
+
+> The layout branches by institution in the benchmark's own specification: a subject-by-subject table for an academic programme, a stage-progression table for a memorisation one. Both are this template with different columns and different rows, which is what the column set being a slot is for.
+
+Security registers drawn on this sheet:
+
+- constructed guilloché ground
+- anti-copy line screens at 8° and 53°
+- embossed khatam watermark
+- serial-bearing fine-text rails
+- engraved number cartouche
+- Code 128 archive symbol
+- QR verification bay
+- void notice
+
+### Diploma Supplement
+
+- **Key** `ledger-supplement`  
+- **Arabic title** ملحق الشهادة  
+- **Reference family** `SUPP` · security class A  
+- **Designed at** a4-portrait, 210 × 297mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, letter-portrait  
+- **Ceremonial level** 2  
+- **Language architecture** latin-primary  
+- **Metal scheme** signature  
+- **Editable slots** 27  
+- **Content field** 151.2 × 238.2mm
+
+Specified in the benchmark's own master document specification and never built there. Composed here as a ledger: a holder block, a body of rows, and a grading key on the same sheet.
+
+> The single highest-leverage document in the library for a graduate applying abroad. An excellent transcript is still unreadable to an admissions officer who has never seen this institution's grading conventions. The disclaimer in the body is not boilerplate: a supplement that implies equivalence to a foreign qualification is making a claim only a recognition authority can make.
+
+Security registers drawn on this sheet:
+
+- constructed guilloché ground
+- anti-copy line screens at 8° and 53°
+- embossed khatam watermark
+- serial-bearing fine-text rails
+- engraved number cartouche
+- Code 128 archive symbol
+- QR verification bay
+- void notice
+
+### Statement of Results
+
+- **Key** `ledger-statement`  
+- **Arabic title** بيان النتائج  
+- **Reference family** `SOR` · security class A  
+- **Designed at** a4-portrait, 210 × 297mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, letter-portrait  
+- **Ceremonial level** 1  
+- **Language architecture** latin-primary  
+- **Metal scheme** signature  
+- **Editable slots** 27  
+- **Content field** 151.2 × 238.2mm
+
+Specified in the benchmark's own master document specification and never built there. Composed here as a ledger: a holder block, a body of rows, and a grading key on the same sheet.
+
+> Signed by Examinations and Records rather than by the Registrar or the Principal, and that is the point: the office that signs a document is a statement about what the document claims. A principal's signature on an interim results statement implies a completion the statement does not attest.
+
+Security registers drawn on this sheet:
+
+- constructed guilloché ground
+- anti-copy line screens at 8° and 53°
+- embossed khatam watermark
+- serial-bearing fine-text rails
+- engraved number cartouche
+- Code 128 archive symbol
+- QR verification bay
+- void notice
+
+## Award — 4 templates
+
+Landscape ceremonial without an academic session. The citation is the substance: a certificate says what was completed, an award says what was done and who says so. One family parameterised by awarding authority, not six that drift apart.
+
+### Award Certificate
+
+- **Key** `award-general`  
+- **Arabic title** شهادة جائزة  
+- **Reference family** `AWD` · security class B  
+- **Designed at** a4-landscape, 297 × 210mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, legal-landscape, a4-portrait, letter-landscape  
+- **Ceremonial level** 3  
+- **Language architecture** peer  
+- **Metal scheme** imperial  
+- **Editable slots** 28  
+- **Content field** 229.5 × 142.5mm
+
+Specified in the benchmark's own master document specification as one shared template parameterised by awarding authority and citation — one family, not six independently drifting ones.
+
+> The general award: academic, leadership, sporting or other honours. The specific honour is the award title slot, so one template serves four registers rather than four templates serving one each.
+
+Security registers drawn on this sheet:
+
+- constructed guilloché ground
+- anti-copy line screens at 8° and 53°
+- embossed khatam watermark
+- serial-bearing fine-text rails
+- engraved number cartouche
+- QR verification bay
+- void notice
+
+### Special Distinction Certificate
+
+- **Key** `award-distinction`  
+- **Arabic title** شهادة تميّز خاص  
+- **Reference family** `DIST` · security class B  
+- **Designed at** a4-landscape, 297 × 210mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, legal-landscape, a4-portrait, letter-landscape  
+- **Ceremonial level** 4  
+- **Language architecture** peer  
+- **Metal scheme** crimson  
+- **Editable slots** 28  
+- **Content field** 229.5 × 142.5mm
+
+Specified in the benchmark's own master document specification as one shared template parameterised by awarding authority and citation — one family, not six independently drifting ones.
+
+> Level IV and a second metal, because a distinction that looks like every other award is not a distinction. Exceptional by construction: if an institution issues these in volume it has stopped meaning what it says, and no layout can fix that.
+
+Security registers drawn on this sheet:
+
+- constructed guilloché ground
+- anti-copy line screens at 8° and 53°
+- embossed khatam watermark
+- serial-bearing fine-text rails
+- engraved number cartouche
+- QR verification bay
+- void notice
+
+### Board Award
+
+- **Key** `award-board`  
+- **Arabic title** جائزة مجلس الإدارة  
+- **Reference family** `BRD` · security class B  
+- **Designed at** a4-landscape, 297 × 210mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, legal-landscape, a4-portrait, letter-landscape  
+- **Ceremonial level** 4  
+- **Language architecture** peer  
+- **Metal scheme** imperial  
+- **Editable slots** 29  
+- **Content field** 229.5 × 142.5mm
+
+Specified in the benchmark's own master document specification as one shared template parameterised by awarding authority and citation — one family, not six independently drifting ones.
+
+> The only award in the library that must name its authorising instrument on its face. A board acts by resolution; a certificate claiming a board award without one is claiming a decision that was never taken.
+
+Security registers drawn on this sheet:
+
+- constructed guilloché ground
+- anti-copy line screens at 8° and 53°
+- embossed khatam watermark
+- serial-bearing fine-text rails
+- engraved number cartouche
+- QR verification bay
+- void notice
+
+### Head of Schools Award
+
+- **Key** `award-head-of-schools`  
+- **Arabic title** جائزة رئيس المدارس  
+- **Reference family** `FCA` · security class B  
+- **Designed at** a4-landscape, 297 × 210mm  
+- **Also issues on** a3-portrait, a3-landscape, tabloid-portrait, tabloid-landscape, b4-portrait, b4-landscape, legal-portrait, legal-landscape, a4-portrait, letter-landscape  
+- **Ceremonial level** 4  
+- **Language architecture** peer  
+- **Metal scheme** palace  
+- **Editable slots** 29  
+- **Content field** 229.5 × 142.5mm
+
+Specified in the benchmark's own master document specification as one shared template parameterised by awarding authority and citation — one family, not six independently drifting ones.
+
+> Where one person holds the Founder and Head of Schools offices, this is one template with a selectable honorific line rather than two award systems that drift apart.
+
+Security registers drawn on this sheet:
+
+- constructed guilloché ground
+- anti-copy line screens at 8° and 53°
+- embossed khatam watermark
+- serial-bearing fine-text rails
+- engraved number cartouche
 - QR verification bay
 - void notice

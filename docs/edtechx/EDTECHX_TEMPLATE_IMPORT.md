@@ -1,4 +1,4 @@
-# Importing the benchmark press: fifteen documents, made editable
+# Importing the benchmark press: twenty-four documents, at every honest size
 
 **What was asked.** Bring the benchmark institution's certificates and
 examination documents into EdirasX *exactly*, so that an institution can edit
@@ -6,11 +6,20 @@ one quickly. All of them. They must support verification. The names may be
 generic, but everything else — the layout, the background — should be what is
 there.
 
-**What was delivered.** Fifteen templates in three families, each an editable
+**What was delivered.** Twenty-four templates in five families, each an editable
 `Template` in `app/modules/documents/library.py`, each rendering through the
 EdirasX engine onto a resolution-free heritage ground, each wired to the one
-verification architecture EdirasX already had. All fifteen render against
-specimen and hostile data with zero collision on the machine audit.
+verification architecture EdirasX already had, and each issuable on **twelve to
+fourteen sheet sizes** — every ISO A and B stock and every North American stock
+large enough to carry it, in both orientations.
+
+Fifteen came from the benchmark's rendering code. **Nine more existed only in
+its own master specification** — named, numbered, given a security class, and
+never built. Those nine are the ones an institution needs most.
+
+Plus the reissuance discipline the specification is most emphatic about and
+nothing implemented: **Certified True Copy** and **Duplicate** editions, each
+with its own reference number and a visible permanent overprint.
 
 ---
 
@@ -35,20 +44,133 @@ specimen and hostile data with zero collision on the machine audit.
 | `college-memorisation-complete` | Completion of the Memorisation (Thirty Juzʼ) | IV |
 | `college-memorisation-ten` | Memorisation of Ten Juzʼ | III |
 
-### Record — six sheets, A4 portrait
+### Record — seven sheets, portrait
 
-| Key | Document | Level |
-|---|---|---|
-| `record-alumni-registration` | Alumni Registration Certificate | II |
-| `record-testimonial` | Official Testimonial | II |
-| `record-character` | Character Certificate | II |
-| `record-clearance` | Graduation Clearance Certificate | I |
-| `record-graduation` | Graduation Certificate | III |
-| `record-graduation-register` | Graduation Register | I |
+| Key | Document | Code | Class | Level |
+|---|---|---|---|---|
+| `record-alumni-registration` | Alumni Registration Certificate | `ALUM` | C | II |
+| `record-testimonial` | Official Testimonial | `TEST` | B | II |
+| `record-character` | Character Certificate | `CHAR` | B | II |
+| `record-clearance` | Graduation Clearance Certificate | `CLR` | B | I |
+| `record-graduation` | Graduation Certificate | `CERT` | A | III |
+| `record-graduation-register` | Graduation Register | `REG` | C | I |
+| `record-provisional` | **Provisional Certificate** | `PROV` | A | III |
+
+### Ledger — three sheets, portrait tabular *(all new)*
+
+A ledger is not a certificate with a table on it. It has a holder block, a body
+of rows that *is* the document, and a grading key on the same sheet — a
+transcript read by somebody who has never seen this institution's conventions is
+otherwise a page of letters to guess at. Every ledger closes with an **End of
+record** rule, because unused space below the last row on a sealed transcript is
+where a line gets added afterwards.
+
+| Key | Document | Code | Class |
+|---|---|---|---|
+| `ledger-transcript` | Official Academic Transcript | `TRAN` | A |
+| `ledger-supplement` | Diploma Supplement | `SUPP` | A |
+| `ledger-statement` | Statement of Results | `SOR` | A |
+
+### Award — four sheets, landscape ceremonial *(all new)*
+
+One family parameterised by awarding authority and citation, not four that drift
+apart. An award carries **no academic session**: an award for a piece of work is
+not an award for a year. The citation is required — an award with a generic
+citation is a certificate of attendance with a ribbon on it.
+
+| Key | Document | Code | Class | Level |
+|---|---|---|---|---|
+| `award-general` | Award Certificate | `AWD` | B | III |
+| `award-distinction` | Special Distinction | `DIST` | B | IV |
+| `award-board` | Board Award | `BRD` | B | IV |
+| `award-head-of-schools` | Head of Schools Award | `FCA` | B | IV |
+
+And `college-islamiyyah` (`ISL`, class A) joins the college family — the level is
+a slot, so one certificate names six levels rather than six templates drifting
+apart at the third revision.
 
 Full field-by-field inventory: `docs/edtechx/design/library/INVENTORY.md`.
 Rendered proofs: `docs/edtechx/design/library/specimen/`, `…/hostile/`,
 `…/shots/`, `…/contact-sheet.png`.
+
+---
+
+## Sheet sizes: a brief, not a scale factor
+
+An institution asks for A3 and gets A3. What it never gets is an A4 composition
+photographed onto a different rectangle — which is what produces 0.05mm
+hairlines on an enlargement and an unscannable verification panel on a
+reduction.
+
+**Three things happen when the sheet changes, and only one is scaling.**
+
+1. **The border is re-cut.** The seven band insets are proportions of the short
+   side, so the border is *drawn* at the new size. A hairline stays a hairline.
+2. **The type is re-solved**, on a square-root curve rather than linearly —
+   doubling the field does not double the reading distance — and clamped so no
+   sheet drives the peak below 4.2mm or the body below 1.8mm.
+3. **The instruments do not move at all.** A Code 128 module floor of 0.33mm,
+   a 27mm verification cartouche, an 18mm seal. These are facts about presses,
+   scanners and eyes, and they are the same on A6 as on A3.
+
+Point 3 is why the system can say **no**:
+
+| Stock | Sizes | Carried by |
+|---|---|---|
+| A3, Tabloid, B4, Legal, A4, Letter | both orientations | every family |
+| B5 | portrait / landscape by family | most |
+| **A5, A6, Half Letter** | — | **refused, with the arithmetic** |
+
+A refusal reads: *"The field is 99mm tall and this composition needs 123mm at
+its type floors — 74mm of content above a 49mm foot that may not be shrunk. It
+is 24mm short."* That is an answer an institution can act on. "Does not fit"
+without a number is an opinion.
+
+**Landscape and portrait are different compositions, including in the foot.** A
+wide sheet sets the number cartouche, the signatures and the seal on one line; a
+tall one has not got the width for that, so the cartouche takes its own line and
+the signatures pair beneath it. Same rule that makes the citation run in columns
+on one and stack on the other.
+
+---
+
+## Reissuance: never a second original
+
+| Edition | Overprint | Names the original? |
+|---|---|---|
+| `original` | *nothing* | — |
+| `certified_copy` | CERTIFIED TRUE COPY · نسخة طبق الأصل معتمدة | no |
+| `duplicate` | DUPLICATE — ORIGINAL REFERENCE No. X | **required** |
+
+The overprint is drawn **over** the ground and under nothing, at −16°, in
+oxblood — a colour reserved in this library for exactly two things and spent
+nowhere else, which is what makes it mean something when it appears. A copy
+notice that content can obscure is a copy notice a forger can obscure.
+
+An original renders **no stamp at all**. There is no faint "ORIGINAL" mark,
+because a document that has to announce it is genuine has already conceded the
+question.
+
+A duplicate with no original reference number is **refused outright**: without
+it the sheet is indistinguishable from a second original, and a holder with two
+unmarked certificates can lend one and keep one while a verifier has no way to
+tell which is which. A Class C registry document cannot be reissued as a copy at
+all — it is regenerated from the register, and stamping a copy notice on it would
+imply a chain of custody it does not have.
+
+---
+
+## Permanent banners, which are not editions
+
+Two documents carry a banner *always*, set in the flow above the title where it
+is read before the document is:
+
+- **Statement of Results** — INTERIM — NOT A COMPLETION DOCUMENT. Without it the
+  sheet reads as a final academic record. It is signed by Examinations and
+  Records rather than by a principal, because the office that signs is itself a
+  claim about what the document attests.
+- **Provisional Certificate** — PROVISIONAL — FINAL CERTIFICATE IN PREPARATION.
+  Without it the sheet reads as the certificate it is standing in for.
 
 ---
 
@@ -170,7 +292,51 @@ It found, in order, and every one of these is now fixed:
    wrong place. `Credential.barcode_digits` now returns nothing and the panel
    draws nothing.
 
-Current state: **thirty sheets, thirty passes, zero millimetres over.**
+**The second pass found three more**, and the third of them is the kind only a
+rendering catches:
+
+6. **An award printing the word AWARD over the holder's identity number.** The
+   particulars band took its first label from `registers[-3]`, which is "Student
+   ID" on a stage sheet and "Award" on an award sheet. A label derived from a
+   position rather than named is a label that will eventually describe the wrong
+   value; both are now stated explicitly.
+7. **A transcript left open below its last row.** Blank space under a sealed
+   record is where a line gets added afterwards. Closed with an End-of-record
+   rule — and left *blank* rather than filled with ruled lines, because ruled
+   lines invite an entry and a closing rule forbids one.
+8. **A5 accepted for transcripts** on a height check alone. Five table columns
+   below about 26mm each stop being readable long before the page runs out of
+   height, so width is now its own constraint with its own reason per family.
+
+**The third pass was the model itself.** The first size arithmetic accepted 320
+compositions and the browser found 23 of them overflowing by 0.3 to 19.6mm. The
+first correction over-swung and refused A4 landscape, the size the certificates
+were designed at. So the estimates were thrown away and the constants
+**measured**: every template rendered on every candidate sheet, with both data
+sets, with its flexible spacers deleted and its natural height read back — 672
+measurements — then fitted per family *and orientation* as `base + slope ×
+type_scale`. Affine rather than proportional, because a content column is partly
+type (which scales) and partly rules and fixed boxes (which do not).
+
+Two traps that cost a full run each, and both are recorded in the source:
+
+- **The measured stack already includes the foot.** Adding the foot floors on
+  top double-counted 49mm and refused everything below A3.
+- **The gate has to be open while measuring.** With the previous constants in
+  place the renderer refused the small sheets, so those sheets were never
+  measured and the fit came back describing only the sizes the old constants
+  already allowed. Calibrating a limit against data the limit itself selected
+  tells you nothing.
+
+Four sizes still overflowed after that, all line-wrap discontinuities a linear
+model cannot see — a citation that sets on one line at ×1.00 takes two at ×1.02
+and the column jumps 7mm. They are recorded as `MEASURED_OVERFLOWS`, with the
+millimetres, rather than absorbed into a constant that would then refuse A4.
+**The model predicts; the proof wins.**
+
+Current state: **48 sheets at design size (specimen and hostile), 44 reissued
+editions, and 279 size compositions — every one measured, zero millimetres over,
+and 201 sheet sizes honestly refused.**
 
 ---
 

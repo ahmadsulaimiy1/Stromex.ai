@@ -28,7 +28,11 @@ from app.modules.documents.library import (
     template_for,
     templates_in,
 )
-from app.modules.documents.library_sheet import credential_for, render, sheet_for
+from app.modules.documents.library_sheet import (
+    credential_for,
+    render,
+    sheet_for_template,
+)
 
 SPECIMEN = {
     "institution": "Meridian Institute",
@@ -53,6 +57,15 @@ SPECIMEN = {
     "testimonial_text": "She leaves with our confidence.",
     "clearance_rows": "Library|Cleared|A. Bello|3 January 2026",
     "register_rows": "1|A Graduand|MIA-2026-004173|Secondary|SS 3A",
+    "programme": "Secondary Programme",
+    "rows": "2025 – 2026|Arabic Language|3|86|A",
+    "examinations_name": "Examinations Officer's Name",
+    "head_of_schools_name": "Head of Schools' Name",
+    "award_title": "Prize for Excellence in Arabic",
+    "citation": "for sustained excellence across three sessions.",
+    "islamiyyah_level": "Level Four",
+    "resolution": "RES-2026-014",
+    "original_reference": "CERT/2024/000188",
 }
 
 
@@ -69,9 +82,10 @@ def filled(key):
 
 
 def test_the_library_holds_every_imported_document():
-    assert len(TEMPLATES) == 15
+    assert len(TEMPLATES) == 24
     counts = {name: len(templates_in(name)) for name in FAMILIES}
-    assert counts == {"stage": 4, "college": 5, "record": 6}
+    assert counts == {"stage": 4, "college": 6, "record": 7,
+                      "ledger": 3, "award": 4}
 
 
 def test_every_template_key_matches_its_family():
@@ -274,13 +288,13 @@ def test_every_template_renders_a_complete_sheet(key):
 @pytest.mark.parametrize("key", sorted(TEMPLATES))
 def test_no_sheet_prints_an_unresolved_placeholder(key):
     """Checked on the body, not the stylesheet — CSS legitimately has braces."""
-    built = sheet_for(filled(key))
+    built = sheet_for_template(filled(key))
     assert not re.search(r"\{[a-z0-9_]+\}", built.html), key
 
 
 @pytest.mark.parametrize("key", sorted(TEMPLATES))
 def test_the_field_sits_inside_the_sheet(key):
-    built = sheet_for(filled(key))
+    built = sheet_for_template(filled(key))
     assert built.field.x > 0
     assert built.field.y > 0
     assert built.field.x + built.field.w < built.width
@@ -289,14 +303,14 @@ def test_the_field_sits_inside_the_sheet(key):
 
 def test_a_signatory_with_no_prepared_ink_gets_no_synthesised_signature():
     """A generated squiggle over a real name is a forgery, not a placeholder."""
-    built = sheet_for(filled("stage-primary"))
+    built = sheet_for_template(filled("stage-primary"))
     assert built.html.count('<span class="ink"></span>') == 2
     assert "<img class=\"ink\"" not in built.html
 
 
 def test_a_prepared_signature_is_mounted_when_one_is_supplied():
     document = filled("stage-primary")
-    built = sheet_for(document, signature_assets={
+    built = sheet_for_template(document, signature_assets={
         "principal_ink": "data:image/png;base64,AAAA",
     })
     assert 'src="data:image/png;base64,AAAA"' in built.html
@@ -305,13 +319,13 @@ def test_a_prepared_signature_is_mounted_when_one_is_supplied():
 
 def test_the_qr_bay_is_reserved_rather_than_drawn():
     """EdirasX does not mint the code here, so it does not draw a picture of one."""
-    built = sheet_for(filled("stage-primary"))
+    built = sheet_for_template(filled("stage-primary"))
     assert "QR BAY RESERVED" in built.html
 
 
 def test_the_serial_runs_the_border_rail():
     """A sheet copied from another record must contradict itself in its border."""
-    built = sheet_for(filled("stage-primary"))
+    built = sheet_for_template(filled("stage-primary"))
     assert SPECIMEN["serial"] in built.html
 
 
@@ -333,3 +347,139 @@ def test_the_renderer_contains_no_test_for_any_particular_script():
     )
     for smell in ("if arabic", 'if lang == "ar"', "== 'ar'", 'script.key == "arabic"'):
         assert smell not in body, smell
+
+
+# --- the nine documents the specification named and nobody built --------------
+
+
+def test_every_specified_reference_family_exists():
+    """The benchmark's numbering standard, carried whole.
+
+    A transcript numbered in the certificate series collides with a certificate
+    the first time two offices issue on the same day, which is why the standard
+    lists thirteen families rather than one.
+    """
+    codes = {template.code for template in TEMPLATES.values()}
+    assert {"CERT", "TRAN", "SUPP", "SOR", "PROV", "TEST", "CHAR", "CLR",
+            "ALUM", "AWD", "DIST", "BRD", "FCA", "ISL", "REG"} <= codes
+
+
+def test_every_template_declares_a_real_security_class():
+    for template in TEMPLATES.values():
+        assert template.security_class in {"A", "B", "C"}, template.key
+    classes = {t.key: t.security_class for t in TEMPLATES.values()}
+    # A transcript is a legal academic record; an alumni registration is not.
+    assert classes["ledger-transcript"] == "A"
+    assert classes["record-alumni-registration"] == "C"
+    assert classes["award-board"] == "B"
+
+
+def test_the_interim_documents_carry_a_permanent_banner():
+    """Without it each reads as the document it is standing in for."""
+    statement = template_for("ledger-statement")
+    provisional = template_for("record-provisional")
+    assert "INTERIM" in statement.banner.en
+    assert "PROVISIONAL" in provisional.banner.en
+    for key in ("ledger-transcript", "stage-primary", "record-graduation"):
+        assert template_for(key).banner.en == ""
+
+
+def test_the_statement_of_results_does_not_claim_completion():
+    """It is an academic-progress document and must say so."""
+    statement = template_for("ledger-statement")
+    body = statement.statement.en
+    assert "not a statement that the requirements for an award have been met" in body
+    # And it is signed by Examinations and Records, not by a principal: the
+    # office that signs is itself a claim about what the document attests.
+    assert statement.signatories[0].key == "examinations"
+
+
+def test_the_supplement_claims_no_equivalence():
+    """Only a recognition authority can say a qualification equals another."""
+    body = template_for("ledger-supplement").statement.en
+    assert "no statement of value, equivalence or recognition" in body
+
+
+def test_a_board_award_must_name_its_authorising_resolution():
+    """A board acts by resolution; without one the decision was never taken."""
+    board = template_for("award-board")
+    assert "resolution" in board.slot_keys
+    with pytest.raises(TemplateError):
+        fill(board, {**values_for(board), "resolution": ""})
+
+
+def test_every_ledger_prints_its_grading_key_on_the_same_sheet():
+    for template in templates_in("ledger"):
+        assert "grading_key" in template.slot_keys, template.key
+        built = sheet_for_template(filled(template.key))
+        assert "Grading scale" in built.html
+
+
+def test_an_award_refuses_a_blank_citation():
+    """An award with no citation is a certificate of attendance with a ribbon."""
+    award = template_for("award-general")
+    with pytest.raises(TemplateError) as caught:
+        fill(award, {**values_for(award), "citation": ""})
+    assert "citation" in str(caught.value)
+
+
+def test_an_award_carries_no_academic_session_requirement():
+    """An award for a piece of work is not an award for a year."""
+    award = template_for("award-distinction")
+    assert "{session}" not in award.statement.en
+
+
+# --- reissuance ---------------------------------------------------------------
+
+
+def test_an_original_carries_no_stamp_announcing_it_is_genuine():
+    built = sheet_for_template(filled("stage-primary"))
+    assert "overprint" not in built.html
+    assert "ORIGINAL" not in built.html
+
+
+def test_a_certified_copy_is_visibly_and_permanently_a_copy():
+    template = template_for("stage-primary")
+    document = fill(template, values_for(template), edition="certified_copy")
+    built = sheet_for_template(document)
+    assert "CERTIFIED TRUE COPY" in built.html
+    assert 'class="overprint"' in built.html
+
+
+def test_a_duplicate_must_name_the_original_it_replaces():
+    """Otherwise it is indistinguishable from a second original."""
+    template = template_for("stage-primary")
+    values = values_for(template)
+    with pytest.raises(TemplateError) as caught:
+        fill(template, {**values, "original_reference": ""}, edition="duplicate")
+    assert "original" in str(caught.value).lower()
+
+    document = fill(template, values, edition="duplicate")
+    assert "CERT/2024/000188" in document.overprint.en
+    assert "CERT/2024/000188" in sheet_for_template(document).html
+
+
+def test_a_registry_document_is_regenerated_rather_than_reissued():
+    """Stamping a copy notice on a register implies custody it does not have."""
+    register = template_for("record-graduation-register")
+    assert register.security_class == "C"
+    with pytest.raises(TemplateError) as caught:
+        fill(register, values_for(register), edition="certified_copy")
+    assert "regenerated" in str(caught.value)
+
+
+def test_an_unknown_edition_is_refused():
+    template = template_for("stage-primary")
+    with pytest.raises(TemplateError):
+        fill(template, values_for(template), edition="original-ish")
+
+
+def test_the_overprint_colour_is_reserved_for_reissuance_and_banners():
+    """Oxblood means one thing in this library, which is why it means anything."""
+    plain = sheet_for_template(filled("stage-primary")).html
+    assert "#6E1F2B" not in plain
+    copy = sheet_for_template(
+        fill(template_for("stage-primary"), values_for(template_for("stage-primary")),
+             edition="certified_copy")
+    ).html
+    assert "#6E1F2B" in copy

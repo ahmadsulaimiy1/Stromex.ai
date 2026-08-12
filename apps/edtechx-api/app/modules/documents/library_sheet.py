@@ -50,11 +50,29 @@ from app.modules.design.gilding import scheme_for
 from app.modules.design.heraldry import seal_with_device
 from app.modules.design.heritage import heritage_ground
 from app.modules.design.language import Architecture, Phrase, architecture_for
+from app.modules.design.sheets import Fit, Sheet, fits, sheet_for
 from app.modules.design.signature import motif_for
 from app.modules.design.typeface import font_face_css
-from app.modules.documents.library import Filled, Template, Wording
+from app.modules.documents.library import (
+    MEASURED_OVERFLOWS,
+    Filled,
+    Template,
+    Wording,
+)
 
-__all__ = ["Sheet", "credential_for", "render", "sheet_for"]
+__all__ = ["Rendered", "SheetTooSmall", "credential_for", "render",
+           "sheet_for_template"]
+
+
+class SheetTooSmall(ValueError):
+    """This document cannot honestly be printed at this size.
+
+    Raised rather than shrunk. A verification panel squeezed until it
+    fits is a panel that cannot be scanned, and a document that has lost
+    the property it exists to have is not a smaller version of itself.
+    The message carries the arithmetic so the caller can choose a sheet
+    rather than guess at one.
+    """
 
 #: Faces, by the role the language architecture names. Keyed on the *script*,
 #: never on a language: a Latin display face applied to an Arabic run is how a
@@ -67,14 +85,6 @@ _FACE = {
     "mono": "IBM Plex Mono",
 }
 
-_SHEETS = {
-    "a4-landscape": (297.0, 210.0),
-    "a4-portrait": (210.0, 297.0),
-    "a3-landscape": (420.0, 297.0),
-    "letter-landscape": (279.4, 215.9),
-    "letter-portrait": (215.9, 279.4),
-}
-
 
 def _escape(value: str) -> str:
     return (str(value).replace("&", "&amp;").replace("<", "&lt;")
@@ -82,7 +92,7 @@ def _escape(value: str) -> str:
 
 
 @dataclass(frozen=True, slots=True)
-class Sheet:
+class Rendered:
     """A rendered sheet and the facts a caller needs about it."""
 
     html: str
@@ -90,6 +100,12 @@ class Sheet:
     height: float
     field: geo.Rect
     template: Template
+    sheet: Sheet
+    fit: Fit
+
+    @property
+    def type_scale(self) -> float:
+        return self.fit.type_scale
 
 
 def credential_for(filled: Filled) -> Credential:
@@ -419,7 +435,7 @@ def _table(filled: Filled, template: Template, key: str, *, ink: str,
 
 def _ceremonial(filled: Filled, *, architecture: Architecture, scheme, ink: str,
                 paper: str, width: float, field: geo.Rect, device: str,
-                assets: dict[str, str], award: bool) -> str:
+                assets: dict[str, str], award: bool, scale: float = 1.0) -> str:
     """The landscape ceremonial field: stage and college sheets.
 
     One peak, one citation, one award register where the family has one, one
@@ -436,38 +452,45 @@ def _ceremonial(filled: Filled, *, architecture: Architecture, scheme, ink: str,
     # peak is 7.6mm rather than the 9.2 it wants to be. A peak that has to be
     # shrunk after the fact is a composition that did not fit.
     parts = [
-        _lockup(architecture, filled, base=3.3, mark=mark),
+        _lockup(architecture, filled, base=3.3 * scale, mark=mark),
+        _banner(architecture, filled, scale=scale),
         '<div class="spacer"></div>',
-        _runs(architecture, filled, template.title, cls="ttl", base=5.8,
+        _runs(architecture, filled, template.title, cls="ttl", base=5.8 * scale,
               inline=architecture.mode == "peer"),
         # The subtitle is the stage gloss on a stage sheet. A college sheet's
         # award is set once, in the conferred-award register below, and setting
         # it here as well cost 7.8mm of a 132mm field to say the same words
         # twice at two sizes.
         "" if award else _runs(architecture, filled, template.subtitle,
-                              cls="sub", base=2.7),
+                              cls="sub", base=2.7 * scale),
         '<div class="spacer"></div>',
-        _runs(architecture, filled, template.lede, cls="lede", base=2.9),
-        _runs(architecture, filled, _peak(template), cls="name", base=7.2),
+        _runs(architecture, filled, template.lede, cls="lede", base=2.9 * scale),
+        _runs(architecture, filled, _peak(template), cls="name", base=7.2 * scale),
         _name_rule(measure * 0.62, scheme=scheme, ink=ink),
         '<div class="spacer"></div>',
         '<div class="cite">'
-        + _runs(architecture, filled, template.statement, cls="stmt", base=2.75)
+        + _runs(architecture, filled, template.statement, cls="stmt", base=2.75 * scale)
         + "</div>",
     ]
     if award:
         parts.append(
             '<div class="award">'
-            + _runs(architecture, filled, template.award, cls="awd", base=2.9,
+            + _runs(architecture, filled, template.award, cls="awd", base=2.9 * scale,
                     inline=True)
             + "</div>"
         )
     parts.append('<div class="spacer"></div>')
+    # Stated explicitly rather than indexed out of `template.registers`. The
+    # first version took the label from `registers[-3]`, which is "Student ID"
+    # on a stage sheet and "Award" on an award sheet — so an award printed the
+    # word AWARD over the holder's identity number. A label that is derived
+    # from a position rather than named is a label that will eventually
+    # describe the wrong value.
     parts.append(_register_band(
         architecture, filled,
         (
-            (template.registers[-3] if len(template.registers) >= 3
-             else Wording(en="Student ID", ar="الرقم التعريفي للطالب"),
+            (Wording(en="Student Identity Number",
+                     ar="الرقم التعريفي للطالب"),
              _value_phrase(filled, "student_id")),
             (Wording(en="Date of Issue", ar="تاريخ الإصدار"),
              Wording(en="{issued_on}", ar="{issued_on_hijri}")),
@@ -482,17 +505,33 @@ def _ceremonial(filled: Filled, *, architecture: Architecture, scheme, ink: str,
     # for what is left; the verification instrument competes for nothing,
     # because a sheet that ran out of room and dropped its verification panel
     # is a sheet that cannot be checked.
-    foot = (
-        '<div class="exec">'
-        + _number(filled, template, scheme=scheme, ink=ink, width=46, height=14,
-                  paper=paper)
-        + '<div class="sigrow">'
+    #
+    # **Landscape and portrait are different feet, not one squeezed.** A wide
+    # sheet sets the number cartouche, the signatures and the seal on one line.
+    # A tall one has not got the width for that — 112mm of field cannot hold a
+    # 46mm cartouche, two 38mm signature cells and a 22mm seal side by side —
+    # so it stacks: the cartouche takes its own line, and the signatures pair
+    # beneath it with the seal. This is the same rule that makes the citation
+    # run in columns on one and stack on the other, applied to the foot.
+    tall = field.h > field.w
+    number = _number(filled, template, scheme=scheme, ink=ink,
+                     width=46, height=14, paper=paper)
+    signatures = (
+        '<div class="sigrow">'
         + _signature_block(filled, template, scheme=scheme, ink=ink,
                            assets=assets)
         + "</div>"
-        + _seal(filled, template, scheme=scheme, ink=ink, radius=9.2,
-                device=device)
-        + "</div>"
+    )
+    seal = _seal(filled, template, scheme=scheme, ink=ink, radius=9.2,
+                 device=device)
+    execution = (
+        f'<div class="numrow">{number}</div>'
+        f'<div class="exec">{signatures}{seal}</div>'
+        if tall else
+        f'<div class="exec">{number}{signatures}{seal}</div>'
+    )
+    foot = (
+        execution
         + '<div class="vrow">'
         + _verification(filled, template, scheme=scheme, ink=ink, width=measure,
                         height=27, paper=paper)
@@ -503,7 +542,7 @@ def _ceremonial(filled: Filled, *, architecture: Architecture, scheme, ink: str,
 
 def _administrative(filled: Filled, *, architecture: Architecture, scheme,
                     ink: str, paper: str, field: geo.Rect, device: str,
-                    assets: dict[str, str]) -> str:
+                    assets: dict[str, str], scale: float = 1.0) -> str:
     """The portrait record: masthead, statement, body or table, pinned foot."""
     template = filled.template
     measure = field.w
@@ -511,21 +550,22 @@ def _administrative(filled: Filled, *, architecture: Architecture, scheme,
         (slot.key for slot in template.slots if slot.kind == "table"), ""
     )
     parts = [
-        _lockup(architecture, filled, base=3.2, mark=""),
-        _runs(architecture, filled, template.title, cls="ttl ttl--rec", base=5.2,
+        _lockup(architecture, filled, base=3.2 * scale, mark=""),
+        _banner(architecture, filled, scale=scale),
+        _runs(architecture, filled, template.title, cls="ttl ttl--rec", base=5.2 * scale,
               inline=architecture.mode == "peer"),
         # Uneven on purpose. Two equal spacers put the block on the sheet's
         # geometric centre, which the eye reads as low — the same reason a
         # picture hung at true centre looks like it has slipped. 0.62 above and
         # 1 below lands it on the optical centre.
         '<div class="spacer spacer--high"></div>',
-        _runs(architecture, filled, template.lede, cls="lede", base=2.9),
+        _runs(architecture, filled, template.lede, cls="lede", base=2.9 * scale),
         _runs(architecture, filled, _peak(template), cls="name name--rec",
-              base=6.6),
+              base=6.6 * scale),
         _name_rule(measure * 0.52, scheme=scheme, ink=ink),
         '<div class="cite cite--rec">'
         + _runs(architecture, filled, template.statement, cls="stmt",
-                base=2.85, lead_only=bool(body_key))
+                base=2.85 * scale, lead_only=bool(body_key))
         + "</div>",
     ]
     if body_key:
@@ -548,6 +588,157 @@ def _administrative(filled: Filled, *, architecture: Architecture, scheme,
                            assets=assets)
         + "</div>"
         + _seal(filled, template, scheme=scheme, ink=ink, radius=11.0,
+                device=device)
+        + "</div>"
+        + '<div class="vrow">'
+        + _verification(filled, template, scheme=scheme, ink=ink, width=measure,
+                        height=27, paper=paper)
+        + "</div>"
+    )
+    return "".join(parts) + foot
+
+
+def _banner(architecture: Architecture, filled: Filled, *,
+            scale: float) -> str:
+    """A permanent banner the document always carries.
+
+    Not an edition and not a watermark. A Statement of Results without INTERIM
+    on it reads as a final academic record, and a Provisional Certificate
+    without its banner reads as the certificate it is standing in for — so the
+    banner is part of the composition, set in the flow above the title where it
+    is read *before* the document is, rather than laid over it where a reader
+    can take it for decoration.
+    """
+    if not filled.template.banner.en and not filled.template.banner.ar:
+        return ""
+    return (
+        '<div class="banner">'
+        + _runs(architecture, filled, filled.template.banner, cls="bnr",
+                base=2.6 * scale, inline=True)
+        + "</div>"
+    )
+
+
+def _overprint(filled: Filled, *, width: float, height: float, scheme) -> str:
+    """The reissuance overprint: CERTIFIED TRUE COPY, or DUPLICATE.
+
+    Laid across the sheet at an angle, in a colour reserved for exactly this
+    and nothing else, and drawn *over* the ground rather than under the content
+    — a copy notice that content can obscure is a copy notice a forger can
+    obscure. Deliberately impossible to mistake for ornament, and deliberately
+    ugly next to the engraving: this sheet is not the original and the reader
+    must not have to look for that.
+
+    An original renders nothing at all. There is no faint "ORIGINAL" stamp,
+    because a document that has to announce it is genuine has already conceded
+    the question.
+    """
+    text = filled.overprint
+    if not text.en and not text.ar:
+        return ""
+    # Oxblood, and reserved: this is the only place in the entire library where
+    # it appears, which is what makes it mean something when it does.
+    alert = "#6E1F2B"
+    size = min(width, height) * 0.052
+    lines = [line for line in (text.en, text.ar) if line]
+    body = "".join(
+        f'<text x="{width / 2:.1f}"'
+        f' y="{height / 2 + (index - (len(lines) - 1) / 2) * size * 1.5:.1f}"'
+        f' text-anchor="middle" font-size="{size * (0.62 if index else 1):.2f}"'
+        f' font-family="Inter, sans-serif" font-weight="700"'
+        f' letter-spacing="{size * 0.06:.2f}" fill="{alert}"'
+        f' fill-opacity="0.22">{_escape(line)}</text>'
+        for index, line in enumerate(lines)
+    )
+    return (
+        f'<div class="overprint"><svg viewBox="0 0 {width:g} {height:g}"'
+        f' preserveAspectRatio="none" aria-hidden="true">'
+        f'<g transform="rotate(-16 {width / 2:.1f} {height / 2:.1f})">{body}</g>'
+        "</svg></div>"
+    )
+
+
+def _end_of_record(architecture: Architecture, filled: Filled, *,
+                   scale: float) -> str:
+    """The rule that closes a tabular record against later addition."""
+    if not filled.value("rows").strip():
+        return ""
+    return (
+        '<div class="endrule">'
+        + _runs(architecture, filled,
+                Wording(en="End of record", ar="نهاية السجل"),
+                cls="endr", base=1.9 * scale, inline=True)
+        + "</div>"
+    )
+
+
+def _ledger(filled: Filled, *, architecture: Architecture, scheme, ink: str,
+            paper: str, field: geo.Rect, device: str,
+            assets: dict[str, str], scale: float = 1.0) -> str:
+    """The portrait tabular record: transcript, supplement, statement.
+
+    The rows are the document, so they get the room and the peak does not. A
+    transcript whose holder's name is set at certificate size and whose results
+    are set at footnote size has its emphasis exactly backwards: nobody is
+    checking the spelling of the name, they are reading the marks.
+
+    The grading key sits on the same sheet as the rows, above the foot. Filing
+    it as an appendix is how a transcript reaches an admissions officer who has
+    never seen this institution before as a page of letters to guess at.
+    """
+    template = filled.template
+    measure = field.w
+    parts = [
+        _lockup(architecture, filled, base=3.0 * scale, mark=""),
+        _banner(architecture, filled, scale=scale),
+        _runs(architecture, filled, template.title, cls="ttl ttl--rec",
+              base=4.8 * scale, inline=architecture.mode == "peer"),
+        '<div class="hairspace"></div>',
+        _runs(architecture, filled, template.lede, cls="lede",
+              base=2.7 * scale),
+        _runs(architecture, filled, _peak(template), cls="name name--led",
+              base=5.4 * scale),
+        _name_rule(measure * 0.46, scheme=scheme, ink=ink),
+        _register_band(
+            architecture, filled,
+            (
+                (Wording(en="Programme", ar="البرنامج"),
+                 Wording(en="{programme}")),
+                (Wording(en="Identity Number", ar="الرقم التعريفي"),
+                 Wording(en="{student_id}")),
+                (Wording(en="Session", ar="العام الدراسي"),
+                 Wording(en="{session}")),
+            ),
+            scheme=scheme, ink=ink,
+        ),
+        '<div class="cite cite--rec">'
+        + _runs(architecture, filled, template.statement, cls="stmt",
+                base=2.6 * scale, lead_only=True)
+        + "</div>",
+        _table(filled, template, "rows", ink=ink, scheme=scheme),
+        # The record is closed the moment it is sealed. Unused space below the
+        # last row on a transcript is where a line gets added afterwards, and
+        # ruling it out is older than photocopiers: a closing rule and a stated
+        # end mean anything below them is visibly an addition. This is why the
+        # blank area is left blank rather than filled with ruled lines — ruled
+        # lines invite an entry, a closing rule forbids one.
+        _end_of_record(architecture, filled, scale=scale),
+        '<div class="spacer"></div>',
+        '<div class="key">'
+        + _runs(architecture, filled,
+                Wording(en="Grading scale", ar="سلّم الدرجات"),
+                cls="keyhead", base=1.9 * scale, lead_only=True)
+        + _runs(architecture, filled, Wording(en="{grading_key}"),
+                cls="keybody", base=2.3 * scale)
+        + "</div>",
+    ]
+    foot = (
+        '<div class="exec exec--rec">'
+        + '<div class="sigrow">'
+        + _signature_block(filled, template, scheme=scheme, ink=ink,
+                           assets=assets)
+        + "</div>"
+        + _seal(filled, template, scheme=scheme, ink=ink, radius=10.0,
                 device=device)
         + "</div>"
         + '<div class="vrow">'
@@ -635,6 +826,35 @@ html, body { margin: 0; padding: 0; background: #221F1B; }
 .sealbox svg, .nbox svg, .vbox svg { display: block; width: 100%; height: auto; }
 .nbox { flex: none; width: 46mm; }
 .vrow { width: 100%; flex: none; margin-top: 2.0mm; }
+.endrule { flex: none; width: 100%; margin-top: 1.6mm; padding-top: 1.2mm;
+  border-top: 0.24mm solid; display: flex; justify-content: center; }
+.endr { font-family: 'Inter', sans-serif; text-transform: uppercase;
+  font-weight: 600; letter-spacing: 0.26em; }
+.endr--arabic { text-transform: none; letter-spacing: 0;
+  font-family: 'Amiri', serif; }
+.endr-row { display: flex; gap: 4mm; align-items: baseline; }
+.numrow { flex: none; margin-top: 2.0mm; display: flex; justify-content: center; }
+.hairspace { flex: none; height: 2.4mm; }
+/* The permanent banner sits in the flow above the title, where it is read
+   before the document is, rather than over it where it reads as decoration. */
+.banner { flex: none; margin: 1.6mm 0 0.4mm; padding: 1.0mm 4mm;
+  border-top: 0.20mm solid; border-bottom: 0.20mm solid; }
+.bnr { font-family: 'Inter', sans-serif; text-transform: uppercase;
+  font-weight: 700; letter-spacing: 0.24em; }
+.bnr--arabic { text-transform: none; letter-spacing: 0;
+  font-family: 'Amiri', serif; }
+.bnr-row { display: flex; gap: 5mm; align-items: baseline; justify-content: center; }
+/* Over the ground, under nothing. A copy notice that content can obscure is a
+   copy notice a forger can obscure. */
+.overprint { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.overprint svg { display: block; width: 100%; height: 100%; }
+.field { z-index: 2; }
+.name--led { font-weight: 600; }
+.key { flex: none; width: 100%; margin-top: 2.0mm; padding-top: 1.4mm;
+  border-top: 0.16mm solid; text-align: center; }
+.keyhead { font-family: 'Inter', sans-serif; text-transform: uppercase;
+  font-weight: 600; letter-spacing: 0.20em; }
+.keybody { margin-top: 0.8mm; }
 """
 
 
@@ -652,15 +872,57 @@ def _palette(ink: str, scheme, accent: str) -> str:
 .bval, .sig .nm, .sig .nm-ar, .rows td {{ color: {ink}; }}
 .sig .of, .rows th {{ color: {geo.tint(accent, 0.92)}; }}
 .sig .of-ar {{ color: {geo.tint(ink, 0.58)}; }}
+/* Oxblood is reserved for exactly two things and appears nowhere else in the
+   library: a permanent banner that says this document is not what it might be
+   taken for, and a reissuance overprint. Spending it anywhere else would make
+   it stop meaning anything here. */
+.banner {{ border-color: #6E1F2B; }}
+.bnr {{ color: #6E1F2B; }}
+.endrule {{ border-color: {geo.tint(ink, 0.40)}; }}
+.endr {{ color: {geo.tint(ink, 0.56)}; }}
+.key {{ border-color: {geo.tint(ink, 0.30)}; }}
+.keyhead {{ color: {geo.tint(accent, 0.92)}; }}
+.keybody {{ color: {geo.tint(ink, 0.78)}; }}
 """
 
 
-def sheet_for(filled: Filled, *, device: str = "",
-              signature_assets: dict[str, str] | None = None,
-              paper: str = "#F4ECDC", ink: str = "#221A10") -> Sheet:
-    """Render one filled template to a complete, self-contained sheet."""
+def sheet_for_template(filled: Filled, *, sheet: str | None = None,
+                       device: str = "",
+                       signature_assets: dict[str, str] | None = None,
+                       paper: str = "#F4ECDC",
+                       ink: str = "#221A10") -> Rendered:
+    """Render one filled template onto one sheet size.
+
+    `sheet` defaults to the template's own, which is the size the document was
+    designed at. Any other size in `design.sheets` is re-solved rather than
+    scaled: the border is re-cut from its proportions, the optical sizes move
+    with the field on a square-root curve, and the fixed instruments do not move
+    at all. If what remains cannot carry the composition, this raises rather
+    than printing a document whose verification panel has been shrunk out of
+    usefulness.
+    """
     template = filled.template
-    width, height = _SHEETS[template.sheet]
+    chosen = sheet_for(sheet or template.sheet)
+    fit = fits(family=template.family, sheet=chosen,
+               border_weight=template.border_weight)
+    measured = MEASURED_OVERFLOWS.get((template.key, chosen.key))
+    if measured:
+        raise SheetTooSmall(
+            f"{template.name} cannot be issued on {chosen.name}: {measured}. "
+            "The arithmetic accepts this size and the press proof does not; "
+            "the proof wins. Sheets this document does fit: "
+            + ", ".join(template.sheets()) + "."
+        )
+    if not fit.ok:
+        raise SheetTooSmall(
+            f"{template.name} cannot be issued on {chosen.name}. "
+            + " ".join(fit.reasons)
+            + " Sheets this document does fit: "
+            + ", ".join(template.sheets()) + "."
+        )
+
+    width, height = chosen.width, chosen.height
+    scale = fit.type_scale
     scheme = scheme_for(template.scheme)
     architecture = architecture_for(template.language)
     budget = budget_for(template.level)
@@ -674,47 +936,58 @@ def sheet_for(filled: Filled, *, device: str = "",
         seed=filled.value("serial") or template.key,
         paper=paper, ink=scheme.role("engraved").core,
         border_weight=template.border_weight,
-        fibre_count=150 if "fibres" in budget.permits else 90,
-        show_watermark=template.family != "record",
+        # Fibres are a count over an area, so a fixed number thins out on A3
+        # and clumps on B5. Scaled by area against the A4 landscape the count
+        # was chosen on.
+        fibre_count=round((150 if "fibres" in budget.permits else 90)
+                          * (chosen.area_cm2 / 623.7)),
+        show_watermark=template.family not in ("record", "ledger"),
     )
     field = ground.field
 
-    body = (
-        _ceremonial(filled, architecture=architecture, scheme=scheme, ink=ink,
-                    paper=paper, width=width, field=field, device=device,
-                    assets=signature_assets or {},
-                    award=template.family == "college")
-        if template.family in ("stage", "college")
-        else _administrative(filled, architecture=architecture, scheme=scheme,
-                             ink=ink, paper=paper, field=field, device=device,
-                             assets=signature_assets or {})
-    )
+    shared = {
+        "architecture": architecture, "scheme": scheme, "ink": ink,
+        "paper": paper, "field": field, "device": device,
+        "assets": signature_assets or {}, "scale": scale,
+    }
+    if template.family in ("stage", "college"):
+        body = _ceremonial(filled, width=width,
+                           award=template.family == "college", **shared)
+    elif template.family == "award":
+        body = _ceremonial(filled, width=width, award=True, **shared)
+    elif template.family == "ledger":
+        body = _ledger(filled, **shared)
+    else:
+        body = _administrative(filled, **shared)
 
     html = (
         f'<div class="sheet" style="width:{width:g}mm;height:{height:g}mm;'
         f'background:{paper}">'
         f'<div class="plate">{ground.svg}</div>'
-        f'<div class="field" style="left:{field.x:.2f}mm;top:{field.y:.2f}mm;'
+        + _overprint(filled, width=width, height=height, scheme=scheme)
+        + f'<div class="field" style="left:{field.x:.2f}mm;top:{field.y:.2f}mm;'
         f'width:{field.w:.2f}mm;height:{field.h:.2f}mm">{body}</div>'
         "</div>"
     )
-    return Sheet(html=html, width=width, height=height, field=field,
-                 template=template)
+    return Rendered(html=html, width=width, height=height, field=field,
+                    template=template, sheet=chosen, fit=fit)
 
 
-def render(filled: Filled, *, device: str = "",
+def render(filled: Filled, *, sheet: str | None = None, device: str = "",
            signature_assets: dict[str, str] | None = None,
            paper: str = "#F4ECDC", ink: str = "#221A10",
            embed_fonts: bool = True, caption: bool = True) -> str:
     """A complete HTML page for one sheet, ready to print or rasterise."""
-    built = sheet_for(filled, device=device, signature_assets=signature_assets,
-                      paper=paper, ink=ink)
+    built = sheet_for_template(filled, sheet=sheet, device=device,
+                               signature_assets=signature_assets,
+                               paper=paper, ink=ink)
     template = filled.template
     scheme = scheme_for(template.scheme)
     tag = (
         f'<p class="tag"><b>{_escape(template.key)} · {_escape(template.name)}'
-        f"</b> — {_escape(template.family)} family · Level {template.level} · "
-        f"{_escape(template.sheet)}</p>"
+        f"</b> — {_escape(template.family)} family · {_escape(template.code)} · "
+        f"class {_escape(template.security_class)} · Level {template.level} · "
+        f"{_escape(built.sheet.name)} · type ×{built.type_scale:g}</p>"
     ) if caption else ""
     return (
         '<!doctype html><html lang="en"><head><meta charset="utf-8">'

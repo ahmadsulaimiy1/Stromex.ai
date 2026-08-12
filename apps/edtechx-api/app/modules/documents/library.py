@@ -1,8 +1,15 @@
 """The imported template library: benchmark documents, made editable.
 
-Fifteen documents were brought across from the benchmark institution's press —
-four stage certificates, five college awards, five records and one register —
-and this file is what they became. Each one is a `Template`: its sheet, its
+Twenty-four documents in five composition families. Fifteen were brought across
+from the benchmark institution's press, where they existed as rendering code.
+The other nine existed only in that institution's own master specification —
+named, numbered and given a security class, and never built: the transcript, the
+diploma supplement, the statement of results, the provisional certificate, the
+Islamiyyah certificate and the four awards. They are here because a document
+ecosystem with a certificate and no transcript is not an ecosystem, and because
+the specification that named them was right about what an institution needs.
+
+This file is what all twenty-four became. Each one is a `Template`: its sheet, its
 ceremonial level, its language architecture, its zone structure, its complete
 bilingual wording, the slots an institution fills, the signatures and seals it
 carries, and how it verifies. An institution adopts one, edits the slots, and
@@ -43,6 +50,32 @@ Education Certificate, because that award is made by a state examination board
 and not by a school — the refusal is transcribed with it, in `Template.notes`.
 Importing the layout and dropping that reasoning would import the sheet and
 lose the thing that made it lawful.
+
+**Reference-number families.** Each template belongs to one — CERT, TRAN, SUPP,
+SOR, PROV, TEST, CHAR, CLR, ALUM, AWD, DIST, BRD, FCA, ISL, REG — carried from
+the benchmark's own numbering standard rather than invented. A transcript
+numbered in the certificate series collides with a certificate the first time
+two offices issue on the same day, and a collision between two permanent records
+is not a bug that can be fixed after the fact.
+
+**Security classes.** A — a legal academic record, fully publicly verifiable,
+meant for security stock. B — institutional recognition, standard verification,
+premium letterhead. C — registry, minimal public verification, and never
+reissued as a certified copy because a register is regenerated from itself
+rather than copied. The class is a property of the document, not a setting.
+
+**Reissuance.** `EDITIONS` carries the discipline the specification is most
+emphatic about: a reissued document is visibly and permanently a copy, carries
+its own new reference number, names the original's where it is a duplicate, and
+never alters or withdraws the original. Two unmarked originals of one credential
+is the failure this prevents — a holder can lend one and keep one, and a
+verifier cannot tell which is which.
+
+**Sheet sizes.** A template names the sheet it was *designed* at and computes
+the ones it can honestly be *issued* on (`Template.sheets()`). The computation
+is in `design.sheets` and it can say no: a verification panel that has been
+squeezed until it fits is a panel that cannot be scanned, so a sheet too small
+to carry one is refused with the arithmetic rather than printed.
 
 **Verification.** Every template declares a `Verification` spec, and every spec
 resolves against `design.credential.Credential` — five identifiers, a
@@ -206,6 +239,21 @@ class Template:
     #: is named by the template rather than assumed by the renderer.
     peak_slot: str = "recipient"
     peak_slot_ar: str = "recipient_ar"
+    #: The reference-number family this document's numbers belong to — CERT,
+    #: TRAN, SUPP, SOR, PROV, TEST, CHAR, CLR, ALUM, AWD, DIST, BRD, FCA, REG.
+    #: Carried from the benchmark's own numbering standard, because a transcript
+    #: numbered in the certificate series is a transcript that collides with a
+    #: certificate the first time two offices issue on the same day.
+    code: str = "CERT"
+    #: A — legal academic record; B — institutional recognition; C — registry.
+    #: The class decides public verification depth and the paper it is meant to
+    #: be struck on, and it is a property of the document rather than a setting.
+    security_class: str = "A"
+    #: A banner this document *always* carries, because the document is not what
+    #: an unbannered version of it would be. A Statement of Results without
+    #: INTERIM on it reads as a final academic record; a Provisional Certificate
+    #: without its banner reads as the certificate it is standing in for.
+    banner: Wording = Wording()
 
     @property
     def slot_keys(self) -> frozenset[str]:
@@ -214,7 +262,23 @@ class Template:
     @property
     def wording(self) -> tuple[Wording, ...]:
         return (self.title, self.subtitle, self.lede, self.statement,
-                self.award, *self.registers)
+                self.award, self.banner, *self.registers)
+
+    def sheets(self) -> tuple[str, ...]:
+        """Every sheet size this template can honestly be issued on.
+
+        Computed rather than listed, from the composition's own floors: see
+        `design.sheets.fits`. A template does not get to declare that it fits
+        A6 — the arithmetic decides, and the arithmetic includes a verification
+        panel that may not be shrunk.
+        """
+        from app.modules.design.sheets import usable_sheets
+
+        return tuple(
+            sheet.key for sheet in
+            usable_sheets(self.family, border_weight=self.border_weight)
+            if (self.key, sheet.key) not in MEASURED_OVERFLOWS
+        )
 
     def defaults(self) -> dict[str, str]:
         return {slot.key: slot.default for slot in self.slots}
@@ -254,11 +318,58 @@ class Template:
 
 
 @dataclass(frozen=True, slots=True)
+class Edition:
+    """Whether a printed sheet is the original, or a reissue of one.
+
+    The benchmark's reissuance discipline, imported whole because it is the part
+    institutions get wrong: when a graduate loses a certificate, what they are
+    sent must be **visibly and permanently** a copy. It carries its own new
+    reference number, it names the original's, and it is logged as a reissuance
+    against the original row. The original is never altered, never withdrawn,
+    and stays independently verifiable at its own number for its own lifetime.
+
+    Two originals of one credential is the failure this prevents. A holder with
+    two unmarked certificates can lend one and keep one, and a verifier has no
+    way to tell which is which — so a reissue that is not visibly a reissue is
+    not a convenience, it is a second original.
+    """
+
+    key: str
+    banner_en: str
+    banner_ar: str
+    #: Whether the sheet must name the original document's reference number.
+    names_original: bool = False
+    note: str = ""
+
+    @property
+    def is_original(self) -> bool:
+        return self.key == "original"
+
+
+EDITIONS: Final[dict[str, Edition]] = {
+    "original": Edition("original", "", "", note="The issued document itself."),
+    "certified_copy": Edition(
+        "certified_copy", "CERTIFIED TRUE COPY", "نسخة طبق الأصل معتمدة",
+        note="Issued where a receiving institution requires a certified copy "
+             "rather than accepting a photocopy. Carries its own reference "
+             "number and is logged against the original.",
+    ),
+    "duplicate": Edition(
+        "duplicate", "DUPLICATE", "نسخة مكررة", names_original=True,
+        note="Issued where the original has been lost or destroyed. Must name "
+             "the original's reference number on its face: a duplicate that "
+             "does not is indistinguishable from a second original.",
+    ),
+}
+
+
+@dataclass(frozen=True, slots=True)
 class Filled:
     """A template with an institution's values in it, ready to render."""
 
     template: Template
     values: dict[str, str] = field(default_factory=dict)
+    edition: Edition = EDITIONS["original"]
 
     def text(self, phrase: Wording) -> Wording:
         return Wording(en=self._sub(phrase.en), ar=self._sub(phrase.ar))
@@ -271,9 +382,29 @@ class Filled:
     def value(self, key: str) -> str:
         return self.values.get(key, "")
 
+    @property
+    def overprint(self) -> Wording:
+        """The reissuance banner this sheet carries, if any.
+
+        Composed here rather than in the renderer so that a duplicate cannot be
+        printed without its original's number: the sentence is built from the
+        value, and `fill` has already refused the edition if the value is
+        missing.
+        """
+        edition = self.edition
+        if edition.is_original:
+            return Wording()
+        if not edition.names_original:
+            return Wording(en=edition.banner_en, ar=edition.banner_ar)
+        reference = self.value("original_reference")
+        return Wording(
+            en=f"{edition.banner_en} — ORIGINAL REFERENCE No. {reference}",
+            ar=f"{edition.banner_ar} — رقم الوثيقة الأصلية {reference}",
+        )
+
 
 def fill(template: Template, values: dict[str, str] | None = None, *,
-         strict: bool = True) -> Filled:
+         strict: bool = True, edition: str = "original") -> Filled:
     """Put an institution's values into a template.
 
     `strict` refuses when a required slot is empty. That is the default because
@@ -284,6 +415,12 @@ def fill(template: Template, values: dict[str, str] | None = None, *,
     Unknown keys are refused rather than ignored: a caller passing
     `principal_name` to a template whose slot is `head_teacher_name` has just
     silently printed the default over the value they supplied.
+
+    `edition` refuses in two more ways, and both are about not minting a second
+    original. A Class C registry document is not reissued as a certified copy —
+    it is regenerated from the register, and stamping a copy notice on it
+    implies a chain of custody it does not have. And a duplicate with no
+    original reference number is refused outright.
     """
     supplied = dict(values or {})
     unknown = set(supplied) - template.slot_keys
@@ -310,7 +447,30 @@ def fill(template: Template, values: dict[str, str] | None = None, *,
             raise TemplateError(
                 f"Template {template.key!r} cannot be printed: {detail}."
             )
-    return Filled(template=template, values=resolved)
+
+    try:
+        chosen = EDITIONS[edition]
+    except KeyError:
+        raise TemplateError(
+            f"No edition named {edition!r}. Editions: "
+            f"{', '.join(sorted(EDITIONS))}."
+        ) from None
+    if not chosen.is_original:
+        if template.security_class == "C":
+            raise TemplateError(
+                f"{template.name} is a registry document and is regenerated "
+                "from the register rather than reissued as a copy. Stamping a "
+                "copy notice on it would imply a chain of custody it does not "
+                "have."
+            )
+        if chosen.names_original and not resolved.get("original_reference", "").strip():
+            raise TemplateError(
+                "A duplicate must name the original's reference number on its "
+                "face. Without it the sheet is indistinguishable from a second "
+                "original, which is the failure the duplicate protocol exists "
+                "to prevent. Set `original_reference`."
+            )
+    return Filled(template=template, values=resolved, edition=chosen)
 
 
 # ---------------------------------------------------------------------------
@@ -391,6 +551,11 @@ def _credential() -> tuple[Slot, ...]:
              default="verify.example.edu",
              note="Printed on the face so the sheet is verifiable without the "
                   "QR — a code with nowhere to take it is not verification."),
+        Slot("original_reference", "Original reference number",
+             "رقم الوثيقة الأصلية", "identifier", required=False, default="",
+             note="Filled only on a duplicate, and required there. It is what "
+                  "makes a reissued sheet trace back to the one it replaces "
+                  "instead of standing beside it as a second original."),
     )
 
 
@@ -529,7 +694,8 @@ def _college_template(*, key: str, name: str, name_ar: str, award_en: str,
                       award_ar: str, stage_en: str, stage_ar: str,
                       progresses_en: str, progresses_ar: str,
                       title_en: str, title_ar: str, scheme: str,
-                      notes: str, level: int = 3) -> Template:
+                      notes: str, level: int = 3, code: str = "CERT",
+                      extra: tuple[Slot, ...] = ()) -> Template:
     return Template(
         key=f"college-{key}",
         name=name,
@@ -561,6 +727,7 @@ def _college_template(*, key: str, name: str, name_ar: str, award_en: str,
         ),
         slots=(
             *_institution(), *_recipient(), *_particulars(), *_credential(),
+            *extra,
             *_signature_slots(
                 ("head", "Head of the awarding school", "مدير الكلية"),
                 ("chairman", "Chairman, Board of Governors", "رئيس مجلس الإدارة"),
@@ -575,6 +742,8 @@ def _college_template(*, key: str, name: str, name_ar: str, award_en: str,
         ),
         verification=Verification(),
         security=_STANDARD_SECURITY,
+        code=code,
+        security_class="A",
         border_weight=0.82,
         provenance=(
             "Imported from the benchmark press's college award. The citation "
@@ -599,6 +768,8 @@ def _record_template(*, key: str, name: str, name_ar: str, level: int,
                      registers: tuple[Wording, ...] = (),
                      about_a_person: bool = True,
                      peak: tuple[str, str] = ("recipient", "recipient_ar"),
+                     code: str = "CERT", security_class: str = "B",
+                     banner: Wording | None = None,
                      ) -> Template:
     office_key, office_en, office_ar = signatory
     return Template(
@@ -651,6 +822,162 @@ def _record_template(*, key: str, name: str, name_ar: str, level: int,
         ),
         notes=notes,
         border_weight=0.78,
+        code=code,
+        security_class=security_class,
+        banner=banner or Wording(),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Family 4 — the ledgers: transcript, supplement, statement of results
+# ---------------------------------------------------------------------------
+#
+# A ledger is not a certificate with a table on it. A certificate has one
+# statement and one peak; a ledger has a holder block, a body of rows that may
+# run to more than one page, and a key that tells a reader what the rows mean.
+# The peak is smaller because the rows are the document, and the grading key is
+# not an appendix — a transcript sent abroad without one is a page of letters
+# an admissions officer has to guess at.
+
+
+def _ledger_template(*, key: str, name: str, name_ar: str, code: str,
+                     lede_en: str, lede_ar: str, body_en: str, body_ar: str,
+                     columns: tuple[Wording, ...], rows_note: str,
+                     extra: tuple[Slot, ...] = (), level: int = 3,
+                     banner: Wording | None = None,
+                     signatory: tuple[str, str, str] = (
+                         "registrar", "Registrar", "المسجّل"),
+                     notes: str = "") -> Template:
+    office_key, office_en, office_ar = signatory
+    return Template(
+        key=f"ledger-{key}",
+        name=name,
+        name_ar=name_ar,
+        family="ledger",
+        sheet="a4-portrait",
+        level=level,
+        language="latin-primary",
+        scheme="signature",
+        title=Wording(en=name, ar=name_ar),
+        lede=Wording(en=lede_en, ar=lede_ar),
+        statement=Wording(en=body_en, ar=body_ar),
+        banner=banner or Wording(),
+        registers=columns,
+        slots=(
+            *_institution(), *_recipient(), *_particulars(), *_credential(),
+            Slot("programme", "Programme of study", "البرنامج الدراسي", "text",
+                 default="Programme Name"),
+            Slot("rows", "Rows", "الصفوف", "table", default="",
+                 note=rows_note),
+            Slot("grading_key", "Grading scale", "سلّم الدرجات", "paragraph",
+                 default="A 80–100 Distinction · B 70–79 Very Good · "
+                         "C 60–69 Good · D 50–59 Pass · F below 50 Fail",
+                 note="Printed on every sheet, not filed as an appendix. A "
+                      "transcript read by somebody who has never seen this "
+                      "institution's grading conventions is a page of letters "
+                      "they have to guess at."),
+            *extra,
+            *_signature_slots((office_key, office_en, office_ar)),
+            _SEAL_SLOT,
+        ),
+        signatories=(
+            SignatorySlot(office_key, office_en, office_ar,
+                          f"{office_key}_name", f"{office_key}_ink", seal=True),
+        ),
+        verification=Verification(),
+        security=_STANDARD_SECURITY,
+        code=code,
+        security_class="A",
+        provenance=(
+            "Specified in the benchmark's own master document specification "
+            "and never built there. Composed here as a ledger: a holder block, "
+            "a body of rows, and a grading key on the same sheet."
+        ),
+        notes=notes,
+        border_weight=0.74,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Family 5 — the awards
+# ---------------------------------------------------------------------------
+#
+# One template family parameterised by awarding authority and citation, not six
+# that drift apart. An award is the one document in the library whose *citation*
+# is the substance: a certificate says what was completed, an award says what
+# was done and who says so. So the citation is a slot, the authority line is a
+# slot, and there is no academic session on it at all — an award for a piece of
+# work is not an award for a year.
+
+
+def _award_template(*, key: str, name: str, name_ar: str, code: str,
+                    title_en: str, title_ar: str, authority_en: str,
+                    authority_ar: str, extra: tuple[Slot, ...] = (),
+                    signatory: tuple[str, str, str], level: int = 3,
+                    scheme: str = "imperial", notes: str = "") -> Template:
+    office_key, office_en, office_ar = signatory
+    return Template(
+        key=f"award-{key}",
+        name=name,
+        name_ar=name_ar,
+        family="award",
+        sheet="a4-landscape",
+        level=level,
+        language="peer",
+        scheme=scheme,
+        title=Wording(en=title_en, ar=title_ar),
+        subtitle=Wording(en=authority_en, ar=authority_ar),
+        lede=Wording(en="This award is made to",
+                     ar="تُمنح هذه الجائزة إلى"),
+        statement=Wording(en="{citation}", ar="{citation_ar}"),
+        award=Wording(en="{award_title}", ar="{award_title_ar}"),
+        registers=(
+            Wording(en="Award", ar="الجائزة"),
+            Wording(en="Conferred on", ar="تاريخ المنح"),
+            Wording(en="Place", ar="المكان"),
+        ),
+        slots=(
+            *_institution(), *_recipient(), *_particulars(), *_credential(),
+            Slot("award_title", "Award", "الجائزة", "text",
+                 default="Award Title"),
+            Slot("award_title_ar", "Award (Arabic)", "الجائزة بالعربية",
+                 "text_ar", required=False, default=""),
+            Slot("citation", "Citation", "نص الجائزة", "paragraph",
+                 default="",
+                 note="What was actually done, in the institution's own words. "
+                      "An award with a generic citation is a certificate of "
+                      "attendance with a ribbon on it."),
+            Slot("citation_ar", "Citation (Arabic)", "نص الجائزة بالعربية",
+                 "paragraph_ar", required=False, default=""),
+            *extra,
+            *_signature_slots((office_key, office_en, office_ar)),
+            _SEAL_SLOT,
+        ),
+        signatories=(
+            SignatorySlot(office_key, office_en, office_ar,
+                          f"{office_key}_name", f"{office_key}_ink", seal=True),
+        ),
+        verification=Verification(
+            identifiers=("document_id", "verification_code", "serial"),
+        ),
+        security=(
+            "constructed guilloché ground",
+            "anti-copy line screens at 8° and 53°",
+            "embossed khatam watermark",
+            "serial-bearing fine-text rails",
+            "engraved number cartouche",
+            "QR verification bay",
+            "void notice",
+        ),
+        code=code,
+        security_class="B",
+        provenance=(
+            "Specified in the benchmark's own master document specification as "
+            "one shared template parameterised by awarding authority and "
+            "citation — one family, not six independently drifting ones."
+        ),
+        notes=notes,
+        border_weight=0.86,
     )
 
 
@@ -772,12 +1099,45 @@ def _build() -> dict[str, Template]:
             ),
         ),
     )
+    college = (*college, _college_template(
+        key="islamiyyah",
+        code="ISL",
+        name="Islamiyyah Certificate",
+        name_ar="شهادة الدراسات الإسلامية",
+        title_en="Certificate of Islamic Studies",
+        title_ar="شهادة الدراسات الإسلامية",
+        award_en="Islamiyyah — {islamiyyah_level}",
+        award_ar="المستوى: {islamiyyah_level_ar}",
+        stage_en="the Islamiyyah programme at the level of {islamiyyah_level}",
+        stage_ar="متطلبات برنامج الدراسات الإسلامية في مستوى "
+                 "{islamiyyah_level_ar}",
+        progresses_en="the next level of the programme",
+        progresses_ar="ويواصل المستوى التالي من البرنامج",
+        scheme="palace",
+        level=3,
+        extra=(
+            Slot("islamiyyah_level", "Islamiyyah level", "المستوى", "text",
+                 default="Level Name"),
+            Slot("islamiyyah_level_ar", "Islamiyyah level (Arabic)",
+                 "المستوى بالعربية", "text_ar", required=False,
+                 default="المستوى"),
+        ),
+        notes=(
+            "Specified in the benchmark's master document specification and "
+            "never built there. The level is a slot rather than a set of "
+            "templates: an institution that runs six Islamiyyah levels needs "
+            "one certificate that names the level, not six certificates that "
+            "drift apart at the third revision."
+        ),
+    ))
     for template in college:
         out[template.key] = template
 
     records = (
         _record_template(
             key="alumni-registration",
+            code="ALUM",
+            security_class="C",
             name="Alumni Registration Certificate",
             name_ar="شهادة تسجيل الخريجين",
             level=2,
@@ -798,6 +1158,8 @@ def _build() -> dict[str, Template]:
         ),
         _record_template(
             key="testimonial",
+            code="TEST",
+            security_class="B",
             name="Official Testimonial",
             name_ar="شهادة توصية رسمية",
             level=2,
@@ -824,6 +1186,8 @@ def _build() -> dict[str, Template]:
         ),
         _record_template(
             key="character",
+            code="CHAR",
+            security_class="B",
             name="Character Certificate",
             name_ar="شهادة حسن سيرة وسلوك",
             level=2,
@@ -857,6 +1221,8 @@ def _build() -> dict[str, Template]:
         ),
         _record_template(
             key="clearance",
+            code="CLR",
+            security_class="B",
             name="Graduation Clearance Certificate",
             name_ar="شهادة إتمام إجراءات التخرج",
             level=1,
@@ -883,6 +1249,8 @@ def _build() -> dict[str, Template]:
         ),
         _record_template(
             key="graduation",
+            code="CERT",
+            security_class="A",
             name="Graduation Certificate",
             name_ar="شهادة التخرج",
             level=3,
@@ -896,6 +1264,8 @@ def _build() -> dict[str, Template]:
         ),
         _record_template(
             key="graduation-register",
+            code="REG",
+            security_class="C",
             name="Graduation Register",
             name_ar="سجل التخرج",
             level=1,
@@ -937,7 +1307,245 @@ def _build() -> dict[str, Template]:
             ),
         ),
     )
+    records = (*records, _record_template(
+        key="provisional",
+        name="Provisional Certificate",
+        name_ar="شهادة مؤقتة",
+        level=3,
+        code="PROV",
+        security_class="A",
+        banner=Wording(
+            en="PROVISIONAL — FINAL CERTIFICATE IN PREPARATION",
+            ar="مؤقتة — الشهادة النهائية قيد الإعداد",
+        ),
+        eyebrow_en="{institution} certifies that",
+        eyebrow_ar="تشهد إدارة {institution_ar} بأن",
+        body_en="had met every requirement for graduation from {school} as at "
+                "{issued_on}. The final Certificate is in preparation and will "
+                "be issued under its own reference number; this document "
+                "stands in its place until then and does not replace it.",
+        body_ar="قد استوفى جميع متطلبات التخرج من {school} حتى تاريخ "
+                "{issued_on}. والشهادة النهائية قيد الإعداد وتصدر برقمها "
+                "الخاص، وهذه الوثيقة تقوم مقامها إلى حين صدورها ولا تحل "
+                "محلها.",
+        signatory=("registrar", "Registrar", "المسجّل"),
+        notes=(
+            "The gap between clearing every stage and the parchment being "
+            "printed, sealed and signed is real and at many institutions runs "
+            "to weeks. This is what a university or an embassy actually "
+            "accepts in that window. It is deliberately NOT the Statement of "
+            "Results, which is an academic-progress document and says the "
+            "wrong thing; and its banner is permanent rather than an edition, "
+            "because a provisional certificate without it reads as the "
+            "certificate it is standing in for."
+        ),
+    ))
     for template in records:
+        out[template.key] = template
+
+    ledgers = (
+        _ledger_template(
+            key="transcript",
+            name="Official Academic Transcript",
+            name_ar="كشف الدرجات الرسمي",
+            code="TRAN",
+            lede_en="{institution} certifies the academic record of",
+            lede_ar="تشهد إدارة {institution_ar} بالسجل الأكاديمي لـ",
+            body_en="The record below is a complete and unaltered statement of "
+                    "the results obtained in the programme of {programme} at "
+                    "{school}. It is issued under seal and is invalid without "
+                    "it.",
+            body_ar="السجل أدناه بيان كامل غير معدّل للنتائج المحرزة في "
+                    "برنامج {programme} لدى {school}، صادر بختم المؤسسة ولا "
+                    "يُعتد به بدونه.",
+            columns=(
+                Wording(en="Session", ar="العام"),
+                Wording(en="Course", ar="المقرر"),
+                Wording(en="Credit", ar="الساعات"),
+                Wording(en="Mark", ar="الدرجة"),
+                Wording(en="Grade", ar="التقدير"),
+            ),
+            rows_note=(
+                "One row per course per term: session, course, credit, mark, "
+                "grade. Snapshotted at issue and never recomputed — a "
+                "transcript that changes after it was sealed is not a record."
+            ),
+            notes=(
+                "The layout branches by institution in the benchmark's own "
+                "specification: a subject-by-subject table for an academic "
+                "programme, a stage-progression table for a memorisation one. "
+                "Both are this template with different columns and different "
+                "rows, which is what the column set being a slot is for."
+            ),
+        ),
+        _ledger_template(
+            key="supplement",
+            name="Diploma Supplement",
+            name_ar="ملحق الشهادة",
+            code="SUPP",
+            lede_en="This supplement describes the qualification held by",
+            lede_ar="يصف هذا الملحق المؤهل الذي يحمله",
+            body_en="This supplement explains the nature, level and content of "
+                    "the qualification named below, and the grading scale "
+                    "against which the accompanying Transcript should be read. "
+                    "It carries no statement of value, equivalence or "
+                    "recognition, and confers no rights beyond those of the "
+                    "qualification it describes.",
+            body_ar="يوضح هذا الملحق طبيعة المؤهل المذكور أدناه ومستواه "
+                    "ومحتواه، وسلّم الدرجات الذي يُقرأ به كشف الدرجات المرفق. "
+                    "ولا يتضمن أي حكم بالقيمة أو المعادلة أو الاعتراف، ولا "
+                    "يمنح حقوقًا تتجاوز حقوق المؤهل الذي يصفه.",
+            columns=(
+                Wording(en="Section", ar="القسم"),
+                Wording(en="Information", ar="البيان"),
+            ),
+            rows_note=(
+                "The eight sections the international convention expects: the "
+                "holder, the qualification, its level, the programme and "
+                "results, its function, additional information, the "
+                "certification of the supplement itself, and a factual "
+                "description of the institution's own education system."
+            ),
+            level=2,
+            notes=(
+                "The single highest-leverage document in the library for a "
+                "graduate applying abroad. An excellent transcript is still "
+                "unreadable to an admissions officer who has never seen this "
+                "institution's grading conventions. The disclaimer in the body "
+                "is not boilerplate: a supplement that implies equivalence to "
+                "a foreign qualification is making a claim only a recognition "
+                "authority can make."
+            ),
+        ),
+        _ledger_template(
+            key="statement",
+            name="Statement of Results",
+            name_ar="بيان النتائج",
+            code="SOR",
+            level=1,
+            banner=Wording(en="INTERIM — NOT A COMPLETION DOCUMENT",
+                           ar="مؤقت — ليس وثيقة إتمام"),
+            lede_en="{institution} states the results obtained by",
+            lede_ar="تبيّن إدارة {institution_ar} النتائج المحرزة لـ",
+            body_en="The results below are those recorded to date in the "
+                    "programme of {programme}. This is a statement of academic "
+                    "progress. It is not a statement that the requirements for "
+                    "an award have been met, and it must not be read as one.",
+            body_ar="النتائج أدناه هي المسجّلة حتى تاريخه في برنامج "
+                    "{programme}. وهذا بيان بالتقدّم الأكاديمي، وليس إفادةً "
+                    "باستيفاء متطلبات المنح، ولا يجوز قراءته على هذا النحو.",
+            columns=(
+                Wording(en="Session", ar="العام"),
+                Wording(en="Course", ar="المقرر"),
+                Wording(en="Mark", ar="الدرجة"),
+                Wording(en="Grade", ar="التقدير"),
+            ),
+            rows_note="One row per course recorded to date.",
+            signatory=("examinations", "Examinations and Records",
+                       "الامتحانات والسجلات"),
+            notes=(
+                "Signed by Examinations and Records rather than by the "
+                "Registrar or the Principal, and that is the point: the office "
+                "that signs a document is a statement about what the document "
+                "claims. A principal's signature on an interim results "
+                "statement implies a completion the statement does not attest."
+            ),
+        ),
+    )
+    for template in ledgers:
+        out[template.key] = template
+
+    awards = (
+        _award_template(
+            key="general",
+            name="Award Certificate",
+            name_ar="شهادة جائزة",
+            code="AWD",
+            title_en="Certificate of Award", title_ar="شهادة جائزة",
+            authority_en="Awarded by the Institution",
+            authority_ar="ممنوحة من المؤسسة",
+            signatory=("principal", "Principal", "رئيس المدرسة"),
+            notes=(
+                "The general award: academic, leadership, sporting or other "
+                "honours. The specific honour is the award title slot, so one "
+                "template serves four registers rather than four templates "
+                "serving one each."
+            ),
+        ),
+        _award_template(
+            key="distinction",
+            name="Special Distinction Certificate",
+            name_ar="شهادة تميّز خاص",
+            code="DIST",
+            title_en="Special Distinction", title_ar="تميّز خاص",
+            authority_en="Conferred by Resolution of the Institution",
+            authority_ar="ممنوحة بقرار من المؤسسة",
+            signatory=("principal", "Principal", "رئيس المدرسة"),
+            level=4,
+            scheme="crimson",
+            notes=(
+                "Level IV and a second metal, because a distinction that looks "
+                "like every other award is not a distinction. Exceptional by "
+                "construction: if an institution issues these in volume it has "
+                "stopped meaning what it says, and no layout can fix that."
+            ),
+        ),
+        _award_template(
+            key="board",
+            name="Board Award",
+            name_ar="جائزة مجلس الإدارة",
+            code="BRD",
+            title_en="Award of the Board of Governors",
+            title_ar="جائزة مجلس الإدارة",
+            authority_en="Conferred by Resolution of the Board of Governors",
+            authority_ar="ممنوحة بقرار من مجلس الإدارة",
+            extra=(
+                Slot("resolution", "Authorising resolution", "رقم القرار",
+                     "identifier", default="RES-2026-000",
+                     note="The resolution that authorised this award. A board "
+                          "award with no resolution behind it was not made by "
+                          "the board."),
+            ),
+            signatory=("chairman", "Chairman, Board of Governors",
+                       "رئيس مجلس الإدارة"),
+            level=4,
+            notes=(
+                "The only award in the library that must name its authorising "
+                "instrument on its face. A board acts by resolution; a "
+                "certificate claiming a board award without one is claiming a "
+                "decision that was never taken."
+            ),
+        ),
+        _award_template(
+            key="head-of-schools",
+            name="Head of Schools Award",
+            name_ar="جائزة رئيس المدارس",
+            code="FCA",
+            title_en="Award of the Head of Schools",
+            title_ar="جائزة رئيس المدارس",
+            authority_en="Conferred by the Head of Schools",
+            authority_ar="ممنوحة من رئيس المدارس",
+            extra=(
+                Slot("honorific", "Honorific line", "سطر اللقب", "text",
+                     required=False, default="",
+                     note="The awarding office as the institution names it — "
+                          "Founder, Head of Schools, Administrator. One "
+                          "template with a selectable honorific, because "
+                          "inventing parallel award registries for one "
+                          "authority is duplication, not rigour."),
+            ),
+            signatory=("head_of_schools", "Head of Schools",
+                       "رئيس المدارس"),
+            level=4,
+            scheme="palace",
+            notes=(
+                "Where one person holds the Founder and Head of Schools "
+                "offices, this is one template with a selectable honorific "
+                "line rather than two award systems that drift apart."
+            ),
+        ),
+    )
+    for template in awards:
         out[template.key] = template
 
     for template in out.values():
@@ -963,6 +1571,41 @@ FAMILIES: Final[dict[str, str]] = {
     "record": "Portrait administrative. A masthead, an eyebrow, the name, a "
               "short body or a table, and a pinned administrative foot. The "
               "border is narrower because the field has to hold rows.",
+    "ledger": "Portrait tabular. A holder block, a body of rows that is the "
+              "document rather than an illustration of it, and a grading key "
+              "on the same sheet — a transcript read without one is a page of "
+              "letters somebody has to guess at. The peak is small because the "
+              "rows are what is being certified.",
+    "award": "Landscape ceremonial without an academic session. The citation "
+             "is the substance: a certificate says what was completed, an "
+             "award says what was done and who says so. One family "
+             "parameterised by awarding authority, not six that drift apart.",
+}
+
+
+#: Sizes the arithmetic accepts and the press proof rejects, with the measured
+#: overflow. Data, not a fudge factor.
+#:
+#: `design.sheets` predicts a composition's height as a straight line in the
+#: type scale, and text does not oblige: a citation that fits on one line at
+#: ×1.00 takes two at ×1.02, and the column jumps 7mm for a 2 % change. No
+#: linear model catches that, and widening the model until it does would refuse
+#: A4 landscape — the size these certificates were designed at.
+#:
+#: So the model predicts, `tools/design/library.py` renders and measures, and
+#: what it catches is written down here rather than absorbed into a constant
+#: that would then break something else. Each entry is a real measurement from a
+#: real render, and each is re-checked on every audit run.
+MEASURED_OVERFLOWS: Final[dict[tuple[str, str], str]] = {
+    ("college-primary", "a4-portrait"):
+        "0.3mm over — the portrait citation gains a line at ×1.27",
+    ("college-memorisation-complete", "letter-landscape"):
+        "3.4mm over — the thirty-juzʼ citation, the longest institutional "
+        "sentence in the library, gains a line at ×1.015",
+    ("record-clearance", "b5-landscape"):
+        "10.3mm over — the clearance table's rows are not in the model",
+    ("record-graduation-register", "b5-landscape"):
+        "5.3mm over — the register's rows are not in the model",
 }
 
 
