@@ -1,79 +1,92 @@
 # Red team: what is wrong with these plates
 
-Written adversarially and before release, against the benchmark. Nothing here is
-a plan; it is a list of things a hostile reviewer would say about the current
-sheets, with my own verdict on each.
+Written adversarially and re-run after each pass. Nothing here is a plan; it is
+what a hostile reviewer would say, with my own verdict.
 
-## Confirmed defects — still present
+## Fixed in this pass
 
-**1 · The number cartouche is a box with a number in it.** Its guilloché fill
-is passed but renders at a strength that does not read, so a panel meant to
-balance the seal reads as an empty rectangle. The benchmark's equivalent is
-visibly turned. *Not fixed.*
+**The watermark was a smudge — because a rosette is the wrong figure.** Twice
+reduced and still reading as a stain. Relief needs flat areas separated by edges
+that change direction, and radial symmetry gives light nothing to catch. Rebuilt
+as a constructed heater shield — chief, cross quartering, the motif's star at the
+honour point, a charge in each quarter — at the heater's own proportions
+(width 5/6 of height, flanks straight for the top two fifths, the point struck as
+two arcs). It now reads as relief.
 
-**2 · The QR bay reads as an unfinished form.** Three square outlines and the
-words `QR RESERVED` look like empty checkboxes on a draft. Reserving the bay is
-right; drawing it as three boxes is not. It should be a filled, obviously
-*blank* plate — a solid tint panel with the caption — so it reads as "nothing
-here yet" rather than as "form to complete". *Not fixed.*
+**The security ground was invisible at 0.024.** Its own library says a wave lathe
+belongs near 0.050, and a sheet-scale field wants a longer period than a swatch.
+Corrected, and the powdered stars with it — which then read as confetti over the
+text at 0.26 and came back to 0.13.
 
-**3 · The allover wave-lathe ground is invisible at 0.024.** It is doing none of
-the work it was added for. The benchmark's ground reads clearly at arm's length
-as a turned field. Either the strength is wrong or `wave_lathe` at scale 1.5 has
-too long a period for a 297mm sheet. *Not fixed — needs a strength sweep looked
-at, not guessed.*
+**The number cartouche was a box with a number in it.** Its lathe fill was a
+small rosette in the middle of a wide panel. Now a figure wider than the panel,
+clipped by it, with a knockout behind the number so the turning does not run
+through it.
 
-**4 · The embossed crest is a smudge, not a device.** Twice reduced and still
-reading as a stain rather than as relief, because a rosette is the wrong figure
-for a watermark — the benchmark's is a *shield with internal structure*, which
-holds an emboss. A rosette's radial symmetry gives the emboss nothing to catch.
-*Not fixed; the figure is wrong, not the strength.*
+**The QR bay read as three empty checkboxes** — a form somebody forgot to fill
+in. Now one quiet tinted panel with a diagonal and a single line: `QR BAY
+RESERVED`.
 
-**5 · No heraldic register.** The benchmark carries three devices across the
-head with their authorities named. EdirasX has one mark in the lockup. The bays
-were specified in the teardown and not built. *Not built.*
+**No heraldic register.** Three bays across the head, each captioned with its
+authority. EdirasX draws the bays and never the emblems.
 
-**6 · No signature assets.** The authority chain stores signature images; the
-plates draw a rule and a name. Every benchmark sheet has a real signature above
-the rule, and its absence is why the execution band still reads as a form.
-*Not built.*
+## Found *by* this pass, and fixed
 
-**7 · No woven border band.** The benchmark's top and bottom edges are a braided
-band over a coloured ribbon. EdirasX uses a tessellation, which is flatter.
-*Not built.*
+**A device escaped its bay and painted a shield across half a certificate.** The
+mount was a nested `<svg>` with a viewBox and `overflow`. Rendered in isolation
+the same fragment behaved; only in place, inside a plate whose root carries
+`preserveAspectRatio="none"`, did the nested viewport go unhonoured. Replaced
+with an explicit `translate`/`scale` transform and a `clipPath`, which has no
+such ambiguity — and a test now asserts a device drawing far outside its own
+space is cropped.
 
-**8 · The ceremonial field lost its border weight.** Recorded two passes ago and
-still true: the panels opened to hold the interior and took the room from the
-frame. M11's crimson band is thinner than it was.
+**`DEVICE NOT SUPPLIED` printed on a finished certificate.** The dashed keyline
+and that text are a studio affordance telling a designer what is missing;
+printing them would put those words across the head of somebody's doctorate.
+Empty bays now draw nothing unless `show_empty` is set.
+
+**One plate's administrative band rendered at the top of the sheet**, over the
+masthead — a single line that had not been converted with the other three and
+was still being handed the content field, whose origin is the top.
+
+**A synthesised signature, removed after one look.** Seeded from each officer's
+name it produced three near-identical wavy scribbles across the execution band:
+artificial in exactly the way this project exists to avoid. A signature is the
+one mark on a certificate that is *about a person's hand*, and inventing it is
+not a smaller lie than inventing a coat of arms. The rule is now the bays' rule —
+mount what was supplied, draw nothing otherwise.
+
+## Still open
+
+**No woven border band.** The benchmark's top and bottom edges are a braided
+band over a coloured ribbon; EdirasX uses a tessellation, which is flatter.
+
+**The ceremonial field still carries less border weight than it did** before the
+interior pass. The room should come back from the content, not the frame.
+
+**The heraldic bay caption sits close to the lockup mark** on some plates. The
+head needs its own zone rather than sharing the masthead's.
+
+**Nothing has been printed.** No press, no paper, no foil, no loupe. Every
+statement about foil, emboss, hairline hold and substrate remains a
+specification, and that is still the largest gap in the programme.
 
 ## Claims a reviewer would challenge, and whether they hold
 
-**"The barcode is real."** Holds. Code 128-C with the specification's modulo-103
-check character, verified against the worked example, 11 modules per symbol and
-13 for the stop, drawn in pure black at a stated module floor of 0.33mm. A
-scanner is still the only proof that matters and there is none here.
+**"The barcode is real."** Holds — Code 128-C with the specification's
+modulo-103 check character, verified by arithmetic, 11 modules per symbol and 13
+for the stop, pure black at a 0.33mm module floor. A scanner is still the only
+proof that matters and there is none here.
 
-**"Five identifiers."** Holds — document ID, verification code, archive
-reference, identity number, certificate number, all labelled, four in the panel
-and one in its own cartouche.
+**"The QR is deliberately not drawn."** Holds, and should until there is an
+encoder checked against a decoder.
 
-**"The QR is deliberately not drawn."** Holds, and should stay that way until
-there is an encoder that has been checked against a decoder.
+**"Fine text, not microprint."** Holds — measured illegible at 300 DPI, legible
+at 600, ≈0.41mm against microprint's ≤0.25mm.
 
-**"Fine text, not microprint."** Holds. Measured: illegible at 300 DPI, legible
-at 600, ≈0.41mm cap height against microprint's ≤0.25mm. Renamed accordingly.
+**"Premium only."** Holds structurally: every term in the prompt vocabulary
+lands on a premium construction because there are no others in it, and the tests
+check every term and every pair.
 
-**"Nothing has been printed."** Holds, and is the largest outstanding gap in the
-whole programme. Every statement about foil, emboss, hairline hold and substrate
-is a specification.
-
-## The honest summary
-
-The officiality gap is now roughly half closed. The sheets carry a real
-verification architecture where they carried none, and that is the single
-biggest step towards the benchmark taken so far. The *craft* gap is not closed:
-four of the eight defects above are things the benchmark does and EdirasX
-still does not, and two more are elements that were added this pass and do not
-yet read.
-
-These plates are better than the last set and are not yet at the standard.
+**"An assistant cannot produce artwork."** Holds by signature — `propose()`
+returns a `Brief`, so there is nowhere to put artwork.

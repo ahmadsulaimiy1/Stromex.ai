@@ -136,7 +136,10 @@ def test_the_panel_carries_all_five_identifiers_and_the_void_notice():
 
 
 def test_the_qr_bay_says_it_is_a_reservation():
-    """A grid that looks like a QR and is not one is worse than an empty bay."""
+    """A grid that looks like a QR and is not one is worse than an empty bay —
+    and three finder outlines read as empty checkboxes, which is a form
+    somebody forgot to fill in rather than a bay held open on purpose."""
     svg = qr_bay(geo.Rect(0, 0, 20, 20), scheme=SCHEME, ink="#0E1B33")
-    assert "QR RESERVED" in svg
+    assert "QR BAY RESERVED" in svg
     assert "VERIFY AUTHENTICITY" in svg
+    assert svg.count("<rect") == 2, "one keyline and one quiet panel, no grid"

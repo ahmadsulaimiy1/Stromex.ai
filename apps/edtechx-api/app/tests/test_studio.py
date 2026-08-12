@@ -132,12 +132,41 @@ def test_an_unsupplied_bay_says_so_rather_than_drawing_a_placeholder():
     assert "FEDERAL REPUBLIC" in svg
 
 
+def test_a_finished_sheet_never_prints_device_not_supplied():
+    """That text is a studio affordance. Printing it would put DEVICE NOT
+    SUPPLIED across the head of somebody's doctorate."""
+    svg = bay(geo.Rect(0, 0, 15, 15), Bay("nation", "FEDERAL REPUBLIC"),
+              scheme=SCHEME, ink="#0E1B33", show_empty=False)
+    assert svg == ""
+    register = heraldic_register(
+        geo.Rect(0, 0, 200, 15),
+        (Bay("a", "A"), Bay("b", "B", device="<circle r='30' cx='50' cy='50'/>")),
+        scheme=SCHEME, ink="#0E1B33", show_empty=False)
+    assert "DEVICE NOT SUPPLIED" not in register
+    assert "circle" in register, "the supplied device still appears"
+
+
+def test_a_device_cannot_escape_its_bay():
+    """A 13mm bay once put a shield across half a certificate, because the
+    mount allowed overflow and the device drew outside its own viewBox."""
+    svg = bay(geo.Rect(0, 0, 13, 13),
+              Bay("crest", "THE INSTITUTE",
+                  device="<rect x='-400' y='-400' width='900' height='900'/>"),
+              scheme=SCHEME, ink="#0E1B33")
+    assert "clipPath" in svg and "clip-path=" in svg
+    assert "<svg" not in svg, (
+        "a nested viewport is not honoured inside a plate whose root carries "
+        "preserveAspectRatio=none; the mount must be a transform and a clip"
+    )
+
+
 def test_a_supplied_device_is_mounted_inside_a_clear_zone():
     svg = bay(geo.Rect(0, 0, 20, 20), Bay("crest", "THE INSTITUTE",
                                           device="<circle r='40' cx='50' cy='50'/>"),
               scheme=SCHEME, ink="#0E1B33")
-    assert "preserveAspectRatio=\"xMidYMid meet\"" in svg
-    # 14% clear on each side of a 20mm bay leaves 14.4mm for the device.
+    # 14% clear on each side of a 20mm bay leaves 14.4mm for the device, and a
+    # 100-unit drawing scales into it by 0.144.
+    assert "scale(0.14400)" in svg
     assert 'width="14.40"' in svg
 
 

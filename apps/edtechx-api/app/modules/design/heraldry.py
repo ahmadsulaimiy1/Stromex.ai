@@ -46,7 +46,9 @@ __all__ = [
     "bay",
     "device_resolution_note",
     "heraldic_register",
+    "institutional_crest",
     "seal_with_device",
+    "shield_path",
 ]
 
 
@@ -65,7 +67,7 @@ class Bay:
 
 
 def bay(rect: geo.Rect, entry: Bay, *, scheme: Scheme, ink: str,
-        clear: float = 0.14) -> str:
+        clear: float = 0.14, show_empty: bool = True) -> str:
     """One bay: a clear zone, the device if supplied, and the caption.
 
     `clear` is the proportion of the bay kept free around the device on every
@@ -77,6 +79,13 @@ def bay(rect: geo.Rect, entry: Bay, *, scheme: Scheme, ink: str,
     before the arms arrive still composes correctly and visibly says what is
     missing.
     """
+    # On a *finished* certificate an unsupplied bay draws nothing at all. The
+    # dashed keyline and the words DEVICE NOT SUPPLIED are a studio affordance —
+    # they tell a designer what is missing — and printing them on an issued
+    # document would put "DEVICE NOT SUPPLIED" across the head of somebody's
+    # doctorate.
+    if not entry.device and not show_empty:
+        return ""
     inner = rect.inset(min(rect.w, rect.h) * clear)
     caption = (
         f'<text x="{rect.cx:.2f}" y="{rect.y + rect.h + 2.4:.2f}"'
@@ -93,16 +102,33 @@ def bay(rect: geo.Rect, entry: Bay, *, scheme: Scheme, ink: str,
             f' font-family="Inter, sans-serif" fill="{geo.tint(ink, 0.40)}">'
             f"DEVICE NOT SUPPLIED</text>" + caption
         )
+    # **A device is clipped to its bay, by transform and clip path.**
+    #
+    # This was a nested `<svg>` with a viewBox and `overflow`, and it did not
+    # hold: inside a plate whose own root carries `preserveAspectRatio="none"`,
+    # the nested viewport was not honoured and a 13mm bay put a shield across
+    # half a certificate. Rendered in isolation the same fragment behaved; only
+    # in place did it escape, which is the worst kind of bug to leave in.
+    #
+    # A `translate`/`scale` transform with an explicit `clipPath` has no such
+    # ambiguity. The device is authored in a 100 × 100 space, scaled to the
+    # clear zone, and clipped to it — and a device that draws outside its own
+    # space is cropped rather than let loose.
+    tag = f"bay-{abs(hash((rect.x, rect.y, entry.key))) % 999999}"
+    scale = min(inner.w, inner.h) / 100.0
+    offset_x = inner.x + (inner.w - 100 * scale) / 2
+    offset_y = inner.y + (inner.h - 100 * scale) / 2
     return (
-        f'<svg x="{inner.x:.2f}" y="{inner.y:.2f}" width="{inner.w:.2f}"'
-        f' height="{inner.h:.2f}" viewBox="0 0 100 100"'
-        ' preserveAspectRatio="xMidYMid meet" overflow="visible">'
-        f"{entry.device}</svg>" + caption
+        f'<defs><clipPath id="{tag}"><rect {inner.attrs()}/></clipPath></defs>'
+        f'<g clip-path="url(#{tag})">'
+        f'<g transform="translate({offset_x:.3f} {offset_y:.3f}) '
+        f'scale({scale:.5f})">{entry.device}</g></g>' + caption
     )
 
 
 def heraldic_register(rect: geo.Rect, bays: tuple[Bay, ...], *,
-                      scheme: Scheme, ink: str, size: float = 15.0) -> str:
+                      scheme: Scheme, ink: str, size: float = 15.0,
+                      show_empty: bool = True) -> str:
     """Devices across the head of the sheet, each with its authority named.
 
     Odd counts put a bay on the axis, which is where an institution's own crest
@@ -117,7 +143,8 @@ def heraldic_register(rect: geo.Rect, bays: tuple[Bay, ...], *,
     for index, entry in enumerate(bays):
         cx = rect.x + step * (index + 0.5)
         box = geo.Rect(cx - size / 2, rect.y, size, size)
-        out.append(bay(box, entry, scheme=scheme, ink=ink))
+        out.append(bay(box, entry, scheme=scheme, ink=ink,
+                       show_empty=show_empty))
     return "".join(out)
 
 
@@ -184,3 +211,79 @@ def device_resolution_note(size_mm: float) -> str:
         "600 DPI. Vector artwork has no such limit and is preferred: it is "
         "exact at any size and separates cleanly onto a plate."
     )
+
+
+def shield_path(cx: float, cy: float, height: float) -> str:
+    """A heater shield, constructed — the figure a watermark actually needs.
+
+    A rosette makes a poor blind emboss and the render proved it twice: radial
+    symmetry gives the light nothing to catch, so the mark read as a stain
+    rather than as relief. Relief needs *flat areas separated by edges that
+    change direction*, which is precisely what a shield is and why every
+    institution in the world put its watermark on one.
+
+    The proportions are the heater's own: width is 5/6 of height, the flanks
+    run straight for the top two fifths, and the point is struck as two arcs
+    from centres on the opposite flank. Nothing here is drawn by eye.
+    """
+    width = height * 5 / 6
+    half = width / 2
+    top = cy - height / 2
+    straight = top + height * 0.42
+    return (
+        f"M{cx - half:.2f} {top:.2f} H{cx + half:.2f} V{straight:.2f} "
+        f"C{cx + half:.2f} {top + height * 0.74:.2f} "
+        f"{cx + half * 0.58:.2f} {top + height * 0.93:.2f} "
+        f"{cx:.2f} {top + height:.2f} "
+        f"C{cx - half * 0.58:.2f} {top + height * 0.93:.2f} "
+        f"{cx - half:.2f} {top + height * 0.74:.2f} "
+        f"{cx - half:.2f} {straight:.2f} Z"
+    )
+
+
+def institutional_crest(cx: float, cy: float, height: float, *, motif: Motif,
+                        ink: str, strength: float = 0.030,
+                        motto: str = "") -> str:
+    """EdirasX's own armorial device: shield, chief, quartering, charges.
+
+    Drawn as a *watermark* — one tone, no fills, at a few per cent above the
+    paper — and it is EdirasX's construction rather than a claim to be anybody's
+    arms, which is why the system may draw it when an institution has supplied
+    nothing. A supplied device always displaces it.
+
+    Five elements, each of which an emboss can catch: the shield's own outline,
+    a chief across the top, a cross quartering the field, the motif's star in
+    the honour point, and a small charge in each quarter.
+    """
+    stroke = geo.tint(ink, strength)
+    width = height * 5 / 6
+    half = width / 2
+    top = cy - height / 2
+    chief = top + height * 0.20
+    quarter = top + height * 0.52
+    out = [
+        f'<path d="{shield_path(cx, cy, height)}" fill="none"'
+        f' stroke="{stroke}" stroke-width="{height * 0.022:.3f}"'
+        ' stroke-linejoin="round"/>',
+        f'<path d="M{cx - half:.2f} {chief:.2f} H{cx + half:.2f}"'
+        f' stroke="{stroke}" stroke-width="{height * 0.016:.3f}" fill="none"/>',
+        f'<path d="M{cx:.2f} {chief:.2f} V{top + height * 0.86:.2f}"'
+        f' stroke="{stroke}" stroke-width="{height * 0.013:.3f}" fill="none"/>',
+        f'<path d="M{cx - half * 0.86:.2f} {quarter:.2f} '
+        f'H{cx + half * 0.86:.2f}" stroke="{stroke}"'
+        f' stroke-width="{height * 0.013:.3f}" fill="none"/>',
+        motif.star(cx, chief + (quarter - chief) * 0.02 + height * 0.005,
+                   height * 0.085, ink=stroke, width=height * 0.014),
+    ]
+    for sign in (-1, 1):
+        out.append(motif.star(cx + sign * half * 0.44,
+                              quarter + height * 0.16, height * 0.055,
+                              ink=stroke, width=height * 0.011, sharpen=0.88))
+    if motto:
+        out.append(
+            f'<text x="{cx:.2f}" y="{top + height * 1.12:.2f}"'
+            f' text-anchor="middle" font-size="{height * 0.075:.2f}"'
+            f' letter-spacing="{height * 0.012:.2f}"'
+            f' font-family="Inter, sans-serif" fill="{stroke}">{motto}</text>'
+        )
+    return "".join(out)

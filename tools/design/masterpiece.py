@@ -49,7 +49,7 @@ OUT = ROOT / "docs" / "edtechx" / "design" / "masterpieces"
 
 from app.modules.design import architecture as arch  # noqa: E402
 from app.modules.design import geometry as geo  # noqa: E402
-from app.modules.design import grounds, interior  # noqa: E402
+from app.modules.design import grounds, heraldry, interior  # noqa: E402
 from app.modules.design.ceremony import Budget, budget_for  # noqa: E402
 from app.modules.design.credential import (  # noqa: E402
     Credential,
@@ -117,6 +117,11 @@ SERIAL = "PHD/2031/0007"
 CODE = "BFJ7-DRNM-8VZ9"
 ISSUED = "14 March 2031"
 SEAL_LEGEND = "MERIDIAN INSTITUTE"
+
+#: Prepared signature artwork, by officer. Empty here because this fixture has
+#: none — which is the ordinary case for a design review, and the plates render
+#: correctly without them rather than filling the space with an invention.
+SIGNATURE_ASSETS: dict[str, str] = {}
 
 #: Five identifiers, not one. The benchmark sheets carry five and each answers a
 #: different question; EdirasX carried two and neither was labelled.
@@ -317,22 +322,19 @@ def security_ground(plate: Plate) -> None:
     sheet = geo.Rect(0, 0, W, H)
     s = plate.scheme
     plate.add("security", grounds.wave_lathe(
-        sheet, ink=plate.accent, strength=0.024, scale=1.5))
+        sheet, ink=plate.accent, strength=0.052, scale=2.4))
     plate.add("security", grounds.starfield(
-        sheet.inset(14), ink=s.security.core, strength=0.10, scale=1.35,
+        sheet.inset(14), ink=s.primary.core, strength=0.13, scale=1.7,
         seed=SERIAL))
     # The embossed crest: ~45% of the sheet's height, which is far larger than
     # anything EdirasX had put in a field, and is exactly what makes the
     # benchmark's middle look worked rather than empty.
-    crest = (
-        MOTIF.rosette(W / 2, H * 0.46, H * 0.185,
-                      ink=geo.tint(plate.accent, 0.017), width=0.22)
-        + MOTIF.polygram(W / 2, H * 0.46, H * 0.135,
-                         ink=geo.tint(plate.accent, 0.014), width=0.18)
-    )
+    crest = heraldry.institutional_crest(
+        W / 2, H * 0.455, H * 0.40, motif=MOTIF, ink=plate.accent,
+        strength=0.045)
     plate.add("security", arch.emboss(
-        crest, depth=0.22, light="#FFFFFF",
-        dark=geo.tint(plate.accent, 0.026)))
+        crest, depth=0.34, light="#FFFFFF",
+        dark=geo.tint(plate.accent, 0.075)))
 
 
 def ground_figure(plate: Plate, cx: float, cy: float, radius: float,
@@ -423,6 +425,64 @@ def institutional_mark(plate: Plate, cx: float, cy: float,
     )
     return arch.emboss(figure, depth=0.24, light=s.primary.highlight,
                        dark=s.engraved.shadow)
+
+
+#: The three authorities a sheet is issued under. EdirasX draws the *bays* and
+#: never the emblems: a state's arms are an official mark, and approximating one
+#: is not a thing to do quietly. An institution supplies its own licensed
+#: devices; supply nothing and the bay says so, which is honest.
+AUTHORITIES: tuple[heraldry.Bay, ...] = (
+    heraldry.Bay("nation", "FEDERAL REPUBLIC"),
+    heraldry.Bay("institution", "THE INSTITUTE"),
+    heraldry.Bay("state", "LAGOS STATE"),
+)
+
+
+def heraldic_head(plate: Plate, rect: geo.Rect, *, size: float = 13.0) -> None:
+    """Three devices across the head, each with its authority named.
+
+    The institution's own bay takes EdirasX's constructed crest when nothing has
+    been supplied — that is our figure, not a claim to be anybody's arms — and
+    the two flanking bays stay visibly empty until real devices arrive.
+    """
+    bays = tuple(
+        replace_bay(entry, plate) if entry.key == "institution" else entry
+        for entry in AUTHORITIES
+    )
+    plate.add("process", heraldry.heraldic_register(
+        rect, bays, scheme=plate.scheme, ink=plate.ink, size=size,
+        show_empty=False))
+
+
+def replace_bay(entry: heraldry.Bay, plate: Plate) -> heraldry.Bay:
+    crest = heraldry.institutional_crest(
+        50, 46, 76, motif=MOTIF, ink=plate.accent, strength=0.62)
+    return heraldry.Bay(entry.key, entry.authority, device=crest)
+
+
+def signature_mark(prepared: str, width: float, height: float) -> str:
+    """The officer's own prepared signature, mounted above the rule.
+
+    **Nothing is drawn when there is none.** A synthesised stroke was tried and
+    removed after one look: seeded from the officer's name it produced three
+    near-identical wavy scribbles across the execution band, which is precisely
+    the artificial tell this project exists to avoid. A signature is the one
+    mark on a certificate that is *about a person's hand*, and inventing it is
+    not a smaller lie than inventing a coat of arms.
+
+    So the rule here is the same as the heraldic bays': mount what was supplied,
+    draw nothing when nothing was. `signature_asset.py` prepares the raster —
+    lifting the ink off the paper it was photographed on — and
+    `documents.authority` decides whether that officer may sign this document
+    at all.
+    """
+    if not prepared:
+        return ""
+    return (
+        f'<svg class="ink" viewBox="0 0 {width:.1f} {height:.1f}"'
+        ' preserveAspectRatio="xMidYMax meet" aria-hidden="true">'
+        f"{prepared}</svg>"
+    )
 
 
 def dress_field(plate: Plate, rect: geo.Rect) -> None:
@@ -570,7 +630,7 @@ def administrative_band(plate: Plate, rect: geo.Rect) -> None:
     plate.add("variable", qr_bay(qr, scheme=s, ink=plate.ink))
     plate.add("variable", number_cartouche(
         number, CREDENTIAL.certificate_number, scheme=s, ink=plate.ink,
-        motif=MOTIF))
+        motif=MOTIF, paper=plate.ground))
     plate.add("variable", verification_cartouche(
         verify, CREDENTIAL, scheme=s, ink=plate.ink,
         institution=INSTITUTION.get("latin") or "", paper=plate.ground))
@@ -599,7 +659,11 @@ def execution(plate: Plate, *, seal_radius: float = 15.0) -> str:
     s = plate.scheme
     d = seal_radius * 2 + 3
     cells = "".join(
-        f'<div class="sig"><div class="disp nm">{name}</div>'
+        '<div class="sig">'
+        # The officer's own mark, when the authority chain holds one. Nothing
+        # otherwise — see `signature_mark`.
+        + signature_mark(SIGNATURE_ASSETS.get(name, ""), 60.0, 12.0)
+        + f'<div class="disp nm">{name}</div>'
         f'<svg class="srule" viewBox="0 0 60 1.6" preserveAspectRatio="none">'
         f'{arch.engraved_metal_rule(1, 0.8, 59, 0.8, metal=s.primary, weight=0.34)}'
         "</svg>"
@@ -662,6 +726,7 @@ html, body { margin: 0; padding: 0; background: #221F1B; }
 /* A fixed box for the name, so the three engraved rules land on one
    baseline. Bottom-aligning the cells instead put the middle rule 4mm high
    the moment "Dean of the Graduate School" wrapped to two lines. */
+.sig .ink { display: block; width: 100%; height: 8mm; margin-bottom: -1.2mm; }
 .sig .nm { font-size: 3.8mm; height: 6.4mm; display: flex; align-items: flex-end;
   justify-content: center; white-space: nowrap; letter-spacing: 0.004em; }
 .sig .srule { display: block; width: 100%; height: 1.6mm; }
@@ -943,6 +1008,7 @@ def m02(*, language: Architecture | None = None) -> tuple[Plate, str, str]:
                                      field_end, field_foot).inset(-3.0))
     administrative_band(plate, geo.Rect(
         field_side, H - field_end - BAND_H, W - field_side * 2, BAND_H))
+    heraldic_head(plate, geo.Rect(W / 2 - 62, field_end - 15.5, 124, 13))
     fine_text(plate, sheet.inset(9.0), "m02")
 
     css = f"""
@@ -1049,6 +1115,7 @@ def m11() -> tuple[Plate, str, str]:
                                      13 + BAND_H + FOOT_H + 2).inset(-4.0))
     administrative_band(plate, geo.Rect(
         22, H - 13 - BAND_H, W - 22 * 2, BAND_H))
+    heraldic_head(plate, geo.Rect(W / 2 - 60, 6.0, 120, 12))
     fine_text(plate, sheet.inset(8.4), "m11")
 
     css = f"""
@@ -1153,7 +1220,9 @@ def m12() -> tuple[Plate, str, str]:
     corner_architecture(plate, 5.0, 23.0)
     ground_figure(plate, W / 2, H * 0.47, 54, strength=0.028)
     dress_field(plate, field.inset(-4.0))
-    administrative_band(plate, field.inset(-4.0))
+    administrative_band(plate, geo.Rect(
+        40, H - 18 - BAND_H, W - 80, BAND_H))
+    heraldic_head(plate, geo.Rect(W / 2 - 60, 9.5, 120, 12))
     fine_text(plate, sheet.inset(9.6), "m12")
 
     css = f"""
@@ -1268,6 +1337,7 @@ def m01() -> tuple[Plate, str, str]:
                                      25 + BAND_H + FOOT_H + 2).inset(-4.0))
     administrative_band(plate, geo.Rect(
         34, H - 25 - BAND_H, W - 34 * 2, BAND_H))
+    heraldic_head(plate, geo.Rect(W / 2 - 62, 19.0, 124, 13))
     fine_text(plate, sheet.inset(9.0), "m01")
 
     css = f"""

@@ -83,10 +83,10 @@ Every stroke in the supplied separations, by width:
 | **0.048 mm** | 8 |
 | **0.056 mm** | 8 |
 | **0.061 mm** | 1 |
-| **0.070 mm** | 1591 |
+| **0.070 mm** | 1594 |
 | **0.072 mm** | 1 |
 | **0.075 mm** | 1 |
-| **0.080 mm** | 240 |
+| **0.080 mm** | 207 |
 | **0.085 mm** | 1584 |
 | **0.088 mm** | 13 |
 | **0.090 mm** | 176 |
@@ -95,8 +95,6 @@ Every stroke in the supplied separations, by width:
 | **0.102 mm** | 2 |
 | **0.104 mm** | 8 |
 | **0.120 mm** | 2 |
-| **0.121 mm** | 3 |
-| **0.136 mm** | 30 |
 | **0.140 mm** | 10 |
 | **0.143 mm** | 1 |
 | **0.153 mm** | 4 |
@@ -104,21 +102,31 @@ Every stroke in the supplied separations, by width:
 | **0.165 mm** | 4 |
 | **0.168 mm** | 1 |
 | **0.170 mm** | 4 |
-| **0.180 mm** | 12 |
+| **0.180 mm** | 9 |
 | **0.186 mm** | 40 |
-| **0.200 mm** | 6 |
-| **0.220 mm** | 10 |
+| **0.200 mm** | 7 |
+| **0.220 mm** | 4 |
 | **0.238 mm** | 4 |
 | **0.260 mm** | 11 |
 | **0.280 mm** | 4 |
-| **0.300 mm** | 9 |
-| **0.340 mm** | 3 |
+| **0.300 mm** | 8 |
+| **0.340 mm** | 4 |
 | **0.400 mm** | 1 |
 | **0.420 mm** | 7 |
 | **0.450 mm** | 8 |
 | **0.500 mm** | 4 |
 | **0.620 mm** | 2 |
 | **0.700 mm** | 4 |
+| **0.836 mm** | 2 |
+| **0.924 mm** | 6 |
+| **0.988 mm** | 2 |
+| **1.064 mm** | 1 |
+| **1.092 mm** | 6 |
+| **1.176 mm** | 3 |
+| **1.216 mm** | 1 |
+| **1.344 mm** | 3 |
+| **1.672 mm** | 1 |
+| **1.848 mm** | 3 |
 
 **The floor in this artwork is 0.048 mm.** That is stated so you can act on
 it: confirm your reproduction floor and anything underneath it will be raised,

@@ -178,26 +178,22 @@ def qr_bay(rect: geo.Rect, *, scheme: Scheme, ink: str,
     The bay is real work all the same: it fixes the size, the quiet zone and the
     caption, so the encoder drops in without the composition moving.
     """
-    quiet = min(rect.w, rect.h) * 0.09
-    inner = rect.inset(quiet)
-    finder = min(inner.w, inner.h) * 0.22
-    marks = "".join(
-        f'<rect x="{px:.2f}" y="{py:.2f}" width="{finder:.2f}"'
-        f' height="{finder:.2f}" fill="none" stroke="{geo.tint(ink, 0.35)}"'
-        ' stroke-width="0.22"/>'
-        for px, py in (
-            (inner.x, inner.y),
-            (inner.x + inner.w - finder, inner.y),
-            (inner.x, inner.y + inner.h - finder),
-        )
-    )
+    # Drawn as one quiet tinted panel with a diagonal rule and a single line of
+    # text. The first version outlined three finder-pattern positions, which on
+    # a finished sheet read as empty checkboxes — a form somebody forgot to
+    # fill in rather than a bay held open on purpose.
+    inner = rect.inset(min(rect.w, rect.h) * 0.08)
     return (
         f'<rect {rect.attrs()} fill="none" stroke="{scheme.secondary.face}"'
-        ' stroke-width="0.30"/>'
-        + marks
-        + f'<text x="{rect.cx:.2f}" y="{inner.cy + 1.0:.2f}"'
-        f' text-anchor="middle" font-size="2.1" font-family="Inter, sans-serif"'
-        f' fill="{geo.tint(ink, 0.45)}">QR RESERVED</text>'
+        ' stroke-width="0.34"/>'
+        f'<rect {inner.attrs()} fill="{geo.tint(ink, 0.055)}"/>'
+        f'<path d="M{inner.x:.2f} {inner.y + inner.h:.2f} '
+        f'L{inner.x + inner.w:.2f} {inner.y:.2f}" stroke="{geo.tint(ink, 0.16)}"'
+        ' stroke-width="0.20"/>'
+        + f'<text x="{rect.cx:.2f}" y="{inner.cy + 0.7:.2f}"'
+        f' text-anchor="middle" font-size="1.85" letter-spacing="0.10"'
+        f' font-family="Inter, sans-serif" fill="{geo.tint(ink, 0.50)}">'
+        f'QR BAY RESERVED</text>'
         + f'<text x="{rect.cx:.2f}" y="{rect.y + rect.h + 2.6:.2f}"'
         f' text-anchor="middle" font-size="1.7" letter-spacing="0.30"'
         f' font-family="Inter, sans-serif" fill="{geo.tint(ink, 0.55)}">'
@@ -301,7 +297,8 @@ def verification_cartouche(rect: geo.Rect, credential: Credential, *,
 
 
 def number_cartouche(rect: geo.Rect, number: str, *, scheme: Scheme,
-                     ink: str, motif=None) -> str:
+                     ink: str, motif=None,
+                     paper: str = "#F7F2E6") -> str:
     """The certificate number, in a guilloché-filled panel of its own.
 
     Separate from the verification cartouche on purpose: on the benchmark sheets
@@ -317,9 +314,29 @@ def number_cartouche(rect: geo.Rect, number: str, *, scheme: Scheme,
         f' stroke="{scheme.engraved.shadow}" stroke-width="0.14"/>',
     ]
     if motif is not None:
-        out.append(motif.guilloche(rect.cx, rect.cy, rect.w * 0.46,
-                                   ink=scheme.security.core, width=0.07,
-                                   strength=0.28, passes=2))
+        # The fill has to *read*, or the panel is a box with a number in it —
+        # which is what the first render produced. A lathe figure wider than
+        # the panel, clipped by it, fills the whole field instead of sitting as
+        # a small rosette in the middle of it.
+        tag = f"num-{abs(hash((rect.x, rect.y, number))) % 999999}"
+        out.append(
+            f'<defs><clipPath id="{tag}"><rect {rect.inset(1.2).attrs()}/>'
+            "</clipPath></defs>"
+            f'<g clip-path="url(#{tag})">'
+            + motif.guilloche(rect.cx, rect.cy, rect.w * 0.62,
+                              ink=scheme.security.core, width=0.07,
+                              strength=0.85, passes=3)
+            + motif.guilloche(rect.cx, rect.cy, rect.w * 0.34,
+                              ink=scheme.primary.core, width=0.07,
+                              strength=0.55, passes=2)
+            + "</g>"
+        )
+        # A knockout behind the number, so the lathe does not run through it.
+        out.append(
+            f'<rect x="{rect.cx - rect.w * 0.34:.2f}"'
+            f' y="{rect.y + rect.h * 0.42:.2f}" width="{rect.w * 0.68:.2f}"'
+            f' height="{rect.h * 0.44:.2f}" fill="{paper}" opacity="0.88"/>'
+        )
     out.append(
         f'<text x="{rect.cx:.2f}" y="{rect.y + 3.4:.2f}" text-anchor="middle"'
         f' font-size="1.62" letter-spacing="0.30"'
