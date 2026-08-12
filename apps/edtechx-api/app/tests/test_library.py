@@ -483,3 +483,105 @@ def test_the_overprint_colour_is_reserved_for_reissuance_and_banners():
              edition="certified_copy")
     ).html
     assert "#6E1F2B" in copy
+
+
+# --- the library is content, not product code --------------------------------
+
+
+def test_the_library_is_data_rather_than_python():
+    """The architecture the universality rule actually requires.
+
+    A thousand lines of template literals in a module is a product that has
+    decided which education tradition it serves. The definitions name one
+    ladder — Diploma Supplement, Ibtidāʼiyyah, Junior Secondary — and a German
+    institution issuing a Diplom, a French one a licence or a seminary an
+    ijāzah should not need EdirasX redeployed to have its own document set.
+
+    So the file holds the model and the data file holds the documents, and this
+    is the test that stops the literals creeping back.
+    """
+    import ast
+    import pathlib
+
+    source = pathlib.Path(
+        __file__).resolve().parents[1] / "modules" / "documents" / "library.py"
+    tree = ast.parse(source.read_text(encoding="utf-8"))
+    # Executed strings only, the same rule `test_universal_education` uses:
+    # a comment that says "Ibtidāʼiyyah, Junior Secondary" is explaining what
+    # was moved out and why, and a check that cannot tell explanation from
+    # assumption pushes the examples out of the documentation in the name of a
+    # rule about the code.
+    docstrings = {
+        id(node.body[0].value) for node in ast.walk(tree)
+        if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef,
+                             ast.AsyncFunctionDef))
+        and node.body and isinstance(node.body[0], ast.Expr)
+        and isinstance(node.body[0].value, ast.Constant)
+        and isinstance(node.body[0].value.value, str)
+    }
+    body = " ".join(
+        node.value for node in ast.walk(tree)
+        if isinstance(node, ast.Constant) and isinstance(node.value, str)
+        and id(node) not in docstrings
+    )
+    for name in ("Ibtidāʼiyyah", "Junior Secondary", "Diploma Supplement",
+                 "Islamiyyah", "Thānawiyyah"):
+        assert name not in body, (
+            f"{name!r} is back in product code. Templates belong in "
+            "app/data/document-templates.toml."
+        )
+
+
+def test_a_tenant_can_ship_its_own_library():
+    """The claim, exercised rather than asserted.
+
+    If a deployment cannot load a different file, the data move was filing
+    rather than architecture.
+    """
+    import pathlib
+    import tempfile
+
+    from app.modules.documents.library import DEFAULT_LIBRARY, load
+
+    shipped = (pathlib.Path(__file__).resolve().parents[1] / "data"
+               / DEFAULT_LIBRARY)
+    text = shipped.read_text(encoding="utf-8")
+    # One template, renamed. Everything else about it is the shipped file's.
+    first = text.split("[[template]]")[1]
+    custom = "[[template]]" + first.replace(
+        'name = "Certificate of Tamhīdiyyah"', 'name = "Certificat de Licence"'
+    )
+    with tempfile.NamedTemporaryFile("w", suffix=".toml", delete=False,
+                                     encoding="utf-8") as handle:
+        handle.write(custom)
+        path = pathlib.Path(handle.name)
+    try:
+        library = load(path)
+        assert len(library) == 1
+        assert next(iter(library.values())).name == "Certificat de Licence"
+    finally:
+        path.unlink()
+
+
+def test_a_template_naming_a_family_nothing_renders_is_refused_at_load():
+    """A composition is code; declaring one that does not exist is a defect."""
+    import pathlib
+    import tempfile
+
+    from app.modules.documents.library import DEFAULT_LIBRARY, load
+
+    shipped = (pathlib.Path(__file__).resolve().parents[1] / "data"
+               / DEFAULT_LIBRARY)
+    first = "[[template]]" + shipped.read_text(
+        encoding="utf-8").split("[[template]]")[1]
+    broken = first.replace('family = "stage"', 'family = "scroll"')
+    with tempfile.NamedTemporaryFile("w", suffix=".toml", delete=False,
+                                     encoding="utf-8") as handle:
+        handle.write(broken)
+        path = pathlib.Path(handle.name)
+    try:
+        with pytest.raises(TemplateError) as caught:
+            load(path)
+        assert "scroll" in str(caught.value)
+    finally:
+        path.unlink()

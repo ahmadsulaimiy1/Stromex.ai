@@ -1,0 +1,313 @@
+[[term]]
+key = "royal"
+kind = "character"
+words = ["royal", "regal", "palace", "majestic", "grand"]
+note = "Ivory, navy and royal gold; a doorcase frame with mass at the corners."
+[term.patch]
+ground = "engine-turn"
+ground_strength = 0.055
+scheme = "palace"
+ground_colour = "#F7F2E6"
+ink = "#101826"
+accent = "#14294C"
+second_metal = true
+
+[[term]]
+key = "imperial"
+kind = "character"
+words = ["imperial", "islamic", "geometric", "girih", "khatam"]
+note = "A midnight strapwork border with an ivory field cut into it."
+[term.patch]
+ground = "girih-diaper"
+ground_strength = 0.055
+scheme = "imperial"
+ground_colour = "#F5F0E2"
+ink = "#0E1B33"
+accent = "#0E1B33"
+second_metal = true
+
+[[term]]
+key = "crimson"
+kind = "character"
+words = ["crimson", "burgundy", "maroon", "wine", "red"]
+note = "Crimson mass, gold architecture, one bright ceremonial centre."
+[term.patch]
+ground = "damask"
+ground_strength = 0.06
+scheme = "crimson"
+ground_colour = "#F7F1E4"
+ink = "#2A0E18"
+accent = "#5A1226"
+second_metal = true
+
+[[term]]
+key = "heritage"
+kind = "character"
+words = ["heritage", "manuscript", "illuminated", "classical", "antique", "old"]
+note = "Parchment, warm gold and an illuminated border architecture."
+[term.patch]
+ground = "arabesque-scroll"
+ground_strength = 0.06
+scheme = "imperial"
+ground_colour = "#EFE6CE"
+ink = "#2A2214"
+accent = "#6B4E1E"
+second_metal = true
+
+[[term]]
+key = "emerald"
+kind = "character"
+words = ["green", "emerald", "arabian", "gulf"]
+note = "Deep green, ivory and deep gold — the Arabian royal register."
+[term.patch]
+ground = "ogee-lattice"
+ground_strength = 0.055
+scheme = "imperial"
+ground_colour = "#F7F3E7"
+ink = "#0F2620"
+accent = "#123A2E"
+second_metal = true
+
+[[term]]
+key = "midnight"
+kind = "character"
+words = ["midnight blue", "midnight", "royal blue", "navy", "deep blue", "dark blue", "sapphire"]
+note = "A midnight ground with gold behaving as light rather than pigment."
+[term.patch]
+ground = "engine-turn"
+ground_strength = 0.05
+scheme = "signature"
+ground_colour = "#F7F2E6"
+ink = "#0A101C"
+accent = "#132038"
+second_metal = true
+
+[[term]]
+key = "executive"
+kind = "character"
+words = ["executive", "simple", "clean", "minimal", "modern", "plain", "professional", "corporate", "contemporary"]
+note = "The most restrained premium register: laid paper, one metal register, and the typography doing the work. Not a flat design — there is none."
+[term.patch]
+ground = "laid"
+ground_strength = 0.04
+scheme = "signature"
+ground_colour = "#F8F5EC"
+ink = "#14202E"
+accent = "#1E3A5C"
+second_metal = false
+
+[[term]]
+key = "scholarly"
+kind = "character"
+words = ["scholarly", "scholar", "ijaza", "ijazah", "quran", "qur'an", "tajweed", "islamic studies"]
+note = "A scholarly register set entirely right-to-left, on parchment."
+[term.patch]
+ground = "arabesque-scroll"
+ground_strength = 0.06
+scheme = "imperial"
+ground_colour = "#EFE6CE"
+ink = "#2A2214"
+accent = "#6B4E1E"
+language = "arabic-only"
+second_metal = true
+
+[[term]]
+key = "gold-royal"
+kind = "metal"
+words = ["gold", "golden", "royal gold"]
+note = "Royal gold carries the architecture."
+[term.patch]
+scheme = "palace"
+
+[[term]]
+key = "gold-antique"
+kind = "metal"
+words = ["antique gold", "aged gold", "bronze"]
+note = "Antique gold: browner in the face than in the core."
+[term.patch]
+scheme = "imperial"
+
+[[term]]
+key = "gold-champagne"
+kind = "metal"
+words = ["champagne", "pale gold", "light gold"]
+note = "Champagne: metal without brass."
+[term.patch]
+scheme = "imperial"
+
+[[term]]
+key = "silver"
+kind = "metal"
+words = ["silver", "platinum", "steel"]
+note = "Royal gold against silver — two metals that are not two golds."
+[term.patch]
+scheme = "signature"
+second_metal = true
+
+[[term]]
+key = "copper"
+kind = "metal"
+words = ["copper", "rose gold", "warm metal"]
+note = "Copper as the warm counter-metal."
+[term.patch]
+scheme = "crimson"
+
+[[term]]
+key = "g-guilloche"
+kind = "ground"
+words = ["guilloche", "guilloché", "engine turned", "banknote", "security print"]
+note = "Engine turning: overlapping closed lathe roses."
+[term.patch]
+ground = "engine-turn"
+ground_strength = 0.055
+
+[[term]]
+key = "g-damask"
+kind = "ground"
+words = ["damask", "brocade", "textile", "fabric"]
+note = "The pointed-oval diaper of a court hanging."
+[term.patch]
+ground = "damask"
+ground_strength = 0.06
+
+[[term]]
+key = "g-laid"
+kind = "ground"
+words = ["laid", "watermark", "mould made", "paper"]
+note = "Laid lines and chain lines — mould-made paper against the light."
+[term.patch]
+ground = "laid"
+ground_strength = 0.045
+
+[[term]]
+key = "g-vellum"
+kind = "ground"
+words = ["vellum", "parchment", "skin"]
+note = "Irregular short fibres; a skin rather than a sheet."
+[term.patch]
+ground = "vellum"
+ground_strength = 0.055
+
+[[term]]
+key = "g-marble"
+kind = "ground"
+words = ["marble", "marbled", "endpaper"]
+note = "Combed veins as line rather than wash."
+[term.patch]
+ground = "marbled"
+ground_strength = 0.07
+
+[[term]]
+key = "g-arabesque"
+kind = "ground"
+words = ["arabesque", "scroll", "vine", "floral"]
+note = "Counter-curved stems with leaf terminals."
+[term.patch]
+ground = "arabesque-scroll"
+ground_strength = 0.06
+
+[[term]]
+key = "g-star"
+kind = "ground"
+words = ["stars", "starfield", "powdered"]
+note = "The powdered ground of an illuminated page."
+[term.patch]
+ground = "starfield"
+ground_strength = 0.07
+
+[[term]]
+key = "l-arabic-only"
+kind = "language"
+words = ["arabic only", "only arabic", "arabic alone", "all arabic"]
+note = "The whole sheet set right-to-left."
+[term.patch]
+language = "arabic-only"
+
+[[term]]
+key = "l-latin-only"
+kind = "language"
+words = ["english only", "only english", "latin only", "no arabic"]
+note = "Complete in one script, and not missing anything."
+[term.patch]
+language = "latin-only"
+
+[[term]]
+key = "l-arabic-first"
+kind = "language"
+words = ["arabic first", "arabic primary", "arabic leading", "arabic dominant"]
+note = "Arabic carries the ceremony; English carries the explanation."
+[term.patch]
+language = "arabic-primary"
+
+[[term]]
+key = "l-latin-first"
+kind = "language"
+words = ["english first", "english primary", "english leading", "latin primary"]
+note = "English leads; the Arabic is the institution's own identity."
+[term.patch]
+language = "latin-primary"
+
+[[term]]
+key = "l-peer"
+kind = "language"
+words = ["bilingual", "side by side", "both languages", "two languages", "arabic and english", "english and arabic"]
+note = "Optically equal, flanking the institutional mark."
+[term.patch]
+language = "peer"
+
+[[term]]
+key = "lv4"
+kind = "level"
+words = ["phd", "doctorate", "doctoral", "honorary", "fellowship", "highest", "flagship"]
+note = "Level IV: the whole vocabulary is available."
+[term.patch]
+level = 4
+
+[[term]]
+key = "lv3"
+kind = "level"
+words = ["graduation", "degree", "bachelor", "master", "masters", "distinction", "award", "ceremonial"]
+note = "Level III: richly ornamented, with a ceremonial centre."
+[term.patch]
+level = 3
+
+[[term]]
+key = "lv2"
+kind = "level"
+words = ["diploma", "certificate", "professional", "transcript", "qualification"]
+note = "Level II: clearly luxurious."
+[term.patch]
+level = 2
+
+[[term]]
+key = "lv1"
+kind = "level"
+words = ["report card", "statement of results", "letter", "enrolment", "attendance", "completion", "participation"]
+note = "Level I: elegant, and not apologetic about it."
+[term.patch]
+level = 1
+ground_strength = 0.0
+
+[[term]]
+key = "o8"
+kind = "geometry"
+words = ["eight fold", "eight-fold", "octagonal", "8 fold"]
+note = "An eight-fold family — the khatam."
+[term.patch]
+motif_order = 8
+
+[[term]]
+key = "o10"
+kind = "geometry"
+words = ["ten fold", "ten-fold", "decagonal", "10 fold"]
+note = "A ten-fold family — decagonal girih."
+[term.patch]
+motif_order = 10
+
+[[term]]
+key = "o12"
+kind = "geometry"
+words = ["twelve fold", "twelve-fold", "dodecagonal", "12 fold"]
+note = "A twelve-fold family."
+[term.patch]
+motif_order = 12

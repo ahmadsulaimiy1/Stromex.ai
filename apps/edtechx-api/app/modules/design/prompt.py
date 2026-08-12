@@ -40,6 +40,7 @@ deserves. `test_prompt.py` asserts all four for every reachable resolution.
 
 from __future__ import annotations
 
+import pathlib
 import re
 from dataclasses import dataclass, field, replace
 from typing import Final
@@ -90,143 +91,54 @@ def _t(key: str, words: str, kind: str, note: str, **patch) -> Term:
 #: The vocabulary. Every entry lands on a premium construction; there is nothing
 #: in this table that produces a flat, stock or web-styled sheet, which is what
 #: makes "premium only" a property of the code rather than a promise.
-VOCABULARY: Final[tuple[Term, ...]] = (
-    # --- character: the overall world the sheet belongs to -------------------
-    _t("royal", "royal|regal|palace|majestic|grand", "character",
-       "Ivory, navy and royal gold; a doorcase frame with mass at the corners.",
-       ground="engine-turn", ground_strength=0.055, scheme="palace",
-       ground_colour="#F7F2E6", ink="#101826", accent="#14294C",
-       second_metal=True),
-    _t("imperial", "imperial|islamic|geometric|girih|khatam", "character",
-       "A midnight strapwork border with an ivory field cut into it.",
-       ground="girih-diaper", ground_strength=0.055, scheme="imperial",
-       ground_colour="#F5F0E2", ink="#0E1B33", accent="#0E1B33",
-       second_metal=True),
-    _t("crimson", "crimson|burgundy|maroon|wine|red", "character",
-       "Crimson mass, gold architecture, one bright ceremonial centre.",
-       ground="damask", ground_strength=0.060, scheme="crimson",
-       ground_colour="#F7F1E4", ink="#2A0E18", accent="#5A1226",
-       second_metal=True),
-    _t("heritage", "heritage|manuscript|illuminated|classical|antique|old", "character",
-       "Parchment, warm gold and an illuminated border architecture.",
-       ground="arabesque-scroll", ground_strength=0.060, scheme="imperial",
-       ground_colour="#EFE6CE", ink="#2A2214", accent="#6B4E1E",
-       second_metal=True),
-    _t("emerald", "green|emerald|arabian|gulf", "character",
-       "Deep green, ivory and deep gold — the Arabian royal register.",
-       ground="ogee-lattice", ground_strength=0.055, scheme="imperial",
-       ground_colour="#F7F3E7", ink="#0F2620", accent="#123A2E",
-       second_metal=True),
-    _t("midnight", "midnight blue|midnight|royal blue|navy|deep blue|dark blue|sapphire",
-       "character",
-       "A midnight ground with gold behaving as light rather than pigment.",
-       ground="engine-turn", ground_strength=0.050, scheme="signature",
-       ground_colour="#F7F2E6", ink="#0A101C", accent="#132038",
-       second_metal=True),
-    # "Simple" does not reach a simple design. It reaches the most restrained
-    # *premium* one: laid paper, one metal, engraved rules, and the typography
-    # carrying the sheet. There is no flatter option in this table.
-    _t("executive", "executive|simple|clean|minimal|modern|plain|professional|"
-       "corporate|contemporary", "character",
-       "The most restrained premium register: laid paper, one metal register, "
-       "and the typography doing the work. Not a flat design — there is none.",
-       ground="laid", ground_strength=0.040, scheme="signature",
-       ground_colour="#F8F5EC", ink="#14202E", accent="#1E3A5C",
-       second_metal=False),
-    _t("scholarly", "scholarly|scholar|ijaza|ijazah|quran|qur'an|tajweed|"
-       "islamic studies", "character",
-       "A scholarly register set entirely right-to-left, on parchment.",
-       ground="arabesque-scroll", ground_strength=0.060, scheme="imperial",
-       ground_colour="#EFE6CE", ink="#2A2214", accent="#6B4E1E",
-       language="arabic-only", second_metal=True),
+def _load_vocabulary() -> tuple[Term, ...]:
+    """The vocabulary, read from data rather than compiled into the product.
 
-    # --- metal ---------------------------------------------------------------
-    _t("gold-royal", "gold|golden|royal gold", "metal",
-       "Royal gold carries the architecture.", scheme="palace"),
-    _t("gold-antique", "antique gold|aged gold|bronze", "metal",
-       "Antique gold: browner in the face than in the core.", scheme="imperial"),
-    _t("gold-champagne", "champagne|pale gold|light gold", "metal",
-       "Champagne: metal without brass.", scheme="imperial"),
-    _t("silver", "silver|platinum|steel", "metal",
-       "Royal gold against silver — two metals that are not two golds.",
-       scheme="signature", second_metal=True),
-    _t("copper", "copper|rose gold|warm metal", "metal",
-       "Copper as the warm counter-metal.", scheme="crimson"),
+    It used to be a tuple of literals here, and that was wrong for a reason a
+    test caught rather than a reviewer: the level terms named *one* credential
+    ladder — doctorate, masters, bachelor, diploma — inside product code. A
+    French institution says licence, a German one Diplom, an Islamic seminary
+    says ijāzah, and none of them should need EdirasX redeployed to be
+    understood. A synonym table is content.
 
-    # --- ground --------------------------------------------------------------
-    _t("g-guilloche", "guilloche|guilloché|engine turned|banknote|security print",
-       "ground", "Engine turning: overlapping closed lathe roses.",
-       ground="engine-turn", ground_strength=0.055),
-    _t("g-damask", "damask|brocade|textile|fabric", "ground",
-       "The pointed-oval diaper of a court hanging.",
-       ground="damask", ground_strength=0.060),
-    _t("g-laid", "laid|watermark|mould made|paper", "ground",
-       "Laid lines and chain lines — mould-made paper against the light.",
-       ground="laid", ground_strength=0.045),
-    _t("g-vellum", "vellum|parchment|skin", "ground",
-       "Irregular short fibres; a skin rather than a sheet.",
-       ground="vellum", ground_strength=0.055),
-    _t("g-marble", "marble|marbled|endpaper", "ground",
-       "Combed veins as line rather than wash.",
-       ground="marbled", ground_strength=0.070),
-    _t("g-arabesque", "arabesque|scroll|vine|floral", "ground",
-       "Counter-curved stems with leaf terminals.",
-       ground="arabesque-scroll", ground_strength=0.060),
-    _t("g-star", "stars|starfield|powdered", "ground",
-       "The powdered ground of an illuminated page.",
-       ground="starfield", ground_strength=0.070),
+    So it is a data file, shipped as a default and replaceable per deployment.
+    The *structure* — that a term names an axis, that the last one typed wins,
+    that every entry lands on a premium construction — stays here, because that
+    is architecture.
+    """
+    import tomllib
 
-    # --- language ------------------------------------------------------------
-    _t("l-arabic-only", "arabic only|only arabic|arabic alone|all arabic",
-       "language", "The whole sheet set right-to-left.",
-       language="arabic-only"),
-    _t("l-latin-only", "english only|only english|latin only|no arabic",
-       "language", "Complete in one script, and not missing anything.",
-       language="latin-only"),
-    _t("l-arabic-first", "arabic first|arabic primary|arabic leading|"
-       "arabic dominant", "language",
-       "Arabic carries the ceremony; English carries the explanation.",
-       language="arabic-primary"),
-    _t("l-latin-first", "english first|english primary|english leading|"
-       "latin primary", "language",
-       "English leads; the Arabic is the institution's own identity.",
-       language="latin-primary"),
-    _t("l-peer", "bilingual|side by side|both languages|two languages|"
-       "arabic and english|english and arabic", "language",
-       "Optically equal, flanking the institutional mark.", language="peer"),
+    path = pathlib.Path(__file__).resolve().parents[2] / "data" / _VOCABULARY_FILE
+    raw = tomllib.loads(path.read_text(encoding="utf-8"))
+    return tuple(
+        Term(key=entry["key"], words=tuple(entry["words"]),
+             patch=dict(entry.get("patch", {})), kind=entry["kind"],
+             note=entry["note"])
+        for entry in raw["term"]
+    )
 
-    # --- level ---------------------------------------------------------------
-    _t("lv4", "phd|doctorate|doctoral|honorary|fellowship|highest|flagship",
-       "level", "Level IV: the whole vocabulary is available.", level=4),
-    _t("lv3", "graduation|degree|bachelor|master|masters|distinction|award|"
-       "ceremonial", "level",
-       "Level III: richly ornamented, with a ceremonial centre.", level=3),
-    _t("lv2", "diploma|certificate|professional|transcript|qualification",
-       "level", "Level II: clearly luxurious.", level=2),
-    _t("lv1", "report card|statement of results|letter|enrolment|attendance|"
-       "completion|participation", "level",
-       "Level I: elegant, and not apologetic about it.", level=1,
-       ground_strength=0.0),
 
-    # --- geometry ------------------------------------------------------------
-    _t("o8", "eight fold|eight-fold|octagonal|8 fold", "geometry",
-       "An eight-fold family — the khatam.", motif_order=8),
-    _t("o10", "ten fold|ten-fold|decagonal|10 fold", "geometry",
-       "A ten-fold family — decagonal girih.", motif_order=10),
-    _t("o12", "twelve fold|twelve-fold|dodecagonal|12 fold", "geometry",
-       "A twelve-fold family.", motif_order=12),
-)
+#: The default vocabulary file. Every entry in it lands on a premium
+#: construction; there is nothing in the table that produces a flat, stock or
+#: web-styled sheet, which is what makes "premium only" a property of the
+#: system rather than a promise. Replacing the file replaces the words, never
+#: the constructions they reach.
+_VOCABULARY_FILE: Final[str] = "prompt-vocabulary.toml"
+
+VOCABULARY: Final[tuple[Term, ...]] = _load_vocabulary()
 
 #: Precedence. A character term sets the whole world; the axes after it refine
 #: that world. So "royal, but silver" gives the royal architecture with the
 #: two-metal scheme, which is what a person means by it.
+#:
+#: This stays in the product where the vocabulary does not: which words mean
+#: "royal" is content, but the fact that character is decided before metal is
+#: how the resolver works.
 _ORDER: Final[tuple[str, ...]] = (
     "character", "ground", "metal", "language", "level", "geometry",
 )
 
-#: Where a resolution starts when the words say nothing about the level. Keyed
-#: on the document's purpose, because a doctorate and a report card are not the
-#: same object and neither is a downgrade of the other.
+
 PURPOSE_BASE: Final[dict[str, str]] = {
     "doctoral": "imperial-islamic",
     "honorary": "royal-palace",

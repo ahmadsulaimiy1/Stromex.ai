@@ -1,0 +1,5681 @@
+[[template]]
+key = "stage-preparatory"
+name = "Certificate of Tamhīdiyyah"
+name_ar = "شهادة إتمام المرحلة التمهيدية"
+family = "stage"
+sheet = "a4-landscape"
+language = "peer"
+scheme = "imperial"
+code = "CERT"
+security_class = "A"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Imported from the benchmark press's stage certificate. The stage wording, the citation sentence and the three-register particulars band are transcribed; the ground is re-cut as constructed geometry; every name is a slot."
+notes = "The citation is set to three lines at this measure on purpose. The wording it replaced ran to four lines for the longer stage names, and the fourth line crossed the particulars band's rule — on every sheet of a printed batch. Re-measure before lengthening this sentence or adding a fifth stage."
+level = 3
+border_weight = 0.88
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "embossed khatam watermark", "serial-bearing fine-text rails", "engraved number cartouche", "Code 128 archive symbol", "QR verification bay", "void notice"]
+title.en = "Certificate of Tamhīdiyyah"
+title.ar = "شهادة إتمام المرحلة التمهيدية"
+subtitle.en = "Preparatory Stage Completion"
+lede.en = "This is to certify that"
+lede.ar = "تشهد إدارة {institution_ar} بأن"
+statement.en = "has successfully completed the Tamhīdiyyah stage in the {session} academic session, in accordance with the approved curriculum and academic standards of the School."
+statement.ar = "قد أتمّ بنجاحٍ متطلبات المرحلة التمهيدية في العام الدراسي {session}، وفقًا للمناهج المعتمدة والمعايير الأكاديمية المعمول بها في المدرسة."
+[[template.registers]]
+en = "Student ID"
+ar = "الرقم التعريفي للطالب"
+[[template.registers]]
+en = "Date of Issue"
+ar = "تاريخ الإصدار"
+[[template.registers]]
+en = "Place of Issue"
+ar = "مكان الإصدار"
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial", "archive_reference"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "principal_name"
+label_en = "Principal and Head of School — name"
+label_ar = "رئيس المدرسة"
+kind = "text"
+required = true
+default = "Principal and Head of School Name"
+[[template.slots]]
+key = "principal_name_ar"
+label_en = "Principal and Head of School — name (Arabic)"
+label_ar = "رئيس المدرسة (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "principal_ink"
+label_en = "Principal and Head of School — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "chairman_name"
+label_en = "Chairman, Board of Governors — name"
+label_ar = "رئيس مجلس الإدارة"
+kind = "text"
+required = true
+default = "Chairman, Board of Governors Name"
+[[template.slots]]
+key = "chairman_name_ar"
+label_en = "Chairman, Board of Governors — name (Arabic)"
+label_ar = "رئيس مجلس الإدارة (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "chairman_ink"
+label_en = "Chairman, Board of Governors — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "principal"
+role_en = "Principal and Head of School"
+role_ar = "رئيس المدرسة"
+name_slot = "principal_name"
+ink_slot = "principal_ink"
+seal = true
+[[template.signatories]]
+key = "chairman"
+role_en = "Chairman, Board of Governors"
+role_ar = "رئيس مجلس الإدارة"
+name_slot = "chairman_name"
+ink_slot = "chairman_ink"
+seal = false
+
+[[template]]
+key = "stage-primary"
+name = "Certificate of Ibtidāʼiyyah"
+name_ar = "شهادة إتمام المرحلة الابتدائية"
+family = "stage"
+sheet = "a4-landscape"
+language = "peer"
+scheme = "imperial"
+code = "CERT"
+security_class = "A"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Imported from the benchmark press's stage certificate. The stage wording, the citation sentence and the three-register particulars band are transcribed; the ground is re-cut as constructed geometry; every name is a slot."
+notes = "The citation is set to three lines at this measure on purpose. The wording it replaced ran to four lines for the longer stage names, and the fourth line crossed the particulars band's rule — on every sheet of a printed batch. Re-measure before lengthening this sentence or adding a fifth stage."
+level = 3
+border_weight = 0.88
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "embossed khatam watermark", "serial-bearing fine-text rails", "engraved number cartouche", "Code 128 archive symbol", "QR verification bay", "void notice"]
+title.en = "Certificate of Ibtidāʼiyyah"
+title.ar = "شهادة إتمام المرحلة الابتدائية"
+subtitle.en = "Primary Stage Completion"
+lede.en = "This is to certify that"
+lede.ar = "تشهد إدارة {institution_ar} بأن"
+statement.en = "has successfully completed the Ibtidāʼiyyah stage in the {session} academic session, in accordance with the approved curriculum and academic standards of the School."
+statement.ar = "قد أتمّ بنجاحٍ متطلبات المرحلة الابتدائية في العام الدراسي {session}، وفقًا للمناهج المعتمدة والمعايير الأكاديمية المعمول بها في المدرسة."
+[[template.registers]]
+en = "Student ID"
+ar = "الرقم التعريفي للطالب"
+[[template.registers]]
+en = "Date of Issue"
+ar = "تاريخ الإصدار"
+[[template.registers]]
+en = "Place of Issue"
+ar = "مكان الإصدار"
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial", "archive_reference"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "principal_name"
+label_en = "Principal and Head of School — name"
+label_ar = "رئيس المدرسة"
+kind = "text"
+required = true
+default = "Principal and Head of School Name"
+[[template.slots]]
+key = "principal_name_ar"
+label_en = "Principal and Head of School — name (Arabic)"
+label_ar = "رئيس المدرسة (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "principal_ink"
+label_en = "Principal and Head of School — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "chairman_name"
+label_en = "Chairman, Board of Governors — name"
+label_ar = "رئيس مجلس الإدارة"
+kind = "text"
+required = true
+default = "Chairman, Board of Governors Name"
+[[template.slots]]
+key = "chairman_name_ar"
+label_en = "Chairman, Board of Governors — name (Arabic)"
+label_ar = "رئيس مجلس الإدارة (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "chairman_ink"
+label_en = "Chairman, Board of Governors — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "principal"
+role_en = "Principal and Head of School"
+role_ar = "رئيس المدرسة"
+name_slot = "principal_name"
+ink_slot = "principal_ink"
+seal = true
+[[template.signatories]]
+key = "chairman"
+role_en = "Chairman, Board of Governors"
+role_ar = "رئيس مجلس الإدارة"
+name_slot = "chairman_name"
+ink_slot = "chairman_ink"
+seal = false
+
+[[template]]
+key = "stage-intermediate"
+name = "Certificate of Iʻdādiyyah"
+name_ar = "شهادة إتمام المرحلة الإعدادية"
+family = "stage"
+sheet = "a4-landscape"
+language = "peer"
+scheme = "imperial"
+code = "CERT"
+security_class = "A"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Imported from the benchmark press's stage certificate. The stage wording, the citation sentence and the three-register particulars band are transcribed; the ground is re-cut as constructed geometry; every name is a slot."
+notes = "The citation is set to three lines at this measure on purpose. The wording it replaced ran to four lines for the longer stage names, and the fourth line crossed the particulars band's rule — on every sheet of a printed batch. Re-measure before lengthening this sentence or adding a fifth stage."
+level = 3
+border_weight = 0.88
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "embossed khatam watermark", "serial-bearing fine-text rails", "engraved number cartouche", "Code 128 archive symbol", "QR verification bay", "void notice"]
+title.en = "Certificate of Iʻdādiyyah"
+title.ar = "شهادة إتمام المرحلة الإعدادية"
+subtitle.en = "Intermediate Stage Completion"
+lede.en = "This is to certify that"
+lede.ar = "تشهد إدارة {institution_ar} بأن"
+statement.en = "has successfully completed the Iʻdādiyyah stage in the {session} academic session, in accordance with the approved curriculum and academic standards of the School."
+statement.ar = "قد أتمّ بنجاحٍ متطلبات المرحلة الإعدادية في العام الدراسي {session}، وفقًا للمناهج المعتمدة والمعايير الأكاديمية المعمول بها في المدرسة."
+[[template.registers]]
+en = "Student ID"
+ar = "الرقم التعريفي للطالب"
+[[template.registers]]
+en = "Date of Issue"
+ar = "تاريخ الإصدار"
+[[template.registers]]
+en = "Place of Issue"
+ar = "مكان الإصدار"
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial", "archive_reference"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "principal_name"
+label_en = "Principal and Head of School — name"
+label_ar = "رئيس المدرسة"
+kind = "text"
+required = true
+default = "Principal and Head of School Name"
+[[template.slots]]
+key = "principal_name_ar"
+label_en = "Principal and Head of School — name (Arabic)"
+label_ar = "رئيس المدرسة (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "principal_ink"
+label_en = "Principal and Head of School — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "chairman_name"
+label_en = "Chairman, Board of Governors — name"
+label_ar = "رئيس مجلس الإدارة"
+kind = "text"
+required = true
+default = "Chairman, Board of Governors Name"
+[[template.slots]]
+key = "chairman_name_ar"
+label_en = "Chairman, Board of Governors — name (Arabic)"
+label_ar = "رئيس مجلس الإدارة (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "chairman_ink"
+label_en = "Chairman, Board of Governors — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "principal"
+role_en = "Principal and Head of School"
+role_ar = "رئيس المدرسة"
+name_slot = "principal_name"
+ink_slot = "principal_ink"
+seal = true
+[[template.signatories]]
+key = "chairman"
+role_en = "Chairman, Board of Governors"
+role_ar = "رئيس مجلس الإدارة"
+name_slot = "chairman_name"
+ink_slot = "chairman_ink"
+seal = false
+
+[[template]]
+key = "stage-secondary"
+name = "Certificate of Thānawiyyah"
+name_ar = "شهادة إتمام المرحلة الثانوية"
+family = "stage"
+sheet = "a4-landscape"
+language = "peer"
+scheme = "imperial"
+code = "CERT"
+security_class = "A"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Imported from the benchmark press's stage certificate. The stage wording, the citation sentence and the three-register particulars band are transcribed; the ground is re-cut as constructed geometry; every name is a slot."
+notes = "The citation is set to three lines at this measure on purpose. The wording it replaced ran to four lines for the longer stage names, and the fourth line crossed the particulars band's rule — on every sheet of a printed batch. Re-measure before lengthening this sentence or adding a fifth stage."
+level = 3
+border_weight = 0.88
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "embossed khatam watermark", "serial-bearing fine-text rails", "engraved number cartouche", "Code 128 archive symbol", "QR verification bay", "void notice"]
+title.en = "Certificate of Thānawiyyah"
+title.ar = "شهادة إتمام المرحلة الثانوية"
+subtitle.en = "Secondary Stage Completion"
+lede.en = "This is to certify that"
+lede.ar = "تشهد إدارة {institution_ar} بأن"
+statement.en = "has successfully completed the Thānawiyyah stage in the {session} academic session, in accordance with the approved curriculum and academic standards of the School."
+statement.ar = "قد أتمّ بنجاحٍ متطلبات المرحلة الثانوية في العام الدراسي {session}، وفقًا للمناهج المعتمدة والمعايير الأكاديمية المعمول بها في المدرسة."
+[[template.registers]]
+en = "Student ID"
+ar = "الرقم التعريفي للطالب"
+[[template.registers]]
+en = "Date of Issue"
+ar = "تاريخ الإصدار"
+[[template.registers]]
+en = "Place of Issue"
+ar = "مكان الإصدار"
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial", "archive_reference"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "principal_name"
+label_en = "Principal and Head of School — name"
+label_ar = "رئيس المدرسة"
+kind = "text"
+required = true
+default = "Principal and Head of School Name"
+[[template.slots]]
+key = "principal_name_ar"
+label_en = "Principal and Head of School — name (Arabic)"
+label_ar = "رئيس المدرسة (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "principal_ink"
+label_en = "Principal and Head of School — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "chairman_name"
+label_en = "Chairman, Board of Governors — name"
+label_ar = "رئيس مجلس الإدارة"
+kind = "text"
+required = true
+default = "Chairman, Board of Governors Name"
+[[template.slots]]
+key = "chairman_name_ar"
+label_en = "Chairman, Board of Governors — name (Arabic)"
+label_ar = "رئيس مجلس الإدارة (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "chairman_ink"
+label_en = "Chairman, Board of Governors — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "principal"
+role_en = "Principal and Head of School"
+role_ar = "رئيس المدرسة"
+name_slot = "principal_name"
+ink_slot = "principal_ink"
+seal = true
+[[template.signatories]]
+key = "chairman"
+role_en = "Chairman, Board of Governors"
+role_ar = "رئيس مجلس الإدارة"
+name_slot = "chairman_name"
+ink_slot = "chairman_ink"
+seal = false
+
+[[template]]
+key = "college-junior-secondary"
+name = "Junior Secondary Graduation Certificate"
+name_ar = "شهادة تخرج المرحلة الإعدادية"
+family = "college"
+sheet = "a4-landscape"
+language = "peer"
+scheme = "imperial"
+code = "CERT"
+security_class = "A"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Imported from the benchmark press's college award. The citation runs in two columns rather than two stacked paragraphs — stacked it costs 26mm of a 138mm field and makes a reader of one language wait for the other."
+notes = "The award line is deliberately NOT a national certificate's name. A national award is made by a state examination board on its own examination; a school certificate borrowing that name claims an authority the institution does not hold. This sheet certifies what a school can certify — completion of its own programme — and the wording must not be 'improved' into the national one."
+level = 3
+border_weight = 0.82
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "embossed khatam watermark", "serial-bearing fine-text rails", "engraved number cartouche", "Code 128 archive symbol", "QR verification bay", "void notice"]
+title.en = "Certificate of Graduation"
+title.ar = "شهادة تخرج"
+subtitle.en = "Junior Secondary School Graduation Certificate"
+subtitle.ar = "شهادة تخرج المرحلة الإعدادية"
+lede.en = "This is to certify that"
+lede.ar = "تشهد إدارة {institution_ar} بأن"
+statement.en = "has satisfactorily completed the three-year Junior Secondary School programme at {school} for the academic session {session}, has met in full the academic and conduct requirements of the institution, and is hereby graduated and admitted to the Senior Secondary School."
+statement.ar = "قد أتمّ بنجاحٍ متطلبات المرحلة الإعدادية في العام الدراسي {session}، وفقًا للمناهج المعتمدة والمعايير الأكاديمية المعمول بها في الكلية، وأُجيزَ له الانتقال إلى المرحلة الثانوية."
+award.en = "Junior Secondary School Graduation Certificate"
+award.ar = "شهادة تخرج المرحلة الإعدادية"
+[[template.registers]]
+en = "Award Conferred"
+ar = "الشهادة الممنوحة"
+[[template.registers]]
+en = "Student Identity Number"
+ar = "الرقم التعريفي للطالب"
+[[template.registers]]
+en = "Date of Issue"
+ar = "تاريخ الإصدار"
+[[template.registers]]
+en = "Place of Issue"
+ar = "مكان الإصدار"
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial", "archive_reference"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "head_name"
+label_en = "Head of the awarding school — name"
+label_ar = "مدير الكلية"
+kind = "text"
+required = true
+default = "Head of the awarding school Name"
+[[template.slots]]
+key = "head_name_ar"
+label_en = "Head of the awarding school — name (Arabic)"
+label_ar = "مدير الكلية (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "head_ink"
+label_en = "Head of the awarding school — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "chairman_name"
+label_en = "Chairman, Board of Governors — name"
+label_ar = "رئيس مجلس الإدارة"
+kind = "text"
+required = true
+default = "Chairman, Board of Governors Name"
+[[template.slots]]
+key = "chairman_name_ar"
+label_en = "Chairman, Board of Governors — name (Arabic)"
+label_ar = "رئيس مجلس الإدارة (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "chairman_ink"
+label_en = "Chairman, Board of Governors — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "head"
+role_en = "Head of the awarding school"
+role_ar = "مدير الكلية"
+name_slot = "head_name"
+ink_slot = "head_ink"
+seal = true
+[[template.signatories]]
+key = "chairman"
+role_en = "Chairman, Board of Governors"
+role_ar = "رئيس مجلس الإدارة"
+name_slot = "chairman_name"
+ink_slot = "chairman_ink"
+seal = false
+
+[[template]]
+key = "college-senior-secondary"
+name = "Senior Secondary Graduation Certificate"
+name_ar = "شهادة تخرج المرحلة الثانوية"
+family = "college"
+sheet = "a4-landscape"
+language = "peer"
+scheme = "imperial"
+code = "CERT"
+security_class = "A"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Imported from the benchmark press's college award. The citation runs in two columns rather than two stacked paragraphs — stacked it costs 26mm of a 138mm field and makes a reader of one language wait for the other."
+notes = "Same rule as the junior sheet, and it matters more here: the senior award is the one most often mistaken for a national school certificate. It is not one, and it does not say it is."
+level = 3
+border_weight = 0.82
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "embossed khatam watermark", "serial-bearing fine-text rails", "engraved number cartouche", "Code 128 archive symbol", "QR verification bay", "void notice"]
+title.en = "Certificate of Graduation"
+title.ar = "شهادة تخرج"
+subtitle.en = "Senior Secondary School Graduation Certificate"
+subtitle.ar = "شهادة تخرج المرحلة الثانوية"
+lede.en = "This is to certify that"
+lede.ar = "تشهد إدارة {institution_ar} بأن"
+statement.en = "has satisfactorily completed the three-year Senior Secondary School programme at {school} for the academic session {session}, has met in full the academic and conduct requirements of the institution, and is hereby graduated and admitted to tertiary study."
+statement.ar = "قد أتمّ بنجاحٍ متطلبات المرحلة الثانوية في العام الدراسي {session}، وفقًا للمناهج المعتمدة والمعايير الأكاديمية المعمول بها في الكلية، وأُجيزَ له التقدّم للدراسة الجامعية."
+award.en = "Senior Secondary School Graduation Certificate"
+award.ar = "شهادة تخرج المرحلة الثانوية"
+[[template.registers]]
+en = "Award Conferred"
+ar = "الشهادة الممنوحة"
+[[template.registers]]
+en = "Student Identity Number"
+ar = "الرقم التعريفي للطالب"
+[[template.registers]]
+en = "Date of Issue"
+ar = "تاريخ الإصدار"
+[[template.registers]]
+en = "Place of Issue"
+ar = "مكان الإصدار"
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial", "archive_reference"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "head_name"
+label_en = "Head of the awarding school — name"
+label_ar = "مدير الكلية"
+kind = "text"
+required = true
+default = "Head of the awarding school Name"
+[[template.slots]]
+key = "head_name_ar"
+label_en = "Head of the awarding school — name (Arabic)"
+label_ar = "مدير الكلية (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "head_ink"
+label_en = "Head of the awarding school — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "chairman_name"
+label_en = "Chairman, Board of Governors — name"
+label_ar = "رئيس مجلس الإدارة"
+kind = "text"
+required = true
+default = "Chairman, Board of Governors Name"
+[[template.slots]]
+key = "chairman_name_ar"
+label_en = "Chairman, Board of Governors — name (Arabic)"
+label_ar = "رئيس مجلس الإدارة (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "chairman_ink"
+label_en = "Chairman, Board of Governors — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "head"
+role_en = "Head of the awarding school"
+role_ar = "مدير الكلية"
+name_slot = "head_name"
+ink_slot = "head_ink"
+seal = true
+[[template.signatories]]
+key = "chairman"
+role_en = "Chairman, Board of Governors"
+role_ar = "رئيس مجلس الإدارة"
+name_slot = "chairman_name"
+ink_slot = "chairman_ink"
+seal = false
+
+[[template]]
+key = "college-primary"
+name = "Primary School Graduation Certificate"
+name_ar = "شهادة تخرج المرحلة الابتدائية"
+family = "college"
+sheet = "a4-landscape"
+language = "peer"
+scheme = "crimson"
+code = "CERT"
+security_class = "A"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Imported from the benchmark press's college award. The citation runs in two columns rather than two stacked paragraphs — stacked it costs 26mm of a 138mm field and makes a reader of one language wait for the other."
+notes = "No year count in the citation. The benchmark's own prospectus states an age range and never a number of primary years, so 'the six-year programme' would be invented — and an invented number on a permanent record is the error this whole library exists to avoid. Add the count when an institution confirms its own. The warm metal is deliberate: a parent holding this and a stage certificate must never have to work out which school issued which."
+level = 2
+border_weight = 0.82
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "embossed khatam watermark", "serial-bearing fine-text rails", "engraved number cartouche", "Code 128 archive symbol", "QR verification bay", "void notice"]
+title.en = "Certificate of Graduation"
+title.ar = "شهادة تخرج"
+subtitle.en = "Primary School Graduation Certificate"
+subtitle.ar = "شهادة تخرج المرحلة الابتدائية"
+lede.en = "This is to certify that"
+lede.ar = "تشهد إدارة {institution_ar} بأن"
+statement.en = "has satisfactorily completed the Primary School programme at {school} for the academic session {session}, has met in full the academic and conduct requirements of the institution, and is hereby graduated and admitted to the Junior Secondary School."
+statement.ar = "قد أتمّ بنجاحٍ متطلبات المرحلة الابتدائية في العام الدراسي {session}، وفقًا للمناهج المعتمدة والمعايير الأكاديمية المعمول بها في الكلية، وأُجيزَ له الانتقال إلى المرحلة الإعدادية."
+award.en = "Primary School Graduation Certificate"
+award.ar = "شهادة تخرج المرحلة الابتدائية"
+[[template.registers]]
+en = "Award Conferred"
+ar = "الشهادة الممنوحة"
+[[template.registers]]
+en = "Student Identity Number"
+ar = "الرقم التعريفي للطالب"
+[[template.registers]]
+en = "Date of Issue"
+ar = "تاريخ الإصدار"
+[[template.registers]]
+en = "Place of Issue"
+ar = "مكان الإصدار"
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial", "archive_reference"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "head_name"
+label_en = "Head of the awarding school — name"
+label_ar = "مدير الكلية"
+kind = "text"
+required = true
+default = "Head of the awarding school Name"
+[[template.slots]]
+key = "head_name_ar"
+label_en = "Head of the awarding school — name (Arabic)"
+label_ar = "مدير الكلية (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "head_ink"
+label_en = "Head of the awarding school — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "chairman_name"
+label_en = "Chairman, Board of Governors — name"
+label_ar = "رئيس مجلس الإدارة"
+kind = "text"
+required = true
+default = "Chairman, Board of Governors Name"
+[[template.slots]]
+key = "chairman_name_ar"
+label_en = "Chairman, Board of Governors — name (Arabic)"
+label_ar = "رئيس مجلس الإدارة (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "chairman_ink"
+label_en = "Chairman, Board of Governors — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "head"
+role_en = "Head of the awarding school"
+role_ar = "مدير الكلية"
+name_slot = "head_name"
+ink_slot = "head_ink"
+seal = true
+[[template.signatories]]
+key = "chairman"
+role_en = "Chairman, Board of Governors"
+role_ar = "رئيس مجلس الإدارة"
+name_slot = "chairman_name"
+ink_slot = "chairman_ink"
+seal = false
+
+[[template]]
+key = "college-memorisation-complete"
+name = "Certificate of Completion — Memorisation"
+name_ar = "شهادة إتمام حفظ القرآن الكريم"
+family = "college"
+sheet = "a4-landscape"
+language = "peer"
+scheme = "palace"
+code = "CERT"
+security_class = "A"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Imported from the benchmark press's college award. The citation runs in two columns rather than two stacked paragraphs — stacked it costs 26mm of a 138mm field and makes a reader of one language wait for the other."
+notes = "Admission to the Ijazah examination is what follows from completing the memorisation; the Ijazah itself is a separate award made after examination by named scholars. The citation says the first and must never be shortened into the second."
+level = 4
+border_weight = 0.82
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "embossed khatam watermark", "serial-bearing fine-text rails", "engraved number cartouche", "Code 128 archive symbol", "QR verification bay", "void notice"]
+title.en = "Certificate of Completion"
+title.ar = "شهادة إتمام حفظ القرآن الكريم"
+subtitle.en = "Completion of the Memorisation of the Glorious Qurʼan (Thirty Juzʼ)"
+subtitle.ar = "إتمام حفظ القرآن الكريم كاملًا — ثلاثون جزءًا"
+lede.en = "This is to certify that"
+lede.ar = "تشهد إدارة {institution_ar} بأن"
+statement.en = "has satisfactorily completed the memorisation of the entire Glorious Qurʼan, thirty juzʼ, at {school} for the academic session {session}, has met in full the academic and conduct requirements of the institution, and is hereby graduated and admitted to the Ijazah examination of the College."
+statement.ar = "قد أتمّ بنجاحٍ حفظ القرآن الكريم كاملًا — ثلاثين جزءًا — في العام الدراسي {session}، وفقًا للمناهج المعتمدة والمعايير الأكاديمية المعمول بها في الكلية، وأُجيزَ له التقدّم لامتحان الإجازة بالكلية."
+award.en = "Completion of the Memorisation of the Glorious Qurʼan (Thirty Juzʼ)"
+award.ar = "إتمام حفظ القرآن الكريم كاملًا — ثلاثون جزءًا"
+[[template.registers]]
+en = "Award Conferred"
+ar = "الشهادة الممنوحة"
+[[template.registers]]
+en = "Student Identity Number"
+ar = "الرقم التعريفي للطالب"
+[[template.registers]]
+en = "Date of Issue"
+ar = "تاريخ الإصدار"
+[[template.registers]]
+en = "Place of Issue"
+ar = "مكان الإصدار"
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial", "archive_reference"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "head_name"
+label_en = "Head of the awarding school — name"
+label_ar = "مدير الكلية"
+kind = "text"
+required = true
+default = "Head of the awarding school Name"
+[[template.slots]]
+key = "head_name_ar"
+label_en = "Head of the awarding school — name (Arabic)"
+label_ar = "مدير الكلية (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "head_ink"
+label_en = "Head of the awarding school — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "chairman_name"
+label_en = "Chairman, Board of Governors — name"
+label_ar = "رئيس مجلس الإدارة"
+kind = "text"
+required = true
+default = "Chairman, Board of Governors Name"
+[[template.slots]]
+key = "chairman_name_ar"
+label_en = "Chairman, Board of Governors — name (Arabic)"
+label_ar = "رئيس مجلس الإدارة (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "chairman_ink"
+label_en = "Chairman, Board of Governors — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "head"
+role_en = "Head of the awarding school"
+role_ar = "مدير الكلية"
+name_slot = "head_name"
+ink_slot = "head_ink"
+seal = true
+[[template.signatories]]
+key = "chairman"
+role_en = "Chairman, Board of Governors"
+role_ar = "رئيس مجلس الإدارة"
+name_slot = "chairman_name"
+ink_slot = "chairman_ink"
+seal = false
+
+[[template]]
+key = "college-memorisation-ten"
+name = "Certificate of Achievement — Ten Juzʼ"
+name_ar = "شهادة حفظ عشرة أجزاء"
+family = "college"
+sheet = "a4-landscape"
+language = "peer"
+scheme = "palace"
+code = "CERT"
+security_class = "A"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Imported from the benchmark press's college award. The citation runs in two columns rather than two stacked paragraphs — stacked it costs 26mm of a 138mm field and makes a reader of one language wait for the other."
+notes = "A separate template rather than a variant of the completion sheet, and separate on purpose. The two are different achievements: a completion sheet printed over a child who has memorised ten juzʼ overstates it, and an achievement sheet printed over one who has completed the whole robs her of it. Neither may be reachable from the other by a default."
+level = 3
+border_weight = 0.82
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "embossed khatam watermark", "serial-bearing fine-text rails", "engraved number cartouche", "Code 128 archive symbol", "QR verification bay", "void notice"]
+title.en = "Certificate of Achievement"
+title.ar = "شهادة حفظ عشرة أجزاء"
+subtitle.en = "Memorisation of Ten Juzʼ of the Glorious Qurʼan"
+subtitle.ar = "حفظ عشرة أجزاء من القرآن الكريم"
+lede.en = "This is to certify that"
+lede.ar = "تشهد إدارة {institution_ar} بأن"
+statement.en = "has satisfactorily completed the memorisation of ten juzʼ of the Glorious Qurʼan at {school} for the academic session {session}, has met in full the academic and conduct requirements of the institution, and is hereby graduated and admitted to the continuing memorisation programme of the College."
+statement.ar = "قد أتمّ بنجاحٍ حفظ عشرة أجزاء من القرآن الكريم في العام الدراسي {session}، وفقًا للمناهج المعتمدة والمعايير الأكاديمية المعمول بها في الكلية، ويواصل برنامج الحفظ بالكلية."
+award.en = "Memorisation of Ten Juzʼ of the Glorious Qurʼan"
+award.ar = "حفظ عشرة أجزاء من القرآن الكريم"
+[[template.registers]]
+en = "Award Conferred"
+ar = "الشهادة الممنوحة"
+[[template.registers]]
+en = "Student Identity Number"
+ar = "الرقم التعريفي للطالب"
+[[template.registers]]
+en = "Date of Issue"
+ar = "تاريخ الإصدار"
+[[template.registers]]
+en = "Place of Issue"
+ar = "مكان الإصدار"
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial", "archive_reference"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "head_name"
+label_en = "Head of the awarding school — name"
+label_ar = "مدير الكلية"
+kind = "text"
+required = true
+default = "Head of the awarding school Name"
+[[template.slots]]
+key = "head_name_ar"
+label_en = "Head of the awarding school — name (Arabic)"
+label_ar = "مدير الكلية (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "head_ink"
+label_en = "Head of the awarding school — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "chairman_name"
+label_en = "Chairman, Board of Governors — name"
+label_ar = "رئيس مجلس الإدارة"
+kind = "text"
+required = true
+default = "Chairman, Board of Governors Name"
+[[template.slots]]
+key = "chairman_name_ar"
+label_en = "Chairman, Board of Governors — name (Arabic)"
+label_ar = "رئيس مجلس الإدارة (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "chairman_ink"
+label_en = "Chairman, Board of Governors — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "head"
+role_en = "Head of the awarding school"
+role_ar = "مدير الكلية"
+name_slot = "head_name"
+ink_slot = "head_ink"
+seal = true
+[[template.signatories]]
+key = "chairman"
+role_en = "Chairman, Board of Governors"
+role_ar = "رئيس مجلس الإدارة"
+name_slot = "chairman_name"
+ink_slot = "chairman_ink"
+seal = false
+
+[[template]]
+key = "college-islamiyyah"
+name = "Islamiyyah Certificate"
+name_ar = "شهادة الدراسات الإسلامية"
+family = "college"
+sheet = "a4-landscape"
+language = "peer"
+scheme = "palace"
+code = "ISL"
+security_class = "A"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Imported from the benchmark press's college award. The citation runs in two columns rather than two stacked paragraphs — stacked it costs 26mm of a 138mm field and makes a reader of one language wait for the other."
+notes = "Specified in the benchmark's master document specification and never built there. The level is a slot rather than a set of templates: an institution that runs six Islamiyyah levels needs one certificate that names the level, not six certificates that drift apart at the third revision."
+level = 3
+border_weight = 0.82
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "embossed khatam watermark", "serial-bearing fine-text rails", "engraved number cartouche", "Code 128 archive symbol", "QR verification bay", "void notice"]
+title.en = "Certificate of Islamic Studies"
+title.ar = "شهادة الدراسات الإسلامية"
+subtitle.en = "Islamiyyah — {islamiyyah_level}"
+subtitle.ar = "المستوى: {islamiyyah_level_ar}"
+lede.en = "This is to certify that"
+lede.ar = "تشهد إدارة {institution_ar} بأن"
+statement.en = "has satisfactorily completed the Islamiyyah programme at the level of {islamiyyah_level} at {school} for the academic session {session}, has met in full the academic and conduct requirements of the institution, and is hereby graduated and admitted to the next level of the programme."
+statement.ar = "قد أتمّ بنجاحٍ متطلبات برنامج الدراسات الإسلامية في مستوى {islamiyyah_level_ar} في العام الدراسي {session}، وفقًا للمناهج المعتمدة والمعايير الأكاديمية المعمول بها في الكلية، ويواصل المستوى التالي من البرنامج."
+award.en = "Islamiyyah — {islamiyyah_level}"
+award.ar = "المستوى: {islamiyyah_level_ar}"
+[[template.registers]]
+en = "Award Conferred"
+ar = "الشهادة الممنوحة"
+[[template.registers]]
+en = "Student Identity Number"
+ar = "الرقم التعريفي للطالب"
+[[template.registers]]
+en = "Date of Issue"
+ar = "تاريخ الإصدار"
+[[template.registers]]
+en = "Place of Issue"
+ar = "مكان الإصدار"
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial", "archive_reference"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "islamiyyah_level"
+label_en = "Islamiyyah level"
+label_ar = "المستوى"
+kind = "text"
+required = true
+default = "Level Name"
+[[template.slots]]
+key = "islamiyyah_level_ar"
+label_en = "Islamiyyah level (Arabic)"
+label_ar = "المستوى بالعربية"
+kind = "text_ar"
+required = false
+default = "المستوى"
+[[template.slots]]
+key = "head_name"
+label_en = "Head of the awarding school — name"
+label_ar = "مدير الكلية"
+kind = "text"
+required = true
+default = "Head of the awarding school Name"
+[[template.slots]]
+key = "head_name_ar"
+label_en = "Head of the awarding school — name (Arabic)"
+label_ar = "مدير الكلية (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "head_ink"
+label_en = "Head of the awarding school — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "chairman_name"
+label_en = "Chairman, Board of Governors — name"
+label_ar = "رئيس مجلس الإدارة"
+kind = "text"
+required = true
+default = "Chairman, Board of Governors Name"
+[[template.slots]]
+key = "chairman_name_ar"
+label_en = "Chairman, Board of Governors — name (Arabic)"
+label_ar = "رئيس مجلس الإدارة (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "chairman_ink"
+label_en = "Chairman, Board of Governors — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "head"
+role_en = "Head of the awarding school"
+role_ar = "مدير الكلية"
+name_slot = "head_name"
+ink_slot = "head_ink"
+seal = true
+[[template.signatories]]
+key = "chairman"
+role_en = "Chairman, Board of Governors"
+role_ar = "رئيس مجلس الإدارة"
+name_slot = "chairman_name"
+ink_slot = "chairman_ink"
+seal = false
+
+[[template]]
+key = "record-alumni-registration"
+name = "Alumni Registration Certificate"
+name_ar = "شهادة تسجيل الخريجين"
+family = "record"
+sheet = "a4-portrait"
+language = "latin-primary"
+scheme = "signature"
+code = "ALUM"
+security_class = "C"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Imported from the benchmark press's document shell — the portrait register that carries its administrative records."
+level = 2
+border_weight = 0.78
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "serial-bearing fine-text rails", "QR verification bay", "void notice"]
+title.en = "Alumni Registration Certificate"
+title.ar = "شهادة تسجيل الخريجين"
+lede.en = "{institution} certifies that"
+lede.ar = "تشهد إدارة {institution_ar} بأن"
+statement.en = "has been formally entered into the Alumni Register following graduation from {school} in the {session} session, bearing Permanent Graduate ID {graduate_id}."
+statement.ar = "قد تم تسجيله رسميًا في سجل الخريجين لدى {school} عقب التخرج في دورة {session}، ويحمل الرقم الدائم للخريج {graduate_id}."
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "graduate_id"
+label_en = "Permanent graduate ID"
+label_ar = "الرقم الدائم للخريج"
+kind = "identifier"
+required = true
+default = "ALM-000000"
+[[template.slots]]
+key = "registrar_name"
+label_en = "Registrar — name"
+label_ar = "المسجّل"
+kind = "text"
+required = true
+default = "Registrar Name"
+[[template.slots]]
+key = "registrar_name_ar"
+label_en = "Registrar — name (Arabic)"
+label_ar = "المسجّل (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "registrar_ink"
+label_en = "Registrar — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "registrar"
+role_en = "Registrar"
+role_ar = "المسجّل"
+name_slot = "registrar_name"
+ink_slot = "registrar_ink"
+seal = true
+
+[[template]]
+key = "record-testimonial"
+name = "Official Testimonial"
+name_ar = "شهادة توصية رسمية"
+family = "record"
+sheet = "a4-portrait"
+language = "latin-primary"
+scheme = "signature"
+code = "TEST"
+security_class = "B"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Imported from the benchmark press's document shell — the portrait register that carries its administrative records."
+notes = "The only template in the library whose body is free text. That is what a testimonial is: a named officer's own words about a person. The Arabic half is left empty rather than machine-translated, because a translated character reference is a reference the signatory did not give."
+level = 2
+border_weight = 0.78
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "serial-bearing fine-text rails", "QR verification bay", "void notice"]
+title.en = "Official Testimonial"
+title.ar = "شهادة توصية رسمية"
+lede.en = "{institution} provides this testimonial regarding"
+lede.ar = "تقدم إدارة {institution_ar} هذه الشهادة بخصوص"
+statement.en = "{testimonial_text}"
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "testimonial_text"
+label_en = "Testimonial"
+label_ar = "نص الشهادة"
+kind = "paragraph"
+required = true
+note = "Written by an officer who knows the holder. It is never generated from a data table, and no translation is fabricated for the other script — a reference nobody wrote is not a reference."
+[[template.slots]]
+key = "principal_name"
+label_en = "Principal — name"
+label_ar = "رئيس المدرسة"
+kind = "text"
+required = true
+default = "Principal Name"
+[[template.slots]]
+key = "principal_name_ar"
+label_en = "Principal — name (Arabic)"
+label_ar = "رئيس المدرسة (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "principal_ink"
+label_en = "Principal — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "principal"
+role_en = "Principal"
+role_ar = "رئيس المدرسة"
+name_slot = "principal_name"
+ink_slot = "principal_ink"
+seal = true
+
+[[template]]
+key = "record-character"
+name = "Character Certificate"
+name_ar = "شهادة حسن سيرة وسلوك"
+family = "record"
+sheet = "a4-portrait"
+language = "latin-primary"
+scheme = "signature"
+code = "CHAR"
+security_class = "B"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Imported from the benchmark press's document shell — the portrait register that carries its administrative records."
+notes = "A fact statement, not a narrative reference — which is why it is a different template from the Testimonial rather than a shorter setting of it. The qualifier is the whole document: it must state a recorded disciplinary action where one exists rather than omit it, because a certificate of good conduct that quietly drops the exception is a false one."
+level = 2
+border_weight = 0.78
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "serial-bearing fine-text rails", "QR verification bay", "void notice"]
+title.en = "Character Certificate"
+title.ar = "شهادة حسن سيرة وسلوك"
+lede.en = "{institution} certifies that"
+lede.ar = "تشهد إدارة {institution_ar} بأن"
+statement.en = "has been a student of good conduct during their time at the institution, {conduct_qualifier}."
+statement.ar = "كان طالبًا يتمتع بحسن السيرة والسلوك خلال فترة دراسته بالمؤسسة، {conduct_qualifier_ar}."
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "conduct_qualifier"
+label_en = "Conduct qualifier"
+label_ar = "التحفظ"
+kind = "text"
+required = true
+default = "without any disciplinary action recorded against them"
+note = "Snapshotted at issue from the conduct record and never recomputed later. A certificate that changes its meaning after it was signed is not a record."
+[[template.slots]]
+key = "conduct_qualifier_ar"
+label_en = "Conduct qualifier (Arabic)"
+label_ar = "التحفظ بالعربية"
+kind = "text_ar"
+required = false
+default = "دون أي إجراء تأديبي مسجل بحقه"
+[[template.slots]]
+key = "principal_name"
+label_en = "Principal — name"
+label_ar = "رئيس المدرسة"
+kind = "text"
+required = true
+default = "Principal Name"
+[[template.slots]]
+key = "principal_name_ar"
+label_en = "Principal — name (Arabic)"
+label_ar = "رئيس المدرسة (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "principal_ink"
+label_en = "Principal — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "principal"
+role_en = "Principal"
+role_ar = "رئيس المدرسة"
+name_slot = "principal_name"
+ink_slot = "principal_ink"
+seal = true
+
+[[template]]
+key = "record-clearance"
+name = "Graduation Clearance Certificate"
+name_ar = "شهادة إتمام إجراءات التخرج"
+family = "record"
+sheet = "a4-portrait"
+language = "latin-primary"
+scheme = "signature"
+code = "CLR"
+security_class = "B"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Imported from the benchmark press's document shell — the portrait register that carries its administrative records."
+level = 1
+border_weight = 0.78
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "serial-bearing fine-text rails", "QR verification bay", "void notice"]
+title.en = "Graduation Clearance Certificate"
+title.ar = "شهادة إتمام إجراءات التخرج"
+lede.en = "{institution} certifies that"
+lede.ar = "تشهد إدارة {institution_ar} بأن"
+statement.en = "has completed every clearance stage required for graduation in the {session} session, as recorded below."
+statement.ar = "قد أتمّ جميع مراحل إخلاء الطرف المطلوبة للتخرج في دورة {session}، وفقًا لما هو مثبت أدناه."
+[[template.registers]]
+en = "Stage"
+ar = "المرحلة"
+[[template.registers]]
+en = "Status"
+ar = "الحالة"
+[[template.registers]]
+en = "Cleared by"
+ar = "أخلى الطرف"
+[[template.registers]]
+en = "Date"
+ar = "التاريخ"
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "clearance_rows"
+label_en = "Clearance stages"
+label_ar = "مراحل إخلاء الطرف"
+kind = "table"
+required = true
+note = "One row per stage: the stage, who cleared it, and when. A stage that is not applicable says so; an empty row is not the same statement as 'N/A'."
+[[template.slots]]
+key = "registrar_name"
+label_en = "Registrar — name"
+label_ar = "المسجّل"
+kind = "text"
+required = true
+default = "Registrar Name"
+[[template.slots]]
+key = "registrar_name_ar"
+label_en = "Registrar — name (Arabic)"
+label_ar = "المسجّل (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "registrar_ink"
+label_en = "Registrar — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "registrar"
+role_en = "Registrar"
+role_ar = "المسجّل"
+name_slot = "registrar_name"
+ink_slot = "registrar_ink"
+seal = true
+
+[[template]]
+key = "record-graduation"
+name = "Graduation Certificate"
+name_ar = "شهادة التخرج"
+family = "record"
+sheet = "a4-portrait"
+language = "latin-primary"
+scheme = "signature"
+code = "CERT"
+security_class = "A"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Imported from the benchmark press's document shell — the portrait register that carries its administrative records."
+level = 3
+border_weight = 0.78
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "serial-bearing fine-text rails", "QR verification bay", "void notice"]
+title.en = "Graduation Certificate"
+title.ar = "شهادة التخرج"
+lede.en = "{institution} certifies that"
+lede.ar = "تشهد إدارة {institution_ar} بأن"
+statement.en = "has fulfilled the requirements of the programme of study at {school} and was graduated in the {session} session."
+statement.ar = "قد استوفى متطلبات البرنامج الدراسي لدى {school} وتخرّج في دورة {session}."
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "principal_name"
+label_en = "Principal — name"
+label_ar = "رئيس المدرسة"
+kind = "text"
+required = true
+default = "Principal Name"
+[[template.slots]]
+key = "principal_name_ar"
+label_en = "Principal — name (Arabic)"
+label_ar = "رئيس المدرسة (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "principal_ink"
+label_en = "Principal — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "principal"
+role_en = "Principal"
+role_ar = "رئيس المدرسة"
+name_slot = "principal_name"
+ink_slot = "principal_ink"
+seal = true
+
+[[template]]
+key = "record-graduation-register"
+name = "Graduation Register"
+name_ar = "سجل التخرج"
+family = "record"
+sheet = "a4-portrait"
+language = "latin-primary"
+scheme = "signature"
+code = "REG"
+security_class = "C"
+peak_slot = "session"
+provenance = "Imported from the benchmark press's document shell — the portrait register that carries its administrative records."
+notes = "The one template in the library that is not about a person. Its peak is the SESSION, it carries no recipient slots at all, and its body is a column of rows rather than a sentence about a name. The first proof of it set one graduand's name at full peak size over a list of four — a composition that reads as that student's certificate with three strangers appended."
+level = 1
+border_weight = 0.78
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "serial-bearing fine-text rails", "QR verification bay", "void notice"]
+title.en = "Graduation Register"
+title.ar = "سجل التخرج"
+lede.en = "{institution} records the following graduands"
+lede.ar = "تسجّل إدارة {institution_ar} الخريجين التالية أسماؤهم"
+statement.en = "The persons named below were graduated from {school} in the {session} session. This register is the institutional record; a certificate is the holder's copy of one line of it."
+statement.ar = "تخرّج المذكورون أدناه من {school} في دورة {session}. هذا السجل هو السجل المؤسسي؛ والشهادة نسخة الحامل من سطرٍ واحد منه."
+[[template.registers]]
+en = "No."
+ar = "م"
+[[template.registers]]
+en = "Name"
+ar = "الاسم"
+[[template.registers]]
+en = "Identity Number"
+ar = "الرقم التعريفي"
+[[template.registers]]
+en = "Programme"
+ar = "البرنامج"
+[[template.registers]]
+en = "Class"
+ar = "الصف"
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "register_rows"
+label_en = "Register rows"
+label_ar = "صفوف السجل"
+kind = "table"
+required = true
+note = "One row per graduand. The register is tabular and is the one template in the library composed as a column of data rather than around a single name."
+[[template.slots]]
+key = "registrar_name"
+label_en = "Registrar — name"
+label_ar = "المسجّل"
+kind = "text"
+required = true
+default = "Registrar Name"
+[[template.slots]]
+key = "registrar_name_ar"
+label_en = "Registrar — name (Arabic)"
+label_ar = "المسجّل (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "registrar_ink"
+label_en = "Registrar — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "registrar"
+role_en = "Registrar"
+role_ar = "المسجّل"
+name_slot = "registrar_name"
+ink_slot = "registrar_ink"
+seal = true
+
+[[template]]
+key = "record-provisional"
+name = "Provisional Certificate"
+name_ar = "شهادة مؤقتة"
+family = "record"
+sheet = "a4-portrait"
+language = "latin-primary"
+scheme = "signature"
+code = "PROV"
+security_class = "A"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Imported from the benchmark press's document shell — the portrait register that carries its administrative records."
+notes = "The gap between clearing every stage and the parchment being printed, sealed and signed is real and at many institutions runs to weeks. This is what a university or an embassy actually accepts in that window. It is deliberately NOT the Statement of Results, which is an academic-progress document and says the wrong thing; and its banner is permanent rather than an edition, because a provisional certificate without it reads as the certificate it is standing in for."
+level = 3
+border_weight = 0.78
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "serial-bearing fine-text rails", "QR verification bay", "void notice"]
+title.en = "Provisional Certificate"
+title.ar = "شهادة مؤقتة"
+lede.en = "{institution} certifies that"
+lede.ar = "تشهد إدارة {institution_ar} بأن"
+statement.en = "had met every requirement for graduation from {school} as at {issued_on}. The final Certificate is in preparation and will be issued under its own reference number; this document stands in its place until then and does not replace it."
+statement.ar = "قد استوفى جميع متطلبات التخرج من {school} حتى تاريخ {issued_on}. والشهادة النهائية قيد الإعداد وتصدر برقمها الخاص، وهذه الوثيقة تقوم مقامها إلى حين صدورها ولا تحل محلها."
+banner.en = "PROVISIONAL — FINAL CERTIFICATE IN PREPARATION"
+banner.ar = "مؤقتة — الشهادة النهائية قيد الإعداد"
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "registrar_name"
+label_en = "Registrar — name"
+label_ar = "المسجّل"
+kind = "text"
+required = true
+default = "Registrar Name"
+[[template.slots]]
+key = "registrar_name_ar"
+label_en = "Registrar — name (Arabic)"
+label_ar = "المسجّل (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "registrar_ink"
+label_en = "Registrar — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "registrar"
+role_en = "Registrar"
+role_ar = "المسجّل"
+name_slot = "registrar_name"
+ink_slot = "registrar_ink"
+seal = true
+
+[[template]]
+key = "ledger-transcript"
+name = "Official Academic Transcript"
+name_ar = "كشف الدرجات الرسمي"
+family = "ledger"
+sheet = "a4-portrait"
+language = "latin-primary"
+scheme = "signature"
+code = "TRAN"
+security_class = "A"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Specified in the benchmark's own master document specification and never built there. Composed here as a ledger: a holder block, a body of rows, and a grading key on the same sheet."
+notes = "The layout branches by institution in the benchmark's own specification: a subject-by-subject table for an academic programme, a stage-progression table for a memorisation one. Both are this template with different columns and different rows, which is what the column set being a slot is for."
+level = 3
+border_weight = 0.74
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "embossed khatam watermark", "serial-bearing fine-text rails", "engraved number cartouche", "Code 128 archive symbol", "QR verification bay", "void notice"]
+title.en = "Official Academic Transcript"
+title.ar = "كشف الدرجات الرسمي"
+lede.en = "{institution} certifies the academic record of"
+lede.ar = "تشهد إدارة {institution_ar} بالسجل الأكاديمي لـ"
+statement.en = "The record below is a complete and unaltered statement of the results obtained in the programme of {programme} at {school}. It is issued under seal and is invalid without it."
+statement.ar = "السجل أدناه بيان كامل غير معدّل للنتائج المحرزة في برنامج {programme} لدى {school}، صادر بختم المؤسسة ولا يُعتد به بدونه."
+[[template.registers]]
+en = "Session"
+ar = "العام"
+[[template.registers]]
+en = "Course"
+ar = "المقرر"
+[[template.registers]]
+en = "Credit"
+ar = "الساعات"
+[[template.registers]]
+en = "Mark"
+ar = "الدرجة"
+[[template.registers]]
+en = "Grade"
+ar = "التقدير"
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial", "archive_reference"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "programme"
+label_en = "Programme of study"
+label_ar = "البرنامج الدراسي"
+kind = "text"
+required = true
+default = "Programme Name"
+[[template.slots]]
+key = "rows"
+label_en = "Rows"
+label_ar = "الصفوف"
+kind = "table"
+required = true
+note = "One row per course per term: session, course, credit, mark, grade. Snapshotted at issue and never recomputed — a transcript that changes after it was sealed is not a record."
+[[template.slots]]
+key = "grading_key"
+label_en = "Grading scale"
+label_ar = "سلّم الدرجات"
+kind = "paragraph"
+required = true
+default = "A 80–100 Distinction · B 70–79 Very Good · C 60–69 Good · D 50–59 Pass · F below 50 Fail"
+note = "Printed on every sheet, not filed as an appendix. A transcript read by somebody who has never seen this institution's grading conventions is a page of letters they have to guess at."
+[[template.slots]]
+key = "registrar_name"
+label_en = "Registrar — name"
+label_ar = "المسجّل"
+kind = "text"
+required = true
+default = "Registrar Name"
+[[template.slots]]
+key = "registrar_name_ar"
+label_en = "Registrar — name (Arabic)"
+label_ar = "المسجّل (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "registrar_ink"
+label_en = "Registrar — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "registrar"
+role_en = "Registrar"
+role_ar = "المسجّل"
+name_slot = "registrar_name"
+ink_slot = "registrar_ink"
+seal = true
+
+[[template]]
+key = "ledger-supplement"
+name = "Diploma Supplement"
+name_ar = "ملحق الشهادة"
+family = "ledger"
+sheet = "a4-portrait"
+language = "latin-primary"
+scheme = "signature"
+code = "SUPP"
+security_class = "A"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Specified in the benchmark's own master document specification and never built there. Composed here as a ledger: a holder block, a body of rows, and a grading key on the same sheet."
+notes = "The single highest-leverage document in the library for a graduate applying abroad. An excellent transcript is still unreadable to an admissions officer who has never seen this institution's grading conventions. The disclaimer in the body is not boilerplate: a supplement that implies equivalence to a foreign qualification is making a claim only a recognition authority can make."
+level = 2
+border_weight = 0.74
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "embossed khatam watermark", "serial-bearing fine-text rails", "engraved number cartouche", "Code 128 archive symbol", "QR verification bay", "void notice"]
+title.en = "Diploma Supplement"
+title.ar = "ملحق الشهادة"
+lede.en = "This supplement describes the qualification held by"
+lede.ar = "يصف هذا الملحق المؤهل الذي يحمله"
+statement.en = "This supplement explains the nature, level and content of the qualification named below, and the grading scale against which the accompanying Transcript should be read. It carries no statement of value, equivalence or recognition, and confers no rights beyond those of the qualification it describes."
+statement.ar = "يوضح هذا الملحق طبيعة المؤهل المذكور أدناه ومستواه ومحتواه، وسلّم الدرجات الذي يُقرأ به كشف الدرجات المرفق. ولا يتضمن أي حكم بالقيمة أو المعادلة أو الاعتراف، ولا يمنح حقوقًا تتجاوز حقوق المؤهل الذي يصفه."
+[[template.registers]]
+en = "Section"
+ar = "القسم"
+[[template.registers]]
+en = "Information"
+ar = "البيان"
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial", "archive_reference"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "programme"
+label_en = "Programme of study"
+label_ar = "البرنامج الدراسي"
+kind = "text"
+required = true
+default = "Programme Name"
+[[template.slots]]
+key = "rows"
+label_en = "Rows"
+label_ar = "الصفوف"
+kind = "table"
+required = true
+default = "1. The holder|Named above, with the identity number recorded against this institution's own register.\n2. The qualification|As named on the accompanying certificate, awarded by this institution in its own right.\n3. Level|The stage of study the qualification completes within this institution's published progression.\n4. Programme and results|Set out in full on the accompanying Transcript, which this supplement does not repeat.\n5. Function|What the qualification entitles the holder to within this institution: admission to the next stage.\n6. Additional information|Any distinction, medium of instruction, or attendance mode the institution records.\n7. Certification|Signed and sealed below by the office named, and verifiable at the address printed on this sheet.\n8. The education system|The institution's own curriculum structure and the grading scale printed below."
+note = "The eight sections the international convention expects: the holder, the qualification, its level, the programme and results, its function, additional information, the certification of the supplement itself, and a factual description of the institution's own education system."
+[[template.slots]]
+key = "grading_key"
+label_en = "Grading scale"
+label_ar = "سلّم الدرجات"
+kind = "paragraph"
+required = true
+default = "A 80–100 Distinction · B 70–79 Very Good · C 60–69 Good · D 50–59 Pass · F below 50 Fail"
+note = "Printed on every sheet, not filed as an appendix. A transcript read by somebody who has never seen this institution's grading conventions is a page of letters they have to guess at."
+[[template.slots]]
+key = "registrar_name"
+label_en = "Registrar — name"
+label_ar = "المسجّل"
+kind = "text"
+required = true
+default = "Registrar Name"
+[[template.slots]]
+key = "registrar_name_ar"
+label_en = "Registrar — name (Arabic)"
+label_ar = "المسجّل (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "registrar_ink"
+label_en = "Registrar — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "registrar"
+role_en = "Registrar"
+role_ar = "المسجّل"
+name_slot = "registrar_name"
+ink_slot = "registrar_ink"
+seal = true
+
+[[template]]
+key = "ledger-statement"
+name = "Statement of Results"
+name_ar = "بيان النتائج"
+family = "ledger"
+sheet = "a4-portrait"
+language = "latin-primary"
+scheme = "signature"
+code = "SOR"
+security_class = "A"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Specified in the benchmark's own master document specification and never built there. Composed here as a ledger: a holder block, a body of rows, and a grading key on the same sheet."
+notes = "Signed by Examinations and Records rather than by the Registrar or the Principal, and that is the point: the office that signs a document is a statement about what the document claims. A principal's signature on an interim results statement implies a completion the statement does not attest."
+level = 1
+border_weight = 0.74
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "embossed khatam watermark", "serial-bearing fine-text rails", "engraved number cartouche", "Code 128 archive symbol", "QR verification bay", "void notice"]
+title.en = "Statement of Results"
+title.ar = "بيان النتائج"
+lede.en = "{institution} states the results obtained by"
+lede.ar = "تبيّن إدارة {institution_ar} النتائج المحرزة لـ"
+statement.en = "The results below are those recorded to date in the programme of {programme}. This is a statement of academic progress. It is not a statement that the requirements for an award have been met, and it must not be read as one."
+statement.ar = "النتائج أدناه هي المسجّلة حتى تاريخه في برنامج {programme}. وهذا بيان بالتقدّم الأكاديمي، وليس إفادةً باستيفاء متطلبات المنح، ولا يجوز قراءته على هذا النحو."
+banner.en = "INTERIM — NOT A COMPLETION DOCUMENT"
+banner.ar = "مؤقت — ليس وثيقة إتمام"
+[[template.registers]]
+en = "Session"
+ar = "العام"
+[[template.registers]]
+en = "Course"
+ar = "المقرر"
+[[template.registers]]
+en = "Mark"
+ar = "الدرجة"
+[[template.registers]]
+en = "Grade"
+ar = "التقدير"
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial", "archive_reference"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "programme"
+label_en = "Programme of study"
+label_ar = "البرنامج الدراسي"
+kind = "text"
+required = true
+default = "Programme Name"
+[[template.slots]]
+key = "rows"
+label_en = "Rows"
+label_ar = "الصفوف"
+kind = "table"
+required = true
+note = "One row per course recorded to date."
+[[template.slots]]
+key = "grading_key"
+label_en = "Grading scale"
+label_ar = "سلّم الدرجات"
+kind = "paragraph"
+required = true
+default = "A 80–100 Distinction · B 70–79 Very Good · C 60–69 Good · D 50–59 Pass · F below 50 Fail"
+note = "Printed on every sheet, not filed as an appendix. A transcript read by somebody who has never seen this institution's grading conventions is a page of letters they have to guess at."
+[[template.slots]]
+key = "examinations_name"
+label_en = "Examinations and Records — name"
+label_ar = "الامتحانات والسجلات"
+kind = "text"
+required = true
+default = "Examinations and Records Name"
+[[template.slots]]
+key = "examinations_name_ar"
+label_en = "Examinations and Records — name (Arabic)"
+label_ar = "الامتحانات والسجلات (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "examinations_ink"
+label_en = "Examinations and Records — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "examinations"
+role_en = "Examinations and Records"
+role_ar = "الامتحانات والسجلات"
+name_slot = "examinations_name"
+ink_slot = "examinations_ink"
+seal = true
+
+[[template]]
+key = "award-general"
+name = "Award Certificate"
+name_ar = "شهادة جائزة"
+family = "award"
+sheet = "a4-landscape"
+language = "peer"
+scheme = "imperial"
+code = "AWD"
+security_class = "B"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Specified in the benchmark's own master document specification as one shared template parameterised by awarding authority and citation — one family, not six independently drifting ones."
+notes = "The general award: academic, leadership, sporting or other honours. The specific honour is the award title slot, so one template serves four registers rather than four templates serving one each."
+level = 3
+border_weight = 0.86
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "embossed khatam watermark", "serial-bearing fine-text rails", "engraved number cartouche", "QR verification bay", "void notice"]
+title.en = "Certificate of Award"
+title.ar = "شهادة جائزة"
+subtitle.en = "Awarded by the Institution"
+subtitle.ar = "ممنوحة من المؤسسة"
+lede.en = "This award is made to"
+lede.ar = "تُمنح هذه الجائزة إلى"
+statement.en = "{citation}"
+statement.ar = "{citation_ar}"
+award.en = "{award_title}"
+award.ar = "{award_title_ar}"
+[[template.registers]]
+en = "Award"
+ar = "الجائزة"
+[[template.registers]]
+en = "Conferred on"
+ar = "تاريخ المنح"
+[[template.registers]]
+en = "Place"
+ar = "المكان"
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "award_title"
+label_en = "Award"
+label_ar = "الجائزة"
+kind = "text"
+required = true
+default = "Award Title"
+[[template.slots]]
+key = "award_title_ar"
+label_en = "Award (Arabic)"
+label_ar = "الجائزة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "citation"
+label_en = "Citation"
+label_ar = "نص الجائزة"
+kind = "paragraph"
+required = true
+note = "What was actually done, in the institution's own words. An award with a generic citation is a certificate of attendance with a ribbon on it."
+[[template.slots]]
+key = "citation_ar"
+label_en = "Citation (Arabic)"
+label_ar = "نص الجائزة بالعربية"
+kind = "paragraph_ar"
+required = false
+[[template.slots]]
+key = "principal_name"
+label_en = "Principal — name"
+label_ar = "رئيس المدرسة"
+kind = "text"
+required = true
+default = "Principal Name"
+[[template.slots]]
+key = "principal_name_ar"
+label_en = "Principal — name (Arabic)"
+label_ar = "رئيس المدرسة (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "principal_ink"
+label_en = "Principal — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "principal"
+role_en = "Principal"
+role_ar = "رئيس المدرسة"
+name_slot = "principal_name"
+ink_slot = "principal_ink"
+seal = true
+
+[[template]]
+key = "award-distinction"
+name = "Special Distinction Certificate"
+name_ar = "شهادة تميّز خاص"
+family = "award"
+sheet = "a4-landscape"
+language = "peer"
+scheme = "crimson"
+code = "DIST"
+security_class = "B"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Specified in the benchmark's own master document specification as one shared template parameterised by awarding authority and citation — one family, not six independently drifting ones."
+notes = "Level IV and a second metal, because a distinction that looks like every other award is not a distinction. Exceptional by construction: if an institution issues these in volume it has stopped meaning what it says, and no layout can fix that."
+level = 4
+border_weight = 0.86
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "embossed khatam watermark", "serial-bearing fine-text rails", "engraved number cartouche", "QR verification bay", "void notice"]
+title.en = "Special Distinction"
+title.ar = "تميّز خاص"
+subtitle.en = "Conferred by Resolution of the Institution"
+subtitle.ar = "ممنوحة بقرار من المؤسسة"
+lede.en = "This award is made to"
+lede.ar = "تُمنح هذه الجائزة إلى"
+statement.en = "{citation}"
+statement.ar = "{citation_ar}"
+award.en = "{award_title}"
+award.ar = "{award_title_ar}"
+[[template.registers]]
+en = "Award"
+ar = "الجائزة"
+[[template.registers]]
+en = "Conferred on"
+ar = "تاريخ المنح"
+[[template.registers]]
+en = "Place"
+ar = "المكان"
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "award_title"
+label_en = "Award"
+label_ar = "الجائزة"
+kind = "text"
+required = true
+default = "Award Title"
+[[template.slots]]
+key = "award_title_ar"
+label_en = "Award (Arabic)"
+label_ar = "الجائزة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "citation"
+label_en = "Citation"
+label_ar = "نص الجائزة"
+kind = "paragraph"
+required = true
+note = "What was actually done, in the institution's own words. An award with a generic citation is a certificate of attendance with a ribbon on it."
+[[template.slots]]
+key = "citation_ar"
+label_en = "Citation (Arabic)"
+label_ar = "نص الجائزة بالعربية"
+kind = "paragraph_ar"
+required = false
+[[template.slots]]
+key = "principal_name"
+label_en = "Principal — name"
+label_ar = "رئيس المدرسة"
+kind = "text"
+required = true
+default = "Principal Name"
+[[template.slots]]
+key = "principal_name_ar"
+label_en = "Principal — name (Arabic)"
+label_ar = "رئيس المدرسة (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "principal_ink"
+label_en = "Principal — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "principal"
+role_en = "Principal"
+role_ar = "رئيس المدرسة"
+name_slot = "principal_name"
+ink_slot = "principal_ink"
+seal = true
+
+[[template]]
+key = "award-board"
+name = "Board Award"
+name_ar = "جائزة مجلس الإدارة"
+family = "award"
+sheet = "a4-landscape"
+language = "peer"
+scheme = "imperial"
+code = "BRD"
+security_class = "B"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Specified in the benchmark's own master document specification as one shared template parameterised by awarding authority and citation — one family, not six independently drifting ones."
+notes = "The only award in the library that must name its authorising instrument on its face. A board acts by resolution; a certificate claiming a board award without one is claiming a decision that was never taken."
+level = 4
+border_weight = 0.86
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "embossed khatam watermark", "serial-bearing fine-text rails", "engraved number cartouche", "QR verification bay", "void notice"]
+title.en = "Award of the Board of Governors"
+title.ar = "جائزة مجلس الإدارة"
+subtitle.en = "Conferred by Resolution of the Board of Governors"
+subtitle.ar = "ممنوحة بقرار من مجلس الإدارة"
+lede.en = "This award is made to"
+lede.ar = "تُمنح هذه الجائزة إلى"
+statement.en = "{citation}"
+statement.ar = "{citation_ar}"
+award.en = "{award_title}"
+award.ar = "{award_title_ar}"
+[[template.registers]]
+en = "Award"
+ar = "الجائزة"
+[[template.registers]]
+en = "Conferred on"
+ar = "تاريخ المنح"
+[[template.registers]]
+en = "Place"
+ar = "المكان"
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "award_title"
+label_en = "Award"
+label_ar = "الجائزة"
+kind = "text"
+required = true
+default = "Award Title"
+[[template.slots]]
+key = "award_title_ar"
+label_en = "Award (Arabic)"
+label_ar = "الجائزة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "citation"
+label_en = "Citation"
+label_ar = "نص الجائزة"
+kind = "paragraph"
+required = true
+note = "What was actually done, in the institution's own words. An award with a generic citation is a certificate of attendance with a ribbon on it."
+[[template.slots]]
+key = "citation_ar"
+label_en = "Citation (Arabic)"
+label_ar = "نص الجائزة بالعربية"
+kind = "paragraph_ar"
+required = false
+[[template.slots]]
+key = "resolution"
+label_en = "Authorising resolution"
+label_ar = "رقم القرار"
+kind = "identifier"
+required = true
+default = "RES-2026-000"
+note = "The resolution that authorised this award. A board award with no resolution behind it was not made by the board."
+[[template.slots]]
+key = "chairman_name"
+label_en = "Chairman, Board of Governors — name"
+label_ar = "رئيس مجلس الإدارة"
+kind = "text"
+required = true
+default = "Chairman, Board of Governors Name"
+[[template.slots]]
+key = "chairman_name_ar"
+label_en = "Chairman, Board of Governors — name (Arabic)"
+label_ar = "رئيس مجلس الإدارة (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "chairman_ink"
+label_en = "Chairman, Board of Governors — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "chairman"
+role_en = "Chairman, Board of Governors"
+role_ar = "رئيس مجلس الإدارة"
+name_slot = "chairman_name"
+ink_slot = "chairman_ink"
+seal = true
+
+[[template]]
+key = "award-head-of-schools"
+name = "Head of Schools Award"
+name_ar = "جائزة رئيس المدارس"
+family = "award"
+sheet = "a4-landscape"
+language = "peer"
+scheme = "palace"
+code = "FCA"
+security_class = "B"
+peak_slot = "recipient"
+peak_slot_ar = "recipient_ar"
+provenance = "Specified in the benchmark's own master document specification as one shared template parameterised by awarding authority and citation — one family, not six independently drifting ones."
+notes = "Where one person holds the Founder and Head of Schools offices, this is one template with a selectable honorific line rather than two award systems that drift apart."
+level = 4
+border_weight = 0.86
+security = ["constructed guilloché ground", "anti-copy line screens at 8° and 53°", "embossed khatam watermark", "serial-bearing fine-text rails", "engraved number cartouche", "QR verification bay", "void notice"]
+title.en = "Award of the Head of Schools"
+title.ar = "جائزة رئيس المدارس"
+subtitle.en = "Conferred by the Head of Schools"
+subtitle.ar = "ممنوحة من رئيس المدارس"
+lede.en = "This award is made to"
+lede.ar = "تُمنح هذه الجائزة إلى"
+statement.en = "{citation}"
+statement.ar = "{citation_ar}"
+award.en = "{award_title}"
+award.ar = "{award_title_ar}"
+[[template.registers]]
+en = "Award"
+ar = "الجائزة"
+[[template.registers]]
+en = "Conferred on"
+ar = "تاريخ المنح"
+[[template.registers]]
+en = "Place"
+ar = "المكان"
+[template.verification]
+identifiers = ["document_id", "verification_code", "serial"]
+barcode = true
+qr = true
+serial_rail = true
+void_en = "Void if altered or erased"
+void_ar = "لاغيةٌ عند أي كشطٍ أو تعديل"
+[[template.slots]]
+key = "institution"
+label_en = "Institution"
+label_ar = "المؤسسة"
+kind = "text"
+required = true
+default = "Institution Name"
+note = "The awarding body's registered name, as it appears on its instrument of establishment."
+[[template.slots]]
+key = "institution_ar"
+label_en = "Institution (Arabic)"
+label_ar = "المؤسسة بالعربية"
+kind = "text_ar"
+required = false
+default = "اسم المؤسسة"
+note = "Leave blank on a monolingual sheet — an empty Arabic run is resolved away, not printed as a gap."
+[[template.slots]]
+key = "school"
+label_en = "School or faculty"
+label_ar = "المدرسة"
+kind = "text"
+required = false
+default = "School Name"
+[[template.slots]]
+key = "school_ar"
+label_en = "School or faculty (Arabic)"
+label_ar = "المدرسة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "authority"
+label_en = "Supervising authority"
+label_ar = "الجهة المشرفة"
+kind = "text"
+required = false
+note = "A ministry or board line, where the award is made under one. Left empty it is not printed, and no authority is implied that has not been named."
+[[template.slots]]
+key = "authority_ar"
+label_en = "Supervising authority (Arabic)"
+label_ar = "الجهة المشرفة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "recipient"
+label_en = "Recipient name"
+label_ar = "اسم الحامل"
+kind = "name"
+required = true
+default = "Recipient Full Name"
+note = "The visual peak of the sheet. Set to the name the holder will be known by for life, not an abbreviated file name."
+[[template.slots]]
+key = "recipient_ar"
+label_en = "Recipient name (Arabic)"
+label_ar = "الاسم بالعربية"
+kind = "name_ar"
+required = false
+note = "Never transliterated automatically. A person's name in another script is theirs to give."
+[[template.slots]]
+key = "student_id"
+label_en = "Student identity number"
+label_ar = "الرقم التعريفي للطالب"
+kind = "identifier"
+required = true
+default = "000-0000-0000"
+[[template.slots]]
+key = "session"
+label_en = "Academic session"
+label_ar = "العام الدراسي"
+kind = "text"
+required = true
+default = "2025 – 2026"
+[[template.slots]]
+key = "issued_on"
+label_en = "Date of issue"
+label_ar = "تاريخ الإصدار"
+kind = "date"
+required = true
+default = "1 January 2026"
+[[template.slots]]
+key = "issued_on_hijri"
+label_en = "Date of issue (Hijri)"
+label_ar = "التاريخ الهجري"
+kind = "date_hijri"
+required = false
+[[template.slots]]
+key = "place"
+label_en = "Place of issue"
+label_ar = "مكان الإصدار"
+kind = "text"
+required = true
+default = "City, State, Country"
+[[template.slots]]
+key = "place_ar"
+label_en = "Place of issue (Arabic)"
+label_ar = "مكان الإصدار بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "serial"
+label_en = "Serial number"
+label_ar = "الرقم التسلسلي"
+kind = "identifier"
+required = true
+default = "XXX/0000/000000"
+note = "Minted by the issuing register, never typed. It is what the border rail and the covert layers carry."
+[[template.slots]]
+key = "document_id"
+label_en = "Document number"
+label_ar = "رقم الوثيقة"
+kind = "identifier"
+required = true
+default = "DID-2026-XXX-0000000"
+[[template.slots]]
+key = "verification_code"
+label_en = "Verification code"
+label_ar = "رمز التحقق"
+kind = "identifier"
+required = true
+default = "0000-0000-0000"
+[[template.slots]]
+key = "archive_reference"
+label_en = "Archive reference"
+label_ar = "المرجع الأرشيفي"
+kind = "identifier"
+required = true
+default = "ARCH/XXX/2026/000000"
+[[template.slots]]
+key = "verify_url"
+label_en = "Verification address"
+label_ar = "عنوان التحقق"
+kind = "text"
+required = true
+default = "verify.example.edu"
+note = "Printed on the face so the sheet is verifiable without the QR — a code with nowhere to take it is not verification."
+[[template.slots]]
+key = "original_reference"
+label_en = "Original reference number"
+label_ar = "رقم الوثيقة الأصلية"
+kind = "identifier"
+required = false
+note = "Filled only on a duplicate, and required there. It is what makes a reissued sheet trace back to the one it replaces instead of standing beside it as a second original."
+[[template.slots]]
+key = "award_title"
+label_en = "Award"
+label_ar = "الجائزة"
+kind = "text"
+required = true
+default = "Award Title"
+[[template.slots]]
+key = "award_title_ar"
+label_en = "Award (Arabic)"
+label_ar = "الجائزة بالعربية"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "citation"
+label_en = "Citation"
+label_ar = "نص الجائزة"
+kind = "paragraph"
+required = true
+note = "What was actually done, in the institution's own words. An award with a generic citation is a certificate of attendance with a ribbon on it."
+[[template.slots]]
+key = "citation_ar"
+label_en = "Citation (Arabic)"
+label_ar = "نص الجائزة بالعربية"
+kind = "paragraph_ar"
+required = false
+[[template.slots]]
+key = "honorific"
+label_en = "Honorific line"
+label_ar = "سطر اللقب"
+kind = "text"
+required = false
+note = "The awarding office as the institution names it — Founder, Head of Schools, Administrator. One template with a selectable honorific, because inventing parallel award registries for one authority is duplication, not rigour."
+[[template.slots]]
+key = "head_of_schools_name"
+label_en = "Head of Schools — name"
+label_ar = "رئيس المدارس"
+kind = "text"
+required = true
+default = "Head of Schools Name"
+[[template.slots]]
+key = "head_of_schools_name_ar"
+label_en = "Head of Schools — name (Arabic)"
+label_ar = "رئيس المدارس (بالعربية)"
+kind = "text_ar"
+required = false
+[[template.slots]]
+key = "head_of_schools_ink"
+label_en = "Head of Schools — signature"
+label_ar = "التوقيع"
+kind = "signature"
+required = false
+note = "A prepared transparent signature. Uploads are assessed and their paper removed before mounting."
+[[template.slots]]
+key = "seal"
+label_en = "Institutional seal"
+label_ar = "الختم الرسمي"
+kind = "seal"
+required = false
+note = "An uploaded device is fitted inside the seal architecture — its own ring, legend and relief — rather than pasted on top of it."
+[[template.signatories]]
+key = "head_of_schools"
+role_en = "Head of Schools"
+role_ar = "رئيس المدارس"
+name_slot = "head_of_schools_name"
+ink_slot = "head_of_schools_ink"
+seal = true
