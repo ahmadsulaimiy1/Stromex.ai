@@ -264,12 +264,14 @@ Volume I §6.2's portfolio rule requires recurring, high-margin engines (subscri
 |---|---|---|---|---|
 | 2030 | $14M | 700 | 1 | 120 |
 | 2035 | $160M | 6,500 | 5 | 900 |
-| 2040 | $700M | 22,000 | 9 | 3,200 |
-| 2046 | $1.8B | 45,000 | 14 | 7,000 |
+| 2040 | ~~$700M~~ **$311M** | 22,000 | 9 | 3,200 |
+| 2046 | ~~$1.8B~~ **$1.24B** | 45,000 | 14 | 7,000 |
+
+> **Amended, 13 August 2026 — reconciliation with the model.** The revenue figures in this table were originally constructed top-down and independently of the institution counts beside them. Building the driver-based model in **Volume XI** from Book III's published prices showed they do not reconcile: $1.8B across 45,000 institutions implies roughly $40,000 of annual revenue per institution, where the price book and twenty years of retention compounding produce about $27,700. The institution counts are unchanged and the model reproduces them exactly; the revenue figures are restated to the model's output. Original estimates are struck through and retained per Volume I §9.2.4. The indicative valuation below is restated accordingly. Volume XI, Chapter 9 carries the full reconciliation.
 
 **Assumptions:** NRR reaches 115% by 2033 and holds · successful UK and US entry in Phase II · at least three ecosystems beyond education at depth · government revenue reaches 20% of the mix · partner-delivered revenue exceeds 35% · marketplace and licensing become material · recurring mix 82% · gross margin 74% by 2040 · Rule of 40 sustained above 40 from 2034 · two to three growth financing rounds plus selective acquisitions.
-**Implied CAGR 2030→2040: ~48%** — demanding, sustained for a decade, and achieved by real companies but not by most.
-**Indicative valuation at 6–8× revenue: $10.8B–$14.4B (2046).**
+**Implied CAGR 2030→2040: ~46%** — demanding, sustained for a decade, and achieved by real companies but not by most.
+**Indicative valuation at 6–8× revenue: ~~$10.8B–$14.4B~~ $7.5B–$9.9B (2046).**
 
 ---
 
@@ -288,6 +290,8 @@ Volume I §6.2's portfolio rule requires recurring, high-margin engines (subscri
 **Implied CAGR 2030→2040: ~57%,** sustained for a decade.
 **Indicative valuation at 6–8× revenue: $33B–$44B (2046).**
 
+*Modelled outputs (Volume XI): peak funding requirement ≈ $4.5M, first cash-positive year 2033, EBITDA margin 33% and Rule of 40 at 57% by 2046, recurring share 82%.*
+
 ## 5.3 The valuation arithmetic, stated plainly
 
 Working backwards from the target rather than forwards from optimism:
@@ -297,7 +301,9 @@ Working backwards from the target rather than forwards from optimism:
 | **$15B** | $3.0B revenue | $2.5B | $1.88B | $1.5B |
 | **$40B** | $8.0B revenue | $6.7B | $5.0B | $4.0B |
 
-**Therefore: the $15–40B ambition requires group revenue somewhere between roughly $1.9B and $8B, depending entirely on the multiple the group earns.** Scenario B reaches $1.8B by 2046 — which touches $15B *only* at a premium 8×+ multiple. Scenario C reaches the band comfortably. Scenario A does not approach it.
+**Therefore: the $15–40B ambition requires group revenue somewhere between roughly $1.9B and $8B, depending entirely on the multiple the group earns.** Scenario B, as restated by the model, reaches $1.24B by 2046 — which does **not** reach $15B at any defensible multiple. Scenario C reaches the band. Scenario A does not approach it.
+
+That restatement is uncomfortable and it is the correct thing to record. It does not change the instruction in §5.5; it sharpens what Scenario C would require — net revenue retention sustained above 115% against a segment median near 97%, a band-mix shift above 3× meaning genuine scale in developed markets, and roughly 130,000 institutions. None of those is impossible; all three must happen together.
 
 ## 5.4 What determines the multiple
 

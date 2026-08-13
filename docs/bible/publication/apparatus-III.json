@@ -1,0 +1,648 @@
+{
+ "tables": [
+  {
+   "n": 1,
+   "cap": "Discount authority",
+   "page": 3,
+   "vol": ""
+  },
+  {
+   "n": 2,
+   "cap": "Website tiers",
+   "page": 5,
+   "vol": ""
+  },
+  {
+   "n": 3,
+   "cap": "Page-level and structural add-ons",
+   "page": 6,
+   "vol": ""
+  },
+  {
+   "n": 4,
+   "cap": "Content",
+   "page": 7,
+   "vol": ""
+  },
+  {
+   "n": 5,
+   "cap": "Multilingual",
+   "page": 7,
+   "vol": ""
+  },
+  {
+   "n": 6,
+   "cap": "SEO, performance & accessibility",
+   "page": 8,
+   "vol": ""
+  },
+  {
+   "n": 7,
+   "cap": "Domains & DNS",
+   "page": 8,
+   "vol": ""
+  },
+  {
+   "n": 8,
+   "cap": "Certificates (TLS/SSL)",
+   "page": 9,
+   "vol": ""
+  },
+  {
+   "n": 9,
+   "cap": "Email",
+   "page": 9,
+   "vol": ""
+  },
+  {
+   "n": 10,
+   "cap": "Core platform",
+   "page": 10,
+   "vol": ""
+  },
+  {
+   "n": 11,
+   "cap": "Portals & role surfaces",
+   "page": 11,
+   "vol": ""
+  },
+  {
+   "n": 12,
+   "cap": "Academic modules",
+   "page": 12,
+   "vol": ""
+  },
+  {
+   "n": 13,
+   "cap": "Administrative & operational modules",
+   "page": 14,
+   "vol": ""
+  },
+  {
+   "n": 14,
+   "cap": "Communications",
+   "page": 14,
+   "vol": ""
+  },
+  {
+   "n": 15,
+   "cap": "Implementation & migration",
+   "page": 15,
+   "vol": ""
+  },
+  {
+   "n": 16,
+   "cap": "Credential issuance",
+   "page": 16,
+   "vol": ""
+  },
+  {
+   "n": 17,
+   "cap": "Verification",
+   "page": 17,
+   "vol": ""
+  },
+  {
+   "n": 18,
+   "cap": "Digital identity",
+   "page": 18,
+   "vol": ""
+  },
+  {
+   "n": 19,
+   "cap": "Physical credential production",
+   "page": 19,
+   "vol": ""
+  },
+  {
+   "n": 20,
+   "cap": "The verification tokens",
+   "page": 19,
+   "vol": ""
+  },
+  {
+   "n": 21,
+   "cap": "Managed hosting",
+   "page": 20,
+   "vol": ""
+  },
+  {
+   "n": 22,
+   "cap": "Compute, storage & network (metered)",
+   "page": 20,
+   "vol": ""
+  },
+  {
+   "n": 23,
+   "cap": "Managed data services",
+   "page": 21,
+   "vol": ""
+  },
+  {
+   "n": 24,
+   "cap": "GPU & AI compute",
+   "page": 21,
+   "vol": ""
+  },
+  {
+   "n": 25,
+   "cap": "Platform services",
+   "page": 22,
+   "vol": ""
+  },
+  {
+   "n": 26,
+   "cap": "Data residency & sovereignty",
+   "page": 22,
+   "vol": ""
+  },
+  {
+   "n": 27,
+   "cap": "AI agents \u2014 subscription per agent, per institution",
+   "page": 23,
+   "vol": ""
+  },
+  {
+   "n": 28,
+   "cap": "AI agents \u2014 subscription per agent, per institution",
+   "page": 24,
+   "vol": ""
+  },
+  {
+   "n": 29,
+   "cap": "AI agents \u2014 subscription per agent, per institution",
+   "page": 24,
+   "vol": ""
+  },
+  {
+   "n": 30,
+   "cap": "AI platform",
+   "page": 25,
+   "vol": ""
+  },
+  {
+   "n": 31,
+   "cap": "Stromex Pay",
+   "page": 26,
+   "vol": ""
+  },
+  {
+   "n": 32,
+   "cap": "Automation platform",
+   "page": 27,
+   "vol": ""
+  },
+  {
+   "n": 33,
+   "cap": "Prebuilt automation packs",
+   "page": 28,
+   "vol": ""
+  },
+  {
+   "n": 34,
+   "cap": "Integration",
+   "page": 29,
+   "vol": ""
+  },
+  {
+   "n": 35,
+   "cap": "Mobile & Applications",
+   "page": 30,
+   "vol": ""
+  },
+  {
+   "n": 36,
+   "cap": "Intelligence & Analytics",
+   "page": 31,
+   "vol": ""
+  },
+  {
+   "n": 37,
+   "cap": "Security & Compliance",
+   "page": 33,
+   "vol": ""
+  },
+  {
+   "n": 38,
+   "cap": "Access & security",
+   "page": 34,
+   "vol": ""
+  },
+  {
+   "n": 39,
+   "cap": "Identity & issuance hardware",
+   "page": 35,
+   "vol": ""
+  },
+  {
+   "n": 40,
+   "cap": "Campus & operations",
+   "page": 36,
+   "vol": ""
+  },
+  {
+   "n": 41,
+   "cap": "Smart campus packages",
+   "page": 36,
+   "vol": ""
+  },
+  {
+   "n": 42,
+   "cap": "Hardware services",
+   "page": 37,
+   "vol": ""
+  },
+  {
+   "n": 43,
+   "cap": "Brand identity",
+   "page": 38,
+   "vol": ""
+  },
+  {
+   "n": 44,
+   "cap": "Print & collateral",
+   "page": 39,
+   "vol": ""
+  },
+  {
+   "n": 45,
+   "cap": "Digital & product design",
+   "page": 40,
+   "vol": ""
+  },
+  {
+   "n": 46,
+   "cap": "Motion, 3D & media",
+   "page": 40,
+   "vol": ""
+  },
+  {
+   "n": 47,
+   "cap": "Editorial",
+   "page": 41,
+   "vol": ""
+  },
+  {
+   "n": 48,
+   "cap": "Design & production",
+   "page": 42,
+   "vol": ""
+  },
+  {
+   "n": 49,
+   "cap": "International print coordination",
+   "page": 43,
+   "vol": ""
+  },
+  {
+   "n": 50,
+   "cap": "International print coordination",
+   "page": 43,
+   "vol": ""
+  },
+  {
+   "n": 51,
+   "cap": "Audio & interactive",
+   "page": 43,
+   "vol": ""
+  },
+  {
+   "n": 52,
+   "cap": "Institutional & educational publishing",
+   "page": 44,
+   "vol": ""
+  },
+  {
+   "n": 53,
+   "cap": "Author & publisher services",
+   "page": 45,
+   "vol": ""
+  },
+  {
+   "n": 54,
+   "cap": "Strategy & transformation",
+   "page": 46,
+   "vol": ""
+  },
+  {
+   "n": 55,
+   "cap": "Education services",
+   "page": 47,
+   "vol": ""
+  },
+  {
+   "n": 56,
+   "cap": "Governance, policy & compliance",
+   "page": 48,
+   "vol": ""
+  },
+  {
+   "n": 57,
+   "cap": "Marketing & growth services",
+   "page": 49,
+   "vol": ""
+  },
+  {
+   "n": 58,
+   "cap": "Stromex Academy",
+   "page": 50,
+   "vol": ""
+  },
+  {
+   "n": 59,
+   "cap": "Marketplace",
+   "page": 51,
+   "vol": ""
+  },
+  {
+   "n": 60,
+   "cap": "White-label & licensing",
+   "page": 52,
+   "vol": ""
+  },
+  {
+   "n": 61,
+   "cap": "Support tiers",
+   "page": 53,
+   "vol": ""
+  },
+  {
+   "n": 62,
+   "cap": "Service levels",
+   "page": 53,
+   "vol": ""
+  },
+  {
+   "n": 63,
+   "cap": "Managed services",
+   "page": 54,
+   "vol": ""
+  },
+  {
+   "n": 64,
+   "cap": "StromeX Credits",
+   "page": 55,
+   "vol": ""
+  },
+  {
+   "n": 65,
+   "cap": "StromeX Credits",
+   "page": 55,
+   "vol": ""
+  },
+  {
+   "n": 66,
+   "cap": "Education suites",
+   "page": 57,
+   "vol": ""
+  },
+  {
+   "n": 67,
+   "cap": "Other sector suites",
+   "page": 58,
+   "vol": ""
+  },
+  {
+   "n": 68,
+   "cap": "Cross-division bundles",
+   "page": 58,
+   "vol": ""
+  },
+  {
+   "n": 69,
+   "cap": "A 220-student primary school in Ikorodu, Lagos (Band A)",
+   "page": 59,
+   "vol": ""
+  },
+  {
+   "n": 70,
+   "cap": "An 1,800-student secondary school & college group (Band A)",
+   "page": 60,
+   "vol": ""
+  },
+  {
+   "n": 71,
+   "cap": "An author publishing an Islamic title, UK print (mixed bands)",
+   "page": 61,
+   "vol": ""
+  },
+  {
+   "n": 72,
+   "cap": "A state ministry of education, 400 schools (Band A, Government tier)",
+   "page": 62,
+   "vol": ""
+  },
+  {
+   "n": 73,
+   "cap": "Price book governance",
+   "page": 62,
+   "vol": ""
+  },
+  {
+   "n": 74,
+   "cap": "Glossary of terms",
+   "page": 64,
+   "vol": ""
+  }
+ ],
+ "figures": [],
+ "index": [
+  {
+   "term": "ACV",
+   "pages": [
+    63,
+    65,
+    67
+   ]
+  },
+  {
+   "term": "Band A",
+   "pages": [
+    3,
+    46,
+    59,
+    60,
+    61,
+    62,
+    63,
+    67
+   ]
+  },
+  {
+   "term": "Band B",
+   "pages": [
+    3,
+    46,
+    67
+   ]
+  },
+  {
+   "term": "Band C",
+   "pages": [
+    3,
+    46,
+    59,
+    63,
+    67
+   ]
+  },
+  {
+   "term": "Credential",
+   "pages": [
+    1,
+    4,
+    16,
+    17,
+    18,
+    19,
+    50,
+    58,
+    60,
+    63,
+    66,
+    67
+   ]
+  },
+  {
+   "term": "Data residency",
+   "pages": [
+    22,
+    67
+   ]
+  },
+  {
+   "term": "Ecosystem",
+   "pages": [
+    5,
+    67
+   ]
+  },
+  {
+   "term": "Federation",
+   "pages": [
+    65,
+    67
+   ]
+  },
+  {
+   "term": "Gate",
+   "pages": [
+    14,
+    22,
+    27,
+    28,
+    34,
+    36,
+    63,
+    67
+   ]
+  },
+  {
+   "term": "GRR",
+   "pages": [
+    65
+   ]
+  },
+  {
+   "term": "Marketplace",
+   "pages": [
+    51
+   ]
+  },
+  {
+   "term": "Net revenue retention",
+   "pages": [
+    64,
+    65
+   ]
+  },
+  {
+   "term": "No-fork rule",
+   "pages": [
+    64
+   ]
+  },
+  {
+   "term": "NRR",
+   "pages": [
+    64,
+    65
+   ]
+  },
+  {
+   "term": "Open source",
+   "pages": [
+    65
+   ]
+  },
+  {
+   "term": "Pricing Council",
+   "pages": [
+    1,
+    3,
+    62,
+    64
+   ]
+  },
+  {
+   "term": "Reference Implementation",
+   "pages": [
+    4,
+    66,
+    68
+   ]
+  },
+  {
+   "term": "Smart campus",
+   "pages": [
+    1,
+    34,
+    36,
+    68
+   ]
+  },
+  {
+   "term": "StromeX Cloud",
+   "pages": [
+    20,
+    68
+   ]
+  },
+  {
+   "term": "StromeX Pay",
+   "pages": [
+    26,
+    68
+   ]
+  },
+  {
+   "term": "System of record",
+   "pages": [
+    10,
+    68
+   ]
+  },
+  {
+   "term": "Verification",
+   "pages": [
+    4,
+    16,
+    17,
+    19,
+    28,
+    58,
+    60,
+    64,
+    66,
+    68
+   ]
+  },
+  {
+   "term": "Verification token",
+   "pages": [
+    19,
+    68
+   ]
+  }
+ ]
+}

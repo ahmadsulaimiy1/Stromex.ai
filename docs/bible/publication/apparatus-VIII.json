@@ -1,0 +1,320 @@
+{
+ "tables": [
+  {
+   "n": 1,
+   "cap": "The three phases",
+   "page": 2,
+   "vol": ""
+  },
+  {
+   "n": 2,
+   "cap": "PHASE II \u2014 RACE (2031\u20132035)",
+   "page": 3,
+   "vol": ""
+  },
+  {
+   "n": 3,
+   "cap": "Gate I \u2192 II (assessed from 2030)",
+   "page": 5,
+   "vol": ""
+  },
+  {
+   "n": 4,
+   "cap": "The reference customer \u2014 a Band A Professional-tier school",
+   "page": 6,
+   "vol": ""
+  },
+  {
+   "n": 5,
+   "cap": "The other reference customers",
+   "page": 7,
+   "vol": ""
+  },
+  {
+   "n": 6,
+   "cap": "The engine mix over time",
+   "page": 8,
+   "vol": ""
+  },
+  {
+   "n": 7,
+   "cap": "Gross margin trajectory",
+   "page": 8,
+   "vol": ""
+  },
+  {
+   "n": 8,
+   "cap": "The scenarios",
+   "page": 9,
+   "vol": ""
+  },
+  {
+   "n": 9,
+   "cap": "The scenarios",
+   "page": 10,
+   "vol": ""
+  },
+  {
+   "n": 10,
+   "cap": "The scenarios",
+   "page": 11,
+   "vol": ""
+  },
+  {
+   "n": 11,
+   "cap": "The valuation arithmetic, stated plainly",
+   "page": 11,
+   "vol": ""
+  },
+  {
+   "n": 12,
+   "cap": "Valuation Logic, Honestly Stated",
+   "page": 13,
+   "vol": ""
+  },
+  {
+   "n": 13,
+   "cap": "The sequence",
+   "page": 14,
+   "vol": ""
+  },
+  {
+   "n": 14,
+   "cap": "Allocation of free cash flow, by phase",
+   "page": 16,
+   "vol": ""
+  },
+  {
+   "n": 15,
+   "cap": "The sequence and its logic",
+   "page": 19,
+   "vol": ""
+  },
+  {
+   "n": 16,
+   "cap": "The three entry modes",
+   "page": 19,
+   "vol": ""
+  },
+  {
+   "n": 17,
+   "cap": "The target categories",
+   "page": 21,
+   "vol": ""
+  },
+  {
+   "n": 18,
+   "cap": "What Would Make This Plan Wrong",
+   "page": 25,
+   "vol": ""
+  },
+  {
+   "n": 19,
+   "cap": "Glossary of terms",
+   "page": 27,
+   "vol": ""
+  }
+ ],
+ "figures": [],
+ "index": [
+  {
+   "term": "ACV",
+   "pages": [
+    26,
+    28,
+    30
+   ]
+  },
+  {
+   "term": "Band A",
+   "pages": [
+    6,
+    7,
+    26,
+    30
+   ]
+  },
+  {
+   "term": "Band C",
+   "pages": [
+    7,
+    18,
+    26,
+    30
+   ]
+  },
+  {
+   "term": "CAC payback",
+   "pages": [
+    7,
+    30
+   ]
+  },
+  {
+   "term": "Credential",
+   "pages": [
+    11,
+    13,
+    18,
+    26,
+    29,
+    30
+   ]
+  },
+  {
+   "term": "Ecosystem",
+   "pages": [
+    3,
+    30
+   ]
+  },
+  {
+   "term": "Entrenched provision",
+   "pages": [
+    15,
+    30
+   ]
+  },
+  {
+   "term": "Federation",
+   "pages": [
+    28,
+    30
+   ]
+  },
+  {
+   "term": "Gate",
+   "pages": [
+    1,
+    5,
+    14,
+    24,
+    26,
+    30
+   ]
+  },
+  {
+   "term": "GRR",
+   "pages": [
+    28,
+    30
+   ]
+  },
+  {
+   "term": "LTV",
+   "pages": [
+    6,
+    30
+   ]
+  },
+  {
+   "term": "Marketplace",
+   "pages": [
+    11
+   ]
+  },
+  {
+   "term": "Net revenue retention",
+   "pages": [
+    5,
+    27,
+    28
+   ]
+  },
+  {
+   "term": "No-fork rule",
+   "pages": [
+    27
+   ]
+  },
+  {
+   "term": "NRR",
+   "pages": [
+    11,
+    12,
+    24,
+    27,
+    28
+   ]
+  },
+  {
+   "term": "Open source",
+   "pages": [
+    28
+   ]
+  },
+  {
+   "term": "Phase gate",
+   "pages": [
+    5
+   ]
+  },
+  {
+   "term": "Pricing Council",
+   "pages": [
+    27
+   ]
+  },
+  {
+   "term": "Reference Implementation",
+   "pages": [
+    29,
+    31
+   ]
+  },
+  {
+   "term": "Rule of 40",
+   "pages": [
+    11,
+    12,
+    31
+   ]
+  },
+  {
+   "term": "SpaceTalk",
+   "pages": [
+    11,
+    31
+   ]
+  },
+  {
+   "term": "StromeX Identity",
+   "pages": [
+    11,
+    31
+   ]
+  },
+  {
+   "term": "StromeX Pay",
+   "pages": [
+    3,
+    31
+   ]
+  },
+  {
+   "term": "System of record",
+   "pages": [
+    13,
+    31
+   ]
+  },
+  {
+   "term": "Verification",
+   "pages": [
+    8,
+    11,
+    27,
+    29,
+    31
+   ]
+  },
+  {
+   "term": "Wave",
+   "pages": [
+    3,
+    18,
+    31
+   ]
+  }
+ ]
+}

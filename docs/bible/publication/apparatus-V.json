@@ -1,0 +1,234 @@
+{
+ "tables": [
+  {
+   "n": 1,
+   "cap": "The central constraint",
+   "page": 2,
+   "vol": ""
+  },
+  {
+   "n": 2,
+   "cap": "The free-to-paid conversion mechanics",
+   "page": 3,
+   "vol": ""
+  },
+  {
+   "n": 3,
+   "cap": "The Sales Motions",
+   "page": 5,
+   "vol": ""
+  },
+  {
+   "n": 4,
+   "cap": "Health scoring",
+   "page": 11,
+   "vol": ""
+  },
+  {
+   "n": 5,
+   "cap": "Churn: causes and countermeasures",
+   "page": 13,
+   "vol": ""
+  },
+  {
+   "n": 6,
+   "cap": "The mix",
+   "page": 14,
+   "vol": ""
+  },
+  {
+   "n": 7,
+   "cap": "Partner tiers",
+   "page": 15,
+   "vol": ""
+  },
+  {
+   "n": 8,
+   "cap": "The ecosystem surfaces",
+   "page": 17,
+   "vol": ""
+  },
+  {
+   "n": 9,
+   "cap": "Community programmes",
+   "page": 18,
+   "vol": ""
+  },
+  {
+   "n": 10,
+   "cap": "Glossary of terms",
+   "page": 21,
+   "vol": ""
+  }
+ ],
+ "figures": [
+  {
+   "n": 1,
+   "cap": "The funnel",
+   "page": 3,
+   "vol": ""
+  }
+ ],
+ "index": [
+  {
+   "term": "ACV",
+   "pages": [
+    12,
+    20,
+    22,
+    24
+   ]
+  },
+  {
+   "term": "Band A",
+   "pages": [
+    2,
+    20,
+    24
+   ]
+  },
+  {
+   "term": "Band C",
+   "pages": [
+    20,
+    24
+   ]
+  },
+  {
+   "term": "CAC payback",
+   "pages": [
+    19,
+    24
+   ]
+  },
+  {
+   "term": "Credential",
+   "pages": [
+    1,
+    3,
+    13,
+    18,
+    20,
+    23,
+    24
+   ]
+  },
+  {
+   "term": "Ecosystem",
+   "pages": [
+    1,
+    14,
+    17,
+    18,
+    24
+   ]
+  },
+  {
+   "term": "Federation",
+   "pages": [
+    22,
+    24
+   ]
+  },
+  {
+   "term": "Free tier",
+   "pages": [
+    3,
+    24
+   ]
+  },
+  {
+   "term": "Gate",
+   "pages": [
+    20,
+    24
+   ]
+  },
+  {
+   "term": "GRR",
+   "pages": [
+    22,
+    24
+   ]
+  },
+  {
+   "term": "Marketplace",
+   "pages": [
+    16,
+    17,
+    24
+   ]
+  },
+  {
+   "term": "Net revenue retention",
+   "pages": [
+    9,
+    12,
+    21,
+    22,
+    24
+   ]
+  },
+  {
+   "term": "No-fork rule",
+   "pages": [
+    21
+   ]
+  },
+  {
+   "term": "NRR",
+   "pages": [
+    12,
+    21,
+    22
+   ]
+  },
+  {
+   "term": "Open source",
+   "pages": [
+    17,
+    22
+   ]
+  },
+  {
+   "term": "Partner network",
+   "pages": [
+    15,
+    16
+   ]
+  },
+  {
+   "term": "Pricing Council",
+   "pages": [
+    21
+   ]
+  },
+  {
+   "term": "Reference Implementation",
+   "pages": [
+    23
+   ]
+  },
+  {
+   "term": "Value ledger",
+   "pages": [
+    11,
+    25
+   ]
+  },
+  {
+   "term": "Verification",
+   "pages": [
+    2,
+    3,
+    4,
+    9,
+    14,
+    19,
+    21,
+    23,
+    25
+   ]
+  }
+ ]
+}

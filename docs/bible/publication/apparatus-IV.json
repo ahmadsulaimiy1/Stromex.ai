@@ -1,0 +1,273 @@
+{
+ "tables": [
+  {
+   "n": 1,
+   "cap": "The canonical stack",
+   "page": 4,
+   "vol": ""
+  },
+  {
+   "n": 2,
+   "cap": "The tenancy model",
+   "page": 5,
+   "vol": ""
+  },
+  {
+   "n": 3,
+   "cap": "Data classification",
+   "page": 7,
+   "vol": ""
+  },
+  {
+   "n": 4,
+   "cap": "The verification surfaces",
+   "page": 8,
+   "vol": ""
+  },
+  {
+   "n": 5,
+   "cap": "The layered verification model",
+   "page": 9,
+   "vol": ""
+  },
+  {
+   "n": 6,
+   "cap": "Api & Integration Standards",
+   "page": 10,
+   "vol": ""
+  },
+  {
+   "n": 7,
+   "cap": "The agent model",
+   "page": 12,
+   "vol": ""
+  },
+  {
+   "n": 8,
+   "cap": "The stakes ladder",
+   "page": 13,
+   "vol": ""
+  },
+  {
+   "n": 9,
+   "cap": "Budgets \u2014 release blockers, not aspirations",
+   "page": 15,
+   "vol": ""
+  },
+  {
+   "n": 10,
+   "cap": "The degraded-mode requirement",
+   "page": 15,
+   "vol": ""
+  },
+  {
+   "n": 11,
+   "cap": "Zero trust, concretely",
+   "page": 17,
+   "vol": ""
+  },
+  {
+   "n": 12,
+   "cap": "Security Bible Ii: Identity & Access",
+   "page": 18,
+   "vol": ""
+  },
+  {
+   "n": 13,
+   "cap": "Security Bible Iii: Cryptography & Data Protection",
+   "page": 19,
+   "vol": ""
+  },
+  {
+   "n": 14,
+   "cap": "Security Bible Iv: Secure Development",
+   "page": 20,
+   "vol": ""
+  },
+  {
+   "n": 15,
+   "cap": "Backup",
+   "page": 21,
+   "vol": ""
+  },
+  {
+   "n": 16,
+   "cap": "Recovery objectives",
+   "page": 21,
+   "vol": ""
+  },
+  {
+   "n": 17,
+   "cap": "Severity",
+   "page": 22,
+   "vol": ""
+  },
+  {
+   "n": 18,
+   "cap": "Notification commitments",
+   "page": 22,
+   "vol": ""
+  },
+  {
+   "n": 19,
+   "cap": "Glossary of terms",
+   "page": 28,
+   "vol": ""
+  }
+ ],
+ "figures": [
+  {
+   "n": 1,
+   "cap": "The shape",
+   "page": 3,
+   "vol": ""
+  },
+  {
+   "n": 2,
+   "cap": "The canonical domain model",
+   "page": 6,
+   "vol": ""
+  },
+  {
+   "n": 3,
+   "cap": "The provider-independence doctrine",
+   "page": 11,
+   "vol": ""
+  },
+  {
+   "n": 4,
+   "cap": "Retrieval before generation",
+   "page": 11,
+   "vol": ""
+  }
+ ],
+ "index": [
+  {
+   "term": "ACV",
+   "pages": [
+    27,
+    29,
+    31
+   ]
+  },
+  {
+   "term": "Band A",
+   "pages": [
+    27,
+    31
+   ]
+  },
+  {
+   "term": "Band C",
+   "pages": [
+    27,
+    31
+   ]
+  },
+  {
+   "term": "Credential",
+   "pages": [
+    2,
+    6,
+    8,
+    18,
+    19,
+    20,
+    22,
+    27,
+    30,
+    31
+   ]
+  },
+  {
+   "term": "Federation",
+   "pages": [
+    29,
+    31
+   ]
+  },
+  {
+   "term": "Gate",
+   "pages": [
+    3,
+    11,
+    26,
+    27,
+    31
+   ]
+  },
+  {
+   "term": "GRR",
+   "pages": [
+    29,
+    31
+   ]
+  },
+  {
+   "term": "Guilloche",
+   "pages": [
+    9,
+    31
+   ]
+  },
+  {
+   "term": "Net revenue retention",
+   "pages": [
+    28,
+    29,
+    31
+   ]
+  },
+  {
+   "term": "No-fork rule",
+   "pages": [
+    1,
+    28,
+    31
+   ]
+  },
+  {
+   "term": "NRR",
+   "pages": [
+    28,
+    29
+   ]
+  },
+  {
+   "term": "Open source",
+   "pages": [
+    16,
+    29
+   ]
+  },
+  {
+   "term": "Pricing Council",
+   "pages": [
+    28
+   ]
+  },
+  {
+   "term": "Reference Implementation",
+   "pages": [
+    1,
+    30
+   ]
+  },
+  {
+   "term": "Stakes ladder",
+   "pages": [
+    13
+   ]
+  },
+  {
+   "term": "Verification",
+   "pages": [
+    6,
+    8,
+    9,
+    28,
+    30
+   ]
+  }
+ ]
+}

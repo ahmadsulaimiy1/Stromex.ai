@@ -1,0 +1,173 @@
+{
+ "tables": [
+  {
+   "n": 1,
+   "cap": "The model",
+   "page": 5,
+   "vol": ""
+  },
+  {
+   "n": 2,
+   "cap": "The design layers",
+   "page": 8,
+   "vol": ""
+  },
+  {
+   "n": 3,
+   "cap": "The typographic standard",
+   "page": 11,
+   "vol": ""
+  },
+  {
+   "n": 4,
+   "cap": "Rights, Licensing & Attribution",
+   "page": 12,
+   "vol": ""
+  },
+  {
+   "n": 5,
+   "cap": "The tier decision",
+   "page": 13,
+   "vol": ""
+  },
+  {
+   "n": 6,
+   "cap": "Audio",
+   "page": 14,
+   "vol": ""
+  },
+  {
+   "n": 7,
+   "cap": "Quality gates",
+   "page": 16,
+   "vol": ""
+  },
+  {
+   "n": 8,
+   "cap": "Glossary of terms",
+   "page": 18,
+   "vol": ""
+  }
+ ],
+ "figures": [],
+ "index": [
+  {
+   "term": "ACV",
+   "pages": [
+    17,
+    19,
+    21
+   ]
+  },
+  {
+   "term": "Band A",
+   "pages": [
+    11,
+    17,
+    21
+   ]
+  },
+  {
+   "term": "Band B",
+   "pages": [
+    11,
+    21
+   ]
+  },
+  {
+   "term": "Band C",
+   "pages": [
+    17,
+    21
+   ]
+  },
+  {
+   "term": "Craft standard",
+   "pages": [
+    1,
+    3,
+    21
+   ]
+  },
+  {
+   "term": "Credential",
+   "pages": [
+    2,
+    8,
+    17,
+    20,
+    21
+   ]
+  },
+  {
+   "term": "Federation",
+   "pages": [
+    19,
+    21
+   ]
+  },
+  {
+   "term": "Gate",
+   "pages": [
+    16,
+    17,
+    21
+   ]
+  },
+  {
+   "term": "GRR",
+   "pages": [
+    19,
+    21
+   ]
+  },
+  {
+   "term": "Net revenue retention",
+   "pages": [
+    18,
+    19,
+    21
+   ]
+  },
+  {
+   "term": "No-fork rule",
+   "pages": [
+    18,
+    21
+   ]
+  },
+  {
+   "term": "NRR",
+   "pages": [
+    18,
+    19,
+    21
+   ]
+  },
+  {
+   "term": "Open source",
+   "pages": [
+    19
+   ]
+  },
+  {
+   "term": "Pricing Council",
+   "pages": [
+    18
+   ]
+  },
+  {
+   "term": "Reference Implementation",
+   "pages": [
+    20
+   ]
+  },
+  {
+   "term": "Verification",
+   "pages": [
+    18,
+    20
+   ]
+  }
+ ]
+}

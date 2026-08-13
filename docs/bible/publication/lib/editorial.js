@@ -10,6 +10,10 @@ const DATE = '13 August 2026';
 const VOLUMES = [
   {
     roman: 'I', n: 1, file: 'VOLUME-I-CONSTITUTION.md',
+    slug: 'stromex-book-01-constitution',
+    status: 'Ratified',
+    owner: 'Office of the Founder; Board for entrenched provisions',
+    review: 'Annually, or on any Board-tier amendment',
     title: 'The Constitution',
     sub: 'Vision · Philosophy · Governance · Culture · Brand',
     authority: 'Entrenched & Constitutional',
@@ -18,6 +22,10 @@ const VOLUMES = [
   },
   {
     roman: 'II', n: 2, file: 'VOLUME-II-MARKET-AND-POSITIONING.md',
+    slug: 'stromex-book-02-market-strategy',
+    status: 'Ratified',
+    owner: 'Executive',
+    review: 'Quarterly (risk register); annually otherwise',
     title: 'Market Strategy & Competitive Positioning',
     sub: 'Who we serve · Who we compete with · Why we win',
     authority: 'Strategic',
@@ -26,6 +34,10 @@ const VOLUMES = [
   },
   {
     roman: 'III', n: 3, file: 'VOLUME-III-CATALOGUE-AND-PRICING.md',
+    slug: 'stromex-book-03-catalogue',
+    status: 'Ratified · Price Book v2.0',
+    owner: 'Pricing Council',
+    review: 'Quarterly',
     title: 'The Catalogue',
     sub: 'Products · Services · Modules · Transparent Pricing',
     authority: 'Operational — Pricing Council',
@@ -34,6 +46,10 @@ const VOLUMES = [
   },
   {
     roman: 'IV', n: 4, file: 'VOLUME-IV-ENGINEERING-AI-CLOUD.md',
+    slug: 'stromex-book-04-technology',
+    status: 'Ratified',
+    owner: 'Chief Technology Officer',
+    review: 'Annually; Security Bible half-yearly',
     title: 'Engineering, AI Architecture, Cloud & Security',
     sub: 'How it is built · How it stays up · How it stays safe',
     authority: 'Operational — CTO',
@@ -42,6 +58,10 @@ const VOLUMES = [
   },
   {
     roman: 'V', n: 5, file: 'VOLUME-V-GTM-SALES-PARTNERS.md',
+    slug: 'stromex-book-05-go-to-market',
+    status: 'Ratified',
+    owner: 'Commercial Executive',
+    review: 'Annually; GTM metrics monthly',
     title: 'Go-to-Market',
     sub: 'Sales · Customer Success · Partners · Ecosystem',
     authority: 'Operational',
@@ -50,6 +70,10 @@ const VOLUMES = [
   },
   {
     roman: 'VI', n: 6, file: 'VOLUME-VI-CREATIVE-PUBLISHING-PRINT.md',
+    slug: 'stromex-book-06-creative',
+    status: 'Ratified',
+    owner: 'Creative Director',
+    review: 'Annually',
     title: 'The Creative Division',
     sub: 'Design · Publishing · Print · Media · The Craft Standard',
     authority: 'Operational — Creative Director',
@@ -58,6 +82,10 @@ const VOLUMES = [
   },
   {
     roman: 'VII', n: 7, file: 'VOLUME-VII-INDUSTRY-ECOSYSTEMS.md',
+    slug: 'stromex-book-07-industry-ecosystems',
+    status: 'Ratified',
+    owner: 'Executive',
+    review: 'Half-yearly (sector readiness review)',
     title: 'Industry Ecosystems',
     sub: 'Sector solutions · The Enterprise Division',
     authority: 'Strategic',
@@ -66,6 +94,10 @@ const VOLUMES = [
   },
   {
     roman: 'VIII', n: 8, file: 'VOLUME-VIII-EXPANSION-FINANCE-ROADMAP.md',
+    slug: 'stromex-book-08-expansion-finance',
+    status: 'Ratified',
+    owner: 'Executive; Board',
+    review: 'Annually at the strategy offsite',
     title: 'Expansion, Finance & the Roadmap',
     sub: 'The three phases · The three scenarios · Capital · Geography · Acquisitions',
     authority: 'Strategic — Board',
@@ -74,6 +106,10 @@ const VOLUMES = [
   },
   {
     roman: 'IX', n: 9, file: 'VOLUME-IX-THE-INSTITUTION.md',
+    slug: 'stromex-book-09-the-institution',
+    status: 'Ratified',
+    owner: 'Office of the Founder',
+    review: 'Annually',
     title: 'The Institution',
     sub: 'Innovation · Research · Talent · Operations · The 100-Year Plan',
     authority: 'Constitutional & Strategic',
@@ -82,11 +118,27 @@ const VOLUMES = [
   },
   {
     roman: 'X', n: 10, file: 'VOLUME-X-SPACETALK.md',
+    slug: 'stromex-book-10-spacetalk',
+    status: 'Ratified · Product bible',
+    owner: 'Product Executive',
+    review: 'Half-yearly until launch, then quarterly',
     title: 'SpaceTalk',
     sub: 'The Communication Operating System',
     authority: 'Product',
     summary:
       'Volume X opens by stating what most documents in its category avoid: a general-purpose consumer messenger competing directly with the incumbents cannot be won, and attempting it would be the most expensive mistake available to the group. It then sets out the position that is winnable — institutional communication infrastructure that grows institution by institution rather than person by person, entering through relationships StromeX already holds. It establishes three wedges in verified identity, the institutional record and federation; specifies the architecture and the encryption position that reconciles user privacy with institutional obligation without concealment; answers the connectivity question honestly; and defines trust and safety, the business model, the roadmap and the risks, including the most likely one — that the product is started too early.',
+  },
+  {
+    roman: 'XI', n: 11, file: 'VOLUME-XI-FINANCIAL-MASTER-PLAN.md',
+    slug: 'stromex-book-11-financial-master-plan',
+    status: 'Ratified · companion to the operating model',
+    owner: 'Chief Financial Officer; Executive; Board',
+    review: 'Quarterly (drivers); annually (structure)',
+    title: 'The Financial Master Plan',
+    sub: 'The Operating Model · Drivers · Scenarios · Sensitivity · Capital',
+    authority: 'Strategic — Board',
+    summary:
+      'Volume XI replaces the scenario sketch in Book VIII, Chapter 5 with an instrument. Every figure in the accompanying workbook is a formula over a stated assumption, so the model can be argued with rather than merely read: change one driver and the twenty-year outcome recomputes. It documents the customer cohort engine, the twenty revenue streams, the margin and operating-leverage trajectory, the cost floor that makes the funding requirement realistic, and the collection lag that makes the cash line honest. Its growth rates are solved so the model reproduces Book VIII’s ratified institution counts exactly — and doing so surfaced a genuine inconsistency in the corpus, since those counts at the published prices in Book III produce materially less revenue than Book VIII asserted. Chapter 9 records that reconciliation and the strategic consequence: the stated valuation ambition sits in the Optimistic case alone.',
   },
 ];
 

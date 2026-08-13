@@ -1,0 +1,253 @@
+{
+ "tables": [
+  {
+   "n": 1,
+   "cap": "The annual production target",
+   "page": 3,
+   "vol": ""
+  },
+  {
+   "n": 2,
+   "cap": "The 100-idea discipline",
+   "page": 3,
+   "vol": ""
+  },
+  {
+   "n": 3,
+   "cap": "Research domains",
+   "page": 5,
+   "vol": ""
+  },
+  {
+   "n": 4,
+   "cap": "The measurement domains",
+   "page": 7,
+   "vol": ""
+  },
+  {
+   "n": 5,
+   "cap": "The named anti-metrics",
+   "page": 8,
+   "vol": ""
+  },
+  {
+   "n": 6,
+   "cap": "The hiring standard",
+   "page": 9,
+   "vol": ""
+  },
+  {
+   "n": 7,
+   "cap": "The promotion framework",
+   "page": 10,
+   "vol": ""
+  },
+  {
+   "n": 8,
+   "cap": "Entry programmes",
+   "page": 10,
+   "vol": ""
+  },
+  {
+   "n": 9,
+   "cap": "The SOP library",
+   "page": 12,
+   "vol": ""
+  },
+  {
+   "n": 10,
+   "cap": "The evaluation doctrine",
+   "page": 14,
+   "vol": ""
+  },
+  {
+   "n": 11,
+   "cap": "The watch list",
+   "page": 15,
+   "vol": ""
+  },
+  {
+   "n": 12,
+   "cap": "Environmental",
+   "page": 17,
+   "vol": ""
+  },
+  {
+   "n": 13,
+   "cap": "Community",
+   "page": 18,
+   "vol": ""
+  },
+  {
+   "n": 14,
+   "cap": "The four generational transitions",
+   "page": 20,
+   "vol": ""
+  },
+  {
+   "n": 15,
+   "cap": "The authorship standard",
+   "page": 21,
+   "vol": ""
+  },
+  {
+   "n": 16,
+   "cap": "Glossary of terms",
+   "page": 24,
+   "vol": ""
+  }
+ ],
+ "figures": [],
+ "index": [
+  {
+   "term": "ACV",
+   "pages": [
+    23,
+    25,
+    27
+   ]
+  },
+  {
+   "term": "Band A",
+   "pages": [
+    23,
+    27
+   ]
+  },
+  {
+   "term": "Band C",
+   "pages": [
+    23,
+    27
+   ]
+  },
+  {
+   "term": "Credential",
+   "pages": [
+    5,
+    10,
+    14,
+    15,
+    23,
+    26,
+    27
+   ]
+  },
+  {
+   "term": "Ecosystem",
+   "pages": [
+    3,
+    27
+   ]
+  },
+  {
+   "term": "Federation",
+   "pages": [
+    25,
+    27
+   ]
+  },
+  {
+   "term": "Free tier",
+   "pages": [
+    18,
+    27
+   ]
+  },
+  {
+   "term": "Gate",
+   "pages": [
+    6,
+    12,
+    23,
+    27
+   ]
+  },
+  {
+   "term": "GRR",
+   "pages": [
+    25,
+    27
+   ]
+  },
+  {
+   "term": "Net revenue retention",
+   "pages": [
+    24,
+    25,
+    27
+   ]
+  },
+  {
+   "term": "No-fork rule",
+   "pages": [
+    24,
+    27
+   ]
+  },
+  {
+   "term": "NRR",
+   "pages": [
+    24,
+    25,
+    27
+   ]
+  },
+  {
+   "term": "Open source",
+   "pages": [
+    18,
+    25
+   ]
+  },
+  {
+   "term": "Pricing Council",
+   "pages": [
+    24
+   ]
+  },
+  {
+   "term": "Reference Implementation",
+   "pages": [
+    26
+   ]
+  },
+  {
+   "term": "StromeX Labs",
+   "pages": [
+    3
+   ]
+  },
+  {
+   "term": "Sustainability",
+   "pages": [
+    17,
+    21
+   ]
+  },
+  {
+   "term": "Talent",
+   "pages": [
+    1,
+    9,
+    10,
+    28
+   ]
+  },
+  {
+   "term": "Verification",
+   "pages": [
+    24,
+    26,
+    28
+   ]
+  },
+  {
+   "term": "Wave",
+   "pages": [
+    15,
+    28
+   ]
+  }
+ ]
+}

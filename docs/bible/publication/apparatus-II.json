@@ -1,0 +1,200 @@
+{
+ "tables": [
+  {
+   "n": 1,
+   "cap": "The bottom-up formula",
+   "page": 4,
+   "vol": ""
+  },
+  {
+   "n": 2,
+   "cap": "Segmentation model",
+   "page": 5,
+   "vol": ""
+  },
+  {
+   "n": 3,
+   "cap": "The economic buyer",
+   "page": 6,
+   "vol": ""
+  },
+  {
+   "n": 4,
+   "cap": "The five objections and their answers",
+   "page": 7,
+   "vol": ""
+  },
+  {
+   "n": 5,
+   "cap": "By audience",
+   "page": 13,
+   "vol": ""
+  },
+  {
+   "n": 6,
+   "cap": "The Moat, Honestly Assessed",
+   "page": 17,
+   "vol": ""
+  },
+  {
+   "n": 7,
+   "cap": "Risk Register",
+   "page": 20,
+   "vol": ""
+  },
+  {
+   "n": 8,
+   "cap": "Glossary of terms",
+   "page": 22,
+   "vol": ""
+  }
+ ],
+ "figures": [],
+ "index": [
+  {
+   "term": "ACV",
+   "pages": [
+    4,
+    5,
+    21,
+    23,
+    25
+   ]
+  },
+  {
+   "term": "Band A",
+   "pages": [
+    18,
+    21,
+    25
+   ]
+  },
+  {
+   "term": "Band C",
+   "pages": [
+    21,
+    25
+   ]
+  },
+  {
+   "term": "Credential",
+   "pages": [
+    1,
+    2,
+    13,
+    21,
+    24,
+    25
+   ]
+  },
+  {
+   "term": "Ecosystem",
+   "pages": [
+    8,
+    13,
+    25
+   ]
+  },
+  {
+   "term": "Federation",
+   "pages": [
+    23,
+    25
+   ]
+  },
+  {
+   "term": "Gate",
+   "pages": [
+    12,
+    16,
+    18,
+    20,
+    21,
+    25
+   ]
+  },
+  {
+   "term": "GRR",
+   "pages": [
+    23,
+    25
+   ]
+  },
+  {
+   "term": "Human-in-the-loop",
+   "pages": [
+    20,
+    25
+   ]
+  },
+  {
+   "term": "Net revenue retention",
+   "pages": [
+    22,
+    23,
+    25
+   ]
+  },
+  {
+   "term": "No-fork rule",
+   "pages": [
+    22
+   ]
+  },
+  {
+   "term": "NRR",
+   "pages": [
+    22,
+    23
+   ]
+  },
+  {
+   "term": "Open source",
+   "pages": [
+    23
+   ]
+  },
+  {
+   "term": "Partner network",
+   "pages": [
+    19
+   ]
+  },
+  {
+   "term": "Phase gate",
+   "pages": [
+    20
+   ]
+  },
+  {
+   "term": "Pricing Council",
+   "pages": [
+    22
+   ]
+  },
+  {
+   "term": "Reference Implementation",
+   "pages": [
+    24
+   ]
+  },
+  {
+   "term": "System of record",
+   "pages": [
+    11,
+    16,
+    17,
+    26
+   ]
+  },
+  {
+   "term": "Verification",
+   "pages": [
+    13,
+    22,
+    24,
+    26
+   ]
+  }
+ ]
+}

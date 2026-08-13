@@ -1,0 +1,260 @@
+{
+ "tables": [
+  {
+   "n": 1,
+   "cap": "The rule",
+   "page": 4,
+   "vol": ""
+  },
+  {
+   "n": 2,
+   "cap": "The tier ladder",
+   "page": 7,
+   "vol": ""
+  },
+  {
+   "n": 3,
+   "cap": "Open source policy",
+   "page": 10,
+   "vol": ""
+  },
+  {
+   "n": 4,
+   "cap": "The eleven revenue engines",
+   "page": 12,
+   "vol": ""
+  },
+  {
+   "n": 5,
+   "cap": "Regional price bands",
+   "page": 13,
+   "vol": ""
+  },
+  {
+   "n": 6,
+   "cap": "The revenue-per-relationship ladder",
+   "page": 13,
+   "vol": ""
+  },
+  {
+   "n": 7,
+   "cap": "Decision rights",
+   "page": 18,
+   "vol": ""
+  },
+  {
+   "n": 8,
+   "cap": "Tiers of authority",
+   "page": 19,
+   "vol": ""
+  },
+  {
+   "n": 9,
+   "cap": "The logo decision",
+   "page": 20,
+   "vol": ""
+  },
+  {
+   "n": 10,
+   "cap": "The identity system",
+   "page": 21,
+   "vol": ""
+  },
+  {
+   "n": 11,
+   "cap": "The identity system",
+   "page": 22,
+   "vol": ""
+  },
+  {
+   "n": 12,
+   "cap": "The voice",
+   "page": 23,
+   "vol": ""
+  },
+  {
+   "n": 13,
+   "cap": "The operating rhythm",
+   "page": 25,
+   "vol": ""
+  },
+  {
+   "n": 14,
+   "cap": "Glossary of terms",
+   "page": 29,
+   "vol": ""
+  }
+ ],
+ "figures": [
+  {
+   "n": 1,
+   "cap": "The anatomy of an ecosystem",
+   "page": 5,
+   "vol": ""
+  },
+  {
+   "n": 2,
+   "cap": "Group structure",
+   "page": 17,
+   "vol": ""
+  }
+ ],
+ "index": [
+  {
+   "term": "ACV",
+   "pages": [
+    28,
+    30,
+    32
+   ]
+  },
+  {
+   "term": "Band A",
+   "pages": [
+    13,
+    28,
+    32
+   ]
+  },
+  {
+   "term": "Band C",
+   "pages": [
+    12,
+    13,
+    28,
+    32
+   ]
+  },
+  {
+   "term": "Credential",
+   "pages": [
+    5,
+    6,
+    10,
+    16,
+    28,
+    31,
+    32
+   ]
+  },
+  {
+   "term": "Ecosystem",
+   "pages": [
+    1,
+    4,
+    5,
+    32
+   ]
+  },
+  {
+   "term": "Federation",
+   "pages": [
+    30,
+    32
+   ]
+  },
+  {
+   "term": "Foundation tier",
+   "pages": [
+    9,
+    32
+   ]
+  },
+  {
+   "term": "Gate",
+   "pages": [
+    21,
+    28,
+    32
+   ]
+  },
+  {
+   "term": "GRR",
+   "pages": [
+    30,
+    32
+   ]
+  },
+  {
+   "term": "Human-in-the-loop",
+   "pages": [
+    7,
+    32
+   ]
+  },
+  {
+   "term": "Net revenue retention",
+   "pages": [
+    29,
+    30,
+    32
+   ]
+  },
+  {
+   "term": "No-fork rule",
+   "pages": [
+    29
+   ]
+  },
+  {
+   "term": "NRR",
+   "pages": [
+    29,
+    30
+   ]
+  },
+  {
+   "term": "Open source",
+   "pages": [
+    10,
+    30
+   ]
+  },
+  {
+   "term": "Pricing Council",
+   "pages": [
+    17,
+    18,
+    29
+   ]
+  },
+  {
+   "term": "Reference Implementation",
+   "pages": [
+    31
+   ]
+  },
+  {
+   "term": "System of record",
+   "pages": [
+    5,
+    33
+   ]
+  },
+  {
+   "term": "Value ledger",
+   "pages": [
+    8,
+    33
+   ]
+  },
+  {
+   "term": "Verification",
+   "pages": [
+    10,
+    16,
+    19,
+    29,
+    31,
+    33
+   ]
+  },
+  {
+   "term": "Wave",
+   "pages": [
+    4,
+    33
+   ]
+  }
+ ]
+}

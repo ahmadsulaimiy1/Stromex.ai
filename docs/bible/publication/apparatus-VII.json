@@ -1,0 +1,175 @@
+{
+ "tables": [
+  {
+   "n": 1,
+   "cap": "The ecosystem stack",
+   "page": 4,
+   "vol": ""
+  },
+  {
+   "n": 2,
+   "cap": "Wave 3 Ecosystems",
+   "page": 17,
+   "vol": ""
+  },
+  {
+   "n": 3,
+   "cap": "What it does differently",
+   "page": 18,
+   "vol": ""
+  },
+  {
+   "n": 4,
+   "cap": "Glossary of terms",
+   "page": 21,
+   "vol": ""
+  }
+ ],
+ "figures": [],
+ "index": [
+  {
+   "term": "ACV",
+   "pages": [
+    19,
+    20,
+    22,
+    24
+   ]
+  },
+  {
+   "term": "Band A",
+   "pages": [
+    20,
+    24
+   ]
+  },
+  {
+   "term": "Band C",
+   "pages": [
+    20,
+    24
+   ]
+  },
+  {
+   "term": "Credential",
+   "pages": [
+    4,
+    5,
+    20,
+    23,
+    24
+   ]
+  },
+  {
+   "term": "Ecosystem",
+   "pages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+   ]
+  },
+  {
+   "term": "Federation",
+   "pages": [
+    22,
+    24
+   ]
+  },
+  {
+   "term": "Gate",
+   "pages": [
+    2,
+    20,
+    24
+   ]
+  },
+  {
+   "term": "GRR",
+   "pages": [
+    22,
+    24
+   ]
+  },
+  {
+   "term": "Net revenue retention",
+   "pages": [
+    21,
+    22,
+    24
+   ]
+  },
+  {
+   "term": "No-fork rule",
+   "pages": [
+    21,
+    24
+   ]
+  },
+  {
+   "term": "NRR",
+   "pages": [
+    2,
+    19,
+    21,
+    22,
+    24
+   ]
+  },
+  {
+   "term": "Open source",
+   "pages": [
+    22
+   ]
+  },
+  {
+   "term": "Pricing Council",
+   "pages": [
+    21
+   ]
+  },
+  {
+   "term": "Reference Implementation",
+   "pages": [
+    3,
+    23
+   ]
+  },
+  {
+   "term": "Verification",
+   "pages": [
+    21,
+    23
+   ]
+  },
+  {
+   "term": "Wave",
+   "pages": [
+    1,
+    2,
+    3,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+   ]
+  }
+ ]
+}

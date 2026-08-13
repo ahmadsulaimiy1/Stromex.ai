@@ -16,8 +16,11 @@ const T = require('./lib/tokens');
 const E = require('./lib/editorial');
 const MD = require('./lib/md');
 
+// Roman numeral of a single book to compose; omitted composes the omnibus.
+const BOOK = process.argv[4] || process.env.BOOK || null;
 const APPARATUS = (() => {
-  try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'apparatus.json'), 'utf8')); }
+  const f = BOOK ? `apparatus-${BOOK}.json` : 'apparatus.json';
+  try { return JSON.parse(fs.readFileSync(path.join(__dirname, f), 'utf8')); }
   catch (e) { return null; }
 })();
 
@@ -169,6 +172,66 @@ const INDEX_TERMS = E.GLOSSARY.map(g => g[0]).concat([
 ]);
 
 // ── front matter ──────────────────────────────────────────────────────────
+function bookCover(v) {
+  return [panel({
+    fill: T.color.obsidian,
+    width: T.page.width,
+    height: T.page.height,
+    margins: { top: 1900, bottom: 1500, left: 1580, right: 1400 },
+    children: [
+      p({ spacing: { after: 0 }, children: [uRun('STROMEX', { size: 26, bold: true, characterSpacing: 240, color: 'FFFFFF' })] }),
+      p({ spacing: { before: 120, after: 240 }, children: [uRun('EXECUTIVE KNOWLEDGE SYSTEM', { size: 14, bold: true, characterSpacing: 200, color: T.color.accent })] }),
+      p({ spacing: { after: 60 }, children: [uRun('BOOK ' + v.roman, { size: 15, bold: true, characterSpacing: 220, color: '7C8794' })] }),
+      p({ spacing: { after: 700, line: T.lead(150, 0.9) }, children: [dRun(v.roman, { size: 150, bold: true, color: 'FFFFFF' })] }),
+      p({ spacing: { after: 200, line: T.lead(62, 1.06) }, children: [dRun(v.title, { size: 62, bold: true, color: T.color.accent })] }),
+      p({ spacing: { after: 140 }, border: { bottom: { style: BorderStyle.SINGLE, size: 8, color: T.color.accent, space: 12 } }, children: [run('')] }),
+      p({ spacing: { after: 90 }, children: [run(v.sub, { size: 23, color: 'D9DEE5' })] }),
+      p({ spacing: { after: 1200 }, children: [run('The StromeX Editorial Bible  ·  ' + E.EDITION, { size: 19, color: '7C8794' })] }),
+      p({ spacing: { after: 40 }, children: [uRun('AUTHORITY — ' + v.authority.toUpperCase(), { size: 13, bold: true, characterSpacing: 40, color: '9AA5B1' })] }),
+      p({ children: [uRun(E.DATE.toUpperCase() + '  ·  VERSION ' + E.VERSION, { size: 13, characterSpacing: 40, color: '7C8794' })] }),
+    ],
+  })];
+}
+
+function bookTitlePage(v) {
+  return [
+    p({ spacing: { before: 1400, after: 0 }, children: [uRun('STROMEX GROUP  ·  EXECUTIVE KNOWLEDGE SYSTEM', { size: 15, bold: true, characterSpacing: 160, color: T.color.accent })] }),
+    rule(T.color.rule, 4, 200, 640),
+    p({ spacing: { after: 0 }, children: [uRun('BOOK ' + v.roman, { size: 16, bold: true, characterSpacing: 200, color: T.color.graphite })] }),
+    p({ spacing: { before: 160, after: 220, line: T.lead(56, 1.06) }, children: [dRun(v.title, { size: 56, bold: true, color: T.color.ink })] }),
+    p({ spacing: { after: 700 }, children: [run(v.sub, { size: 22, color: T.color.ink2 })] }),
+    p({ spacing: { after: 140 }, children: [uRun('EXECUTIVE SUMMARY', { size: 13, bold: true, characterSpacing: 110, color: T.color.accent })] }),
+    p({ style: 'ExecSummary', children: MD.inline(v.summary) }),
+    rule(T.color.rule, 4, 500, 200),
+    p({ children: [run('One book of ten. The corpus index and the other nine are at docs/library/.', { size: 16, color: T.color.graphite })] }),
+    pageBreak(),
+  ];
+}
+
+function bookDocumentControl(v) {
+  return [
+    label('Document control'),
+    p({ spacing: { after: 260 }, children: [dRun('Document Control', { size: 40, bold: true, color: T.color.depth })] }),
+    twoColRows([
+      ['Book', `Book ${v.roman} — ${v.title}`],
+      ['Series', 'The StromeX Editorial Bible — Executive Knowledge System'],
+      ['Edition', E.EDITION],
+      ['Version', E.VERSION],
+      ['Status', v.status || 'Ratified'],
+      ['Classification', 'Confidential — internal and authorised parties'],
+      ['Authority tier', v.authority],
+      ['Owner', v.owner || 'Office of the Founder, StromeX Group Holdings'],
+      ['Review cycle', v.review || 'Annually'],
+      ['Amendment protocol', 'Book I, Chapter 9. Four tiers: Entrenched, Constitutional, Strategic, Operational.'],
+      ['Precedence', 'Book I governs. Where this book conflicts with Book I, Book I wins until formally amended.'],
+      ['Master source', 'The DOCX edition of this book. The PDF is generated from it and is content-identical.'],
+      ['Source of record', `docs/bible/${v.file}, under version control.`],
+      ['Issued', E.DATE],
+    ]),
+    pageBreak(),
+  ];
+}
+
 function cover() {
   const inner = [
     p({ spacing: { after: 0 }, children: [uRun('STROMEX', { size: 30, bold: true, characterSpacing: 260, color: 'FFFFFF' })] }),
@@ -593,7 +656,56 @@ function pageFooter(withRule) {
   });
 }
 
+function composeBook(v) {
+  const stats = { chapters: 0 };
+  const raw = fs.readFileSync(path.join(SRC, v.file), 'utf8');
+  const bodyChildren = [
+    ...volumeDivider(v),
+    ...MD.parse(prepare(raw), {
+      headingOffset: 1, chapterLevel: 2, indexTerms: INDEX_TERMS,
+      tableCaption: (ctx) => ctx || v.title,
+      figureCaption: (ctx) => ctx || v.title,
+      onHeading: (lvl) => { if (lvl === 2) stats.chapters++; },
+    }),
+    ...glossary(), ...bibliography(), ...indexPage(), ...colophon(),
+  ];
+
+  return new Document({
+    creator: 'StromeX Group Holdings',
+    title: `Book ${v.roman} — ${v.title} · The StromeX Editorial Bible`,
+    description: v.sub,
+    subject: 'StromeX Executive Knowledge System',
+    lastModifiedBy: 'StromeX Group Holdings',
+    styles: styles(), numbering, features: { updateFields: true },
+    sections: [
+      { properties: { page: { size: { width: T.page.width, height: T.page.height },
+          margin: { top: 0, bottom: 0, left: 0, right: 0, header: 0, footer: 0 } } },
+        children: bookCover(v) },
+      { properties: { page: { size: { width: T.page.width, height: T.page.height },
+          margin: T.page.margin,
+          pageNumbers: { start: 1, formatType: NumberFormat.LOWER_ROMAN } } },
+        footers: { default: pageFooter(false) },
+        children: [...bookTitlePage(v), ...copyrightPage(), ...bookDocumentControl(v), ...contentsPages()] },
+      { properties: { page: { size: { width: T.page.width, height: T.page.height },
+          margin: T.page.margin,
+          pageNumbers: { start: 1, formatType: NumberFormat.DECIMAL } } },
+        headers: { default: bodyHeader() },
+        footers: { default: pageFooter(true) },
+        children: bodyChildren },
+    ],
+  });
+}
+
 function main() {
+  if (BOOK) {
+    const v = E.VOLUMES.find(x => x.roman === BOOK);
+    if (!v) throw new Error('unknown book ' + BOOK);
+    return Packer.toBuffer(composeBook(v)).then((buf) => {
+      fs.writeFileSync(OUT, buf);
+      console.log('wrote', path.basename(OUT), (buf.length / 1048576).toFixed(2) + ' MB');
+    });
+  }
+
   const stats = { tables: 0, figures: 0, chapters: 0 };
 
   // ---- body: volumes

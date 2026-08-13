@@ -1,0 +1,231 @@
+{
+ "tables": [
+  {
+   "n": 1,
+   "cap": "The position that is actually winnable",
+   "page": 2,
+   "vol": ""
+  },
+  {
+   "n": 2,
+   "cap": "The Competitive Landscape, Honestly Read",
+   "page": 5,
+   "vol": ""
+  },
+  {
+   "n": 3,
+   "cap": "The encryption position",
+   "page": 8,
+   "vol": ""
+  },
+  {
+   "n": 4,
+   "cap": "The trade-offs, stated",
+   "page": 10,
+   "vol": ""
+  },
+  {
+   "n": 5,
+   "cap": "Messaging",
+   "page": 11,
+   "vol": ""
+  },
+  {
+   "n": 6,
+   "cap": "Calling & Real-Time Media",
+   "page": 12,
+   "vol": ""
+  },
+  {
+   "n": 7,
+   "cap": "The options, assessed",
+   "page": 14,
+   "vol": ""
+  },
+  {
+   "n": 8,
+   "cap": "Ai in Communication",
+   "page": 15,
+   "vol": ""
+  },
+  {
+   "n": 9,
+   "cap": "Trust, Safety & Abuse Prevention",
+   "page": 20,
+   "vol": ""
+  },
+  {
+   "n": 10,
+   "cap": "Business Model",
+   "page": 21,
+   "vol": ""
+  },
+  {
+   "n": 11,
+   "cap": "Roadmap",
+   "page": 22,
+   "vol": ""
+  },
+  {
+   "n": 12,
+   "cap": "Risks & What Would Kill It",
+   "page": 24,
+   "vol": ""
+  },
+  {
+   "n": 13,
+   "cap": "Glossary of terms",
+   "page": 26,
+   "vol": ""
+  }
+ ],
+ "figures": [
+  {
+   "n": 1,
+   "cap": "The shape",
+   "page": 7,
+   "vol": ""
+  }
+ ],
+ "index": [
+  {
+   "term": "ACV",
+   "pages": [
+    25,
+    27,
+    29
+   ]
+  },
+  {
+   "term": "Band A",
+   "pages": [
+    25,
+    29
+   ]
+  },
+  {
+   "term": "Band C",
+   "pages": [
+    25,
+    29
+   ]
+  },
+  {
+   "term": "Credential",
+   "pages": [
+    18,
+    25,
+    28,
+    29
+   ]
+  },
+  {
+   "term": "Federation",
+   "pages": [
+    7,
+    9,
+    17,
+    27,
+    29
+   ]
+  },
+  {
+   "term": "Free tier",
+   "pages": [
+    21,
+    29
+   ]
+  },
+  {
+   "term": "Gate",
+   "pages": [
+    22,
+    23,
+    25,
+    29
+   ]
+  },
+  {
+   "term": "GRR",
+   "pages": [
+    27,
+    29
+   ]
+  },
+  {
+   "term": "Net revenue retention",
+   "pages": [
+    26,
+    27,
+    29
+   ]
+  },
+  {
+   "term": "No-fork rule",
+   "pages": [
+    26,
+    29
+   ]
+  },
+  {
+   "term": "NRR",
+   "pages": [
+    26,
+    27,
+    29
+   ]
+  },
+  {
+   "term": "Open source",
+   "pages": [
+    27,
+    29
+   ]
+  },
+  {
+   "term": "Pricing Council",
+   "pages": [
+    26
+   ]
+  },
+  {
+   "term": "Reference Implementation",
+   "pages": [
+    28
+   ]
+  },
+  {
+   "term": "SpaceTalk",
+   "pages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+   ]
+  },
+  {
+   "term": "StromeX Identity",
+   "pages": [
+    6,
+    18
+   ]
+  },
+  {
+   "term": "Verification",
+   "pages": [
+    26,
+    28
+   ]
+  }
+ ]
+}

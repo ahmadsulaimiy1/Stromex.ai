@@ -20,7 +20,7 @@ Edition II describes a **group**. StromeX is an AI-powered digital transformatio
 
 The reframing is structural, not cosmetic. Edition I asked "what should our product do?" Edition II asks "what does an institution need in order to be modern, and which of those needs can StromeX meet, at what price, with what margin, at what scale, in which country, by which year?"
 
-## The ten volumes
+## The eleven volumes
 
 | Vol. | Title | What it governs |
 |---|---|---|
@@ -34,6 +34,7 @@ The reframing is structural, not cosmetic. Edition I asked "what should our prod
 | **VIII** | [Expansion, Finance & the Roadmap](VOLUME-VIII-EXPANSION-FINANCE-ROADMAP.md) | The three phases, the three scenarios, unit economics, capital, geography, acquisitions, valuation logic |
 | **IX** | [The Institution](VOLUME-IX-THE-INSTITUTION.md) | Innovation lab, research institute, measurement, talent, operations, sustainability, future technologies, the 100-Year Plan |
 | **X** | [SpaceTalk — The Communication Operating System](VOLUME-X-SPACETALK.md) | The communication platform: strategy, architecture, federation, safety, business model, roadmap |
+| **XI** | [The Financial Master Plan](VOLUME-XI-FINANCIAL-MASTER-PLAN.md) | The operating model: drivers, cohort engine, twenty revenue streams, scenarios, sensitivity, capital. Ships with a live workbook |
 
 ## The three phases
 

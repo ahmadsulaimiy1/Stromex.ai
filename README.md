@@ -21,17 +21,23 @@ Ten volumes. The supreme governing authority of the group. Where a roadmap, cont
 | **VIII** | [Expansion, Finance & the Roadmap](docs/bible/VOLUME-VIII-EXPANSION-FINANCE-ROADMAP.md) |
 | **IX** | [The Institution — Innovation, Research, Talent, Operations, the 100-Year Plan](docs/bible/VOLUME-IX-THE-INSTITUTION.md) |
 | **X** | [SpaceTalk — The Communication Operating System](docs/bible/VOLUME-X-SPACETALK.md) |
+| **XI** | [The Financial Master Plan](docs/bible/VOLUME-XI-FINANCIAL-MASTER-PLAN.md) — with a live driver-based model |
 
 **The three phases** (Volume VIII §1): **Foundation** 2027–2030 · **Race** 2031–2035 · **Global Scale** 2036–2040.
 
-### Published editions
+### 📚 The Executive Knowledge System
+
+The corpus is issued as **[eleven independently-versioned books](docs/library/README.md)** — a constitution that changes once a decade and a price book that changes quarterly should not share a version number. Each book stands alone with its own cover, document control, contents, apparatus, owner and review cycle.
+
+**435 pages across eleven books**, plus a live financial operating model.
 
 | Edition | File |
 |---|---|
-| Microsoft Word master (299pp, A4) | [`docs/bible/StromeX-Editorial-Bible.docx`](docs/bible/StromeX-Editorial-Bible.docx) |
-| Press-quality PDF | [`docs/bible/StromeX-Editorial-Bible.pdf`](docs/bible/StromeX-Editorial-Bible.pdf) |
+| The eleven books (DOCX + PDF each) | [`docs/library/`](docs/library/README.md) |
+| Omnibus — all volumes in one file (317pp) | [`docs/bible/StromeX-Editorial-Bible.pdf`](docs/bible/StromeX-Editorial-Bible.pdf) · [`.docx`](docs/bible/StromeX-Editorial-Bible.docx) |
+| **The financial operating model** | [`StromeX-Financial-Master-Plan.xlsx`](docs/library/stromex-book-11-financial-master-plan/StromeX-Financial-Master-Plan.xlsx) |
 
-Both are generated from the markdown corpus and are content-identical. Rebuild instructions: [`docs/bible/publication/`](docs/bible/publication/README.md).
+All are generated from the markdown corpus and cannot drift apart. Rebuild: [`docs/bible/publication/`](docs/bible/publication/README.md).
 
 ### Edition I (superseded, retained for the record)
 
