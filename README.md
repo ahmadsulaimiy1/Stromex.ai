@@ -18,11 +18,20 @@ Ten volumes. The supreme governing authority of the group. Where a roadmap, cont
 | **V** | [Go-to-Market — Sales, Customer Success, Partners, Ecosystem](docs/bible/VOLUME-V-GTM-SALES-PARTNERS.md) |
 | **VI** | [Creative — Publishing, Design, Print, Media](docs/bible/VOLUME-VI-CREATIVE-PUBLISHING-PRINT.md) |
 | **VII** | [Industry Ecosystems & the Enterprise Division](docs/bible/VOLUME-VII-INDUSTRY-ECOSYSTEMS.md) |
-| **VIII** | [Expansion, Financial Architecture & the 20-Year Roadmap](docs/bible/VOLUME-VIII-EXPANSION-FINANCE-ROADMAP.md) |
+| **VIII** | [Expansion, Finance & the Roadmap](docs/bible/VOLUME-VIII-EXPANSION-FINANCE-ROADMAP.md) |
 | **IX** | [The Institution — Innovation, Research, Talent, Operations, the 100-Year Plan](docs/bible/VOLUME-IX-THE-INSTITUTION.md) |
 | **X** | [SpaceTalk — The Communication Operating System](docs/bible/VOLUME-X-SPACETALK.md) |
 
 **The three phases** (Volume VIII §1): **Foundation** 2027–2030 · **Race** 2031–2035 · **Global Scale** 2036–2040.
+
+### Published editions
+
+| Edition | File |
+|---|---|
+| Microsoft Word master (299pp, A4) | [`docs/bible/StromeX-Editorial-Bible.docx`](docs/bible/StromeX-Editorial-Bible.docx) |
+| Press-quality PDF | [`docs/bible/StromeX-Editorial-Bible.pdf`](docs/bible/StromeX-Editorial-Bible.pdf) |
+
+Both are generated from the markdown corpus and are content-identical. Rebuild instructions: [`docs/bible/publication/`](docs/bible/publication/README.md).
 
 ### Edition I (superseded, retained for the record)
 

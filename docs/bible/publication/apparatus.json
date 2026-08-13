@@ -1,0 +1,1581 @@
+{
+ "tables": [
+  {
+   "n": 1,
+   "cap": "The rule",
+   "page": 4,
+   "vol": "Volume I \u2014 The Constitution"
+  },
+  {
+   "n": 2,
+   "cap": "The tier ladder",
+   "page": 7,
+   "vol": "Volume I \u2014 The Constitution"
+  },
+  {
+   "n": 3,
+   "cap": "Open source policy",
+   "page": 10,
+   "vol": "Volume I \u2014 The Constitution"
+  },
+  {
+   "n": 4,
+   "cap": "The eleven revenue engines",
+   "page": 12,
+   "vol": "Volume I \u2014 The Constitution"
+  },
+  {
+   "n": 5,
+   "cap": "Regional price bands",
+   "page": 13,
+   "vol": "Volume I \u2014 The Constitution"
+  },
+  {
+   "n": 6,
+   "cap": "The revenue-per-relationship ladder",
+   "page": 13,
+   "vol": "Volume I \u2014 The Constitution"
+  },
+  {
+   "n": 7,
+   "cap": "Decision rights",
+   "page": 18,
+   "vol": "Volume I \u2014 The Constitution"
+  },
+  {
+   "n": 8,
+   "cap": "Tiers of authority",
+   "page": 19,
+   "vol": "Volume I \u2014 The Constitution"
+  },
+  {
+   "n": 9,
+   "cap": "The logo decision",
+   "page": 20,
+   "vol": "Volume I \u2014 The Constitution"
+  },
+  {
+   "n": 10,
+   "cap": "The identity system",
+   "page": 21,
+   "vol": "Volume I \u2014 The Constitution"
+  },
+  {
+   "n": 11,
+   "cap": "The identity system",
+   "page": 22,
+   "vol": "Volume I \u2014 The Constitution"
+  },
+  {
+   "n": 12,
+   "cap": "The voice",
+   "page": 23,
+   "vol": "Volume I \u2014 The Constitution"
+  },
+  {
+   "n": 13,
+   "cap": "The operating rhythm",
+   "page": 25,
+   "vol": "Volume I \u2014 The Constitution"
+  },
+  {
+   "n": 14,
+   "cap": "The bottom-up formula",
+   "page": 31,
+   "vol": "Volume II \u2014 Market Strategy & Competitive Positioning"
+  },
+  {
+   "n": 15,
+   "cap": "Segmentation model",
+   "page": 32,
+   "vol": "Volume II \u2014 Market Strategy & Competitive Positioning"
+  },
+  {
+   "n": 16,
+   "cap": "The economic buyer",
+   "page": 33,
+   "vol": "Volume II \u2014 Market Strategy & Competitive Positioning"
+  },
+  {
+   "n": 17,
+   "cap": "The five objections and their answers",
+   "page": 34,
+   "vol": "Volume II \u2014 Market Strategy & Competitive Positioning"
+  },
+  {
+   "n": 18,
+   "cap": "By audience",
+   "page": 40,
+   "vol": "Volume II \u2014 Market Strategy & Competitive Positioning"
+  },
+  {
+   "n": 19,
+   "cap": "The Moat, Honestly Assessed",
+   "page": 44,
+   "vol": "Volume II \u2014 Market Strategy & Competitive Positioning"
+  },
+  {
+   "n": 20,
+   "cap": "Risk Register",
+   "page": 47,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 21,
+   "cap": "Discount authority",
+   "page": 49,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 22,
+   "cap": "Website tiers",
+   "page": 51,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 23,
+   "cap": "Page-level and structural add-ons",
+   "page": 52,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 24,
+   "cap": "Content",
+   "page": 53,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 25,
+   "cap": "Multilingual",
+   "page": 53,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 26,
+   "cap": "SEO, performance & accessibility",
+   "page": 54,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 27,
+   "cap": "Domains & DNS",
+   "page": 54,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 28,
+   "cap": "Certificates (TLS/SSL)",
+   "page": 55,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 29,
+   "cap": "Email",
+   "page": 55,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 30,
+   "cap": "Core platform",
+   "page": 56,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 31,
+   "cap": "Portals & role surfaces",
+   "page": 57,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 32,
+   "cap": "Academic modules",
+   "page": 58,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 33,
+   "cap": "Administrative & operational modules",
+   "page": 60,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 34,
+   "cap": "Communications",
+   "page": 60,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 35,
+   "cap": "Implementation & migration",
+   "page": 61,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 36,
+   "cap": "Credential issuance",
+   "page": 62,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 37,
+   "cap": "Verification",
+   "page": 63,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 38,
+   "cap": "Digital identity",
+   "page": 64,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 39,
+   "cap": "Physical credential production",
+   "page": 65,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 40,
+   "cap": "The verification tokens",
+   "page": 65,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 41,
+   "cap": "Managed hosting",
+   "page": 66,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 42,
+   "cap": "Compute, storage & network (metered)",
+   "page": 66,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 43,
+   "cap": "Managed data services",
+   "page": 67,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 44,
+   "cap": "GPU & AI compute",
+   "page": 67,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 45,
+   "cap": "Platform services",
+   "page": 68,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 46,
+   "cap": "Data residency & sovereignty",
+   "page": 68,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 47,
+   "cap": "AI agents \u2014 subscription per agent, per institution",
+   "page": 69,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 48,
+   "cap": "AI agents \u2014 subscription per agent, per institution",
+   "page": 70,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 49,
+   "cap": "AI agents \u2014 subscription per agent, per institution",
+   "page": 70,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 50,
+   "cap": "AI platform",
+   "page": 71,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 51,
+   "cap": "Stromex Pay",
+   "page": 72,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 52,
+   "cap": "Automation platform",
+   "page": 73,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 53,
+   "cap": "Prebuilt automation packs",
+   "page": 74,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 54,
+   "cap": "Integration",
+   "page": 75,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 55,
+   "cap": "Mobile & Applications",
+   "page": 76,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 56,
+   "cap": "Intelligence & Analytics",
+   "page": 77,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 57,
+   "cap": "Security & Compliance",
+   "page": 79,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 58,
+   "cap": "Access & security",
+   "page": 80,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 59,
+   "cap": "Identity & issuance hardware",
+   "page": 81,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 60,
+   "cap": "Campus & operations",
+   "page": 82,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 61,
+   "cap": "Smart campus packages",
+   "page": 82,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 62,
+   "cap": "Hardware services",
+   "page": 83,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 63,
+   "cap": "Brand identity",
+   "page": 84,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 64,
+   "cap": "Print & collateral",
+   "page": 85,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 65,
+   "cap": "Digital & product design",
+   "page": 86,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 66,
+   "cap": "Motion, 3D & media",
+   "page": 86,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 67,
+   "cap": "Editorial",
+   "page": 87,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 68,
+   "cap": "Design & production",
+   "page": 88,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 69,
+   "cap": "International print coordination",
+   "page": 89,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 70,
+   "cap": "International print coordination",
+   "page": 89,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 71,
+   "cap": "Audio & interactive",
+   "page": 89,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 72,
+   "cap": "Institutional & educational publishing",
+   "page": 90,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 73,
+   "cap": "Author & publisher services",
+   "page": 91,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 74,
+   "cap": "Strategy & transformation",
+   "page": 92,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 75,
+   "cap": "Education services",
+   "page": 93,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 76,
+   "cap": "Governance, policy & compliance",
+   "page": 94,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 77,
+   "cap": "Marketing & growth services",
+   "page": 95,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 78,
+   "cap": "Stromex Academy",
+   "page": 96,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 79,
+   "cap": "Marketplace",
+   "page": 97,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 80,
+   "cap": "White-label & licensing",
+   "page": 98,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 81,
+   "cap": "Support tiers",
+   "page": 99,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 82,
+   "cap": "Service levels",
+   "page": 99,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 83,
+   "cap": "Managed services",
+   "page": 100,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 84,
+   "cap": "StromeX Credits",
+   "page": 101,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 85,
+   "cap": "StromeX Credits",
+   "page": 101,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 86,
+   "cap": "Education suites",
+   "page": 103,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 87,
+   "cap": "Other sector suites",
+   "page": 104,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 88,
+   "cap": "Cross-division bundles",
+   "page": 104,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 89,
+   "cap": "A 220-student primary school in Ikorodu, Lagos (Band A)",
+   "page": 105,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 90,
+   "cap": "An 1,800-student secondary school & college group (Band A)",
+   "page": 106,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 91,
+   "cap": "An author publishing an Islamic title, UK print (mixed bands)",
+   "page": 107,
+   "vol": "Volume III \u2014 The Catalogue"
+  },
+  {
+   "n": 92,
+   "cap": "A state ministry of education, 400 schools (Band A, Government tier)",
+   "page": 108,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 93,
+   "cap": "Price book governance",
+   "page": 108,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 94,
+   "cap": "The canonical stack",
+   "page": 112,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 95,
+   "cap": "The tenancy model",
+   "page": 113,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 96,
+   "cap": "Data classification",
+   "page": 115,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 97,
+   "cap": "The verification surfaces",
+   "page": 116,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 98,
+   "cap": "The layered verification model",
+   "page": 117,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 99,
+   "cap": "Api & Integration Standards",
+   "page": 118,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 100,
+   "cap": "The agent model",
+   "page": 120,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 101,
+   "cap": "The stakes ladder",
+   "page": 121,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 102,
+   "cap": "Budgets \u2014 release blockers, not aspirations",
+   "page": 123,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 103,
+   "cap": "The degraded-mode requirement",
+   "page": 123,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 104,
+   "cap": "Zero trust, concretely",
+   "page": 125,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 105,
+   "cap": "Security Bible Ii: Identity & Access",
+   "page": 126,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 106,
+   "cap": "Security Bible Iii: Cryptography & Data Protection",
+   "page": 127,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 107,
+   "cap": "Security Bible Iv: Secure Development",
+   "page": 128,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 108,
+   "cap": "Backup",
+   "page": 129,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 109,
+   "cap": "Recovery objectives",
+   "page": 129,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 110,
+   "cap": "Severity",
+   "page": 130,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 111,
+   "cap": "Notification commitments",
+   "page": 130,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 112,
+   "cap": "The central constraint",
+   "page": 136,
+   "vol": "Volume V \u2014 Go-to-Market"
+  },
+  {
+   "n": 113,
+   "cap": "The free-to-paid conversion mechanics",
+   "page": 137,
+   "vol": "Volume V \u2014 Go-to-Market"
+  },
+  {
+   "n": 114,
+   "cap": "The Sales Motions",
+   "page": 139,
+   "vol": "Volume V \u2014 Go-to-Market"
+  },
+  {
+   "n": 115,
+   "cap": "Health scoring",
+   "page": 145,
+   "vol": "Volume V \u2014 Go-to-Market"
+  },
+  {
+   "n": 116,
+   "cap": "Churn: causes and countermeasures",
+   "page": 147,
+   "vol": "Volume V \u2014 Go-to-Market"
+  },
+  {
+   "n": 117,
+   "cap": "The mix",
+   "page": 148,
+   "vol": "Volume V \u2014 Go-to-Market"
+  },
+  {
+   "n": 118,
+   "cap": "Partner tiers",
+   "page": 149,
+   "vol": "Volume V \u2014 Go-to-Market"
+  },
+  {
+   "n": 119,
+   "cap": "The ecosystem surfaces",
+   "page": 151,
+   "vol": "Volume V \u2014 Go-to-Market"
+  },
+  {
+   "n": 120,
+   "cap": "Community programmes",
+   "page": 152,
+   "vol": "Volume V \u2014 Go-to-Market"
+  },
+  {
+   "n": 121,
+   "cap": "The model",
+   "page": 158,
+   "vol": "Volume VI \u2014 The Creative Division"
+  },
+  {
+   "n": 122,
+   "cap": "The design layers",
+   "page": 161,
+   "vol": "Volume VI \u2014 The Creative Division"
+  },
+  {
+   "n": 123,
+   "cap": "The typographic standard",
+   "page": 164,
+   "vol": "Volume VI \u2014 The Creative Division"
+  },
+  {
+   "n": 124,
+   "cap": "Rights, Licensing & Attribution",
+   "page": 165,
+   "vol": "Volume VI \u2014 The Creative Division"
+  },
+  {
+   "n": 125,
+   "cap": "The tier decision",
+   "page": 166,
+   "vol": "Volume VI \u2014 The Creative Division"
+  },
+  {
+   "n": 126,
+   "cap": "Audio",
+   "page": 167,
+   "vol": "Volume VI \u2014 The Creative Division"
+  },
+  {
+   "n": 127,
+   "cap": "Quality gates",
+   "page": 169,
+   "vol": "Volume VI \u2014 The Creative Division"
+  },
+  {
+   "n": 128,
+   "cap": "The ecosystem stack",
+   "page": 173,
+   "vol": "Volume VII \u2014 Industry Ecosystems"
+  },
+  {
+   "n": 129,
+   "cap": "Wave 3 Ecosystems",
+   "page": 186,
+   "vol": "Volume VII \u2014 Industry Ecosystems"
+  },
+  {
+   "n": 130,
+   "cap": "What it does differently",
+   "page": 187,
+   "vol": "Volume VII \u2014 Industry Ecosystems"
+  },
+  {
+   "n": 131,
+   "cap": "The three phases",
+   "page": 190,
+   "vol": "Volume VIII \u2014 Expansion, Finance & the Roadmap"
+  },
+  {
+   "n": 132,
+   "cap": "PHASE II \u2014 RACE (2031\u20132035)",
+   "page": 191,
+   "vol": "Volume VIII \u2014 Expansion, Finance & the Roadmap"
+  },
+  {
+   "n": 133,
+   "cap": "Gate I \u2192 II (assessed from 2030)",
+   "page": 193,
+   "vol": "Volume VIII \u2014 Expansion, Finance & the Roadmap"
+  },
+  {
+   "n": 134,
+   "cap": "The reference customer \u2014 a Band A Professional-tier school",
+   "page": 194,
+   "vol": "Volume VIII \u2014 Expansion, Finance & the Roadmap"
+  },
+  {
+   "n": 135,
+   "cap": "The other reference customers",
+   "page": 195,
+   "vol": "Volume VIII \u2014 Expansion, Finance & the Roadmap"
+  },
+  {
+   "n": 136,
+   "cap": "The engine mix over time",
+   "page": 196,
+   "vol": "Volume VIII \u2014 Expansion, Finance & the Roadmap"
+  },
+  {
+   "n": 137,
+   "cap": "Gross margin trajectory",
+   "page": 196,
+   "vol": "Volume VIII \u2014 Expansion, Finance & the Roadmap"
+  },
+  {
+   "n": 138,
+   "cap": "The scenarios",
+   "page": 197,
+   "vol": "Volume VIII \u2014 Expansion, Finance & the Roadmap"
+  },
+  {
+   "n": 139,
+   "cap": "The scenarios",
+   "page": 198,
+   "vol": "Volume VIII \u2014 Expansion, Finance & the Roadmap"
+  },
+  {
+   "n": 140,
+   "cap": "The scenarios",
+   "page": 198,
+   "vol": "Volume VIII \u2014 Expansion, Finance & the Roadmap"
+  },
+  {
+   "n": 141,
+   "cap": "The valuation arithmetic, stated plainly",
+   "page": 199,
+   "vol": "Volume VIII \u2014 Expansion, Finance & the Roadmap"
+  },
+  {
+   "n": 142,
+   "cap": "Valuation Logic, Honestly Stated",
+   "page": 200,
+   "vol": "Volume VIII \u2014 Expansion, Finance & the Roadmap"
+  },
+  {
+   "n": 143,
+   "cap": "The sequence",
+   "page": 201,
+   "vol": "Volume VIII \u2014 Expansion, Finance & the Roadmap"
+  },
+  {
+   "n": 144,
+   "cap": "Allocation of free cash flow, by phase",
+   "page": 203,
+   "vol": "Volume VIII \u2014 Expansion, Finance & the Roadmap"
+  },
+  {
+   "n": 145,
+   "cap": "The sequence and its logic",
+   "page": 206,
+   "vol": "Volume VIII \u2014 Expansion, Finance & the Roadmap"
+  },
+  {
+   "n": 146,
+   "cap": "The three entry modes",
+   "page": 206,
+   "vol": "Volume VIII \u2014 Expansion, Finance & the Roadmap"
+  },
+  {
+   "n": 147,
+   "cap": "The target categories",
+   "page": 208,
+   "vol": "Volume VIII \u2014 Expansion, Finance & the Roadmap"
+  },
+  {
+   "n": 148,
+   "cap": "What Would Make This Plan Wrong",
+   "page": 212,
+   "vol": "Volume IX \u2014 The Institution"
+  },
+  {
+   "n": 149,
+   "cap": "The annual production target",
+   "page": 215,
+   "vol": "Volume IX \u2014 The Institution"
+  },
+  {
+   "n": 150,
+   "cap": "The 100-idea discipline",
+   "page": 215,
+   "vol": "Volume IX \u2014 The Institution"
+  },
+  {
+   "n": 151,
+   "cap": "Research domains",
+   "page": 217,
+   "vol": "Volume IX \u2014 The Institution"
+  },
+  {
+   "n": 152,
+   "cap": "The measurement domains",
+   "page": 219,
+   "vol": "Volume IX \u2014 The Institution"
+  },
+  {
+   "n": 153,
+   "cap": "The named anti-metrics",
+   "page": 220,
+   "vol": "Volume IX \u2014 The Institution"
+  },
+  {
+   "n": 154,
+   "cap": "The hiring standard",
+   "page": 221,
+   "vol": "Volume IX \u2014 The Institution"
+  },
+  {
+   "n": 155,
+   "cap": "The promotion framework",
+   "page": 222,
+   "vol": "Volume IX \u2014 The Institution"
+  },
+  {
+   "n": 156,
+   "cap": "Entry programmes",
+   "page": 222,
+   "vol": "Volume IX \u2014 The Institution"
+  },
+  {
+   "n": 157,
+   "cap": "The SOP library",
+   "page": 224,
+   "vol": "Volume IX \u2014 The Institution"
+  },
+  {
+   "n": 158,
+   "cap": "The evaluation doctrine",
+   "page": 226,
+   "vol": "Volume IX \u2014 The Institution"
+  },
+  {
+   "n": 159,
+   "cap": "The watch list",
+   "page": 227,
+   "vol": "Volume IX \u2014 The Institution"
+  },
+  {
+   "n": 160,
+   "cap": "Environmental",
+   "page": 229,
+   "vol": "Volume IX \u2014 The Institution"
+  },
+  {
+   "n": 161,
+   "cap": "Community",
+   "page": 230,
+   "vol": "Volume IX \u2014 The Institution"
+  },
+  {
+   "n": 162,
+   "cap": "The four generational transitions",
+   "page": 232,
+   "vol": "Volume IX \u2014 The Institution"
+  },
+  {
+   "n": 163,
+   "cap": "The authorship standard",
+   "page": 233,
+   "vol": "Volume IX \u2014 The Institution"
+  },
+  {
+   "n": 164,
+   "cap": "The position that is actually winnable",
+   "page": 236,
+   "vol": "Volume X \u2014 SpaceTalk"
+  },
+  {
+   "n": 165,
+   "cap": "The Competitive Landscape, Honestly Read",
+   "page": 239,
+   "vol": "Volume X \u2014 SpaceTalk"
+  },
+  {
+   "n": 166,
+   "cap": "The encryption position",
+   "page": 242,
+   "vol": "Volume X \u2014 SpaceTalk"
+  },
+  {
+   "n": 167,
+   "cap": "The trade-offs, stated",
+   "page": 244,
+   "vol": "Volume X \u2014 SpaceTalk"
+  },
+  {
+   "n": 168,
+   "cap": "Messaging",
+   "page": 245,
+   "vol": "Volume X \u2014 SpaceTalk"
+  },
+  {
+   "n": 169,
+   "cap": "Calling & Real-Time Media",
+   "page": 246,
+   "vol": "Volume X \u2014 SpaceTalk"
+  },
+  {
+   "n": 170,
+   "cap": "The options, assessed",
+   "page": 248,
+   "vol": "Volume X \u2014 SpaceTalk"
+  },
+  {
+   "n": 171,
+   "cap": "Ai in Communication",
+   "page": 249,
+   "vol": "Volume X \u2014 SpaceTalk"
+  },
+  {
+   "n": 172,
+   "cap": "Trust, Safety & Abuse Prevention",
+   "page": 254,
+   "vol": "Volume X \u2014 SpaceTalk"
+  },
+  {
+   "n": 173,
+   "cap": "Business Model",
+   "page": 255,
+   "vol": "Volume X \u2014 SpaceTalk"
+  },
+  {
+   "n": 174,
+   "cap": "Roadmap",
+   "page": 256,
+   "vol": "Volume X \u2014 SpaceTalk"
+  },
+  {
+   "n": 175,
+   "cap": "Risks & What Would Kill It",
+   "page": 258,
+   "vol": "Volume X \u2014 SpaceTalk"
+  },
+  {
+   "n": 176,
+   "cap": "Gate I \u2192 II \u2014 assessed from 2030",
+   "page": 260,
+   "vol": "Volume X \u2014 SpaceTalk"
+  },
+  {
+   "n": 177,
+   "cap": "Gate II \u2192 III \u2014 assessed from 2035",
+   "page": 260,
+   "vol": "Volume X \u2014 SpaceTalk"
+  },
+  {
+   "n": 178,
+   "cap": "Legal & regulatory",
+   "page": 262,
+   "vol": "Volume X \u2014 SpaceTalk"
+  },
+  {
+   "n": 179,
+   "cap": "Commercial",
+   "page": 262,
+   "vol": "Volume X \u2014 SpaceTalk"
+  },
+  {
+   "n": 180,
+   "cap": "Product, operational & financial",
+   "page": 263,
+   "vol": "Volume X \u2014 SpaceTalk"
+  },
+  {
+   "n": 181,
+   "cap": "Metric definitions and targets",
+   "page": 264,
+   "vol": "Volume X \u2014 SpaceTalk"
+  },
+  {
+   "n": 182,
+   "cap": "Glossary of terms",
+   "page": 266,
+   "vol": "Volume X \u2014 SpaceTalk"
+  }
+ ],
+ "figures": [
+  {
+   "n": 1,
+   "cap": "The anatomy of an ecosystem",
+   "page": 5,
+   "vol": "Volume I \u2014 The Constitution"
+  },
+  {
+   "n": 2,
+   "cap": "Group structure",
+   "page": 17,
+   "vol": "Volume I \u2014 The Constitution"
+  },
+  {
+   "n": 3,
+   "cap": "The shape",
+   "page": 111,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 4,
+   "cap": "The canonical domain model",
+   "page": 114,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 5,
+   "cap": "The provider-independence doctrine",
+   "page": 119,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 6,
+   "cap": "Retrieval before generation",
+   "page": 119,
+   "vol": "Volume IV \u2014 Engineering, AI Architecture, Cloud & Security"
+  },
+  {
+   "n": 7,
+   "cap": "The funnel",
+   "page": 137,
+   "vol": "Volume V \u2014 Go-to-Market"
+  },
+  {
+   "n": 8,
+   "cap": "The shape",
+   "page": 241,
+   "vol": "Volume X \u2014 SpaceTalk"
+  }
+ ],
+ "index": [
+  {
+   "term": "ACV",
+   "pages": [
+    31,
+    32,
+    146,
+    188,
+    265,
+    267,
+    269
+   ]
+  },
+  {
+   "term": "Band A",
+   "pages": [
+    13,
+    45,
+    49,
+    92,
+    105,
+    106,
+    107,
+    108,
+    136,
+    164,
+    194,
+    195,
+    265,
+    269
+   ]
+  },
+  {
+   "term": "Band B",
+   "pages": [
+    49,
+    92,
+    164,
+    269
+   ]
+  },
+  {
+   "term": "Band C",
+   "pages": [
+    12,
+    13,
+    49,
+    92,
+    105,
+    195,
+    199,
+    205,
+    265,
+    269
+   ]
+  },
+  {
+   "term": "CAC payback",
+   "pages": [
+    153,
+    195,
+    260,
+    269
+   ]
+  },
+  {
+   "term": "Craft standard",
+   "pages": [
+    154,
+    156,
+    269
+   ]
+  },
+  {
+   "term": "Credential",
+   "pages": [
+    5,
+    6,
+    10,
+    16,
+    28,
+    29,
+    40,
+    48,
+    50,
+    62,
+    63,
+    64,
+    65,
+    96
+   ]
+  },
+  {
+   "term": "Data residency",
+   "pages": [
+    68
+   ]
+  },
+  {
+   "term": "Ecosystem",
+   "pages": [
+    1,
+    4,
+    5,
+    35,
+    40,
+    51,
+    148,
+    151,
+    152,
+    170,
+    171,
+    172,
+    173,
+    174
+   ]
+  },
+  {
+   "term": "Entrenched provision",
+   "pages": [
+    202
+   ]
+  },
+  {
+   "term": "Federation",
+   "pages": [
+    235,
+    241,
+    243,
+    251,
+    267
+   ]
+  },
+  {
+   "term": "Foundation tier",
+   "pages": [
+    9
+   ]
+  },
+  {
+   "term": "Free tier",
+   "pages": [
+    137,
+    230,
+    255
+   ]
+  },
+  {
+   "term": "Gate",
+   "pages": [
+    21,
+    39,
+    43,
+    45,
+    47,
+    60,
+    68,
+    73,
+    74,
+    80,
+    82,
+    111,
+    119,
+    134
+   ]
+  },
+  {
+   "term": "GRR",
+   "pages": [
+    267
+   ]
+  },
+  {
+   "term": "Guilloche",
+   "pages": [
+    117
+   ]
+  },
+  {
+   "term": "Human-in-the-loop",
+   "pages": [
+    7,
+    47
+   ]
+  },
+  {
+   "term": "LTV",
+   "pages": [
+    194
+   ]
+  },
+  {
+   "term": "Marketplace",
+   "pages": [
+    48,
+    97,
+    150,
+    151,
+    198
+   ]
+  },
+  {
+   "term": "Net revenue retention",
+   "pages": [
+    143,
+    146,
+    193,
+    260,
+    266,
+    267,
+    270
+   ]
+  },
+  {
+   "term": "No-fork rule",
+   "pages": [
+    109,
+    266,
+    270
+   ]
+  },
+  {
+   "term": "NRR",
+   "pages": [
+    146,
+    171,
+    188,
+    198,
+    199,
+    211,
+    266,
+    267,
+    270
+   ]
+  },
+  {
+   "term": "Open source",
+   "pages": [
+    10,
+    124,
+    151,
+    230,
+    267,
+    270
+   ]
+  },
+  {
+   "term": "Partner network",
+   "pages": [
+    46,
+    149,
+    150,
+    270
+   ]
+  },
+  {
+   "term": "Phase gate",
+   "pages": [
+    47,
+    193,
+    260,
+    270
+   ]
+  },
+  {
+   "term": "Pricing Council",
+   "pages": [
+    17,
+    18,
+    48,
+    49,
+    108,
+    266,
+    270
+   ]
+  },
+  {
+   "term": "Reference Implementation",
+   "pages": [
+    50,
+    109,
+    172,
+    268,
+    270
+   ]
+  },
+  {
+   "term": "Rule of 40",
+   "pages": [
+    198,
+    199,
+    270
+   ]
+  },
+  {
+   "term": "Smart campus",
+   "pages": [
+    48,
+    80,
+    82,
+    270
+   ]
+  },
+  {
+   "term": "SpaceTalk",
+   "pages": [
+    234,
+    235,
+    236,
+    237,
+    238,
+    239,
+    240,
+    241,
+    242,
+    243,
+    244,
+    245,
+    246,
+    247
+   ]
+  },
+  {
+   "term": "Stakes ladder",
+   "pages": [
+    121,
+    270
+   ]
+  },
+  {
+   "term": "StromeX Cloud",
+   "pages": [
+    66,
+    270
+   ]
+  },
+  {
+   "term": "StromeX Identity",
+   "pages": [
+    240,
+    252
+   ]
+  },
+  {
+   "term": "StromeX Labs",
+   "pages": [
+    215
+   ]
+  },
+  {
+   "term": "StromeX Pay",
+   "pages": [
+    72,
+    191
+   ]
+  },
+  {
+   "term": "Sustainability",
+   "pages": [
+    229,
+    233
+   ]
+  },
+  {
+   "term": "System of record",
+   "pages": [
+    5,
+    38,
+    43,
+    44,
+    56,
+    200
+   ]
+  },
+  {
+   "term": "Talent",
+   "pages": [
+    212,
+    213,
+    221,
+    222
+   ]
+  },
+  {
+   "term": "Value ledger",
+   "pages": [
+    8,
+    145
+   ]
+  },
+  {
+   "term": "Verification",
+   "pages": [
+    10,
+    16,
+    19,
+    40,
+    50,
+    62,
+    63,
+    65,
+    74,
+    104,
+    106,
+    109,
+    114,
+    116
+   ]
+  },
+  {
+   "term": "Verification token",
+   "pages": [
+    65
+   ]
+  },
+  {
+   "term": "Wave",
+   "pages": [
+    4,
+    170,
+    171,
+    172,
+    174,
+    175,
+    176,
+    177,
+    178,
+    179,
+    180,
+    181,
+    182,
+    183
+   ]
+  }
+ ]
+}

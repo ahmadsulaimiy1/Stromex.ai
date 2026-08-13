@@ -31,7 +31,7 @@ The reframing is structural, not cosmetic. Edition I asked "what should our prod
 | **V** | [Go-to-Market — Sales, Customer Success, Marketing, Partners, Ecosystem](VOLUME-V-GTM-SALES-PARTNERS.md) | How it is sold, how customers succeed, how the partner and platform economy works |
 | **VI** | [Creative — Publishing, Design, Print, Media](VOLUME-VI-CREATIVE-PUBLISHING-PRINT.md) | The creative division: books, design, international print, audio, film, security documents |
 | **VII** | [Industry Ecosystems & the Enterprise Division](VOLUME-VII-INDUSTRY-ECOSYSTEMS.md) | Sector-by-sector complete solutions: education, health, government, finance, faith, industry and the rest |
-| **VIII** | [Expansion, Financial Architecture & the 20-Year Roadmap](VOLUME-VIII-EXPANSION-FINANCE-ROADMAP.md) | The three phases, the three scenarios, unit economics, capital, geography, acquisitions, valuation logic |
+| **VIII** | [Expansion, Finance & the Roadmap](VOLUME-VIII-EXPANSION-FINANCE-ROADMAP.md) | The three phases, the three scenarios, unit economics, capital, geography, acquisitions, valuation logic |
 | **IX** | [The Institution](VOLUME-IX-THE-INSTITUTION.md) | Innovation lab, research institute, measurement, talent, operations, sustainability, future technologies, the 100-Year Plan |
 | **X** | [SpaceTalk — The Communication Operating System](VOLUME-X-SPACETALK.md) | The communication platform: strategy, architecture, federation, safety, business model, roadmap |
 
@@ -95,6 +95,21 @@ Volume III marks each catalogue line ✅ built · ◐ partial · ○ specified-n
 ---
 
 *Amendment protocol: Volume I, Chapter 9. Proposals are raised as pull requests against this directory and require the ratification threshold stated there.*
+
+---
+
+## The published editions
+
+The corpus is issued as a flagship publication in two formats. Both are generated from the markdown in this directory and are content-identical; neither is edited by hand.
+
+| Edition | File | Notes |
+|---|---|---|
+| **Microsoft Word master** | [`StromeX-Editorial-Bible.docx`](StromeX-Editorial-Bible.docx) | The authoritative master. Live table of contents, internal hyperlinks, navigation bookmarks, Word index markers. |
+| **Press-quality PDF** | [`StromeX-Editorial-Bible.pdf`](StromeX-Editorial-Bible.pdf) | Generated from the master. Tagged, bookmarked, opens to the navigation panel. |
+
+**299 pages**, A4. Premium cover, half-title, title page, copyright and legal notice, document control, revision history, executive foreword, founder's message, vision and mission, orientation, a live table of contents, a list of 182 tables and a list of 8 figures both grouped by volume, ten dark volume dividers each carrying an executive summary, running chapter titles, three appendices, a 27-term glossary, a referenced bibliography separating external from internal sources, a 42-term index with real page references, and a colophon.
+
+The build system, and instructions for regenerating both editions after any amendment, are in [`publication/`](publication/README.md).
 
 ---
 
