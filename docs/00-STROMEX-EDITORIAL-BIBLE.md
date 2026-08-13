@@ -1,7 +1,19 @@
+> ## ⚠️ SUPERSEDED — EDITION I
+>
+> **This document has been superseded by [The StromeX Editorial Bible, Edition II](bible/README.md).**
+>
+> Edition I described StromeX as an AI operating system for knowledge work with Arabic and Islamic scholarship as first-class domains. That description was correct and remains true — it is now **Volume III, Division 1**: one product line within a group that serves institutions across many sectors.
+>
+> Edition II is the supreme governing authority. This document is retained, unamended, because the corpus does not silently delete what it used to believe (Volume I §9.2.4) — the record of our earlier thinking is part of the corpus.
+>
+> Nothing in this document may be cited as authority in a dispute.
+
+---
+
 # THE STROMEX EDITORIAL BIBLE
 
 ### Strategic Constitution & Product Philosophy Manual
-### Supreme Governing Authority of the StromeX Ecosystem
+### ~~Supreme Governing Authority of the StromeX Ecosystem~~ — superseded, see above
 
 *Version 1.0 — ratified as the founding document of StromeX. Every roadmap, feature, design decision, and line of code must trace back to a principle in this document. Where a future decision conflicts with this Bible, the Bible wins until formally amended.*
 

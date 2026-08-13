@@ -1,16 +1,36 @@
 # StromeX
 
-StromeX is an AI Operating System for knowledge work — unifying learning, research, writing, design, and publishing behind one trusted, memory-bearing intelligence layer, with Arabic and Islamic scholarship engineered as first-class domains rather than an afterthought.
+StromeX is an AI-powered digital transformation company. We digitise, automate, modernise and intelligently transform organisations across every sector we can serve competently — building complete ecosystems rather than isolated products, at a published price the institution can plan around.
 
-## Founding Documents
+## The Editorial Bible — Edition II
 
-Every future decision in this repository — features, architecture, design, and process — derives from these three governing documents. Where any future work conflicts with them, these documents win until formally amended.
+> ### 📖 **[THE STROMEX EDITORIAL BIBLE](docs/bible/README.md)**
+> **The constitution, operating manual and strategic corpus of the StromeX group.**
 
-1. **[The StromeX Editorial Bible](docs/00-STROMEX-EDITORIAL-BIBLE.md)** — the strategic constitution and product philosophy manual: vision, product/user/intelligence philosophy, editorial standards, design philosophy, AI architecture philosophy, trust & safety constitution, and scalability constitution.
-2. **[The StromeX Master Feature Atlas](docs/01-STROMEX-MASTER-FEATURE-ATLAS.md)** — the classified, scored inventory of features across all 14 product domains, including what was reviewed and rejected and why.
-3. **[The StromeX 10-Year Master Roadmap](docs/02-STROMEX-10-YEAR-ROADMAP.md)** — the phased build plan (MVP → Growth → Platform → Ecosystem → Global Scale), including explicit non-goals per phase and the assumptions challenged along the way.
+Ten volumes. The supreme governing authority of the group. Where a roadmap, contract, pricing sheet, deck or line of code conflicts with it, the corpus wins until formally amended.
 
-Read the Bible first. It is the supreme governing authority of the StromeX ecosystem.
+| Vol. | Title |
+|---|---|
+| **I** | [Constitution — Vision, Philosophy, Governance, Culture, Brand](docs/bible/VOLUME-I-CONSTITUTION.md) |
+| **II** | [Market Strategy & Competitive Positioning](docs/bible/VOLUME-II-MARKET-AND-POSITIONING.md) |
+| **III** | [The Catalogue — Products, Services, Modules & Transparent Pricing](docs/bible/VOLUME-III-CATALOGUE-AND-PRICING.md) |
+| **IV** | [Engineering, AI Architecture, Cloud & Security](docs/bible/VOLUME-IV-ENGINEERING-AI-CLOUD.md) |
+| **V** | [Go-to-Market — Sales, Customer Success, Partners, Ecosystem](docs/bible/VOLUME-V-GTM-SALES-PARTNERS.md) |
+| **VI** | [Creative — Publishing, Design, Print, Media](docs/bible/VOLUME-VI-CREATIVE-PUBLISHING-PRINT.md) |
+| **VII** | [Industry Ecosystems & the Enterprise Division](docs/bible/VOLUME-VII-INDUSTRY-ECOSYSTEMS.md) |
+| **VIII** | [Expansion, Financial Architecture & the 20-Year Roadmap](docs/bible/VOLUME-VIII-EXPANSION-FINANCE-ROADMAP.md) |
+| **IX** | [The Institution — Innovation, Research, Talent, Operations, the 100-Year Plan](docs/bible/VOLUME-IX-THE-INSTITUTION.md) |
+| **X** | [SpaceTalk — The Communication Operating System](docs/bible/VOLUME-X-SPACETALK.md) |
+
+**The three phases** (Volume VIII §1): **Foundation** 2027–2030 · **Race** 2031–2035 · **Global Scale** 2036–2040.
+
+### Edition I (superseded, retained for the record)
+
+Edition I described the AI knowledge-work operating system that is now one product line among many (Volume III, Division 1). It is retained unamended because the corpus never silently deletes what it used to believe (Volume I §9.2).
+
+1. [Editorial Bible, Edition I](docs/00-STROMEX-EDITORIAL-BIBLE.md) — superseded by `docs/bible/`
+2. [Master Feature Atlas](docs/01-STROMEX-MASTER-FEATURE-ATLAS.md)
+3. [10-Year Master Roadmap](docs/02-STROMEX-10-YEAR-ROADMAP.md) — superseded by Volume VIII
 
 ## MVP Codebase
 
