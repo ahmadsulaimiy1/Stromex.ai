@@ -95,3 +95,11 @@ Volume III marks each catalogue line ✅ built · ◐ partial · ○ specified-n
 ---
 
 *Amendment protocol: Volume I, Chapter 9. Proposals are raised as pull requests against this directory and require the ratification threshold stated there.*
+
+---
+
+## The presentation layer
+
+`presentation.src.html` in this directory is the source for the corpus's published front matter — a single self-contained page set in the StromeX brand faces (Archivo and Fraunces, inlined from `apps/web/public/fonts/`), carrying the volume index, the three-phase roadmap, the three financial scenarios, the entrenched provisions and the logo decision.
+
+The two `__ARCHIVO__` / `__FRAUNCES__` placeholders are replaced with base64 of the variable-font files at build time. The masthead device is a guilloche rosette generated on canvas — the same mathematical line-work specified for security documents in Volume VI, Chapter 6, which is the group's signature artifact and therefore its correct visual signature.

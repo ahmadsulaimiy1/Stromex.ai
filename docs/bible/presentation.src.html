@@ -1,0 +1,476 @@
+<title>The StromeX Editorial Bible</title>
+<style>
+@font-face{font-family:"Archivo";src:url(data:font/woff2;base64,__ARCHIVO__) format("woff2");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Fraunces";src:url(data:font/woff2;base64,__FRAUNCES__) format("woff2");font-weight:100 900;font-display:swap}
+
+:root{
+  --ground:#F2F3F6; --surface:#FBFBFD; --sunk:#E8EAEF;
+  --ink:#0D1117; --ink-2:#38414D; --muted:#5D6673;
+  --rule:#C9CFD9; --rule-soft:#DFE3EA;
+  --accent:#0F52C4; --accent-lift:#1B6EF3;
+  --brass:#8A6D12; --brass-soft:#C9A227;
+  --guilloche:#0F52C4; --guilloche-a:0.16;
+  --shadow:0 1px 0 #FFFFFF inset;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#05070A; --surface:#0A0E14; --sunk:#04060A;
+    --ink:#E4E9F0; --ink-2:#AAB4C1; --muted:#78828F;
+    --rule:#1C232D; --rule-soft:#141A22;
+    --accent:#5A94FF; --accent-lift:#1B6EF3;
+    --brass:#C9A227; --brass-soft:#8A6D12;
+    --guilloche:#4E86F0; --guilloche-a:0.30;
+    --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#05070A; --surface:#0A0E14; --sunk:#04060A;
+  --ink:#E4E9F0; --ink-2:#AAB4C1; --muted:#78828F;
+  --rule:#1C232D; --rule-soft:#141A22;
+  --accent:#5A94FF; --accent-lift:#1B6EF3;
+  --brass:#C9A227; --brass-soft:#8A6D12;
+  --guilloche:#4E86F0; --guilloche-a:0.30;
+  --shadow:none;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"Archivo",system-ui,sans-serif; font-weight:400;
+  font-size:16px; line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1120px;margin:0 auto;padding:0 28px}
+h1,h2,h3{text-wrap:balance;margin:0}
+a{color:inherit}
+hr{border:0;border-top:1px solid var(--rule);margin:0}
+:focus-visible{outline:2px solid var(--accent-lift);outline-offset:3px}
+
+/* ── masthead ────────────────────────────────────────── */
+.masthead{position:relative;border-bottom:1px solid var(--rule);overflow:hidden;background:var(--sunk)}
+#seal{position:absolute;inset:0;width:100%;height:100%;display:block}
+.masthead .wrap{position:relative;padding-top:96px;padding-bottom:80px}
+.eyebrow{
+  font-size:11px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;margin:0 0 26px
+}
+.masthead h1{
+  font-family:"Fraunces",Georgia,serif;font-weight:600;
+  font-size:clamp(42px,7.4vw,88px);line-height:1.02;letter-spacing:-.022em;
+  font-variation-settings:"SOFT" 0,"WONK" 1,"opsz" 120;
+}
+.masthead h1 em{font-style:normal;color:var(--accent);font-variation-settings:"WONK" 1}
+.deck{
+  max-width:56ch;margin:30px 0 0;font-size:19px;line-height:1.6;color:var(--ink-2)
+}
+.mast-meta{
+  display:flex;flex-wrap:wrap;gap:0 40px;margin-top:44px;
+  padding-top:22px;border-top:1px solid var(--rule);
+  font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)
+}
+.mast-meta b{display:block;font-family:"Fraunces",serif;font-size:26px;letter-spacing:normal;
+  text-transform:none;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+
+/* ── generic section ─────────────────────────────────── */
+section{padding:78px 0;border-bottom:1px solid var(--rule-soft)}
+.slug{
+  font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);
+  font-weight:600;margin:0 0 34px;display:flex;align-items:baseline;gap:14px
+}
+.slug::after{content:"";flex:1;height:1px;background:var(--rule)}
+h2.big{
+  font-family:"Fraunces",serif;font-weight:600;font-size:clamp(27px,3.4vw,38px);
+  line-height:1.14;letter-spacing:-.015em;margin:0 0 18px;max-width:24ch
+}
+.lede{max-width:62ch;color:var(--ink-2);font-size:17px;margin:0 0 8px}
+
+/* ── volume ledger ───────────────────────────────────── */
+.ledger{border-top:1px solid var(--rule)}
+.vol{
+  display:grid;grid-template-columns:88px 1fr 220px;gap:0 26px;align-items:baseline;
+  padding:22px 8px 22px 0;border-bottom:1px solid var(--rule-soft);
+  text-decoration:none;transition:background .18s ease,padding .18s ease
+}
+.vol:hover,.vol:focus-visible{background:var(--surface);padding-left:12px;padding-right:0}
+.vol .num{
+  font-family:"Fraunces",serif;font-weight:600;font-size:30px;line-height:1;
+  color:var(--accent);font-variation-settings:"WONK" 1;letter-spacing:.01em
+}
+.vol .ttl{font-weight:700;font-size:17.5px;letter-spacing:-.008em;line-height:1.35}
+.vol .gov{display:block;font-weight:400;font-size:14.5px;color:var(--muted);margin-top:5px;max-width:62ch;line-height:1.5}
+.vol .tag{
+  font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  text-align:right;font-weight:600
+}
+
+/* ── phases ──────────────────────────────────────────── */
+.phases{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--rule)}
+.phase{padding:28px 26px 30px;border-right:1px solid var(--rule-soft);border-bottom:1px solid var(--rule)}
+.phase:last-child{border-right:0}
+.phase .yr{font-family:"Fraunces",serif;font-size:13px;letter-spacing:.16em;color:var(--muted);font-variant-numeric:tabular-nums}
+.phase h3{font-family:"Fraunces",serif;font-weight:600;font-size:30px;margin:8px 0 14px;letter-spacing:-.015em}
+.phase p{margin:0;font-size:15px;color:var(--ink-2);line-height:1.6}
+.phase q{display:block;margin-top:16px;font-style:italic;color:var(--accent);quotes:'"' '"';font-size:15px}
+
+/* ── scenario table ──────────────────────────────────── */
+.tablewrap{overflow-x:auto;border-top:1px solid var(--rule)}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:640px}
+th,td{text-align:left;padding:15px 18px 15px 0;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+thead th{
+  font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+  font-weight:600;border-bottom:1px solid var(--rule)
+}
+tbody th{font-weight:700;font-size:15.5px;width:30%}
+tbody th span{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:4px;letter-spacing:normal;text-transform:none}
+td{font-size:15.5px;color:var(--ink-2)}
+td b{color:var(--ink);font-weight:700}
+tr.plan td,tr.plan th{background:var(--surface)}
+
+/* ── seal panel: the one brass moment ────────────────── */
+.sealed{
+  border:1px solid var(--brass-soft);background:var(--surface);
+  padding:38px 34px 34px;position:relative
+}
+.sealed::before{
+  content:"";position:absolute;inset:5px;border:1px solid var(--brass-soft);opacity:.32;pointer-events:none
+}
+.sealed h2{
+  font-family:"Fraunces",serif;font-weight:600;font-size:26px;margin:0 0 6px;color:var(--brass)
+}
+.sealed .sub{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:0 0 26px;font-weight:600}
+.sealed ol{margin:0;padding:0;list-style:none;counter-reset:e;display:grid;gap:13px}
+.sealed li{
+  counter-increment:e;display:grid;grid-template-columns:34px 1fr;gap:14px;
+  font-size:15.5px;line-height:1.55;color:var(--ink-2)
+}
+.sealed li::before{
+  content:counter(e,decimal-leading-zero);font-family:"Fraunces",serif;font-size:13px;
+  color:var(--brass);font-variant-numeric:tabular-nums;padding-top:3px
+}
+.sealed li b{color:var(--ink);font-weight:700}
+
+/* ── evidence grid ───────────────────────────────────── */
+.ev{display:grid;grid-template-columns:repeat(auto-fit,minmax(228px,1fr));gap:0;border-top:1px solid var(--rule)}
+.ev div{padding:24px 24px 26px 0;border-bottom:1px solid var(--rule-soft);border-right:1px solid var(--rule-soft)}
+.ev div:last-child{border-right:0}
+.ev dt{font-family:"Fraunces",serif;font-size:38px;font-weight:600;color:var(--accent);
+  font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-.02em}
+.ev dd{margin:11px 0 0;font-size:14.5px;color:var(--ink-2);line-height:1.5;max-width:34ch}
+
+/* ── logo verdict ────────────────────────────────────── */
+.verdict{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--rule)}
+.verdict > div{padding:24px 26px 26px 0;border-bottom:1px solid var(--rule-soft)}
+.verdict > div:nth-child(odd){border-right:1px solid var(--rule-soft);padding-right:26px}
+.cand{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0 0 9px}
+.verdict p{margin:0;font-size:15px;color:var(--ink-2);line-height:1.6}
+.chosen .cand{color:var(--accent)}
+.chosen{background:var(--surface)}
+.chosen p b{color:var(--ink)}
+
+/* ── footer ──────────────────────────────────────────── */
+footer{padding:62px 0 80px;background:var(--sunk)}
+footer p{max-width:60ch;color:var(--muted);font-size:14.5px;margin:0 0 16px;line-height:1.65}
+footer .rule-quote{
+  font-family:"Fraunces",serif;font-size:clamp(21px,2.7vw,29px);line-height:1.35;
+  color:var(--ink);max-width:22ch;margin:0 0 30px;font-weight:600;letter-spacing:-.014em
+}
+
+@media (max-width:760px){
+  .vol{grid-template-columns:56px 1fr;gap:0 18px}
+  .vol .tag{display:none}
+  .phases{grid-template-columns:1fr}
+  .phase{border-right:0}
+  .verdict{grid-template-columns:1fr}
+  .verdict > div:nth-child(odd){border-right:0}
+  .masthead .wrap{padding-top:66px;padding-bottom:58px}
+  section{padding:56px 0}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+}
+</style>
+
+<header class="masthead">
+  <canvas id="seal" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <p class="eyebrow">Edition&nbsp;II &middot; Ratified as the governing corpus of the StromeX group</p>
+    <h1>The StromeX<br><em>Editorial Bible</em></h1>
+    <p class="deck">The constitution, operating manual and strategic corpus of an AI-powered digital transformation company. Ten volumes. Not a business plan &mdash; a document written to be consulted for twenty years, by people who never met its authors.</p>
+    <div class="mast-meta">
+      <div><b>X</b>Volumes</div>
+      <div><b>17</b>Catalogue divisions</div>
+      <div><b>4</b>Reference implementations</div>
+      <div><b>2027&ndash;2040</b>Roadmap horizon</div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <p class="slug">What changed in Edition II</p>
+    <h2 class="big">Edition I described a product. Edition II describes a group.</h2>
+    <p class="lede">Edition I was an AI operating system for knowledge work, with Arabic and Islamic scholarship as first-class domains. That description was correct and remains true &mdash; it is now Volume III, Division 1: one product line among many.</p>
+    <p class="lede">The reframing is structural, not cosmetic. Edition I asked <em>what should our product do?</em> Edition II asks <em>what does an institution need in order to be modern, and which of those needs can StromeX meet, at what price, with what margin, at what scale, in which country, by which year?</em></p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="slug">The corpus</p>
+    <div class="ledger">
+      <a class="vol" href="#">
+        <span class="num">I</span>
+        <span class="ttl">Constitution<span class="gov">Why we exist, what we will and will not do, how decisions are made, how people behave, what the company looks and sounds like. Includes the free constitution, the ethics constitution and the amendment protocol.</span></span>
+        <span class="tag">Entrenched</span>
+      </a>
+      <a class="vol" href="#">
+        <span class="num">II</span>
+        <span class="ttl">Market Strategy &amp; Positioning<span class="gov">Six competitor classes, seven wedges, buyer psychology, and the moat assessed honestly &mdash; each advantage stated with the condition under which it expires.</span></span>
+        <span class="tag">Strategic</span>
+      </a>
+      <a class="vol" href="#">
+        <span class="num">III</span>
+        <span class="ttl">The Catalogue<span class="gov">Seventeen divisions of itemised, published, module-level pricing. Every line carries its specification, its exclusions and its upgrade path. The only authoritative source of StromeX prices.</span></span>
+        <span class="tag">Operational</span>
+      </a>
+      <a class="vol" href="#">
+        <span class="num">IV</span>
+        <span class="ttl">Engineering, AI, Cloud &amp; Security<span class="gov">How it is built, how it stays up, how it stays safe, what &ldquo;done&rdquo; means. Carries the Security Bible and the credential architecture the group is built on.</span></span>
+        <span class="tag">Operational</span>
+      </a>
+      <a class="vol" href="#">
+        <span class="num">V</span>
+        <span class="ttl">Go-to-Market<span class="gov">Sales, the customer success playbook, partners and the platform ecosystem &mdash; built around the fact that paid acquisition does not work in the founding market.</span></span>
+        <span class="tag">Operational</span>
+      </a>
+      <a class="vol" href="#">
+        <span class="num">VI</span>
+        <span class="ttl">The Creative Division<span class="gov">Design, security-document craft, publishing, Islamic and Arabic typesetting, and international print coordination. The craft standard and the anti-slop rules.</span></span>
+        <span class="tag">Operational</span>
+      </a>
+      <a class="vol" href="#">
+        <span class="num">VII</span>
+        <span class="ttl">Industry Ecosystems<span class="gov">Sector-by-sector complete solutions across three waves, plus the Enterprise Division. Each ecosystem gated on a domain hire, not on enthusiasm.</span></span>
+        <span class="tag">Strategic</span>
+      </a>
+      <a class="vol" href="#">
+        <span class="num">VIII</span>
+        <span class="ttl">Expansion, Finance &amp; the Roadmap<span class="gov">The three phases and their gates, unit economics, geography, capital, acquisitions, and three financial scenarios with every assumption stated inline.</span></span>
+        <span class="tag">Strategic</span>
+      </a>
+      <a class="vol" href="#">
+        <span class="num">IX</span>
+        <span class="ttl">The Institution<span class="gov">Innovation laboratory, research institute, the measurement constitution, the talent system, operational excellence, future technologies, sustainability &mdash; and the 100-Year Plan.</span></span>
+        <span class="tag">Strategic</span>
+      </a>
+      <a class="vol" href="#">
+        <span class="num">X</span>
+        <span class="ttl">SpaceTalk<span class="gov">The communication operating system: why a consumer messenger cannot be won, why institutional communication can, and what federation buys us in government.</span></span>
+        <span class="tag">Product</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="slug">The roadmap</p>
+    <h2 class="big">A phase ends when its gate is passed, not when its years elapse.</h2>
+    <div class="phases">
+      <div class="phase">
+        <p class="yr">2027 &ndash; 2030</p>
+        <h3>Foundation</h3>
+        <p>Build quietly. Perfect the products. Build trust instead of chasing growth. Optimised for quality, satisfaction, reputation and recurring mix &mdash; explicitly not for rapid profitability.</p>
+        <q>Will this decision make StromeX stronger in 2031?</q>
+      </div>
+      <div class="phase">
+        <p class="yr">2031 &ndash; 2035</p>
+        <h3>Race</h3>
+        <p>Expand aggressively, having earned the right to. Enterprise and government motions open, international offices, the major product launches, the first acquisitions.</p>
+        <q>How do we scale without compromising quality, trust or customer satisfaction?</q>
+      </div>
+      <div class="phase">
+        <p class="yr">2036 &ndash; 2040</p>
+        <h3>Global Scale</h3>
+        <p>Become a globally recognised technology company &mdash; and, more importantly, one that no longer depends on the people who started it.</p>
+        <q>How do we become durable enough to outlive our founders?</q>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="slug">The financial position</p>
+    <h2 class="big">Three scenarios, not one target.</h2>
+    <p class="lede">The stated ambition is a group valued at $15&ndash;40&thinsp;billion within ten to twenty years. The corpus takes that seriously by modelling what would have to be true &mdash; and by saying plainly which scenario the company should plan against.</p>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th scope="col">Scenario</th><th scope="col">2035</th><th scope="col">2040</th><th scope="col">2046</th><th scope="col">Indicative valuation</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Conservative<span>Sustainable regional leader &mdash; the most probable good outcome, and not a failure</span></th>
+            <td>$32M</td><td>$90M</td><td>$170M</td><td>$0.7&ndash;0.9B <b>at 4&ndash;5&times;</b></td>
+          </tr>
+          <tr class="plan">
+            <th scope="row">Growth<span>Multinational technology company &mdash; the scenario the group plans and staffs against</span></th>
+            <td>$160M</td><td>$700M</td><td><b>$1.8B</b></td><td><b>$10.8&ndash;14.4B</b> at 6&ndash;8&times;</td>
+          </tr>
+          <tr>
+            <th scope="row">Transformational<span>Global platform company &mdash; the only path that reaches the stated band. Possible; not probable</span></th>
+            <td>$400M</td><td>$2.2B</td><td>$5.5B</td><td>$33&ndash;44B <b>at 6&ndash;8&times;</b></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="lede" style="margin-top:26px">Working backwards rather than forwards from optimism: a $15B valuation requires roughly $1.9&ndash;3.0B of revenue depending on the multiple earned, and $40B requires $5&ndash;8B. Multiples are volatile and outside our control &mdash; the same company was worth 16&times; in 2021 and 4.5&times; in 2023. We control revenue, margin, retention and growth. We do not control the multiple, and we will not manage the company as though we do.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sealed">
+      <h2>The Entrenched Provisions</h2>
+      <p class="sub">Amendable only by board supermajority, published rationale, and thirty days&rsquo; notice</p>
+      <ol>
+        <li><b>Verification is free for the verifier, forever.</b> A graduate&rsquo;s credential is never held hostage to their institution&rsquo;s subscription.</li>
+        <li><b>Customer data belongs to the customer.</b> Never sold, never brokered, never used to train third-party models, always exportable free and complete.</li>
+        <li><b>Children&rsquo;s data receives the strictest handling in the group.</b> Never monetised, never profiled, never advertised against.</li>
+        <li><b>No bribery, ever, in any market, for any contract.</b> Losing business for this reason is a correct outcome.</li>
+        <li><b>We do not build surveillance, weapons, or systems designed to persecute.</b></li>
+        <li><b>High-stakes decisions about a person are made by a person</b> &mdash; named, recorded and accountable.</li>
+        <li><b>We disclose our failures before we are asked</b>, with a timeline and a fix.</li>
+        <li><b>The free tier is real</b>, and its boundary is stated plainly rather than discovered at the moment of frustration.</li>
+        <li><b>We do not sell what we cannot deliver.</b></li>
+        <li><b>A price is honoured for its term</b>, and increases are announced, capped and explained.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="slug">The evidence base</p>
+    <h2 class="big">Grounded in delivered work, not aspiration.</h2>
+    <p class="lede">Every catalogue line is marked built, partial, or specified-not-built. The corpus draws on the group&rsquo;s own code and four institutional reference implementations.</p>
+    <dl class="ev">
+      <div><dt>4</dt><dd>Languages delivered end-to-end &mdash; English, Arabic&nbsp;RTL, Yor&ugrave;b&aacute; and French &mdash; across ~35 page templates per locale</dd></div>
+      <div><dt>73</dt><dd>Tables in the credential-and-commerce schema: enrolment, competencies, evidence, awards, signatures, payments, alumni</dd></div>
+      <div><dt>4</dt><dd>Distinct verification surfaces in production &mdash; certificate, identity, receipt and graduation document</dd></div>
+      <div><dt>107,017</dt><dd>Private schools in Nigeria&rsquo;s 2024/25 census &mdash; the founding market, sized from official data rather than an analyst headline</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="slug">The logo decision</p>
+    <h2 class="big">Four candidates. One survives reduction.</h2>
+    <p class="lede">The criteria, in priority order: does it survive at 16&thinsp;px in a browser tab, embossed on a PVC card, and etched on a turnstile? Does it hold in one colour? Can a Lagos printer reproduce it correctly on the first attempt without a colour proof?</p>
+    <div class="verdict">
+      <div>
+        <p class="cand">A &mdash; Chrome double-chevron</p>
+        <p>Confident and legible, but the chevron pair is heavily occupied territory in tech identity. Ownability is the weakness. <b>Archived.</b></p>
+      </div>
+      <div>
+        <p class="cand">B &mdash; Ribbon infinity-S</p>
+        <p>The most beautiful as an image and the weakest as a logo. Multi-stop gradients and self-intersecting ribbons collapse below 64&thinsp;px and cannot be embossed. An illustration, not an identity. <b>Archived.</b></p>
+      </div>
+      <div>
+        <p class="cand">C &mdash; Gold hexagonal S</p>
+        <p>The most complete submission &mdash; it already thinks in app icon, monochrome, embossed and neon. But gold-on-black reads luxury, not infrastructure. <b>Its system sheet is adopted as the brand-kit template; the mark is retained for the Elite tier and premium imprints.</b></p>
+      </div>
+      <div class="chosen">
+        <p class="cand">D &mdash; Interlocking S &middot; Selected</p>
+        <p><b>The only candidate constructed geometrically rather than pictorially.</b> One interlocking form, one accent element. It reduces to a favicon, survives single-colour reproduction, embosses on a card, engraves on metal, and prints correctly without a proof cycle. It reads as infrastructure &mdash; the category we are actually in &mdash; and it will still look correct stamped on a government contract, a smart gate, a textbook spine and a browser tab on the same day.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="slug">The final instruction</p>
+    <p class="rule-quote">If StromeX ever has to choose between being large and being trusted, it chooses trusted.</p>
+    <p>That choice will present itself. It will be expensive. It will be argued for persuasively by intelligent people with good intentions and a real business case. The answer was written down so that whoever faces it does not have to decide alone.</p>
+    <p>The corpus is a living constitution, not a museum. Products, markets, technologies, business models, structure, pricing, sectors, countries and leadership should all change, repeatedly &mdash; and a future leadership that preserves any of it out of reverence has misunderstood the document. Only the entrenched provisions hold.</p>
+    <p style="color:var(--muted);font-size:13px;margin-top:34px">Set in Archivo and Fraunces, the StromeX brand faces. Financial figures are estimates carrying their assumptions inline; none is a forecast of record. Full corpus: <code>docs/bible/</code>.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var c = document.getElementById('seal');
+  if(!c) return;
+  var ctx = c.getContext('2d');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function tokens(){
+    var cs = getComputedStyle(document.documentElement);
+    return {
+      stroke: cs.getPropertyValue('--guilloche').trim() || '#1B6EF3',
+      alpha: parseFloat(cs.getPropertyValue('--guilloche-a')) || 0.2
+    };
+  }
+
+  var w=0,h=0,dpr=1;
+  function resize(){
+    var r = c.getBoundingClientRect();
+    dpr = Math.min(window.devicePixelRatio||1, 2);
+    w = Math.max(r.width,1); h = Math.max(r.height,1);
+    c.width = Math.round(w*dpr); c.height = Math.round(h*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+
+  // A guilloche rosette: the mathematical line-work of a security document.
+  // Two coupled rotations trace a hypotrochoid; layered phases build the moire.
+  function rosette(cx, cy, R, r, d, phase, turns, alpha, stroke){
+    ctx.beginPath();
+    var steps = 1400, k = (R - r)/r;
+    for(var i=0;i<=steps;i++){
+      var t = (i/steps) * Math.PI*2*turns + phase;
+      var x = cx + (R-r)*Math.cos(t) + d*Math.cos(k*t);
+      var y = cy + (R-r)*Math.sin(t) - d*Math.sin(k*t);
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.strokeStyle = stroke;
+    ctx.globalAlpha = alpha;
+    ctx.lineWidth = 0.6;
+    ctx.stroke();
+  }
+
+  function draw(phase){
+    var t = tokens();
+    ctx.clearRect(0,0,w,h);
+    // anchored to the right edge, so it never fights the headline
+    var cx = w > 900 ? w*0.80 : w*0.72;
+    var cy = h*0.50;
+    var base = Math.min(h*0.92, w*0.62, 620)/2;
+    if(base < 60) return;
+    for(var L=0; L<5; L++){
+      var R = base * (1 - L*0.115);
+      rosette(cx, cy, R, R*0.286, R*0.40, phase + L*0.42, 7, t.alpha*(1 - L*0.13), t.stroke);
+    }
+    rosette(cx, cy, base*0.44, base*0.44*0.34, base*0.44*0.5, -phase*1.6, 5, t.alpha*1.15, t.stroke);
+    ctx.globalAlpha = 1;
+  }
+
+  var phase = 0, raf = null;
+  function tick(){
+    phase += 0.0016;
+    draw(phase);
+    raf = requestAnimationFrame(tick);
+  }
+  function start(){
+    resize();
+    if(raf) cancelAnimationFrame(raf);
+    if(reduce){ draw(0.6); } else { tick(); }
+  }
+  window.addEventListener('resize', function(){ resize(); if(reduce) draw(0.6); });
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  (mq.addEventListener ? mq.addEventListener.bind(mq,'change') : mq.addListener.bind(mq))(function(){ if(reduce) draw(0.6); });
+  start();
+})();
+</script>
