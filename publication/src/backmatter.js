@@ -80,7 +80,7 @@ function appendixA(APPARATUS) {
     head('b_adr', 'Appendix A — Decision register'),
     lead('The twelve decisions with lasting consequence, in one view. Full records, with the alternatives considered and the conditions for revisiting each, are in Part 12.'),
     spacer(200),
-    APPARATUS.dataTable(['#', 'Decision', 'Why', 'Cost accepted'], rows, [11, 21, 40, 28]),
+    APPARATUS.dataTable(['#', 'Decision', 'Why', 'Cost accepted'], rows, [13, 21, 38, 28]),
     spacer(220),
     body('All twelve are Accepted at version 1.0. None has been superseded. An ADR is never edited after acceptance — a changed decision becomes a new record that supersedes the old one, so the reasoning behind a reversal stays legible.', { color: C.void600 }),
   ];

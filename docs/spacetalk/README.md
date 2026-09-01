@@ -47,6 +47,29 @@ This directory is the constitution of the product. It governs every design, engi
 
 ---
 
+## The published editions
+
+This directory is the source of record. For distribution — to executives, investors, or a
+new joiner — the same content is typeset as a 168-page publication:
+
+| | |
+|---|---|
+| [`SpaceTalk_Editorial_Bible_v1.0.pdf`](../../publication/dist/SpaceTalk_Editorial_Bible_v1.0.pdf) | Tagged and bookmarked, print-ready, 203 PDF bookmarks |
+| [`SpaceTalk_Editorial_Bible_v1.0.docx`](../../publication/dist/SpaceTalk_Editorial_Bible_v1.0.docx) | Microsoft Word, brand typefaces embedded |
+
+Both are generated from one parse of these files, and the PDF is exported from the DOCX
+itself — so the two editions cannot say different things. The publication adds a cover,
+front matter, an executive summary, twenty commissioned figures, live cross-references,
+four appendices and an index; it does not alter a word of what is governed here.
+
+Regenerate with `python3 publication/src/build.py`, then `python3 publication/src/verify.py`
+(27 pre-flight checks). See [`publication/README.md`](../../publication/README.md).
+
+**Edit the Markdown here, never the editions.** A change to a source document is picked up
+on the next build; a change made in Word is lost on it.
+
+---
+
 ## Notes on scope
 
 **On the founding brief.** This project began with a brief asking for every feature of WhatsApp, Telegram, Facebook, Instagram, Discord, Signal, and WeChat, plus payments, healthcare, education, commerce, and a creator studio. That brief also contained its own correction: design the full ecosystem, ship a focused MVP, validate, then expand. `10-SCOPE-GOVERNANCE.md` is that correction made operational — the full ecosystem is designed and triaged there, every item either scheduled to a phase or rejected with a stated reason. Nothing was silently dropped, including the ideas we declined.

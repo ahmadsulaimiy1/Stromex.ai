@@ -13,7 +13,13 @@ import re
 import subprocess
 import sys
 
-sys.path.insert(0, "/root/.claude/skills/docx/scripts")
+# The docx skill ships the soffice helper that works around sandboxed
+# AF_UNIX; its location has moved between hosts, so look in both.
+for _cand in ("/mnt/skills/public/docx/scripts",
+              "/root/.claude/skills/docx/scripts"):
+    if os.path.isdir(_cand):
+        sys.path.insert(0, _cand)
+        break
 from office.soffice import run_soffice  # noqa: E402
 
 ROOT = "/home/user/Stromex.ai/publication"
